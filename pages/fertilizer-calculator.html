@@ -459,6 +459,14 @@ permalink: /fertilizer-calculator/
       <strong>What is ion balance?</strong> Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.
     </div>
   </div>
+
+  <div class="results-section" id="ratio-analysis-section" style="display: none; margin-top: 20px;">
+    <h2>Nutrient Ratio Analysis</h2>
+    <div id="ratio-analysis-result"></div>
+    <div class="conversion-note" style="margin-top: 15px;">
+      <strong>What are nutrient ratios?</strong> These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.
+    </div>
+  </div>
   </div>
 
   <!-- Formula Builder Tab -->
@@ -1399,6 +1407,10 @@ function calculate() {
 
   // Calculate and display ion balance
   calculateIonBalance(activeFertilizers, volume);
+
+  // Calculate and display nutrient ratios
+  const ratios = calculateNutrientRatios(finalResults);
+  displayNutrientRatios(ratios);
 }
 
 // Display the results
@@ -1452,6 +1464,138 @@ function displayResults(results) {
 
   // Scroll to results
   resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Calculate nutrient ratios
+function calculateNutrientRatios(results) {
+  const ratios = [];
+
+  // Helper function to calculate ratio with 2 or 3 values
+  function getRatio(values, names, decimals = 2) {
+    // Filter out zero values
+    const nonZeroValues = values.filter(v => v > 0);
+    if (nonZeroValues.length === 0) return null;
+
+    // Find the smallest non-zero value to use as base
+    const minValue = Math.min(...nonZeroValues);
+
+    // Calculate ratios relative to 1
+    const ratioValues = values.map(v => v > 0 ? parseFloat((v / minValue).toFixed(decimals)) : 0);
+
+    return {
+      name: names.join(' : '),
+      ratio: ratioValues.join(' : '),
+      values: values,
+      labels: names
+    };
+  }
+
+  // N:P:K (elemental)
+  const npk = getRatio(
+    [results.N_total || 0, results.P || 0, results.K || 0],
+    ['N', 'P', 'K']
+  );
+  if (npk) ratios.push(npk);
+
+  // N:P2O5:K2O (oxide form) - common in fertilizer labels
+  const npkOxide = getRatio(
+    [results.N_total || 0, results.P2O5 || 0, results.K2O || 0],
+    ['N', 'P₂O₅', 'K₂O']
+  );
+  if (npkOxide) ratios.push(npkOxide);
+
+  // N:K ratio
+  if ((results.N_total || 0) > 0 && (results.K || 0) > 0) {
+    const nk = getRatio(
+      [results.N_total || 0, results.K || 0],
+      ['N', 'K']
+    );
+    if (nk) ratios.push(nk);
+  }
+
+  // NO3:NH4 ratio
+  if ((results.N_NO3 || 0) > 0 || (results.N_NH4 || 0) > 0) {
+    const no3nh4 = getRatio(
+      [results.N_NO3 || 0, results.N_NH4 || 0],
+      ['NO₃', 'NH₄']
+    );
+    if (no3nh4) ratios.push(no3nh4);
+  }
+
+  // Ca:Mg ratio
+  if ((results.Ca || 0) > 0 && (results.Mg || 0) > 0) {
+    const camg = getRatio(
+      [results.Ca || 0, results.Mg || 0],
+      ['Ca', 'Mg']
+    );
+    if (camg) ratios.push(camg);
+  }
+
+  // K:Ca ratio
+  if ((results.K || 0) > 0 && (results.Ca || 0) > 0) {
+    const kca = getRatio(
+      [results.K || 0, results.Ca || 0],
+      ['K', 'Ca']
+    );
+    if (kca) ratios.push(kca);
+  }
+
+  // K:Ca:Mg ratio in meq/L (accounts for different valences)
+  if ((results.K || 0) > 0 && (results.Ca || 0) > 0 && (results.Mg || 0) > 0) {
+    // Convert ppm to meq/L
+    // meq/L = (ppm × valence) / atomic_weight
+    const kMeq = (results.K || 0) / 39.1;  // K: valence 1, atomic weight 39.1
+    const caMeq = (results.Ca || 0) * 2 / 40.08;  // Ca: valence 2, atomic weight 40.08
+    const mgMeq = (results.Mg || 0) * 2 / 24.31;  // Mg: valence 2, atomic weight 24.31
+
+    const kcamgMeq = getRatio(
+      [kMeq, caMeq, mgMeq],
+      ['K', 'Ca', 'Mg']
+    );
+    if (kcamgMeq) {
+      kcamgMeq.name = 'K : Ca : Mg (meq/L basis)';
+      kcamgMeq.values = [kMeq, caMeq, mgMeq];
+      kcamgMeq.unit = 'meq/L';
+      ratios.push(kcamgMeq);
+    }
+  }
+
+  return ratios;
+}
+
+// Display nutrient ratio analysis
+function displayNutrientRatios(ratios) {
+  const ratioSection = document.getElementById('ratio-analysis-section');
+  const ratioResult = document.getElementById('ratio-analysis-result');
+
+  if (ratios.length === 0) {
+    ratioSection.style.display = 'none';
+    return;
+  }
+
+  ratioSection.style.display = 'block';
+
+  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
+
+  ratios.forEach(ratio => {
+    const unit = ratio.unit || 'ppm';
+    html += `
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
+          ${ratio.name}
+        </div>
+        <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
+          ${ratio.ratio}
+        </div>
+        <div style="font-size: 0.85em; color: #666;">
+          ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  ratioResult.innerHTML = html;
 }
 
 // Calculate and display ion balance
@@ -1606,6 +1750,7 @@ function clearAll() {
   // Hide results
   document.getElementById('results').style.display = 'none';
   document.getElementById('ion-balance-section').style.display = 'none';
+  document.getElementById('ratio-analysis-section').style.display = 'none';
 }
 
 // Tab switching
@@ -1970,6 +2115,32 @@ function displayFormulaResults(result, targets, volume) {
       <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
     </div>
   </div>`;
+
+  // Add nutrient ratio analysis
+  const ratios = calculateNutrientRatios(result.achieved);
+  if (ratios.length > 0) {
+    html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
+    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 10px;">';
+
+    ratios.forEach(ratio => {
+      const unit = ratio.unit || 'ppm';
+      html += `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+          <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
+            ${ratio.name}
+          </div>
+          <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
+            ${ratio.ratio}
+          </div>
+          <div style="font-size: 0.85em; color: #666;">
+            ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
+          </div>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+  }
 
   // Warnings or errors
   if (!allGood) {
