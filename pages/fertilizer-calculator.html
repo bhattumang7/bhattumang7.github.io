@@ -626,6 +626,250 @@ permalink: /fertilizer-calculator/
       font-size: 1.2em;
     }
   }
+
+  /* Educational Modal Styles */
+  .info-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 10px;
+    transition: all 0.3s;
+    vertical-align: middle;
+  }
+
+  .info-icon:hover {
+    background: #0056b3;
+    transform: scale(1.1);
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 12px 12px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    color: white;
+    font-size: 1.5em;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+  }
+
+  .modal-body {
+    padding: 30px;
+  }
+
+  .explanation-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+  }
+
+  .explanation-section h3 {
+    color: #007bff;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+  }
+
+  .explanation-section p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  .formula-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #007bff;
+    margin: 15px 0;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+  }
+
+  .formula-box .formula {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+  }
+
+  .formula-box .description {
+    font-size: 0.9em;
+    color: #666;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .example-box {
+    background: #e8f4f8;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 15px 0;
+    border-left: 4px solid #17a2b8;
+  }
+
+  .example-box h4 {
+    color: #17a2b8;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .step {
+    padding: 15px;
+    margin: 10px 0;
+    background: white;
+    border-radius: 6px;
+    border-left: 3px solid #28a745;
+  }
+
+  .step-number {
+    display: inline-block;
+    background: #28a745;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    margin-right: 10px;
+    font-weight: bold;
+  }
+
+  .conversion-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    background: white;
+  }
+
+  .conversion-table th,
+  .conversion-table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #dee2e6;
+  }
+
+  .conversion-table th {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+  }
+
+  .conversion-table tr:nth-child(even) {
+    background: #f8f9fa;
+  }
+
+  .highlight {
+    background: #fff3cd;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+
+  @media (max-width: 768px) {
+    .modal-content {
+      margin: 10px;
+      max-height: 95vh;
+    }
+
+    .modal-header {
+      padding: 20px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.2em;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .explanation-section {
+      padding: 15px;
+    }
+
+    .formula-box .formula {
+      font-size: 1em;
+    }
+  }
 </style>
 
 <div class="calculator-container">
@@ -673,7 +917,10 @@ permalink: /fertilizer-calculator/
   </div>
 
   <div class="results-section" id="results" style="display: none; margin-top: 20px;">
-    <h2>Results (PPM)</h2>
+    <h2>
+      Results (PPM)
+      <span class="info-icon" onclick="openPPMExplanation()" title="Click to learn how we calculate PPM">?</span>
+    </h2>
     <div class="results-grid" id="results-grid"></div>
     <div class="conversion-note">
       <strong>Note:</strong> Oxide values (P₂O₅, K₂O, etc.) are automatically converted to elemental forms (P, K, etc.) using standard conversion factors.
@@ -773,6 +1020,195 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
+</div>
+
+<!-- Educational Modal for PPM Calculation -->
+<div id="ppm-modal" class="modal-overlay" onclick="closePPMExplanation(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Understanding PPM Calculations</h2>
+      <button class="modal-close" onclick="closePPMExplanation()">&times;</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- What is PPM? -->
+      <div class="explanation-section">
+        <h3>What is PPM?</h3>
+        <p>
+          <strong>PPM stands for "Parts Per Million"</strong> - it's a way to measure very small concentrations, similar to how we use percentages.
+          Think of it like this: if you have 1 million drops of water, PPM tells you how many drops of nutrients are mixed in.
+        </p>
+        <p>
+          For example, <span class="highlight">100 PPM of Nitrogen</span> means there are 100 grams of nitrogen in every 1 million grams (1000 liters) of water.
+          In simpler terms: <strong>1 PPM = 1 milligram per liter (mg/L)</strong>.
+        </p>
+      </div>
+
+      <!-- The Basic Formula -->
+      <div class="explanation-section">
+        <h3>The Basic Formula</h3>
+        <p>Here's the formula we use to calculate PPM:</p>
+
+        <div class="formula-box">
+          <div class="formula">PPM = (grams × 1000 × percentage) ÷ liters</div>
+          <div class="description">This tells us the concentration of nutrients in your solution</div>
+        </div>
+
+        <p>Let's break down each part:</p>
+        <ul style="line-height: 1.8;">
+          <li><strong>grams</strong> = Amount of fertilizer you're adding</li>
+          <li><strong>1000</strong> = Converts grams to milligrams (mg)</li>
+          <li><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
+          <li><strong>liters</strong> = Volume of water in your solution</li>
+        </ul>
+      </div>
+
+      <!-- Step by Step Example -->
+      <div class="explanation-section">
+        <h3>Step-by-Step Example</h3>
+
+        <div class="example-box">
+          <h4>Real World Scenario:</h4>
+          <p>You want to add <strong>2 grams</strong> of Calcium Nitrate (which contains <strong>19% Nitrogen</strong>) to <strong>10 liters</strong> of water.</p>
+          <p><em>Question: How much Nitrogen (in PPM) will be in your final solution?</em></p>
+        </div>
+
+        <div class="step">
+          <span class="step-number">1</span>
+          <strong>Identify your values:</strong>
+          <ul style="margin: 10px 0 0 38px; line-height: 1.6;">
+            <li>Fertilizer amount = 2 grams</li>
+            <li>Nitrogen percentage = 19% (or 0.19)</li>
+            <li>Water volume = 10 liters</li>
+          </ul>
+        </div>
+
+        <div class="step">
+          <span class="step-number">2</span>
+          <strong>Plug into the formula:</strong>
+          <div style="margin: 10px 0 0 38px;">
+            <code>PPM = (2 grams × 1000 × 0.19) ÷ 10 liters</code>
+          </div>
+        </div>
+
+        <div class="step">
+          <span class="step-number">3</span>
+          <strong>Calculate step by step:</strong>
+          <ul style="margin: 10px 0 0 38px; line-height: 1.6;">
+            <li>2 × 1000 = 2000 mg</li>
+            <li>2000 × 0.19 = 380 mg of nitrogen</li>
+            <li>380 ÷ 10 = <strong>38 PPM</strong></li>
+          </ul>
+        </div>
+
+        <div class="step">
+          <span class="step-number">4</span>
+          <strong>Result:</strong>
+          <div style="margin: 10px 0 0 38px;">
+            Your solution contains <span class="highlight">38 PPM of Nitrogen</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multiple Fertilizers -->
+      <div class="explanation-section">
+        <h3>Using Multiple Fertilizers</h3>
+        <p>
+          When you use multiple fertilizers, we calculate the PPM from each one separately and then <strong>add them together</strong>.
+        </p>
+
+        <div class="example-box">
+          <h4>Example with Two Fertilizers:</h4>
+          <p>You add both Calcium Nitrate (2g, 19% N) and Potassium Nitrate (1.5g, 13% N) to 10 liters:</p>
+
+          <ul style="line-height: 1.8; margin-top: 10px;">
+            <li><strong>From Calcium Nitrate:</strong> (2 × 1000 × 0.19) ÷ 10 = 38 PPM</li>
+            <li><strong>From Potassium Nitrate:</strong> (1.5 × 1000 × 0.13) ÷ 10 = 19.5 PPM</li>
+            <li><strong>Total Nitrogen:</strong> 38 + 19.5 = <span class="highlight">57.5 PPM</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Oxide Conversions -->
+      <div class="explanation-section">
+        <h3>Understanding Oxide Conversions</h3>
+        <p>
+          Many fertilizers list nutrients in their <strong>oxide form</strong> (like P₂O₅ for phosphorus or K₂O for potassium),
+          but plants actually use the <strong>elemental form</strong>. Don't worry - the calculator handles this automatically!
+        </p>
+
+        <table class="conversion-table">
+          <thead>
+            <tr>
+              <th>Oxide Form (on fertilizer label)</th>
+              <th>Elemental Form (what plants use)</th>
+              <th>Conversion Factor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>P₂O₅ (Phosphate)</td>
+              <td>P (Phosphorus)</td>
+              <td>Multiply by 0.436</td>
+            </tr>
+            <tr>
+              <td>K₂O (Potash)</td>
+              <td>K (Potassium)</td>
+              <td>Multiply by 0.830</td>
+            </tr>
+            <tr>
+              <td>MgO (Magnesium Oxide)</td>
+              <td>Mg (Magnesium)</td>
+              <td>Multiply by 0.603</td>
+            </tr>
+            <tr>
+              <td>CaO (Calcium Oxide)</td>
+              <td>Ca (Calcium)</td>
+              <td>Multiply by 0.715</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="example-box" style="margin-top: 15px;">
+          <h4>Quick Example:</h4>
+          <p>
+            If a fertilizer gives you <strong>100 PPM of P₂O₅</strong>, the actual phosphorus available to plants is:<br>
+            <strong>100 × 0.436 = 43.6 PPM of P</strong>
+          </p>
+          <p style="margin-top: 10px; color: #17a2b8; font-weight: bold;">
+            ✓ The calculator does this conversion automatically for you!
+          </p>
+        </div>
+      </div>
+
+      <!-- Why This Matters -->
+      <div class="explanation-section">
+        <h3>Why Does This Matter?</h3>
+        <p>
+          Understanding PPM helps you:
+        </p>
+        <ul style="line-height: 1.8;">
+          <li><strong>Feed plants properly:</strong> Different plants need different nutrient levels (e.g., tomatoes might need 150-200 PPM nitrogen)</li>
+          <li><strong>Avoid over-feeding:</strong> Too much nutrients can burn or damage plants</li>
+          <li><strong>Save money:</strong> Use just the right amount of fertilizer</li>
+          <li><strong>Compare recipes:</strong> Understand different fertilizer formulations</li>
+        </ul>
+      </div>
+
+      <!-- Quick Tips -->
+      <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
+        <h3 style="color: #28a745;">Quick Tips</h3>
+        <ul style="line-height: 1.8;">
+          <li>Start with lower PPM values and increase gradually</li>
+          <li>1 PPM = 1 mg/L (milligram per liter)</li>
+          <li>More fertilizer ≠ better growth; balance is key</li>
+          <li>Check your water's existing nutrient content if possible</li>
+          <li>Different growth stages may need different PPM levels</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2737,6 +3173,316 @@ function calculateIonBalanceForFormula(activeFertilizers, volume) {
   }
 
   return { totalCations, totalAnions, imbalance, statusColor, statusText };
+}
+
+// PPM Explanation Modal Functions
+let calculationData = null; // Store calculation data for the modal
+
+function openPPMExplanation() {
+  const modal = document.getElementById('ppm-modal');
+  const modalBody = modal.querySelector('.modal-body');
+
+  // Generate dynamic content based on current calculation
+  modalBody.innerHTML = generateExplanationContent();
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+}
+
+function closePPMExplanation(event) {
+  if (event && event.target !== event.currentTarget) return;
+
+  const modal = document.getElementById('ppm-modal');
+  modal.classList.remove('active');
+  document.body.style.overflow = ''; // Restore scrolling
+}
+
+function generateExplanationContent() {
+  const volumeInput = document.getElementById('volume');
+  const volume = parseFloat(volumeInput.value) || 10;
+
+  // Get active fertilizers
+  const activeFertilizers = FERTILIZERS.filter(fert => {
+    const checkbox = document.getElementById(`check-${fert.id}`);
+    const input = document.getElementById(`grams-${fert.id}`);
+    const grams = input ? parseFloat(input.value) : 0;
+    return checkbox && checkbox.checked && grams > 0;
+  }).map(fert => {
+    const input = document.getElementById(`grams-${fert.id}`);
+    return {
+      ...fert,
+      grams: parseFloat(input.value)
+    };
+  });
+
+  let content = `
+    <!-- What is PPM? -->
+    <div class="explanation-section">
+      <h3>What is PPM?</h3>
+      <p>
+        <strong>PPM stands for "Parts Per Million"</strong> - it's a way to measure very small concentrations.
+        Think of it like this: <span class="highlight">1 PPM = 1 milligram per liter (mg/L)</span>.
+      </p>
+      <p>
+        For example, 100 PPM of Nitrogen means there are 100 milligrams of nitrogen in every liter of water.
+      </p>
+    </div>
+
+    <!-- The Basic Formula -->
+    <div class="explanation-section">
+      <h3>The Basic Formula</h3>
+      <div class="formula-box">
+        <div class="formula">PPM = (grams × 1000 × percentage) ÷ liters</div>
+        <div class="description">This tells us the concentration of nutrients in your solution</div>
+      </div>
+      <p><strong>Where:</strong></p>
+      <ul style="line-height: 1.8;">
+        <li><strong>grams</strong> = Amount of fertilizer you're adding</li>
+        <li><strong>1000</strong> = Converts grams to milligrams (mg)</li>
+        <li><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
+        <li><strong>liters</strong> = Volume of water in your solution</li>
+      </ul>
+    </div>
+  `;
+
+  if (activeFertilizers.length === 0) {
+    content += `
+      <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
+        <h3 style="color: #856404;">No Calculation Yet</h3>
+        <p>
+          Add some fertilizers and click "Calculate" to see your personalized calculation breakdown here!
+        </p>
+        <p>
+          The calculator will show you step-by-step how we arrived at each PPM value based on your specific fertilizer selections and amounts.
+        </p>
+      </div>
+    `;
+  } else {
+    content += `
+      <!-- Your Calculation -->
+      <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
+        <h3 style="color: #17a2b8;">Your Current Calculation</h3>
+        <p><strong>Solution Volume:</strong> ${volume} liters</p>
+        <p><strong>Fertilizers Used:</strong> ${activeFertilizers.length}</p>
+      </div>
+    `;
+
+    // Calculate contributions from each fertilizer
+    const nutrientContributions = {};
+
+    content += `
+      <div class="explanation-section">
+        <h3>Step-by-Step Breakdown</h3>
+        <p>Here's exactly how we calculated each nutrient from your selected fertilizers:</p>
+    `;
+
+    activeFertilizers.forEach((fert, index) => {
+      content += `
+        <div class="step">
+          <h4 style="margin-top: 0; color: #007bff;">
+            <span class="step-number">${index + 1}</span>
+            ${fert.name}
+          </h4>
+          <p style="margin: 10px 0 10px 38px;"><strong>Amount used:</strong> ${fert.grams} grams</p>
+          <div style="margin-left: 38px;">
+            <table class="conversion-table" style="font-size: 0.9em;">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>% in Fertilizer</th>
+                  <th>Calculation</th>
+                  <th>PPM</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+
+      Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
+        const ppm = (fert.grams * 1000 * (percentage / 100)) / volume;
+        const calculation = `(${fert.grams} × 1000 × ${percentage / 100}) ÷ ${volume}`;
+
+        // Track contributions for summary
+        if (!nutrientContributions[nutrient]) {
+          nutrientContributions[nutrient] = [];
+        }
+        nutrientContributions[nutrient].push({
+          fertilizer: fert.name,
+          ppm: ppm,
+          percentage: percentage
+        });
+
+        content += `
+          <tr>
+            <td><strong>${nutrient}</strong></td>
+            <td>${percentage}%</td>
+            <td style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td><strong>${ppm.toFixed(2)} PPM</strong></td>
+          </tr>
+        `;
+      });
+
+      content += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    });
+
+    content += `</div>`;
+
+    // Summary section showing total PPM for each nutrient
+    if (Object.keys(nutrientContributions).length > 0) {
+      content += `
+        <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
+          <h3 style="color: #28a745;">Final Results - Total PPM</h3>
+          <p>When using multiple fertilizers, we add up the PPM from each source:</p>
+          <div style="margin-top: 15px;">
+      `;
+
+      // Calculate final results with oxide conversions
+      const finalResults = {};
+      Object.entries(nutrientContributions).forEach(([nutrient, contributions]) => {
+        const totalPPM = contributions.reduce((sum, c) => sum + c.ppm, 0);
+
+        // Check if this is an oxide that needs conversion
+        let displayNutrient = nutrient;
+        let displayPPM = totalPPM;
+        let conversionNote = '';
+
+        if (nutrient === 'P2O5' && OXIDE_CONVERSIONS.P2O5_to_P) {
+          const convertedPPM = totalPPM * OXIDE_CONVERSIONS.P2O5_to_P;
+          finalResults['P'] = convertedPPM;
+          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM P</strong> (elemental form)`;
+          displayNutrient = 'P₂O₅';
+        } else if (nutrient === 'K2O' && OXIDE_CONVERSIONS.K2O_to_K) {
+          const convertedPPM = totalPPM * OXIDE_CONVERSIONS.K2O_to_K;
+          finalResults['K'] = convertedPPM;
+          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM K</strong> (elemental form)`;
+          displayNutrient = 'K₂O';
+        } else if (nutrient === 'MgO' && OXIDE_CONVERSIONS.MgO_to_Mg) {
+          const convertedPPM = totalPPM * OXIDE_CONVERSIONS.MgO_to_Mg;
+          finalResults['Mg'] = convertedPPM;
+          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM Mg</strong> (elemental form)`;
+        } else if (nutrient === 'CaO' && OXIDE_CONVERSIONS.CaO_to_Ca) {
+          const convertedPPM = totalPPM * OXIDE_CONVERSIONS.CaO_to_Ca;
+          finalResults['Ca'] = convertedPPM;
+          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM Ca</strong> (elemental form)`;
+        } else {
+          finalResults[nutrient] = totalPPM;
+        }
+
+        content += `
+          <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 3px solid #28a745;">
+            <strong style="font-size: 1.1em; color: #28a745;">${displayNutrient}:</strong>
+        `;
+
+        if (contributions.length > 1) {
+          content += `<div style="margin: 8px 0 8px 20px; line-height: 1.8;">`;
+          contributions.forEach(c => {
+            content += `<div>• ${c.fertilizer}: ${c.ppm.toFixed(2)} PPM</div>`;
+          });
+          content += `</div>`;
+          content += `<div style="margin-top: 8px; padding-top: 8px; border-top: 2px solid #dee2e6;">`;
+          content += `<strong>Total: ${totalPPM.toFixed(2)} PPM${conversionNote}</strong>`;
+          content += `</div>`;
+        } else {
+          content += ` <strong>${totalPPM.toFixed(2)} PPM${conversionNote}</strong>`;
+        }
+
+        content += `</div>`;
+      });
+
+      content += `
+          </div>
+        </div>
+      `;
+
+      // Oxide conversion explanation if applicable
+      const hasOxides = Object.keys(nutrientContributions).some(n =>
+        n === 'P2O5' || n === 'K2O' || n === 'MgO' || n === 'CaO'
+      );
+
+      if (hasOxides) {
+        content += `
+          <div class="explanation-section">
+            <h3>About Oxide Conversions</h3>
+            <p>
+              Some fertilizers list nutrients in <strong>oxide form</strong> (like P₂O₅, K₂O),
+              but plants use the <strong>elemental form</strong> (P, K). The calculator automatically converts these:
+            </p>
+            <table class="conversion-table" style="margin-top: 10px;">
+              <thead>
+                <tr>
+                  <th>Oxide Form</th>
+                  <th>Elemental Form</th>
+                  <th>Conversion Factor</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        if (nutrientContributions['P2O5']) {
+          content += `
+                <tr>
+                  <td>P₂O₅ (Phosphate)</td>
+                  <td>P (Phosphorus)</td>
+                  <td>×0.436</td>
+                </tr>
+          `;
+        }
+        if (nutrientContributions['K2O']) {
+          content += `
+                <tr>
+                  <td>K₂O (Potash)</td>
+                  <td>K (Potassium)</td>
+                  <td>×0.830</td>
+                </tr>
+          `;
+        }
+        if (nutrientContributions['MgO']) {
+          content += `
+                <tr>
+                  <td>MgO (Magnesium Oxide)</td>
+                  <td>Mg (Magnesium)</td>
+                  <td>×0.603</td>
+                </tr>
+          `;
+        }
+        if (nutrientContributions['CaO']) {
+          content += `
+                <tr>
+                  <td>CaO (Calcium Oxide)</td>
+                  <td>Ca (Calcium)</td>
+                  <td>×0.715</td>
+                </tr>
+          `;
+        }
+
+        content += `
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+  }
+
+  // Always include helpful tips
+  content += `
+    <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
+      <h3 style="color: #28a745;">Quick Tips</h3>
+      <ul style="line-height: 1.8;">
+        <li>1 PPM = 1 mg/L (milligram per liter)</li>
+        <li>Start with lower PPM values and increase gradually</li>
+        <li>Different plants need different nutrient levels</li>
+        <li>More fertilizer ≠ better growth; balance is key</li>
+        <li>Check your water's existing nutrient content if possible</li>
+      </ul>
+    </div>
+  `;
+
+  return content;
 }
 
 // Initialize when page loads
