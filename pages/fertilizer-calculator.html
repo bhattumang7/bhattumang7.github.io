@@ -403,6 +403,229 @@ permalink: /fertilizer-calculator/
   .selection-controls button:hover {
     background: #5a6268;
   }
+
+  .selected-fertilizer-item {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid #007bff;
+  }
+
+  .selected-fertilizer-name {
+    font-weight: bold;
+    color: #333;
+  }
+
+  .selected-fertilizer-amount {
+    color: #007bff;
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+
+  /* Mobile Responsive Styles */
+  @media (max-width: 768px) {
+    .calculator-container {
+      padding: 10px;
+    }
+
+    h1 {
+      font-size: 1.5em;
+    }
+
+    h2 {
+      font-size: 1.3em;
+    }
+
+    h3 {
+      font-size: 1.1em;
+    }
+
+    .input-section {
+      padding: 15px;
+    }
+
+    .volume-control-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .volume-field {
+      width: 100%;
+    }
+
+    .volume-field input {
+      width: 100%;
+    }
+
+    .button-group {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    .fertilizer-item {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .fertilizer-info {
+      width: 100%;
+    }
+
+    .fertilizer-input {
+      width: 100%;
+    }
+
+    .fertilizer-input input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .search-box input {
+      width: 100%;
+      font-size: 16px;
+      padding: 10px;
+    }
+
+    .results-section {
+      padding: 15px;
+    }
+
+    .results-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .result-card {
+      padding: 12px;
+    }
+
+    .result-value {
+      font-size: 1.3em;
+    }
+
+    .tabs {
+      flex-direction: column;
+    }
+
+    .tab {
+      width: 100%;
+      text-align: center;
+    }
+
+    .selected-fertilizer-item {
+      padding: 10px;
+      font-size: 0.9em;
+    }
+
+    .selected-fertilizer-amount {
+      font-size: 1em;
+    }
+
+    /* Formula Builder Mobile Styles */
+    .target-inputs {
+      grid-template-columns: 1fr !important;
+    }
+
+    .target-input-group {
+      width: 100%;
+    }
+
+    .target-input-group input {
+      width: 100%;
+      font-size: 16px;
+      padding: 10px;
+    }
+
+    .fertilizer-selection-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .available-fert-item {
+      padding: 10px;
+    }
+
+    /* Ratio and Balance Tables */
+    .ratio-table, .balance-table {
+      font-size: 0.85em;
+      overflow-x: auto;
+      display: block;
+    }
+
+    .ratio-table td, .ratio-table th,
+    .balance-table td, .balance-table th {
+      padding: 6px;
+    }
+
+    .conversion-note {
+      font-size: 0.85em;
+      padding: 8px;
+    }
+
+    .warning-box {
+      font-size: 0.85em;
+      padding: 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .calculator-container {
+      padding: 5px;
+    }
+
+    h1 {
+      font-size: 1.3em;
+    }
+
+    h2 {
+      font-size: 1.1em;
+    }
+
+    .input-section, .results-section {
+      padding: 10px;
+    }
+
+    .btn {
+      font-size: 13px;
+      padding: 10px;
+    }
+
+    .fertilizer-item {
+      padding: 10px;
+    }
+
+    .fertilizer-name {
+      font-size: 0.95em;
+    }
+
+    .fertilizer-composition {
+      font-size: 0.8em;
+    }
+
+    .result-card {
+      padding: 10px;
+    }
+
+    .result-label {
+      font-size: 0.85em;
+    }
+
+    .result-value {
+      font-size: 1.2em;
+    }
+  }
 </style>
 
 <div class="calculator-container">
@@ -444,7 +667,12 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <div class="results-section" id="results" style="display: none;">
+  <div class="results-section" id="selected-fertilizers-section" style="display: none;">
+    <h2>Selected Fertilizers</h2>
+    <div id="selected-fertilizers-list"></div>
+  </div>
+
+  <div class="results-section" id="results" style="display: none; margin-top: 20px;">
     <h2>Results (PPM)</h2>
     <div class="results-grid" id="results-grid"></div>
     <div class="conversion-note">
@@ -1675,6 +1903,9 @@ function calculate() {
     finalResults.Si = (finalResults.Si || 0) + (ppmResults.SiO2 * OXIDE_CONVERSIONS.SiO2_to_Si);
   }
 
+  // Display selected fertilizers
+  displaySelectedFertilizers(activeFertilizers);
+
   // Display results
   displayResults(finalResults);
 
@@ -1692,6 +1923,32 @@ function calculate() {
   // Calculate and display nutrient ratios
   const ratios = calculateNutrientRatios(finalResults);
   displayNutrientRatios(ratios);
+}
+
+// Display selected fertilizers
+function displaySelectedFertilizers(activeFertilizers) {
+  const section = document.getElementById('selected-fertilizers-section');
+  const list = document.getElementById('selected-fertilizers-list');
+
+  section.style.display = 'block';
+  list.innerHTML = '';
+
+  if (activeFertilizers.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  activeFertilizers.forEach(fert => {
+    const item = document.createElement('div');
+    item.className = 'selected-fertilizer-item';
+
+    item.innerHTML = `
+      <div class="selected-fertilizer-name">${fert.name}</div>
+      <div class="selected-fertilizer-amount">${fert.grams.toFixed(2)} g</div>
+    `;
+
+    list.appendChild(item);
+  });
 }
 
 // Display the results
@@ -2029,9 +2286,12 @@ function clearAll() {
   });
 
   // Hide results
+  document.getElementById('selected-fertilizers-section').style.display = 'none';
   document.getElementById('results').style.display = 'none';
   document.getElementById('ion-balance-section').style.display = 'none';
   document.getElementById('ratio-analysis-section').style.display = 'none';
+  document.getElementById('ec-tds-section').style.display = 'none';
+  document.getElementById('warnings-section').style.display = 'none';
 }
 
 // Tab switching
