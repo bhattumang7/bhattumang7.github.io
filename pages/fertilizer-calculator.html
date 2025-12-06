@@ -2021,10 +2021,10 @@ function renderFertilizerList(filter = '') {
           <input type="checkbox" id="check-${fertilizer.id}"
                  onchange="toggleFertilizer('${fertilizer.id}')">
         </div>
-        <div class="fertilizer-info">
+        <label for="check-${fertilizer.id}" class="fertilizer-info">
           <div class="fertilizer-name">${fertilizer.name}</div>
           <div class="fertilizer-composition">${composition}</div>
-        </div>
+        </label>
         <div class="fertilizer-input">
           <input type="number" id="grams-${fertilizer.id}"
                  value="0" min="0" step="0.1"
