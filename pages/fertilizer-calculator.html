@@ -467,6 +467,16 @@ permalink: /fertilizer-calculator/
       <strong>What are nutrient ratios?</strong> These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.
     </div>
   </div>
+
+  <div class="results-section" id="ec-tds-section" style="display: none; margin-top: 20px;">
+    <h2>EC Prediction</h2>
+    <div id="ec-tds-result"></div>
+  </div>
+
+  <div class="results-section" id="warnings-section" style="display: none; margin-top: 20px;">
+    <h2>Warnings & Recommendations</h2>
+    <div id="warnings-result"></div>
+  </div>
   </div>
 
   <!-- Formula Builder Tab -->
@@ -832,6 +842,64 @@ const OXIDE_CONVERSIONS = {
   MgO_to_Mg: 0.60317,
   SO3_to_S: 0.40059,
   SiO2_to_Si: 0.46744
+};
+
+// Molar masses for nutrients (g/mol) - for EC calculation
+const MOLAR_MASSES = {
+  'N_NO3': 14.007,
+  'N_NH4': 14.007,
+  'P': 30.974,
+  'K': 39.098,
+  'Mg': 24.305,
+  'Ca': 40.078,
+  'S': 32.065,
+  'Fe': 55.845,
+  'Mn': 54.938,
+  'Zn': 65.38,
+  'B': 10.811,
+  'Cu': 63.546,
+  'Mo': 95.95,
+  'Na': 22.99,
+  'Cl': 35.453
+};
+
+// Ionic charges (absolute values) - for EC calculation
+const IONIC_CHARGES = {
+  'N_NO3': 1,
+  'N_NH4': 1,
+  'P': 1,      // H2PO4- form
+  'K': 1,
+  'Mg': 2,
+  'Ca': 2,
+  'S': 2,      // SO4 2- form
+  'Fe': 2,
+  'Mn': 2,
+  'Zn': 2,
+  'B': 1,      // typically present as borate
+  'Cu': 2,
+  'Mo': 2,
+  'Na': 1,
+  'Cl': 1
+};
+
+// EC contribution factors (LMCv2 model from HydroBuddy)
+// Units: S·cm²/mol (molar conductivity)
+const EC_CONTRIBUTIONS = {
+  'N_NO3': 71.46,
+  'N_NH4': 73.5,
+  'P': 57,         // H2PO4-
+  'K': 73,
+  'Mg': 106,
+  'Ca': 119,
+  'S': 160,        // SO4 2-
+  'Fe': 108.0,
+  'Mn': 0,         // negligible
+  'Zn': 0,         // negligible
+  'B': 0,          // negligible
+  'Cu': 0,         // negligible
+  'Mo': 76.35,
+  'Na': 50.01,
+  'Cl': 0
 };
 
 // Ion balance data: molar mass and ions for each fertilizer
@@ -1307,6 +1375,211 @@ function handleGramsChange(id) {
   }
 }
 
+// Calculate EC using LMCv2 model (based on HydroBuddy)
+function calculateECTDS(results) {
+  // Calculate ionic strength
+  let ionicStrength = 0;
+
+  for (const [nutrient, ppm] of Object.entries(results)) {
+    if (MOLAR_MASSES[nutrient] && IONIC_CHARGES[nutrient]) {
+      const molarConc = ppm / (1000 * MOLAR_MASSES[nutrient]); // Convert ppm to mol/L
+      const zi = IONIC_CHARGES[nutrient];
+      ionicStrength += zi * zi * molarConc;
+    }
+  }
+  ionicStrength = ionicStrength / 2; // Ionic strength formula
+
+  // Calculate EC using LMCv2 model
+  // Result is directly in mS/cm (EC contribution factors are calibrated for this)
+  let predictedEC = 0;
+
+  for (const [nutrient, ppm] of Object.entries(results)) {
+    if (EC_CONTRIBUTIONS[nutrient] && MOLAR_MASSES[nutrient] && IONIC_CHARGES[nutrient]) {
+      const molarConc = ppm / (1000 * MOLAR_MASSES[nutrient]);
+      const zi = IONIC_CHARGES[nutrient];
+      const contribution = molarConc * EC_CONTRIBUTIONS[nutrient] * Math.exp(-0.7025187 * Math.sqrt(ionicStrength) * Math.pow(zi, 1.5));
+      predictedEC += contribution;
+    }
+  }
+
+  return {
+    ec: predictedEC,
+    ionicStrength: ionicStrength
+  };
+}
+
+// Check for warnings (incompatibilities and imbalances)
+function checkWarnings(results, activeFertilizers) {
+  const warnings = [];
+
+  // 1. Check for Calcium + Sulfate incompatibility (in stock solutions)
+  // This is critical for concentrated stock solutions
+  const hasCa = (results.Ca || 0) > 10;
+  const hasS = (results.S || 0) > 10;
+
+  if (hasCa && hasS) {
+    const caFertilizers = activeFertilizers.filter(f => f.pct.Ca).map(f => f.name).join(', ');
+    const sFertilizers = activeFertilizers.filter(f => f.pct.S).map(f => f.name).join(', ');
+
+    warnings.push({
+      level: 'warning',
+      category: 'Stock Solution Incompatibility',
+      message: `Calcium and sulfate are both present. When making STOCK SOLUTIONS (not final mix), keep calcium sources (${caFertilizers}) separate from sulfate sources (${sFertilizers}) to prevent calcium sulfate precipitation (gypsum). This warning doesn't apply to the final diluted nutrient solution.`
+    });
+  }
+
+  // 2. Check for high NH4:NO3 ratio (should be < 20%)
+  const nh4 = results.N_NH4 || 0;
+  const no3 = results.N_NO3 || 0;
+  const totalN = nh4 + no3;
+
+  if (totalN > 0) {
+    const nh4Ratio = (nh4 / totalN) * 100;
+    if (nh4Ratio > 30) {
+      warnings.push({
+        level: 'warning',
+        category: 'Nitrogen Balance',
+        message: `High ammonium ratio (${nh4Ratio.toFixed(1)}% NH₄⁺). Recommended: Keep NH₄⁺ below 20-30% of total N to avoid toxicity and acidification. Consider using more nitrate-based fertilizers.`
+      });
+    }
+  }
+
+  // 3. Check for Ca:Mg ratio (optimal is 3:1 to 5:1)
+  const ca = results.Ca || 0;
+  const mg = results.Mg || 0;
+
+  if (ca > 10 && mg > 5) {
+    const ratio = ca / mg;
+    if (ratio < 2) {
+      warnings.push({
+        level: 'info',
+        category: 'Ca:Mg Ratio',
+        message: `Ca:Mg ratio is ${ratio.toFixed(2)}:1 (${ca.toFixed(1)} ppm Ca : ${mg.toFixed(1)} ppm Mg). Optimal range is 3:1 to 5:1. Consider reducing magnesium or increasing calcium.`
+      });
+    } else if (ratio > 7) {
+      warnings.push({
+        level: 'info',
+        category: 'Ca:Mg Ratio',
+        message: `Ca:Mg ratio is ${ratio.toFixed(2)}:1 (${ca.toFixed(1)} ppm Ca : ${mg.toFixed(1)} ppm Mg). Optimal range is 3:1 to 5:1. Consider reducing calcium or increasing magnesium.`
+      });
+    }
+  }
+
+  // 4. Check for K:Ca ratio (should be reasonably balanced)
+  const k = results.K || 0;
+  if (k > 10 && ca > 10) {
+    const kCaRatio = k / ca;
+    if (kCaRatio > 3) {
+      warnings.push({
+        level: 'info',
+        category: 'K:Ca Ratio',
+        message: `K:Ca ratio is ${kCaRatio.toFixed(2)}:1. Very high potassium relative to calcium may interfere with calcium uptake. Optimal K:Ca ratio is typically 0.5:1 to 2:1 depending on crop.`
+      });
+    }
+  }
+
+  // 5. Check for very high EC
+  const ecData = calculateECTDS(results);
+  if (ecData.ec > 3.5) {
+    warnings.push({
+      level: 'warning',
+      category: 'High EC',
+      message: `Electrical conductivity is very high (${ecData.ec.toFixed(2)} mS/cm). This may cause salt stress in plants. Consider reducing fertilizer amounts or increasing solution volume. Most crops prefer EC between 1.5-2.5 mS/cm.`
+    });
+  } else if (ecData.ec < 0.5 && totalN > 0) {
+    warnings.push({
+      level: 'info',
+      category: 'Low EC',
+      message: `Electrical conductivity is quite low (${ecData.ec.toFixed(2)} mS/cm). This solution may be too dilute for optimal plant growth. Consider increasing fertilizer amounts. Most crops prefer EC between 1.5-2.5 mS/cm.`
+    });
+  }
+
+  // 6. Check for Cl- levels (chloride can be toxic at high levels)
+  const cl = results.Cl || 0;
+  if (cl > 100) {
+    warnings.push({
+      level: 'warning',
+      category: 'High Chloride',
+      message: `Chloride level is ${cl.toFixed(1)} ppm. High chloride (>100 ppm) can be toxic to sensitive crops. Consider using sulfate-based fertilizers instead of chloride-based ones.`
+    });
+  }
+
+  return warnings;
+}
+
+// Display EC results
+function displayECTDS(ecData) {
+  const resultsSection = document.getElementById('ec-tds-section');
+  const outputDiv = document.getElementById('ec-tds-result');
+
+  resultsSection.style.display = 'block';
+
+  let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">';
+
+  html += `
+    <div class="result-card">
+      <div class="result-label">Electrical Conductivity (EC)</div>
+      <div class="result-value">
+        ${ecData.ec.toFixed(3)}
+        <span class="result-unit">mS/cm</span>
+      </div>
+    </div>
+  `;
+
+  html += `
+    <div class="result-card">
+      <div class="result-label">Ionic Strength</div>
+      <div class="result-value">
+        ${ecData.ionicStrength.toFixed(4)}
+        <span class="result-unit">mol/L</span>
+      </div>
+    </div>
+  `;
+
+  html += '</div>';
+
+  html += `
+    <div class="conversion-note" style="margin-top: 15px;">
+      <strong>About EC:</strong> EC (Electrical Conductivity) measures the solution's ability to conduct electricity,
+      indicating total dissolved salts. Most hydroponic crops prefer EC between 1.5-2.5 mS/cm.
+      Calculation uses the LMCv2 model from HydroBuddy.
+    </div>
+  `;
+
+  outputDiv.innerHTML = html;
+}
+
+// Display warnings
+function displayWarnings(warnings) {
+  const resultsSection = document.getElementById('warnings-section');
+  const outputDiv = document.getElementById('warnings-result');
+
+  if (warnings.length === 0) {
+    resultsSection.style.display = 'none';
+    return;
+  }
+
+  resultsSection.style.display = 'block';
+
+  let html = '';
+
+  warnings.forEach(warning => {
+    const boxClass = warning.level === 'warning' ? 'warning-box' :
+                     warning.level === 'error' ? 'error-box' : 'conversion-note';
+    const icon = warning.level === 'warning' ? '⚠️' :
+                 warning.level === 'error' ? '❌' : 'ℹ️';
+
+    html += `
+      <div class="${boxClass}" style="margin-bottom: 10px;">
+        <strong>${icon} ${warning.category}</strong><br>
+        ${warning.message}
+      </div>
+    `;
+  });
+
+  outputDiv.innerHTML = html;
+}
+
 // Main calculation function
 function calculate() {
   const volumeInput = document.getElementById('volume');
@@ -1404,6 +1677,14 @@ function calculate() {
 
   // Display results
   displayResults(finalResults);
+
+  // Calculate and display EC
+  const ecData = calculateECTDS(finalResults);
+  displayECTDS(ecData);
+
+  // Check and display warnings
+  const warnings = checkWarnings(finalResults, activeFertilizers);
+  displayWarnings(warnings);
 
   // Calculate and display ion balance
   calculateIonBalance(activeFertilizers, volume);
