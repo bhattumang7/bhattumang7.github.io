@@ -1,0 +1,2036 @@
+---
+layout: default
+title: Fertilizer PPM Calculator
+permalink: /fertilizer-calculator/
+---
+
+<style>
+  .calculator-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .input-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  .volume-input {
+    margin-bottom: 20px;
+  }
+
+  .volume-input label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .volume-input input {
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 200px;
+  }
+
+  .volume-control-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .volume-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #0056b3;
+  }
+
+  .btn-danger {
+    background: #dc3545;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #c82333;
+  }
+
+  .input-error {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
+  }
+
+  .fertilizer-selector {
+    margin-bottom: 20px;
+  }
+
+  .fertilizer-selector h3 {
+    margin-bottom: 10px;
+  }
+
+  .fertilizer-item {
+    background: white;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .fertilizer-item.active {
+    border-color: #007bff;
+    background: #f0f8ff;
+  }
+
+  .fertilizer-checkbox {
+    flex-shrink: 0;
+  }
+
+  .fertilizer-info {
+    flex-grow: 1;
+  }
+
+  .fertilizer-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .fertilizer-composition {
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .fertilizer-input {
+    flex-shrink: 0;
+  }
+
+  .fertilizer-input input {
+    padding: 6px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100px;
+  }
+
+  .fertilizer-input label {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 0.9em;
+  }
+
+  .results-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #007bff;
+  }
+
+  .results-section h2 {
+    margin-top: 0;
+    color: #007bff;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .result-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    border-left: 4px solid #28a745;
+  }
+
+  .result-card.zero {
+    opacity: 0.5;
+    border-left-color: #ccc;
+  }
+
+  .result-label {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .result-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .result-unit {
+    font-size: 0.8em;
+    color: #666;
+    margin-left: 4px;
+  }
+
+  .search-box {
+    margin-bottom: 15px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .conversion-note {
+    background: #fff3cd;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #856404;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.3s;
+  }
+
+  .tab:hover {
+    color: #007bff;
+    background: #f8f9fa;
+  }
+
+  .tab.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  .target-input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .target-input-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .target-input-field label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+  }
+
+  .target-input-field input {
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .formula-result {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+  }
+
+  .formula-fertilizer {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: white;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border-left: 4px solid #28a745;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .comparison-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+  }
+
+  .comparison-table .match {
+    color: #28a745;
+    font-weight: bold;
+  }
+
+  .comparison-table .close {
+    color: #ffc107;
+    font-weight: bold;
+  }
+
+  .comparison-table .miss {
+    color: #dc3545;
+    font-weight: bold;
+  }
+
+  .warning-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+  }
+
+  .error-box {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+  }
+
+  .fertilizer-selection {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+  .fertilizer-selection h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .fertilizer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+  }
+
+  .fertilizer-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+  }
+
+  .fertilizer-checkbox-item input[type="checkbox"] {
+    cursor: pointer;
+  }
+
+  .fertilizer-checkbox-item label {
+    cursor: pointer;
+    font-size: 0.9em;
+    margin: 0;
+  }
+
+  .selection-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .selection-controls button {
+    padding: 5px 10px;
+    font-size: 0.85em;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .selection-controls button:hover {
+    background: #5a6268;
+  }
+</style>
+
+<div class="calculator-container">
+  <h1>Fertilizer PPM Calculator</h1>
+  <p>Calculate nutrient concentrations (PPM) from fertilizer additions to water.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('ppm-calc')">PPM Calculator</button>
+    <button class="tab" onclick="switchTab('formula-builder')">Formula Builder</button>
+  </div>
+
+  <!-- PPM Calculator Tab -->
+  <div id="ppm-calc" class="tab-content active">
+    <div class="input-section">
+    <div class="volume-control-row">
+      <div class="volume-field">
+        <label for="volume">Solution Volume:</label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="number" id="volume" value="10" min="0.1" step="0.1" oninput="validateVolumeInput(this)">
+          <span>liters</span>
+        </div>
+      </div>
+      <div class="button-group">
+        <button onclick="calculate()" class="btn btn-primary">
+          Calculate PPM
+        </button>
+        <button onclick="clearAll()" class="btn btn-danger">
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <div class="fertilizer-selector">
+      <h3>Select Fertilizers and Enter Amounts</h3>
+      <div class="search-box">
+        <input type="text" id="search" placeholder="Search fertilizers...">
+      </div>
+      <div id="fertilizer-list"></div>
+    </div>
+  </div>
+
+  <div class="results-section" id="results" style="display: none;">
+    <h2>Results (PPM)</h2>
+    <div class="results-grid" id="results-grid"></div>
+    <div class="conversion-note">
+      <strong>Note:</strong> Oxide values (P₂O₅, K₂O, etc.) are automatically converted to elemental forms (P, K, etc.) using standard conversion factors.
+    </div>
+  </div>
+
+  <div class="results-section" id="ion-balance-section" style="display: none; margin-top: 20px;">
+    <h2>Ion Balance</h2>
+    <div id="ion-balance-result"></div>
+    <div class="conversion-note" style="margin-top: 15px;">
+      <strong>What is ion balance?</strong> Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.
+    </div>
+  </div>
+  </div>
+
+  <!-- Formula Builder Tab -->
+  <div id="formula-builder" class="tab-content">
+    <div class="input-section">
+      <div class="fertilizer-selection">
+        <h4>Available Fertilizers</h4>
+        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Select the fertilizers you have available. The calculator will use only these to build your formula.</p>
+        <div class="selection-controls">
+          <button onclick="selectAllAvailableFertilizers()">Select All</button>
+          <button onclick="deselectAllAvailableFertilizers()">Deselect All</button>
+          <button onclick="selectCommonFertilizers()">Select Common Only</button>
+        </div>
+        <div class="fertilizer-grid" id="available-fertilizers-list"></div>
+      </div>
+
+      <h3>Target PPM Values</h3>
+      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient concentrations. The calculator will find the best fertilizer combination to match your targets.</p>
+
+      <div class="target-input-grid">
+        <div class="target-input-field">
+          <label for="target-n">Nitrogen (N) *</label>
+          <input type="number" id="target-n" min="0.1" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="target-p">Phosphorus (P) *</label>
+          <input type="number" id="target-p" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="target-k">Potassium (K) *</label>
+          <input type="number" id="target-k" min="0.1" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="target-ca">Calcium (Ca) *</label>
+          <input type="number" id="target-ca" min="0.1" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="target-mg">Magnesium (Mg) *</label>
+          <input type="number" id="target-mg" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="target-s">Sulfur (S)</label>
+          <input type="number" id="target-s" min="0" step="1" placeholder="Optional" oninput="validateTargetInput(this, true)">
+        </div>
+      </div>
+
+      <div class="volume-input">
+        <label for="formula-volume">Solution Volume:</label>
+        <input type="number" id="formula-volume" value="10" min="0.1" step="0.1" oninput="validateVolumeInput(this)">
+        <span>liters</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="buildFormula()" style="padding: 10px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Build Formula
+        </button>
+        <button onclick="clearFormulaBuilder()" style="padding: 10px 20px; font-size: 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="results-section" id="formula-results" style="display: none;">
+      <h2>Recommended Formula</h2>
+      <div id="formula-output"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Fertilizer database
+const FERTILIZERS = [
+  {
+    id: "calcium_nitrate_calcinit_typical",
+    name: "Calcium Nitrate - Calcinit type (15.5% N, 19% Ca)",
+    aliases: ["YaraLiva Calcinit", "Calcium nitrate 15.5-0-0 + Ca", "Calcinit"],
+    pct: { N_total: 15.5, N_NO3: 14.4, N_NH4: 1.1, Ca: 19.0 }
+  },
+  {
+    id: "potassium_nitrate_typical",
+    name: "Potassium Nitrate",
+    aliases: ["KNO3", "13.7-0-46.3"],
+    pct: { N_total: 13.7, N_NO3: 13.7, K2O: 46.3 }
+  },
+  {
+    id: "map_typical",
+    name: "Mono Ammonium Phosphate (MAP)",
+    aliases: ["NH4H2PO4", "12-61-0"],
+    pct: { N_total: 12.0, N_NH4: 12.0, P2O5: 61.0 }
+  },
+  {
+    id: "mkp_typical",
+    name: "Mono Potassium Phosphate (MKP)",
+    aliases: ["KH2PO4", "0-52-34"],
+    pct: { P2O5: 52.0, K2O: 34.0 }
+  },
+  {
+    id: "dap_common",
+    name: "Di Ammonium Phosphate (DAP)",
+    aliases: ["(NH4)2HPO4", "18-46-0"],
+    pct: { N_total: 18.0, N_NH4: 18.0, P2O5: 46.0 }
+  },
+  {
+    id: "urea_common",
+    name: "Urea",
+    aliases: ["CO(NH2)2", "46-0-0"],
+    pct: { N_total: 46.0, N_Urea: 46.0 }
+  },
+  {
+    id: "ammonium_sulfate_common",
+    name: "Ammonium Sulfate",
+    aliases: ["(NH4)2SO4", "21-0-0 + 24S"],
+    pct: { N_total: 21.0, N_NH4: 21.0, S: 24.0 }
+  },
+  {
+    id: "ammonium_nitrate_common",
+    name: "Ammonium Nitrate - Solid (34% N)",
+    aliases: ["NH4NO3", "34-0-0 (typical)", "Ammonium Nitrate solid"],
+    pct: { N_total: 34.0, N_NO3: 17.0, N_NH4: 17.0 }
+  },
+  {
+    id: "magnesium_sulfate_heptahydrate_common",
+    name: "Magnesium Sulfate - Heptahydrate / Epsom Salt (9.86% Mg)",
+    aliases: ["MgSO4·7H2O", "Epsom Salt", "Magnesium Sulfate 7H2O"],
+    pct: { Mg: 9.86, S: 13.0 }
+  },
+  {
+    id: "magnesium_nitrate_hexahydrate_typical",
+    name: "Magnesium Nitrate - Hexahydrate (10.9% N, 9.5% Mg)",
+    aliases: ["Mg(NO3)2·6H2O", "Magnesium Nitrate 6H2O"],
+    pct: { N_total: 10.9, N_NO3: 10.9, Mg: 9.5 }
+  },
+  {
+    id: "potassium_sulfate_common",
+    name: "Potassium Sulfate (SOP)",
+    aliases: ["K2SO4", "0-0-50 + ~17S"],
+    pct: { K2O: 50.0, S: 17.0 }
+  },
+  {
+    id: "potassium_chloride_common",
+    name: "Potassium Chloride (MOP)",
+    aliases: ["KCl", "0-0-60"],
+    pct: { K2O: 60.0, Cl: 47.6 }
+  },
+  {
+    id: "calcium_chloride_dihydrate_common",
+    name: "Calcium Chloride - Dihydrate (27.2% Ca)",
+    aliases: ["CaCl2·2H2O", "Calcium Chloride 2H2O"],
+    pct: { Ca: 27.2, Cl: 48.3 }
+  },
+  {
+    id: "langbeinite_common",
+    name: "Langbeinite / Sul-Po-Mag",
+    aliases: ["K2SO4·2MgSO4", "0-0-22 + 11Mg + 22S"],
+    pct: { K2O: 22.0, Mg: 11.0, S: 22.0 }
+  },
+  {
+    id: "uan32_solution_typical",
+    name: "UAN Solution (example: 32-0-0)",
+    aliases: ["UAN-32"],
+    pct: { N_total: 32.0, N_Urea: 16.0, N_NO3: 8.0, N_NH4: 8.0 }
+  },
+  {
+    id: "ammonium_thiosulfate_common",
+    name: "Ammonium Thiosulfate (ATS)",
+    aliases: ["12-0-0-26S (common liquid)"],
+    pct: { N_total: 12.0, N_NH4: 12.0, S: 26.0 }
+  },
+  {
+    id: "potassium_thiosulfate_common",
+    name: "Potassium Thiosulfate (KTS)",
+    aliases: ["0-0-25-17S (common liquid)"],
+    pct: { K2O: 25.0, S: 17.0 }
+  },
+  {
+    id: "fe_edta_13",
+    name: "Iron Chelate - EDTA (13% Fe)",
+    aliases: ["Fe-EDTA 13", "Fe-EDTA 13%"],
+    pct: { Fe: 13.0 }
+  },
+  {
+    id: "boric_acid_common",
+    name: "Boric Acid",
+    aliases: ["H3BO3"],
+    pct: { B: 17.5 }
+  },
+  {
+    id: "zinc_sulfate_heptahydrate_common",
+    name: "Zinc Sulfate - Heptahydrate (22.7% Zn)",
+    aliases: ["ZnSO4·7H2O", "Zinc Sulfate 7H2O"],
+    pct: { Zn: 22.7, S: 11.2 }
+  },
+  {
+    id: "nitric_acid_38",
+    name: "Nitric Acid 38%",
+    aliases: ["HNO3 38%"],
+    pct: { N_total: 8.4, N_NO3: 8.4 }
+  },
+  {
+    id: "nitric_acid_60",
+    name: "Nitric Acid 60%",
+    aliases: ["HNO3 60%"],
+    pct: { N_total: 13.3, N_NO3: 13.3 }
+  },
+  {
+    id: "phosphoric_acid_49",
+    name: "Phosphoric Acid 49%",
+    aliases: ["H3PO4 49%"],
+    pct: { P: 18.6 }
+  },
+  {
+    id: "potassium_bicarbonate",
+    name: "Potassium Bicarbonate",
+    aliases: ["KHCO3"],
+    pct: { K: 39.0 }
+  },
+  {
+    id: "ammonium_nitrate_liquid",
+    name: "Ammonium Nitrate - Liquid (18% N)",
+    aliases: ["NH4NO3 liquid", "Ammonium Nitrate liquid"],
+    pct: { N_total: 18.0, N_NO3: 9.0, N_NH4: 9.0 }
+  },
+  {
+    id: "urea_phosphate",
+    name: "Urea Phosphate",
+    aliases: ["CO(NH2)2·H3PO4"],
+    pct: { N_total: 17.5, N_Urea: 17.5, P: 19.6 }
+  },
+  {
+    id: "calcium_nitrate_4h2o",
+    name: "Calcium Nitrate - Tetrahydrate (11.5% N, 16.5% Ca)",
+    aliases: ["Ca(NO3)2·4H2O", "Calcium Nitrate 4H2O"],
+    pct: { N_total: 11.5, N_NO3: 11.5, Ca: 16.5 }
+  },
+  {
+    id: "calcium_nitrate_anhydrous",
+    name: "Calcium Nitrate - Anhydrous (15.5% N, 18.5% Ca)",
+    aliases: ["Ca(NO3)2", "Calcium Nitrate anhydrous"],
+    pct: { N_total: 15.5, N_NO3: 15.5, Ca: 18.5 }
+  },
+  {
+    id: "calcium_nitrate_liquid",
+    name: "Calcium Nitrate - Liquid (8.7% N, 12.5% Ca)",
+    aliases: ["Ca(NO3)2 liquid", "Calcium Nitrate liquid"],
+    pct: { N_total: 8.7, N_NO3: 8.7, Ca: 12.5 }
+  },
+  {
+    id: "calcium_chloride_solid",
+    name: "Calcium Chloride - Solid (36% Ca)",
+    aliases: ["CaCl2 solid", "Calcium Chloride solid"],
+    pct: { Ca: 36.0, Cl: 63.9 }
+  },
+  {
+    id: "calcium_chloride_liquid",
+    name: "Calcium Chloride - Liquid (11.8% Ca)",
+    aliases: ["CaCl2 liquid", "Calcium Chloride liquid"],
+    pct: { Ca: 11.8, Cl: 20.9 }
+  },
+  {
+    id: "magnesium_sulfate_anhydrous",
+    name: "Magnesium Sulfate - Anhydrous (19.6% Mg)",
+    aliases: ["MgSO4", "Magnesium Sulfate anhydrous"],
+    pct: { Mg: 19.6, S: 26.5 }
+  },
+  {
+    id: "magnesium_nitrate_liquid",
+    name: "Magnesium Nitrate - Liquid (7% N, 6.1% Mg)",
+    aliases: ["Mg(NO3)2 liquid", "Magnesium Nitrate liquid"],
+    pct: { N_total: 7.0, N_NO3: 7.0, Mg: 6.1 }
+  },
+  {
+    id: "fe_dtpa_12",
+    name: "Iron Chelate - DTPA solid (12% Fe)",
+    aliases: ["Fe-DTPA 12%", "Fe-DTPA 12"],
+    pct: { Fe: 12.0 }
+  },
+  {
+    id: "fe_dtpa_liquid_3",
+    name: "Iron Chelate - DTPA liquid (3% Fe)",
+    aliases: ["Fe-DTPA 3%", "Fe-DTPA 3"],
+    pct: { Fe: 3.0 }
+  },
+  {
+    id: "fe_dtpa_liquid_6",
+    name: "Iron Chelate - DTPA liquid (6% Fe)",
+    aliases: ["Fe-DTPA 6%", "Fe-DTPA 6"],
+    pct: { Fe: 6.0 }
+  },
+  {
+    id: "fe_eddha_6",
+    name: "Iron Chelate - EDDHA (6% Fe)",
+    aliases: ["Fe-EDDHA 6%", "Fe-EDDHA 6"],
+    pct: { Fe: 6.0 }
+  },
+  {
+    id: "fe_hbed_6",
+    name: "Iron Chelate - HBED (6% Fe)",
+    aliases: ["Fe-HBED 6%", "Fe-HBED 6"],
+    pct: { Fe: 6.0 }
+  },
+  {
+    id: "mn_edta_13",
+    name: "Manganese Chelate - EDTA (13% Mn)",
+    aliases: ["Mn-EDTA 13%", "Mn-EDTA 13"],
+    pct: { Mn: 13.0 }
+  },
+  {
+    id: "zn_edta_15",
+    name: "Zinc Chelate - EDTA (15% Zn)",
+    aliases: ["Zn-EDTA 15%", "Zn-EDTA 15"],
+    pct: { Zn: 15.0 }
+  },
+  {
+    id: "cu_edta_15",
+    name: "Copper Chelate - EDTA (15% Cu)",
+    aliases: ["Cu-EDTA 15%", "Cu-EDTA 15"],
+    pct: { Cu: 15.0 }
+  },
+  {
+    id: "manganese_sulfate",
+    name: "Manganese Sulfate",
+    aliases: ["MnSO4·H2O"],
+    pct: { Mn: 32.5, S: 18.9 }
+  },
+  {
+    id: "zinc_sulfate_mono",
+    name: "Zinc Sulfate - Monohydrate (36% Zn)",
+    aliases: ["ZnSO4·H2O", "Zinc Sulfate H2O"],
+    pct: { Zn: 36.0 }
+  },
+  {
+    id: "borax",
+    name: "Borax",
+    aliases: ["Na2B4O7·10H2O"],
+    pct: { B: 11.3 }
+  },
+  {
+    id: "copper_sulfate",
+    name: "Copper Sulfate",
+    aliases: ["CuSO4·5H2O"],
+    pct: { Cu: 25.5, S: 12.8 }
+  },
+  {
+    id: "sodium_molybdate",
+    name: "Sodium Molybdate",
+    aliases: ["Na2MoO4·2H2O"],
+    pct: { Mo: 39.6 }
+  },
+  {
+    id: "ammonium_molybdate",
+    name: "Ammonium Molybdate",
+    aliases: ["(NH4)6Mo7O24·4H2O"],
+    pct: { Mo: 52.0, N_total: 8.0, N_NH4: 8.0 }
+  }
+];
+
+// Conversion factors for oxides to elements
+const OXIDE_CONVERSIONS = {
+  P2O5_to_P: 0.43646,
+  K2O_to_K: 0.83013,
+  CaO_to_Ca: 0.71469,
+  MgO_to_Mg: 0.60317,
+  SO3_to_S: 0.40059,
+  SiO2_to_Si: 0.46744
+};
+
+// Ion balance data: molar mass and ions for each fertilizer
+// Format: {ion: 'name', charge: number (absolute value), count: number, type: 'cation'|'anion'}
+const ION_DATA = {
+  potassium_nitrate_typical: {
+    molarMass: 101.1,
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  map_typical: {
+    molarMass: 115,
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'H₂PO₄⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  mkp_typical: {
+    molarMass: 136.1,
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'H₂PO₄⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  dap_common: {
+    molarMass: 132.1,
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'HPO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  ammonium_sulfate_common: {
+    molarMass: 132.14,
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  ammonium_nitrate_common: {
+    molarMass: 80,
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  ammonium_nitrate_liquid: {
+    molarMass: 80,
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  magnesium_sulfate_heptahydrate_common: {
+    molarMass: 246.47,
+    ions: [
+      {ion: 'Mg²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  magnesium_sulfate_anhydrous: {
+    molarMass: 120.37,
+    ions: [
+      {ion: 'Mg²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  magnesium_nitrate_hexahydrate_typical: {
+    molarMass: 256,
+    ions: [
+      {ion: 'Mg²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  magnesium_nitrate_liquid: {
+    molarMass: 148.3,
+    ions: [
+      {ion: 'Mg²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  potassium_sulfate_common: {
+    molarMass: 174.3,
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  potassium_chloride_common: {
+    molarMass: 74.6,
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'Cl⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  calcium_nitrate_calcinit_typical: {
+    molarMass: 1080,
+    ions: [
+      {ion: 'Ca²⁺', charge: 2, count: 5, type: 'cation'},
+      {ion: 'NH₄⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 11, type: 'anion'}
+    ]
+  },
+  calcium_nitrate_4h2o: {
+    molarMass: 236.18,
+    ions: [
+      {ion: 'Ca²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  calcium_nitrate_anhydrous: {
+    molarMass: 164.1,
+    ions: [
+      {ion: 'Ca²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  calcium_chloride_dihydrate_common: {
+    molarMass: 147,
+    ions: [
+      {ion: 'Ca²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'Cl⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  calcium_chloride_solid: {
+    molarMass: 111,
+    ions: [
+      {ion: 'Ca²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'Cl⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  nitric_acid_38: {
+    molarMass: 167,
+    ions: [
+      {ion: 'NO₃⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  nitric_acid_60: {
+    molarMass: 105,
+    ions: [
+      {ion: 'NO₃⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  phosphoric_acid_49: {
+    molarMass: 167,
+    ions: [
+      {ion: 'H₂PO₄⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  calcium_nitrate_liquid: {
+    molarMass: 164.1,
+    ions: [
+      {ion: 'Ca²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  calcium_chloride_liquid: {
+    molarMass: 111,
+    ions: [
+      {ion: 'Ca²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'Cl⁻', charge: 1, count: 2, type: 'anion'}
+    ]
+  },
+  langbeinite_common: {
+    molarMass: 415,
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'Mg²⁺', charge: 2, count: 2, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 3, type: 'anion'}
+    ]
+  },
+  ammonium_thiosulfate_common: {
+    molarMass: 148.2,
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'S₂O₃²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  potassium_thiosulfate_common: {
+    molarMass: 190.3,
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'S₂O₃²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  potassium_bicarbonate: {
+    molarMass: 100.1,
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'HCO₃⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  urea_phosphate: {
+    molarMass: 158.1,
+    ions: [
+      {ion: 'H₂PO₄⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  manganese_sulfate: {
+    molarMass: 169,
+    ions: [
+      {ion: 'Mn²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  zinc_sulfate_heptahydrate_common: {
+    molarMass: 287.6,
+    ions: [
+      {ion: 'Zn²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  zinc_sulfate_mono: {
+    molarMass: 179.5,
+    ions: [
+      {ion: 'Zn²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  copper_sulfate: {
+    molarMass: 249.7,
+    ions: [
+      {ion: 'Cu²⁺', charge: 2, count: 1, type: 'cation'},
+      {ion: 'SO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  sodium_molybdate: {
+    molarMass: 241.9,
+    ions: [
+      {ion: 'Na⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'MoO₄²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  ammonium_molybdate: {
+    molarMass: 1235.9,
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 6, type: 'cation'},
+      {ion: 'Mo₇O₂₄⁶⁻', charge: 6, count: 1, type: 'anion'}
+    ]
+  },
+  uan32_solution_typical: {
+    // UAN-32 contains urea (non-ionic) + ammonium nitrate (ionic)
+    // Only accounting for the ammonium nitrate portion (50% of N)
+    molarMass: 160,  // Effective based on ionic portion
+    ions: [
+      {ion: 'NH₄⁺', charge: 1, count: 1, type: 'cation'},
+      {ion: 'NO₃⁻', charge: 1, count: 1, type: 'anion'}
+    ]
+  },
+  borax: {
+    molarMass: 381.4,
+    ions: [
+      {ion: 'Na⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'B₄O₇²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  }
+};
+
+// Common fertilizers (most frequently used)
+const COMMON_FERTILIZERS = [
+  'calcium_nitrate_calcinit_typical',
+  'potassium_nitrate_typical',
+  'map_typical',
+  'mkp_typical',
+  'magnesium_sulfate_heptahydrate_common',
+  'magnesium_nitrate_hexahydrate_typical',
+  'potassium_sulfate_common',
+  'ammonium_sulfate_common'
+];
+
+// Validation functions
+function validateVolumeInput(input) {
+  const value = parseFloat(input.value);
+
+  // Remove error class first
+  input.classList.remove('input-error');
+
+  // Check for invalid values
+  if (input.value !== '' && (isNaN(value) || value <= 0)) {
+    input.classList.add('input-error');
+    // Reset to minimum valid value if user tries to leave field
+    if (value <= 0) {
+      input.value = 0.1;
+    }
+  }
+
+  // Auto-recalculate if results are showing
+  if (document.getElementById('results') && document.getElementById('results').style.display !== 'none') {
+    const validValue = parseFloat(input.value);
+    if (!isNaN(validValue) && validValue > 0) {
+      calculate();
+    }
+  }
+}
+
+function validateGramsInput(input) {
+  const value = parseFloat(input.value);
+
+  // Remove error class first
+  input.classList.remove('input-error');
+
+  // Check for negative values
+  if (input.value !== '' && (isNaN(value) || value < 0)) {
+    input.classList.add('input-error');
+    // Reset to 0 for negative values
+    if (value < 0) {
+      input.value = 0;
+    }
+  }
+}
+
+function validateTargetInput(input, allowZero = false) {
+  const value = parseFloat(input.value);
+
+  // Remove error class first
+  input.classList.remove('input-error');
+
+  // Check for invalid values
+  if (input.value !== '') {
+    if (isNaN(value) || value < 0) {
+      input.classList.add('input-error');
+      if (value < 0) {
+        input.value = allowZero ? 0 : 0.1;
+      }
+    } else if (!allowZero && value === 0) {
+      input.classList.add('input-error');
+    }
+  }
+}
+
+// Initialize the page
+function init() {
+  renderFertilizerList();
+  renderAvailableFertilizersList();
+
+  // Add event listeners
+  document.getElementById('search').addEventListener('input', filterFertilizers);
+}
+
+// Render available fertilizers list for formula builder
+function renderAvailableFertilizersList() {
+  const container = document.getElementById('available-fertilizers-list');
+  container.innerHTML = '';
+
+  FERTILIZERS.forEach(fert => {
+    const item = document.createElement('div');
+    item.className = 'fertilizer-checkbox-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `available-${fert.id}`;
+    checkbox.checked = COMMON_FERTILIZERS.includes(fert.id); // Pre-select common fertilizers
+
+    const label = document.createElement('label');
+    label.htmlFor = `available-${fert.id}`;
+    label.textContent = fert.name;
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    container.appendChild(item);
+  });
+}
+
+// Select all available fertilizers
+function selectAllAvailableFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`available-${fert.id}`);
+    if (checkbox) checkbox.checked = true;
+  });
+}
+
+// Deselect all available fertilizers
+function deselectAllAvailableFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`available-${fert.id}`);
+    if (checkbox) checkbox.checked = false;
+  });
+}
+
+// Select only common fertilizers
+function selectCommonFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`available-${fert.id}`);
+    if (checkbox) {
+      checkbox.checked = COMMON_FERTILIZERS.includes(fert.id);
+    }
+  });
+}
+
+// Render the fertilizer list
+function renderFertilizerList(filter = '') {
+  const container = document.getElementById('fertilizer-list');
+
+  // If list is empty, create all items first
+  if (container.children.length === 0) {
+    FERTILIZERS.forEach(fertilizer => {
+      const item = document.createElement('div');
+      item.className = 'fertilizer-item';
+      item.id = `fert-${fertilizer.id}`;
+      item.dataset.fertId = fertilizer.id;
+
+      const composition = Object.entries(fertilizer.pct)
+        .map(([key, val]) => `${key}: ${val}%`)
+        .join(', ');
+
+      item.innerHTML = `
+        <div class="fertilizer-checkbox">
+          <input type="checkbox" id="check-${fertilizer.id}"
+                 onchange="toggleFertilizer('${fertilizer.id}')">
+        </div>
+        <div class="fertilizer-info">
+          <div class="fertilizer-name">${fertilizer.name}</div>
+          <div class="fertilizer-composition">${composition}</div>
+        </div>
+        <div class="fertilizer-input">
+          <input type="number" id="grams-${fertilizer.id}"
+                 value="0" min="0" step="0.1"
+                 disabled
+                 oninput="validateGramsInput(this)"
+                 onchange="handleGramsChange('${fertilizer.id}')">
+          <label>grams</label>
+        </div>
+      `;
+
+      container.appendChild(item);
+    });
+  }
+
+  // Filter by showing/hiding items
+  const searchText = filter.toLowerCase();
+  FERTILIZERS.forEach(fertilizer => {
+    const item = document.getElementById(`fert-${fertilizer.id}`);
+    if (item) {
+      const matches = fertilizer.name.toLowerCase().includes(searchText) ||
+                     fertilizer.aliases.some(a => a.toLowerCase().includes(searchText));
+      item.style.display = matches ? '' : 'none';
+    }
+  });
+}
+
+// Filter fertilizers based on search
+function filterFertilizers() {
+  const search = document.getElementById('search').value;
+  renderFertilizerList(search);
+}
+
+// Toggle fertilizer selection
+function toggleFertilizer(id) {
+  const checkbox = document.getElementById(`check-${id}`);
+  const input = document.getElementById(`grams-${id}`);
+  const item = document.getElementById(`fert-${id}`);
+
+  if (checkbox.checked) {
+    input.disabled = false;
+    item.classList.add('active');
+  } else {
+    input.disabled = true;
+    input.value = 0;
+    item.classList.remove('active');
+  }
+
+  // Auto-calculate if results are showing
+  if (document.getElementById('results').style.display !== 'none') {
+    calculate();
+  }
+}
+
+// Handle grams input change
+function handleGramsChange(id) {
+  if (document.getElementById('results').style.display !== 'none') {
+    calculate();
+  }
+}
+
+// Main calculation function
+function calculate() {
+  const volumeInput = document.getElementById('volume');
+  const volume = parseFloat(volumeInput.value);
+
+  // Validate volume
+  if (!volume || volume <= 0 || isNaN(volume)) {
+    alert('Please enter a valid volume greater than 0');
+    volumeInput.classList.add('input-error');
+    volumeInput.focus();
+    return;
+  }
+  volumeInput.classList.remove('input-error');
+
+  // Collect all active fertilizers and their amounts
+  const activeFertilizers = [];
+  let hasInvalidGrams = false;
+
+  FERTILIZERS.forEach(f => {
+    const checkbox = document.getElementById(`check-${f.id}`);
+    if (checkbox && checkbox.checked) {
+      const gramsInput = document.getElementById(`grams-${f.id}`);
+      const grams = parseFloat(gramsInput.value);
+
+      // Validate grams input
+      if (isNaN(grams) || grams < 0) {
+        gramsInput.classList.add('input-error');
+        hasInvalidGrams = true;
+      } else {
+        gramsInput.classList.remove('input-error');
+        if (grams > 0) {
+          activeFertilizers.push({ ...f, grams });
+        }
+      }
+    }
+  });
+
+  if (hasInvalidGrams) {
+    alert('Please fix the invalid input values (highlighted in red)');
+    return;
+  }
+
+  if (activeFertilizers.length === 0) {
+    alert('Please select at least one fertilizer with an amount greater than 0');
+    return;
+  }
+
+  // Calculate PPM for each nutrient
+  const ppmResults = {};
+
+  activeFertilizers.forEach(fert => {
+    Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
+      // ppm = (grams × 1000 × (pct/100)) / liters
+      const ppm = (fert.grams * 1000 * (percentage / 100)) / volume;
+
+      if (!ppmResults[nutrient]) {
+        ppmResults[nutrient] = 0;
+      }
+      ppmResults[nutrient] += ppm;
+    });
+  });
+
+  // Convert oxides to elements
+  const finalResults = { ...ppmResults };
+
+  // P from P2O5
+  if (ppmResults.P2O5) {
+    finalResults.P = (finalResults.P || 0) + (ppmResults.P2O5 * OXIDE_CONVERSIONS.P2O5_to_P);
+  }
+
+  // K from K2O
+  if (ppmResults.K2O) {
+    finalResults.K = (finalResults.K || 0) + (ppmResults.K2O * OXIDE_CONVERSIONS.K2O_to_K);
+  }
+
+  // Ca from CaO
+  if (ppmResults.CaO) {
+    finalResults.Ca = (finalResults.Ca || 0) + (ppmResults.CaO * OXIDE_CONVERSIONS.CaO_to_Ca);
+  }
+
+  // Mg from MgO
+  if (ppmResults.MgO) {
+    finalResults.Mg = (finalResults.Mg || 0) + (ppmResults.MgO * OXIDE_CONVERSIONS.MgO_to_Mg);
+  }
+
+  // S from SO3
+  if (ppmResults.SO3) {
+    finalResults.S = (finalResults.S || 0) + (ppmResults.SO3 * OXIDE_CONVERSIONS.SO3_to_S);
+  }
+
+  // Si from SiO2
+  if (ppmResults.SiO2) {
+    finalResults.Si = (finalResults.Si || 0) + (ppmResults.SiO2 * OXIDE_CONVERSIONS.SiO2_to_Si);
+  }
+
+  // Display results
+  displayResults(finalResults);
+
+  // Calculate and display ion balance
+  calculateIonBalance(activeFertilizers, volume);
+}
+
+// Display the results
+function displayResults(results) {
+  const resultsSection = document.getElementById('results');
+  const resultsGrid = document.getElementById('results-grid');
+
+  resultsSection.style.display = 'block';
+  resultsGrid.innerHTML = '';
+
+  // Define display order and labels
+  const displayOrder = [
+    { key: 'N_total', label: 'Total Nitrogen (N)' },
+    { key: 'N_NO3', label: 'Nitrate-N (NO₃-N)' },
+    { key: 'N_NH4', label: 'Ammonium-N (NH₄-N)' },
+    { key: 'N_Urea', label: 'Urea-N' },
+    { key: 'P', label: 'Phosphorus (P)' },
+    { key: 'P2O5', label: 'P₂O₅ (oxide form)' },
+    { key: 'K', label: 'Potassium (K)' },
+    { key: 'K2O', label: 'K₂O (oxide form)' },
+    { key: 'Ca', label: 'Calcium (Ca)' },
+    { key: 'Mg', label: 'Magnesium (Mg)' },
+    { key: 'S', label: 'Sulfur (S)' },
+    { key: 'Fe', label: 'Iron (Fe)' },
+    { key: 'B', label: 'Boron (B)' },
+    { key: 'Zn', label: 'Zinc (Zn)' },
+    { key: 'Mn', label: 'Manganese (Mn)' },
+    { key: 'Cu', label: 'Copper (Cu)' },
+    { key: 'Mo', label: 'Molybdenum (Mo)' },
+    { key: 'Cl', label: 'Chlorine (Cl)' },
+    { key: 'Si', label: 'Silicon (Si)' }
+  ];
+
+  displayOrder.forEach(item => {
+    if (results[item.key] !== undefined) {
+      const card = document.createElement('div');
+      const value = results[item.key];
+      card.className = `result-card ${value < 0.01 ? 'zero' : ''}`;
+
+      card.innerHTML = `
+        <div class="result-label">${item.label}</div>
+        <div class="result-value">
+          ${value.toFixed(2)}
+          <span class="result-unit">ppm</span>
+        </div>
+      `;
+
+      resultsGrid.appendChild(card);
+    }
+  });
+
+  // Scroll to results
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Calculate and display ion balance
+function calculateIonBalance(activeFertilizers, volume) {
+  let totalCations = 0;  // meq/L
+  let totalAnions = 0;   // meq/L
+  const ionDetails = {};  // Track individual ion contributions
+
+  // Calculate meq for each fertilizer
+  activeFertilizers.forEach(fert => {
+    const ionData = ION_DATA[fert.id];
+
+    if (!ionData) {
+      // Skip fertilizers without ion data (like chelates, urea, etc.)
+      return;
+    }
+
+    // Convert grams to moles
+    const moles = fert.grams / ionData.molarMass;
+
+    // Calculate meq for each ion
+    ionData.ions.forEach(ionInfo => {
+      const meq = moles * ionInfo.count * ionInfo.charge * 1000;
+      const meqPerLiter = meq / volume;
+
+      // Track by ion name
+      if (!ionDetails[ionInfo.ion]) {
+        ionDetails[ionInfo.ion] = {
+          meq: 0,
+          type: ionInfo.type
+        };
+      }
+      ionDetails[ionInfo.ion].meq += meqPerLiter;
+
+      // Add to totals
+      if (ionInfo.type === 'cation') {
+        totalCations += meqPerLiter;
+      } else {
+        totalAnions += meqPerLiter;
+      }
+    });
+  });
+
+  // Calculate imbalance percentage
+  const average = (totalCations + totalAnions) / 2;
+  const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
+
+  // Display results
+  const ionBalanceSection = document.getElementById('ion-balance-section');
+  const ionBalanceResult = document.getElementById('ion-balance-result');
+
+  ionBalanceSection.style.display = 'block';
+
+  // Determine status
+  let statusColor, statusText;
+  if (imbalance <= 10) {
+    statusColor = '#28a745';
+    statusText = 'Balanced ✓';
+  } else if (imbalance <= 20) {
+    statusColor = '#ffc107';
+    statusText = 'Caution ⚠';
+  } else {
+    statusColor = '#dc3545';
+    statusText = 'Imbalanced ✗';
+  }
+
+  let html = `
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Cations</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${totalCations.toFixed(2)} <span style="font-size: 0.7em;">meq/L</span></div>
+      </div>
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Anions</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${totalAnions.toFixed(2)} <span style="font-size: 0.7em;">meq/L</span></div>
+      </div>
+      <div style="background: ${statusColor}20; padding: 15px; border-radius: 4px; text-align: center; border: 2px solid ${statusColor};">
+        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Imbalance</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: ${statusColor};">${imbalance.toFixed(1)}%</div>
+        <div style="font-size: 0.9em; color: ${statusColor}; margin-top: 5px;">${statusText}</div>
+      </div>
+    </div>
+  `;
+
+  // Add individual ion breakdown
+  const cations = Object.entries(ionDetails).filter(([ion, data]) => data.type === 'cation');
+  const anions = Object.entries(ionDetails).filter(([ion, data]) => data.type === 'anion');
+
+  if (cations.length > 0 || anions.length > 0) {
+    html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">`;
+
+    // Cations column
+    html += `<div><h4 style="margin-top: 0; color: #007bff;">Cations (+)</h4>`;
+    cations.forEach(([ion, data]) => {
+      const percentage = totalCations > 0 ? (data.meq / totalCations * 100).toFixed(1) : 0;
+      html += `
+        <div style="display: flex; justify-content: space-between; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px;">
+          <span>${ion}</span>
+          <span><strong>${data.meq.toFixed(2)}</strong> meq/L (${percentage}%)</span>
+        </div>
+      `;
+    });
+    html += `</div>`;
+
+    // Anions column
+    html += `<div><h4 style="margin-top: 0; color: #007bff;">Anions (-)</h4>`;
+    anions.forEach(([ion, data]) => {
+      const percentage = totalAnions > 0 ? (data.meq / totalAnions * 100).toFixed(1) : 0;
+      html += `
+        <div style="display: flex; justify-content: space-between; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px;">
+          <span>${ion}</span>
+          <span><strong>${data.meq.toFixed(2)}</strong> meq/L (${percentage}%)</span>
+        </div>
+      `;
+    });
+    html += `</div>`;
+
+    html += `</div>`;
+  }
+
+  ionBalanceResult.innerHTML = html;
+}
+
+// Clear all selections and reset the form
+function clearAll() {
+  // Clear search box
+  document.getElementById('search').value = '';
+
+  // Reset volume input
+  const volumeInput = document.getElementById('volume');
+  volumeInput.value = 10;
+  volumeInput.classList.remove('input-error');
+
+  // Reset all fertilizers
+  FERTILIZERS.forEach(f => {
+    const checkbox = document.getElementById(`check-${f.id}`);
+    const input = document.getElementById(`grams-${f.id}`);
+    const item = document.getElementById(`fert-${f.id}`);
+
+    if (checkbox) checkbox.checked = false;
+    if (input) {
+      input.value = 0;
+      input.disabled = true;
+      input.classList.remove('input-error');
+    }
+    if (item) {
+      item.classList.remove('active');
+      item.style.display = ''; // Show all items
+    }
+  });
+
+  // Hide results
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('ion-balance-section').style.display = 'none';
+}
+
+// Tab switching
+function switchTab(tabId) {
+  // Hide all tabs
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+
+  // Show selected tab
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Clear formula builder
+function clearFormulaBuilder() {
+  // Clear target inputs and remove error states
+  const targetIds = ['target-n', 'target-p', 'target-k', 'target-ca', 'target-mg', 'target-s'];
+  targetIds.forEach(id => {
+    const input = document.getElementById(id);
+    input.value = '';
+    input.classList.remove('input-error');
+  });
+
+  // Reset volume input
+  const volumeInput = document.getElementById('formula-volume');
+  volumeInput.value = '10';
+  volumeInput.classList.remove('input-error');
+
+  // Hide results
+  document.getElementById('formula-results').style.display = 'none';
+}
+
+// Formula builder - main function
+function buildFormula() {
+  // Validate volume first
+  const volumeInput = document.getElementById('formula-volume');
+  const volume = parseFloat(volumeInput.value);
+
+  if (!volume || volume <= 0 || isNaN(volume)) {
+    alert('Please enter a valid solution volume greater than 0');
+    volumeInput.classList.add('input-error');
+    volumeInput.focus();
+    return;
+  }
+  volumeInput.classList.remove('input-error');
+
+  // Get and validate target values
+  const targetInputs = {
+    N: document.getElementById('target-n'),
+    P: document.getElementById('target-p'),
+    K: document.getElementById('target-k'),
+    Ca: document.getElementById('target-ca'),
+    Mg: document.getElementById('target-mg'),
+    S: document.getElementById('target-s')
+  };
+
+  const targets = {};
+  let hasInvalidInput = false;
+  const missingRequired = [];
+
+  Object.entries(targetInputs).forEach(([key, input]) => {
+    const value = parseFloat(input.value);
+    const isRequired = key !== 'S';
+
+    if (input.value === '' || isNaN(value)) {
+      if (isRequired) {
+        input.classList.add('input-error');
+        hasInvalidInput = true;
+        missingRequired.push(key);
+      }
+      targets[key] = 0;
+    } else if (value < 0) {
+      input.classList.add('input-error');
+      hasInvalidInput = true;
+      targets[key] = 0;
+    } else if (isRequired && value === 0) {
+      input.classList.add('input-error');
+      hasInvalidInput = true;
+      missingRequired.push(key);
+      targets[key] = 0;
+    } else {
+      input.classList.remove('input-error');
+      targets[key] = value;
+    }
+  });
+
+  // Validate required fields
+  if (missingRequired.length > 0) {
+    alert(`Please enter positive values for the following required nutrients: ${missingRequired.join(', ')}`);
+    return;
+  }
+
+  if (hasInvalidInput) {
+    alert('Please fix the invalid input values (highlighted in red)');
+    return;
+  }
+
+  // Get available fertilizers
+  const availableFertilizers = [];
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`available-${fert.id}`);
+    if (checkbox && checkbox.checked) {
+      availableFertilizers.push(fert);
+    }
+  });
+
+  if (availableFertilizers.length === 0) {
+    alert('Please select at least one available fertilizer');
+    return;
+  }
+
+  // Run optimization algorithm
+  const result = optimizeFormula(targets, volume, availableFertilizers);
+
+  // Display results
+  displayFormulaResults(result, targets, volume);
+}
+
+// Optimization algorithm - finds best fertilizer combination from available fertilizers
+function optimizeFormula(targets, volume, availableFertilizers) {
+  const formula = {};
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+
+  // Helper function to calculate PPM contribution from a fertilizer
+  function calculatePPM(fert, grams) {
+    const contribution = { N_total: 0, N_NO3: 0, N_NH4: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+
+    Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
+      const ppm = (grams * 1000 * (percentage / 100)) / volume;
+
+      if (nutrient === 'P2O5') {
+        contribution.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+      } else if (nutrient === 'K2O') {
+        contribution.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+      } else if (nutrient === 'N_total' || nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+        contribution[nutrient] += ppm;
+      } else {
+        contribution[nutrient] = (contribution[nutrient] || 0) + ppm;
+      }
+    });
+
+    return contribution;
+  }
+
+  // Helper function to add fertilizer to formula
+  function addFertilizer(fert, grams) {
+    if (!formula[fert.id]) formula[fert.id] = 0;
+    formula[fert.id] += grams;
+
+    const contribution = calculatePPM(fert, grams);
+    Object.keys(contribution).forEach(nutrient => {
+      achieved[nutrient] += contribution[nutrient];
+    });
+  }
+
+  // Find best fertilizer for a specific nutrient
+  function findBestFor(nutrient, preferNH4 = false, preferS = false) {
+    let best = null;
+    let bestScore = -1;
+
+    availableFertilizers.forEach(fert => {
+      let score = 0;
+
+      // Primary nutrient availability
+      if (nutrient === 'Ca' && fert.pct.Ca) score += fert.pct.Ca * 10;
+      if (nutrient === 'P' && fert.pct.P2O5) score += fert.pct.P2O5 * 10;
+      if (nutrient === 'K' && fert.pct.K2O) score += fert.pct.K2O * 10;
+      if (nutrient === 'Mg' && fert.pct.Mg) score += fert.pct.Mg * 10;
+
+      // Bonus for NH4 if needed
+      if (preferNH4 && fert.pct.N_NH4) score += fert.pct.N_NH4 * 5;
+
+      // Bonus for S if needed
+      if (preferS && fert.pct.S) score += fert.pct.S * 3;
+
+      if (score > bestScore) {
+        bestScore = score;
+        best = fert;
+      }
+    });
+
+    return best;
+  }
+
+  // Step 1: Add Calcium
+  const caFert = findBestFor('Ca');
+  if (caFert && caFert.pct.Ca) {
+    const gramsNeeded = (targets.Ca * volume) / (caFert.pct.Ca * 10);
+    addFertilizer(caFert, gramsNeeded);
+  }
+
+  // Step 2: Add NH4-N source (targeting 10% of total N as NH4)
+  const targetNH4 = targets.N * 0.10;
+  const needNH4 = Math.max(0, targetNH4 - achieved.N_NH4);
+
+  if (needNH4 > 0) {
+    const nh4Fert = availableFertilizers.find(f => f.pct.N_NH4 && f.pct.N_NH4 > 0);
+    if (nh4Fert) {
+      const gramsNeeded = (needNH4 * volume) / (nh4Fert.pct.N_NH4 * 10);
+      addFertilizer(nh4Fert, gramsNeeded);
+    }
+  }
+
+  // Step 3: Add Phosphorus
+  const needP = Math.max(0, targets.P - achieved.P);
+  if (needP > 0) {
+    const pFert = findBestFor('P');
+    if (pFert && pFert.pct.P2O5) {
+      const ppmP2O5Needed = needP / OXIDE_CONVERSIONS.P2O5_to_P;
+      const gramsNeeded = (ppmP2O5Needed * volume) / (pFert.pct.P2O5 * 10);
+      addFertilizer(pFert, gramsNeeded);
+    }
+  }
+
+  // Step 4: Add Potassium
+  const needK = Math.max(0, targets.K - achieved.K);
+  if (needK > 0) {
+    const needsS = targets.S > 0 && achieved.S < targets.S;
+    const kFert = findBestFor('K', false, needsS);
+    if (kFert && kFert.pct.K2O) {
+      const ppmK2ONeeded = needK / OXIDE_CONVERSIONS.K2O_to_K;
+      const gramsNeeded = (ppmK2ONeeded * volume) / (kFert.pct.K2O * 10);
+      addFertilizer(kFert, gramsNeeded);
+    }
+  }
+
+  // Step 5: Add Magnesium
+  const needMg = Math.max(0, targets.Mg - achieved.Mg);
+  if (needMg > 0) {
+    const needsS = targets.S > 0 && achieved.S < targets.S;
+    const mgFert = findBestFor('Mg', false, needsS);
+    if (mgFert && mgFert.pct.Mg) {
+      const gramsNeeded = (needMg * volume) / (mgFert.pct.Mg * 10);
+      addFertilizer(mgFert, gramsNeeded);
+    }
+  }
+
+  // Step 6: Balance Nitrogen if needed
+  const needN = Math.max(0, targets.N - achieved.N_total);
+  if (needN > targets.N * 0.05) { // More than 5% short
+    // Find a nitrogen fertilizer
+    const nFert = availableFertilizers.find(f => f.pct.N_total && f.pct.N_total > 10);
+    if (nFert) {
+      const gramsNeeded = (needN * volume) / (nFert.pct.N_total * 10);
+      addFertilizer(nFert, gramsNeeded * 0.8); // Add 80% to avoid overshooting
+    }
+  }
+
+  return { formula, achieved };
+}
+
+// Display formula results
+function displayFormulaResults(result, targets, volume) {
+  const resultsSection = document.getElementById('formula-results');
+  const outputDiv = document.getElementById('formula-output');
+
+  resultsSection.style.display = 'block';
+
+  let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
+
+  // Display formula
+  Object.entries(result.formula).forEach(([fertId, grams]) => {
+    const fert = FERTILIZERS.find(f => f.id === fertId);
+    if (fert) {
+      html += `
+        <div class="formula-fertilizer">
+          <span><strong>${fert.name}</strong></span>
+          <span><strong>${grams.toFixed(2)}</strong> grams</span>
+        </div>
+      `;
+    }
+  });
+
+  html += '</div>';
+
+  // Comparison table
+  html += '<h3>Target vs Achieved</h3>';
+  html += '<table class="comparison-table">';
+  html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Difference</th></tr>';
+
+  const nutrients = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S'];
+  const labels = {
+    N_total: 'Nitrogen (N)',
+    P: 'Phosphorus (P)',
+    K: 'Potassium (K)',
+    Ca: 'Calcium (Ca)',
+    Mg: 'Magnesium (Mg)',
+    S: 'Sulfur (S)'
+  };
+
+  let allGood = true;
+  const warnings = [];
+
+  nutrients.forEach(nutrient => {
+    const targetKey = nutrient === 'N_total' ? 'N' : nutrient;
+    const target = targets[targetKey];
+    const achieved = result.achieved[nutrient] || 0;
+
+    if (target === 0 && nutrient === 'S') return; // Skip S if not specified
+
+    const diff = achieved - target;
+    const percentDiff = target > 0 ? (Math.abs(diff) / target * 100) : 0;
+
+    let className = 'match';
+    let status = '✓';
+
+    if (percentDiff > 20) {
+      className = 'miss';
+      status = '✗';
+      allGood = false;
+      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target`);
+    } else if (percentDiff > 10) {
+      className = 'close';
+      status = '⚠';
+      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target (acceptable range)`);
+    }
+
+    html += `
+      <tr>
+        <td>${labels[nutrient]}</td>
+        <td>${target.toFixed(1)}</td>
+        <td class="${className}">${achieved.toFixed(1)} ${status}</td>
+        <td class="${className}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)} (${percentDiff.toFixed(1)}%)</td>
+      </tr>
+    `;
+  });
+
+  html += '</table>';
+
+  // NH4-N percentage
+  const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
+  html += `<div class="conversion-note" style="margin-top: 15px;">
+    <strong>Nitrogen Form:</strong> ${result.achieved.N_NH4.toFixed(1)} ppm NH₄-N (${nh4Percent.toFixed(1)}% of total N),
+    ${result.achieved.N_NO3.toFixed(1)} ppm NO₃-N (${(100 - nh4Percent).toFixed(1)}% of total N)
+  </div>`;
+
+  // Calculate ion balance for this formula
+  const activeFertilizers = Object.entries(result.formula).map(([fertId, grams]) => {
+    const fert = FERTILIZERS.find(f => f.id === fertId);
+    return { ...fert, grams };
+  });
+
+  const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
+
+  html += '<h3 style="margin-top: 20px;">Ion Balance</h3>';
+  html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 10px;">
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+      <div style="font-size: 0.9em; color: #666;">Cations</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalCations.toFixed(2)} meq/L</div>
+    </div>
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+      <div style="font-size: 0.9em; color: #666;">Anions</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalAnions.toFixed(2)} meq/L</div>
+    </div>
+    <div style="background: ${ionBalance.statusColor}20; padding: 15px; border-radius: 4px; text-align: center; border: 2px solid ${ionBalance.statusColor};">
+      <div style="font-size: 0.9em; color: #666;">Imbalance</div>
+      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${ionBalance.imbalance.toFixed(1)}%</div>
+      <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
+    </div>
+  </div>`;
+
+  // Warnings or errors
+  if (!allGood) {
+    html += '<div class="error-box"><strong>⚠ Cannot achieve exact targets</strong><ul>';
+    warnings.forEach(w => html += `<li>${w}</li>`);
+    html += '</ul><p>This is the closest formula achievable with available fertilizers. Consider adjusting your targets or accepting the shown deviations.</p></div>';
+  } else if (warnings.length > 0) {
+    html += '<div class="warning-box"><strong>Note:</strong><ul>';
+    warnings.forEach(w => html += `<li>${w}</li>`);
+    html += '</ul></div>';
+  }
+
+  outputDiv.innerHTML = html;
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Calculate ion balance for formula (returns summary data)
+function calculateIonBalanceForFormula(activeFertilizers, volume) {
+  let totalCations = 0;
+  let totalAnions = 0;
+
+  activeFertilizers.forEach(fert => {
+    const ionData = ION_DATA[fert.id];
+    if (!ionData) return;
+
+    const moles = fert.grams / ionData.molarMass;
+
+    ionData.ions.forEach(ionInfo => {
+      const meq = moles * ionInfo.count * ionInfo.charge * 1000;
+      const meqPerLiter = meq / volume;
+
+      if (ionInfo.type === 'cation') {
+        totalCations += meqPerLiter;
+      } else {
+        totalAnions += meqPerLiter;
+      }
+    });
+  });
+
+  const average = (totalCations + totalAnions) / 2;
+  const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
+
+  let statusColor, statusText;
+  if (imbalance <= 10) {
+    statusColor = '#28a745';
+    statusText = 'Balanced ✓';
+  } else if (imbalance <= 20) {
+    statusColor = '#ffc107';
+    statusText = 'Caution ⚠';
+  } else {
+    statusColor = '#dc3545';
+    statusText = 'Imbalanced ✗';
+  }
+
+  return { totalCations, totalAnions, imbalance, statusColor, statusText };
+}
+
+// Initialize when page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
