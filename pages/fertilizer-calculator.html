@@ -1182,12 +1182,12 @@ permalink: /fertilizer-calculator/
           <input type="number" id="target-k" min="0.1" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
-          <label for="target-ca">Calcium (Ca) *</label>
-          <input type="number" id="target-ca" min="0" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
+          <label for="target-ca">Calcium (Ca)</label>
+          <input type="number" id="target-ca" min="0" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
-          <label for="target-mg">Magnesium (Mg) *</label>
-          <input type="number" id="target-mg" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
+          <label for="target-mg">Magnesium (Mg)</label>
+          <input type="number" id="target-mg" min="0" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-s">Sulfur (S)</label>
@@ -3196,7 +3196,7 @@ function buildFormula() {
 
   Object.entries(targetInputs).forEach(([key, input]) => {
     const value = parseFloat(input.value);
-    const isRequired = key !== 'S';
+    const isRequired = key === 'N' || key === 'P' || key === 'K';
 
     if (input.value === '' || isNaN(value)) {
       if (isRequired) {
@@ -3787,6 +3787,7 @@ function clearReverseCalculator() {
 // Main reverse calculator function
 function calculateReverse() {
   // Get target values
+  // Note: P and K inputs are treated as P2O5 and K2O (industry standard N-P2O5-K2O)
   const targets = {
     N: parseFloat(document.getElementById('reverse-n').value) || 0,
     P: parseFloat(document.getElementById('reverse-p').value) || 0,
