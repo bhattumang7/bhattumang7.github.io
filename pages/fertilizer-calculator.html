@@ -879,6 +879,7 @@ permalink: /fertilizer-calculator/
   <div class="tabs">
     <button class="tab active" onclick="switchTab('ppm-calc')">PPM Calculator</button>
     <button class="tab" onclick="switchTab('formula-builder')">Formula Builder</button>
+    <button class="tab" onclick="switchTab('reverse-calc')">Reverse Calculator</button>
   </div>
 
   <!-- PPM Calculator Tab -->
@@ -1020,6 +1021,72 @@ permalink: /fertilizer-calculator/
     <div class="results-section" id="formula-results" style="display: none;">
       <h2>Recommended Formula</h2>
       <div id="formula-output"></div>
+    </div>
+  </div>
+
+  <!-- Reverse Calculator Tab -->
+  <div id="reverse-calc" class="tab-content">
+    <div class="input-section">
+      <h3>Target Nutrient Values</h3>
+      <p style="margin-bottom: 15px; color: #666;">Enter your desired NPK, Calcium, and Magnesium values. The calculator will determine the fertilizer amounts needed.</p>
+
+      <div class="target-input-grid">
+        <div class="target-input-field">
+          <label for="reverse-n">Nitrogen (N) *</label>
+          <input type="number" id="reverse-n" min="0.1" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="reverse-p">Phosphorus (P) *</label>
+          <input type="number" id="reverse-p" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="reverse-k">Potassium (K) *</label>
+          <input type="number" id="reverse-k" min="0.1" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="reverse-ca">Calcium (Ca) *</label>
+          <input type="number" id="reverse-ca" min="0.1" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="reverse-mg">Magnesium (Mg) *</label>
+          <input type="number" id="reverse-mg" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
+        </div>
+        <div class="target-input-field">
+          <label for="reverse-s">Sulfur (S)</label>
+          <input type="number" id="reverse-s" min="0" step="1" placeholder="Optional" oninput="validateTargetInput(this, true)">
+        </div>
+      </div>
+
+      <div class="fertilizer-selection">
+        <h4>Select Fertilizers to Use</h4>
+        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Choose which fertilizers you want to use. The calculator will find the best combination from your selection.</p>
+        <div class="selection-controls">
+          <button onclick="selectAllReverseFertilizers()">Select All</button>
+          <button onclick="deselectAllReverseFertilizers()">Deselect All</button>
+          <button onclick="selectCommonReverseFertilizers()">Select Common Only</button>
+        </div>
+        <div class="fertilizer-grid" id="reverse-fertilizers-list"></div>
+      </div>
+
+      <div class="volume-input">
+        <label for="reverse-volume">Solution Volume:</label>
+        <input type="number" id="reverse-volume" value="10" min="0.1" step="0.1" oninput="validateVolumeInput(this)">
+        <span>liters</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="calculateReverse()" style="padding: 10px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Calculate Fertilizers
+        </button>
+        <button onclick="clearReverseCalculator()" style="padding: 10px 20px; font-size: 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="results-section" id="reverse-results" style="display: none;">
+      <h2>Required Fertilizers</h2>
+      <div id="reverse-output"></div>
     </div>
   </div>
 
@@ -1951,6 +2018,7 @@ function validateTargetInput(input, allowZero = false) {
 function init() {
   renderFertilizerList();
   renderAvailableFertilizersList();
+  renderReverseFertilizersList();
 
   // Add event listeners
   document.getElementById('search').addEventListener('input', filterFertilizers);
@@ -3225,6 +3293,310 @@ function calculateIonBalanceForFormula(activeFertilizers, volume) {
   }
 
   return { totalCations, totalAnions, imbalance, statusColor, statusText };
+}
+
+// ============================================================================
+// REVERSE CALCULATOR FUNCTIONS
+// ============================================================================
+
+// Render reverse fertilizers list
+function renderReverseFertilizersList() {
+  const container = document.getElementById('reverse-fertilizers-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  FERTILIZERS.forEach(fert => {
+    const item = document.createElement('div');
+    item.className = 'fertilizer-checkbox-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `reverse-${fert.id}`;
+    checkbox.checked = COMMON_FERTILIZERS.includes(fert.id); // Pre-select common fertilizers
+
+    const label = document.createElement('label');
+    label.htmlFor = `reverse-${fert.id}`;
+    label.textContent = fert.name;
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    container.appendChild(item);
+  });
+}
+
+// Select all reverse fertilizers
+function selectAllReverseFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`reverse-${fert.id}`);
+    if (checkbox) checkbox.checked = true;
+  });
+}
+
+// Deselect all reverse fertilizers
+function deselectAllReverseFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`reverse-${fert.id}`);
+    if (checkbox) checkbox.checked = false;
+  });
+}
+
+// Select only common reverse fertilizers
+function selectCommonReverseFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`reverse-${fert.id}`);
+    if (checkbox) {
+      checkbox.checked = COMMON_FERTILIZERS.includes(fert.id);
+    }
+  });
+}
+
+// Clear reverse calculator
+function clearReverseCalculator() {
+  // Clear target inputs and remove error states
+  const targetIds = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg', 'reverse-s'];
+  targetIds.forEach(id => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.value = '';
+      input.classList.remove('input-error');
+    }
+  });
+
+  // Reset volume
+  const volumeInput = document.getElementById('reverse-volume');
+  if (volumeInput) {
+    volumeInput.value = '10';
+    volumeInput.classList.remove('input-error');
+  }
+
+  // Reset fertilizer selections to common only
+  selectCommonReverseFertilizers();
+
+  // Hide results
+  const resultsSection = document.getElementById('reverse-results');
+  if (resultsSection) {
+    resultsSection.style.display = 'none';
+  }
+}
+
+// Main reverse calculator function
+function calculateReverse() {
+  // Get target values
+  const targets = {
+    N: parseFloat(document.getElementById('reverse-n').value) || 0,
+    P: parseFloat(document.getElementById('reverse-p').value) || 0,
+    K: parseFloat(document.getElementById('reverse-k').value) || 0,
+    Ca: parseFloat(document.getElementById('reverse-ca').value) || 0,
+    Mg: parseFloat(document.getElementById('reverse-mg').value) || 0,
+    S: parseFloat(document.getElementById('reverse-s').value) || 0
+  };
+
+  const volume = parseFloat(document.getElementById('reverse-volume').value) || 10;
+
+  // Validate inputs
+  let hasError = false;
+  const requiredFields = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg'];
+
+  requiredFields.forEach(id => {
+    const input = document.getElementById(id);
+    const value = parseFloat(input.value);
+
+    if (!value || value <= 0) {
+      input.classList.add('input-error');
+      hasError = true;
+    } else {
+      input.classList.remove('input-error');
+    }
+  });
+
+  // Validate volume
+  const volumeInput = document.getElementById('reverse-volume');
+  if (!volume || volume <= 0) {
+    volumeInput.classList.add('input-error');
+    hasError = true;
+  } else {
+    volumeInput.classList.remove('input-error');
+  }
+
+  if (hasError) {
+    alert('Please fill in all required fields with positive values.');
+    return;
+  }
+
+  // Get selected fertilizers
+  const selectedFertilizers = FERTILIZERS.filter(fert => {
+    const checkbox = document.getElementById(`reverse-${fert.id}`);
+    return checkbox && checkbox.checked;
+  });
+
+  if (selectedFertilizers.length === 0) {
+    alert('Please select at least one fertilizer to use.');
+    return;
+  }
+
+  // Run optimization
+  const result = optimizeFormula(targets, volume, selectedFertilizers);
+
+  // Display results
+  displayReverseResults(result, targets, volume);
+}
+
+// Display reverse calculator results
+function displayReverseResults(result, targets, volume) {
+  const resultsSection = document.getElementById('reverse-results');
+  const outputDiv = document.getElementById('reverse-output');
+
+  resultsSection.style.display = 'block';
+
+  let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
+
+  // Display formula
+  if (Object.keys(result.formula).length === 0) {
+    html += '<div class="error-box"><strong>Unable to calculate formula</strong><p>The selected fertilizers cannot achieve the target nutrient values. Try selecting different fertilizers or adjusting your targets.</p></div>';
+  } else {
+    Object.entries(result.formula).forEach(([fertId, grams]) => {
+      const fert = FERTILIZERS.find(f => f.id === fertId);
+      if (fert && grams > 0.01) { // Only show if significant amount
+        html += `
+          <div class="formula-fertilizer">
+            <span><strong>${fert.name}</strong></span>
+            <span><strong>${grams.toFixed(2)}</strong> grams</span>
+          </div>
+        `;
+      }
+    });
+  }
+
+  html += '</div>';
+
+  // Comparison table
+  html += '<h3>Target vs Achieved</h3>';
+  html += '<table class="comparison-table">';
+  html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Difference</th></tr>';
+
+  const nutrients = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S'];
+  const labels = {
+    N_total: 'Nitrogen (N)',
+    P: 'Phosphorus (P)',
+    K: 'Potassium (K)',
+    Ca: 'Calcium (Ca)',
+    Mg: 'Magnesium (Mg)',
+    S: 'Sulfur (S)'
+  };
+
+  let allGood = true;
+  const warnings = [];
+
+  nutrients.forEach(nutrient => {
+    const targetKey = nutrient === 'N_total' ? 'N' : nutrient;
+    const target = targets[targetKey];
+    const achieved = result.achieved[nutrient] || 0;
+
+    if (target === 0 && nutrient === 'S') return; // Skip S if not specified
+
+    const diff = achieved - target;
+    const percentDiff = target > 0 ? (Math.abs(diff) / target * 100) : 0;
+
+    let className = 'match';
+    let status = '✓';
+
+    if (percentDiff > 20) {
+      className = 'miss';
+      status = '✗';
+      allGood = false;
+      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target`);
+    } else if (percentDiff > 10) {
+      className = 'close';
+      status = '⚠';
+      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target (acceptable range)`);
+    }
+
+    html += `
+      <tr>
+        <td>${labels[nutrient]}</td>
+        <td>${target.toFixed(1)}</td>
+        <td class="${className}">${achieved.toFixed(1)} ${status}</td>
+        <td class="${className}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)} (${percentDiff.toFixed(1)}%)</td>
+      </tr>
+    `;
+  });
+
+  html += '</table>';
+
+  // NH4-N percentage
+  const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
+  html += `<div class="conversion-note" style="margin-top: 15px;">
+    <strong>Nitrogen Form:</strong> ${result.achieved.N_NH4.toFixed(1)} ppm NH₄-N (${nh4Percent.toFixed(1)}% of total N),
+    ${result.achieved.N_NO3.toFixed(1)} ppm NO₃-N (${(100 - nh4Percent).toFixed(1)}% of total N)
+  </div>`;
+
+  // Calculate ion balance for this formula
+  const activeFertilizers = Object.entries(result.formula).map(([fertId, grams]) => {
+    const fert = FERTILIZERS.find(f => f.id === fertId);
+    return { ...fert, grams };
+  });
+
+  const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
+
+  html += '<h3 style="margin-top: 20px;">Ion Balance</h3>';
+  html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 10px;">
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+      <div style="font-size: 0.9em; color: #666;">Cations</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalCations.toFixed(2)} meq/L</div>
+    </div>
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+      <div style="font-size: 0.9em; color: #666;">Anions</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalAnions.toFixed(2)} meq/L</div>
+    </div>
+    <div style="background: ${ionBalance.statusColor}20; padding: 15px; border-radius: 4px; text-align: center; border: 2px solid ${ionBalance.statusColor};">
+      <div style="font-size: 0.9em; color: #666;">Imbalance</div>
+      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${ionBalance.imbalance.toFixed(1)}%</div>
+      <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
+    </div>
+  </div>`;
+
+  // Add nutrient ratio analysis
+  const ratios = calculateNutrientRatios(result.achieved);
+  if (ratios.length > 0) {
+    html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
+    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 10px;">';
+
+    ratios.forEach(ratio => {
+      const unit = ratio.unit || 'ppm';
+      html += `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+          <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
+            ${ratio.name}
+          </div>
+          <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
+            ${ratio.ratio}
+          </div>
+          <div style="font-size: 0.85em; color: #666;">
+            ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
+          </div>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+  }
+
+  // Warnings or errors
+  if (!allGood) {
+    html += '<div class="error-box"><strong>⚠ Cannot achieve exact targets</strong><ul>';
+    warnings.forEach(w => html += `<li>${w}</li>`);
+    html += '</ul><p>This is the closest formula achievable with selected fertilizers. Consider:</p><ul><li>Selecting additional fertilizers</li><li>Adjusting your target values</li><li>Accepting the shown deviations</li></ul></div>';
+  } else if (warnings.length > 0) {
+    html += '<div class="warning-box"><strong>Note:</strong><ul>';
+    warnings.forEach(w => html += `<li>${w}</li>`);
+    html += '</ul></div>';
+  } else {
+    html += '<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin-top: 15px;"><strong style="color: #28a745;">✓ Targets Successfully Achieved!</strong><p style="margin: 5px 0 0 0;">All nutrient values are within acceptable ranges.</p></div>';
+  }
+
+  outputDiv.innerHTML = html;
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // PPM Explanation Modal Functions
