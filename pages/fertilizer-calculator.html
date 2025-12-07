@@ -3756,6 +3756,10 @@ function displayReverseResults(result, targets, volume) {
 
   html += '</div>';
 
+  // Note: Input values for P and K are treated as commercial oxide forms (P2O5, K2O)
+  // This matches standard fertilizer labeling conventions
+  // We'll display both oxide and elemental forms in the results table
+
   // Calculate achieved ratios using COMMERCIAL values (N:P2O5:K2O)
   const achievedPPM_Commercial = {
     N: result.achieved.N_total,
@@ -3790,56 +3794,85 @@ function displayReverseResults(result, targets, volume) {
     S: targets.S > 0 ? targets.S / minTarget : 0
   };
 
-  // Comparison table - showing ratios
-  html += '<h3>Target vs Achieved Ratios</h3>';
+  // Comparison table - showing both elemental and oxide forms
+  html += '<h3>Target vs Achieved</h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
-  html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
+  html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Status</th></tr>';
 
-  const nutrients = ['N', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
-  const labels = {
-    N: 'Nitrogen (N)',
-    P2O5: 'Phosphorus (P₂O₅)',
-    K2O: 'Potassium (K₂O)',
-    Ca: 'Calcium (Ca)',
-    Mg: 'Magnesium (Mg)',
-    S: 'Sulfur (S)'
-  };
+  // Display order similar to Tab 1 - showing both elemental and oxide forms
+  const displayNutrients = [
+    { key: 'N', label: 'Nitrogen (N)', isCommercial: false },
+    { key: 'P', label: 'Phosphorus (P)', isCommercial: false },
+    { key: 'P2O5', label: 'P₂O₅ (oxide form)', isCommercial: true },
+    { key: 'K', label: 'Potassium (K)', isCommercial: false },
+    { key: 'K2O', label: 'K₂O (oxide form)', isCommercial: true },
+    { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
+    { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
+    { key: 'S', label: 'Sulfur (S)', isCommercial: false }
+  ];
 
   let allGood = true;
   const warnings = [];
 
-  nutrients.forEach(nutrient => {
-    const targetRatio = targetRatios[nutrient];
-    const achievedRatio = achievedRatios[nutrient];
-    const achievedPPMValue = achievedPPM_Commercial[nutrient];
+  displayNutrients.forEach(nutrient => {
+    let targetValue, achievedValue;
+
+    if (nutrient.key === 'N') {
+      targetValue = targets.N;
+      achievedValue = result.achieved.N_total;
+    } else if (nutrient.key === 'P') {
+      // Elemental P - convert from target P (treated as P2O5) to elemental P
+      targetValue = targets.P * OXIDE_CONVERSIONS.P2O5_to_P;
+      achievedValue = result.achieved.P || 0;
+    } else if (nutrient.key === 'P2O5') {
+      // Oxide form P2O5 (commercial)
+      targetValue = targets.P;  // P input is treated as P2O5
+      achievedValue = result.achieved.P2O5 || 0;
+    } else if (nutrient.key === 'K') {
+      // Elemental K - convert from target K (treated as K2O) to elemental K
+      targetValue = targets.K * OXIDE_CONVERSIONS.K2O_to_K;
+      achievedValue = result.achieved.K || 0;
+    } else if (nutrient.key === 'K2O') {
+      // Oxide form K2O (commercial)
+      targetValue = targets.K;  // K input is treated as K2O
+      achievedValue = result.achieved.K2O || 0;
+    } else {
+      // Ca, Mg, S - already elemental
+      targetValue = targets[nutrient.key] || 0;
+      achievedValue = result.achieved[nutrient.key] || 0;
+    }
 
     // Skip if both target and achieved are zero
-    if (targetRatio === 0 && achievedRatio === 0) return;
+    if (targetValue === 0 && achievedValue === 0) return;
 
-    // Calculate ratio difference
-    const ratioDiff = targetRatio > 0 ? Math.abs((achievedRatio - targetRatio) / targetRatio * 100) : 0;
+    const diff = achievedValue - targetValue;
+    const percentDiff = targetValue > 0 ? (Math.abs(diff) / targetValue * 100) : 0;
 
     let className = 'match';
     let status = '✓';
 
-    if (ratioDiff > 15) {
+    if (percentDiff > 15) {
       className = 'miss';
       status = '✗';
       allGood = false;
-      warnings.push(`${labels[nutrient]} ratio is ${ratioDiff.toFixed(1)}% off target`);
-    } else if (ratioDiff > 5) {
+      if (!nutrient.isCommercial) {  // Only warn once for elemental form
+        warnings.push(`${nutrient.label} is ${percentDiff.toFixed(1)}% off target`);
+      }
+    } else if (percentDiff > 5) {
       className = 'close';
       status = '⚠';
-      warnings.push(`${labels[nutrient]} ratio is ${ratioDiff.toFixed(1)}% off target (acceptable range)`);
+      if (!nutrient.isCommercial) {  // Only warn once for elemental form
+        warnings.push(`${nutrient.label} is ${percentDiff.toFixed(1)}% off target (acceptable range)`);
+      }
     }
 
     html += `
       <tr>
-        <td>${labels[nutrient]}</td>
-        <td>${targetRatio > 0 ? targetRatio.toFixed(2) : '0'}</td>
-        <td class="${className}">${achievedRatio.toFixed(2)} ${status}</td>
-        <td>${achievedPPMValue.toFixed(1)} ppm</td>
+        <td>${nutrient.label}</td>
+        <td>${targetValue.toFixed(1)}</td>
+        <td class="${className}">${achievedValue.toFixed(1)} ${status}</td>
+        <td class="${className}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)} (${percentDiff.toFixed(1)}%)</td>
       </tr>
     `;
   });
