@@ -3046,8 +3046,9 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
   const ratioValues = [targetRatios.N, targetRatios.P, targetRatios.K, targetRatios.Ca, targetRatios.Mg, targetRatios.S];
   const maxRatio = Math.max(...ratioValues.filter(v => v > 0));
 
-  // Scale up ratios to get reasonable PPM targets (using max ratio as base of 150 ppm)
-  const basePPM = 150;
+  // Scale up ratios to get reasonable PPM targets (using max ratio as base of 60 ppm)
+  // Lower base PPM gives more conservative fertilizer amounts
+  const basePPM = 60;
   const scaledTargets = {
     N: targetRatios.N > 0 ? (targetRatios.N / maxRatio) * basePPM : 0,
     P: targetRatios.P > 0 ? (targetRatios.P / maxRatio) * basePPM : 0,
