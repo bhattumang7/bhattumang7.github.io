@@ -4,7 +4,33 @@ Personal blog and portfolio website built with Jekyll.
 
 ## How to Run Locally Using Docker
 
-### On Windows (Git Bash / PowerShell)
+### Quick Start (Pre-built Image - Recommended)
+
+This method pre-bakes all 98 gem dependencies into a custom Docker image, reducing startup time from ~2+ minutes to ~35 seconds (just site generation, no network downloads).
+
+**Step 1:** Build the image once (only needed initially or when `Gemfile` changes):
+
+```bash
+docker build -t my-jekyll .
+```
+
+**Step 2:** Run the server:
+
+```bash
+# Windows (Git Bash)
+MSYS_NO_PATHCONV=1 docker run --rm -p 4000:4000 -p 35729:35729 -v "/c/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io:/srv/jekyll" my-jekyll
+
+# Mac/Linux
+docker run --rm -p 4000:4000 -p 35729:35729 -v "$(pwd):/srv/jekyll" my-jekyll
+```
+
+The site will be available at `http://localhost:4000`.
+
+---
+
+### Alternative: Without Pre-built Image
+
+#### On Windows (Git Bash / PowerShell)
 
 ```bash
 MSYS_NO_PATHCONV=1 docker run --rm \
@@ -17,7 +43,7 @@ MSYS_NO_PATHCONV=1 docker run --rm \
 
 **Note:** Update the paths in the command above to match your actual project location.
 
-### On Mac/Linux
+#### On Mac/Linux
 
 ```bash
 docker run --rm -it \
