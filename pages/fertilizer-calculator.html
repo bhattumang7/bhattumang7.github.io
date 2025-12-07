@@ -1185,6 +1185,18 @@ permalink: /fertilizer-calculator/
       </div>
 
       <div style="margin-top: 20px; margin-bottom: 20px;">
+        <label for="reverse-calculation-mode" style="display: block; margin-bottom: 8px; font-weight: bold;">Calculation Mode</label>
+        <select id="reverse-calculation-mode" onchange="updateReverseCalculationMode()" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
+          <option value="oxide" selected>Oxide Forms (P₂O₅, K₂O) - Commercial Standard</option>
+          <option value="elemental">Elemental Forms (P, K) - Pure Elements</option>
+        </select>
+        <p style="margin-top: 5px; margin-bottom: 15px; color: #666; font-size: 0.85em;">
+          <strong>Oxide mode:</strong> Uses P₂O₅ and K₂O (standard fertilizer labels)<br>
+          <strong>Elemental mode:</strong> Uses pure P and K (scientific calculations)
+        </p>
+      </div>
+
+      <div style="margin-top: 20px; margin-bottom: 20px;">
         <label for="reverse-concentration" style="display: block; margin-bottom: 8px; font-weight: bold;">Target Concentration</label>
         <select id="reverse-concentration" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
           <option value="50">Light (EC ~1.0) - Seedlings/Cuttings</option>
@@ -3621,6 +3633,21 @@ function filterReverseFertilizers(searchTerm) {
 }
 
 // Clear reverse calculator
+// Update input labels based on calculation mode
+function updateReverseCalculationMode() {
+  const mode = document.getElementById('reverse-calculation-mode').value;
+  const pLabel = document.querySelector('label[for="reverse-p"]');
+  const kLabel = document.querySelector('label[for="reverse-k"]');
+
+  if (mode === 'elemental') {
+    pLabel.textContent = 'Phosphorus (P)';
+    kLabel.textContent = 'Potassium (K)';
+  } else {
+    pLabel.textContent = 'Phosphorus (P₂O₅)';
+    kLabel.textContent = 'Potassium (K₂O)';
+  }
+}
+
 function clearReverseCalculator() {
   // Clear target inputs and remove error states
   const targetIds = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg', 'reverse-s'];
@@ -3794,23 +3821,38 @@ function displayReverseResults(result, targets, volume) {
     S: targets.S > 0 ? targets.S / minTarget : 0
   };
 
-  // Comparison table - showing both elemental and oxide forms
+  // Get calculation mode preference
+  const calculationMode = document.getElementById('reverse-calculation-mode').value; // 'oxide' or 'elemental'
+
+  // Comparison table - showing nutrients based on selected mode
   html += '<h3>Target vs Achieved Ratios</h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
   html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
 
-  // Display order similar to Tab 1 - showing both elemental and oxide forms
-  const displayNutrients = [
-    { key: 'N', label: 'Nitrogen (N)', isCommercial: false },
-    { key: 'P', label: 'Phosphorus (P)', isCommercial: false },
-    { key: 'P2O5', label: 'P₂O₅ (oxide form)', isCommercial: true },
-    { key: 'K', label: 'Potassium (K)', isCommercial: false },
-    { key: 'K2O', label: 'K₂O (oxide form)', isCommercial: true },
-    { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
-    { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
-    { key: 'S', label: 'Sulfur (S)', isCommercial: false }
-  ];
+  // Display nutrients based on calculation mode
+  let displayNutrients;
+  if (calculationMode === 'elemental') {
+    // Elemental mode: Show P and K (pure elements)
+    displayNutrients = [
+      { key: 'N', label: 'Nitrogen (N)', isCommercial: false },
+      { key: 'P', label: 'Phosphorus (P)', isCommercial: false },
+      { key: 'K', label: 'Potassium (K)', isCommercial: false },
+      { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
+      { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
+      { key: 'S', label: 'Sulfur (S)', isCommercial: false }
+    ];
+  } else {
+    // Oxide mode: Show P₂O₅ and K₂O (commercial standard)
+    displayNutrients = [
+      { key: 'N', label: 'Nitrogen (N)', isCommercial: false },
+      { key: 'P2O5', label: 'Phosphorus (P₂O₅)', isCommercial: true },
+      { key: 'K2O', label: 'Potassium (K₂O)', isCommercial: true },
+      { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
+      { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
+      { key: 'S', label: 'Sulfur (S)', isCommercial: false }
+    ];
+  }
 
   let allGood = true;
   const warnings = [];
@@ -3886,6 +3928,21 @@ function displayReverseResults(result, targets, volume) {
 
   html += '</table>';
   html += '</div>';
+
+  // Add mode-specific conversion note
+  if (calculationMode === 'elemental') {
+    html += `<div class="conversion-note" style="margin-top: 15px;">
+      <strong>Elemental Mode:</strong> Values shown are pure elements (P, K).
+      <br>
+      To convert to oxide forms: P₂O₅ = P × 2.29, K₂O = K × 1.20
+    </div>`;
+  } else {
+    html += `<div class="conversion-note" style="margin-top: 15px;">
+      <strong>Oxide Mode:</strong> Values shown are commercial oxide forms (P₂O₅, K₂O).
+      <br>
+      To convert to elements: P = P₂O₅ × 0.436, K = K₂O × 0.830
+    </div>`;
+  }
 
   // NH4-N percentage
   const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
