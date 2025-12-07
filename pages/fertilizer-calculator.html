@@ -1168,17 +1168,29 @@ permalink: /fertilizer-calculator/
       <h3>Target PPM Values</h3>
       <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient concentrations. The calculator will find the best fertilizer combination to match your targets.</p>
 
+      <div style="margin-bottom: 20px;">
+        <label for="formula-calculation-mode" style="display: block; margin-bottom: 8px; font-weight: bold;">Input Mode</label>
+        <select id="formula-calculation-mode" onchange="updateFormulaCalculationMode()" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
+          <option value="oxide" selected>Oxide Forms (P₂O₅, K₂O) - Commercial Standard</option>
+          <option value="elemental">Elemental Forms (P, K) - Pure Elements</option>
+        </select>
+        <p style="margin-top: 5px; margin-bottom: 15px; color: #666; font-size: 0.85em;">
+          <strong>Oxide mode:</strong> Enter P₂O₅ and K₂O values (matches fertilizer labels and NPK Ratio to Grams output)<br>
+          <strong>Elemental mode:</strong> Enter pure P and K values (scientific calculations)
+        </p>
+      </div>
+
       <div class="target-input-grid">
         <div class="target-input-field">
           <label for="target-n">Nitrogen (N) *</label>
           <input type="number" id="target-n" min="0.1" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
-          <label for="target-p">Phosphorus (P) *</label>
+          <label for="target-p" id="target-p-label">Phosphorus (P₂O₅) *</label>
           <input type="number" id="target-p" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
-          <label for="target-k">Potassium (K) *</label>
+          <label for="target-k" id="target-k-label">Potassium (K₂O) *</label>
           <input type="number" id="target-k" min="0.1" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
@@ -3245,15 +3257,18 @@ function buildFormula() {
     return;
   }
 
+  // Get calculation mode
+  const mode = document.getElementById('formula-calculation-mode').value;
+
   // Run optimization algorithm
-  const result = optimizeFormula(targets, volume, availableFertilizers);
+  const result = optimizeFormula(targets, volume, availableFertilizers, 75, mode);
 
   // Display results
-  displayFormulaResults(result, targets, volume);
+  displayFormulaResults(result, targets, volume, mode);
 }
 
 // Optimization algorithm - finds best fertilizer combination from available fertilizers
-function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75) {
+function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide') {
   // Normalize target ratios - find smallest non-zero value and normalize to that
   const ratioValues = Object.values(targetRatios).filter(v => v > 0);
   const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
@@ -3268,14 +3283,23 @@ function optimizeFormula(targetRatios, volume, availableFertilizers, concentrati
   };
 
   // Use user-selected concentration (base PPM for minimum ratio nutrient)
-  // IMPORTANT: Work with COMMERCIAL ratios (N:P2O5:K2O), not elemental
   // concentration=50 → EC~1.0, concentration=75 → EC~1.5, concentration=100 → EC~2.0
   const basePPMForMinRatio = concentration;
 
+  // If elemental mode, convert P and K to oxide equivalents for internal calculation
+  // P = P2O5 × 0.436, so P2O5 = P / 0.436
+  // K = K2O × 0.830, so K2O = K / 0.830
+  const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;  // ~2.29
+  const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;    // ~1.20
+
   const targetPPM_Commercial = {
     N: normalizedRatios.N * basePPMForMinRatio,
-    P2O5: normalizedRatios.P * basePPMForMinRatio,  // P input is treated as P2O5
-    K2O: normalizedRatios.K * basePPMForMinRatio,   // K input is treated as K2O
+    P2O5: mode === 'elemental'
+      ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5  // Convert elemental P to P2O5
+      : normalizedRatios.P * basePPMForMinRatio,              // Already P2O5
+    K2O: mode === 'elemental'
+      ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O   // Convert elemental K to K2O
+      : normalizedRatios.K * basePPMForMinRatio,              // Already K2O
     Ca: normalizedRatios.Ca * basePPMForMinRatio,
     Mg: normalizedRatios.Mg * basePPMForMinRatio,
     S: normalizedRatios.S * basePPMForMinRatio
@@ -3443,7 +3467,7 @@ function optimizeFormula(targetRatios, volume, availableFertilizers, concentrati
 }
 
 // Display formula results
-function displayFormulaResults(result, targets, volume) {
+function displayFormulaResults(result, targets, volume, mode = 'oxide') {
   const resultsSection = document.getElementById('formula-results');
   const outputDiv = document.getElementById('formula-output');
 
@@ -3472,27 +3496,46 @@ function displayFormulaResults(result, targets, volume) {
 
   html += '</div>';
 
-  // Comparison table
+  // Comparison table - show values in the same mode as input
   html += '<h3>Target vs Achieved</h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
   html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Difference</th></tr>';
 
-  const nutrients = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S'];
-  const labels = {
-    N_total: 'Nitrogen (N)',
-    P: 'Phosphorus (P)',
-    K: 'Potassium (K)',
-    Ca: 'Calcium (Ca)',
-    Mg: 'Magnesium (Mg)',
-    S: 'Sulfur (S)'
-  };
+  // Choose nutrients and labels based on mode
+  const nutrients = mode === 'elemental'
+    ? ['N_total', 'P', 'K', 'Ca', 'Mg', 'S']
+    : ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
+
+  const labels = mode === 'elemental'
+    ? {
+        N_total: 'Nitrogen (N)',
+        P: 'Phosphorus (P)',
+        K: 'Potassium (K)',
+        Ca: 'Calcium (Ca)',
+        Mg: 'Magnesium (Mg)',
+        S: 'Sulfur (S)'
+      }
+    : {
+        N_total: 'Nitrogen (N)',
+        P2O5: 'Phosphorus (P₂O₅)',
+        K2O: 'Potassium (K₂O)',
+        Ca: 'Calcium (Ca)',
+        Mg: 'Magnesium (Mg)',
+        S: 'Sulfur (S)'
+      };
 
   let allGood = true;
   const warnings = [];
 
   nutrients.forEach(nutrient => {
-    const targetKey = nutrient === 'N_total' ? 'N' : nutrient;
+    // Map nutrient key to target key
+    let targetKey;
+    if (nutrient === 'N_total') targetKey = 'N';
+    else if (nutrient === 'P2O5') targetKey = 'P';
+    else if (nutrient === 'K2O') targetKey = 'K';
+    else targetKey = nutrient;
+
     const target = targets[targetKey];
     const achieved = result.achieved[nutrient] || 0;
 
@@ -3527,6 +3570,21 @@ function displayFormulaResults(result, targets, volume) {
 
   html += '</table>';
   html += '</div>';
+
+  // Mode note
+  if (mode === 'elemental') {
+    html += `<div class="conversion-note" style="margin-top: 15px;">
+      <strong>Elemental Mode:</strong> Values shown are pure elemental forms (P, K).
+      <br>
+      To convert to oxide forms: P₂O₅ = P × 2.29, K₂O = K × 1.20
+    </div>`;
+  } else {
+    html += `<div class="conversion-note" style="margin-top: 15px;">
+      <strong>Oxide Mode:</strong> Values shown are commercial oxide forms (P₂O₅, K₂O).
+      <br>
+      To convert to elements: P = P₂O₅ × 0.436, K = K₂O × 0.830
+    </div>`;
+  }
 
   // NH4-N percentage
   const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
@@ -3746,6 +3804,21 @@ function updateReverseCalculationMode() {
   } else {
     pLabel.textContent = 'Phosphorus (P₂O₅)';
     kLabel.textContent = 'Potassium (K₂O)';
+  }
+}
+
+// Update input labels for formula builder based on calculation mode
+function updateFormulaCalculationMode() {
+  const mode = document.getElementById('formula-calculation-mode').value;
+  const pLabel = document.getElementById('target-p-label');
+  const kLabel = document.getElementById('target-k-label');
+
+  if (mode === 'elemental') {
+    pLabel.textContent = 'Phosphorus (P) *';
+    kLabel.textContent = 'Potassium (K) *';
+  } else {
+    pLabel.textContent = 'Phosphorus (P₂O₅) *';
+    kLabel.textContent = 'Potassium (K₂O) *';
   }
 }
 
