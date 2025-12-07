@@ -3795,10 +3795,10 @@ function displayReverseResults(result, targets, volume) {
   };
 
   // Comparison table - showing both elemental and oxide forms
-  html += '<h3>Target vs Achieved</h3>';
+  html += '<h3>Target vs Achieved Ratios</h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
-  html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Status</th></tr>';
+  html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
 
   // Display order similar to Tab 1 - showing both elemental and oxide forms
   const displayNutrients = [
@@ -3816,63 +3816,70 @@ function displayReverseResults(result, targets, volume) {
   const warnings = [];
 
   displayNutrients.forEach(nutrient => {
-    let targetValue, achievedValue;
+    let targetRatio, achievedRatio, achievedPPM;
 
+    // Get the ratio values for comparison (normalized)
     if (nutrient.key === 'N') {
-      targetValue = targets.N;
-      achievedValue = result.achieved.N_total;
+      targetRatio = targetRatios.N;
+      achievedRatio = achievedRatios.N;
+      achievedPPM = result.achieved.N_total;
     } else if (nutrient.key === 'P') {
-      // Elemental P - convert from target P (treated as P2O5) to elemental P
-      targetValue = targets.P * OXIDE_CONVERSIONS.P2O5_to_P;
-      achievedValue = result.achieved.P || 0;
+      // Elemental P - use P2O5 ratio but show elemental PPM
+      targetRatio = targetRatios.P2O5;
+      achievedRatio = achievedRatios.P2O5;
+      achievedPPM = result.achieved.P || 0;
     } else if (nutrient.key === 'P2O5') {
       // Oxide form P2O5 (commercial)
-      targetValue = targets.P;  // P input is treated as P2O5
-      achievedValue = result.achieved.P2O5 || 0;
+      targetRatio = targetRatios.P2O5;
+      achievedRatio = achievedRatios.P2O5;
+      achievedPPM = result.achieved.P2O5 || 0;
     } else if (nutrient.key === 'K') {
-      // Elemental K - convert from target K (treated as K2O) to elemental K
-      targetValue = targets.K * OXIDE_CONVERSIONS.K2O_to_K;
-      achievedValue = result.achieved.K || 0;
+      // Elemental K - use K2O ratio but show elemental PPM
+      targetRatio = targetRatios.K2O;
+      achievedRatio = achievedRatios.K2O;
+      achievedPPM = result.achieved.K || 0;
     } else if (nutrient.key === 'K2O') {
       // Oxide form K2O (commercial)
-      targetValue = targets.K;  // K input is treated as K2O
-      achievedValue = result.achieved.K2O || 0;
+      targetRatio = targetRatios.K2O;
+      achievedRatio = achievedRatios.K2O;
+      achievedPPM = result.achieved.K2O || 0;
     } else {
       // Ca, Mg, S - already elemental
-      targetValue = targets[nutrient.key] || 0;
-      achievedValue = result.achieved[nutrient.key] || 0;
+      targetRatio = targetRatios[nutrient.key] || 0;
+      achievedRatio = achievedRatios[nutrient.key] || 0;
+      achievedPPM = result.achieved[nutrient.key] || 0;
     }
 
     // Skip if both target and achieved are zero
-    if (targetValue === 0 && achievedValue === 0) return;
+    if (targetRatio === 0 && achievedRatio === 0) return;
 
-    const diff = achievedValue - targetValue;
-    const percentDiff = targetValue > 0 ? (Math.abs(diff) / targetValue * 100) : 0;
+    // Compare RATIOS, not absolute PPM values
+    const ratioDiff = targetRatio > 0 ? Math.abs((achievedRatio - targetRatio) / targetRatio * 100) : 0;
 
     let className = 'match';
     let status = '✓';
 
-    if (percentDiff > 15) {
+    if (ratioDiff > 15) {
       className = 'miss';
       status = '✗';
       allGood = false;
       if (!nutrient.isCommercial) {  // Only warn once for elemental form
-        warnings.push(`${nutrient.label} is ${percentDiff.toFixed(1)}% off target`);
+        warnings.push(`${nutrient.label} ratio is ${ratioDiff.toFixed(1)}% off target`);
       }
-    } else if (percentDiff > 5) {
+    } else if (ratioDiff > 5) {
       className = 'close';
       status = '⚠';
       if (!nutrient.isCommercial) {  // Only warn once for elemental form
-        warnings.push(`${nutrient.label} is ${percentDiff.toFixed(1)}% off target (acceptable range)`);
+        warnings.push(`${nutrient.label} ratio is ${ratioDiff.toFixed(1)}% off target (acceptable range)`);
       }
     }
 
     html += `
       <tr>
         <td>${nutrient.label}</td>
-        <td>${targetValue.toFixed(1)}</td>
-        <td class="${className}">${achievedValue.toFixed(1)} ${status}</td>
-        <td class="${className}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)} (${percentDiff.toFixed(1)}%)</td>
+        <td>${targetRatio.toFixed(2)}</td>
+        <td class="${className}">${achievedRatio.toFixed(2)} ${status}</td>
+        <td>${achievedPPM.toFixed(1)} ppm</td>
       </tr>
     `;
   });
