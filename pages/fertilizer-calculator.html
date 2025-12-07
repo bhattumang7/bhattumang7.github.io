@@ -288,11 +288,38 @@ permalink: /fertilizer-calculator/
   .formula-fertilizer {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     padding: 10px;
     background: white;
     margin-bottom: 8px;
     border-radius: 4px;
     border-left: 4px solid #28a745;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .formula-fertilizer-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .formula-fertilizer-name {
+    font-weight: bold;
+    color: #333;
+  }
+
+  .formula-fertilizer-composition {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  .formula-fertilizer-amount {
+    font-weight: bold;
+    white-space: nowrap;
+    text-align: right;
   }
 
   .ion-balance-summary {
@@ -484,8 +511,17 @@ permalink: /fertilizer-calculator/
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     border-left: 4px solid #007bff;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .selected-fertilizer-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
   }
 
   .selected-fertilizer-name {
@@ -493,10 +529,17 @@ permalink: /fertilizer-calculator/
     color: #333;
   }
 
+  .selected-fertilizer-composition {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 2px;
+  }
+
   .selected-fertilizer-amount {
     color: #007bff;
     font-weight: bold;
     font-size: 1.1em;
+    white-space: nowrap;
   }
 
   /* Mobile Responsive Styles */
@@ -656,6 +699,16 @@ permalink: /fertilizer-calculator/
 
     .selected-fertilizer-amount {
       font-size: 1em;
+    }
+
+    .selected-fertilizer-composition,
+    .formula-fertilizer-composition {
+      font-size: 0.8em;
+      word-break: break-word;
+    }
+
+    .formula-fertilizer {
+      padding: 8px;
     }
 
     /* Formula Builder Mobile Styles */
@@ -2689,8 +2742,15 @@ function displaySelectedFertilizers(activeFertilizers) {
     const item = document.createElement('div');
     item.className = 'selected-fertilizer-item';
 
+    const composition = Object.entries(fert.pct)
+      .map(([key, val]) => `${key}: ${val}%`)
+      .join(', ');
+
     item.innerHTML = `
-      <div class="selected-fertilizer-name">${fert.name}</div>
+      <div class="selected-fertilizer-info">
+        <div class="selected-fertilizer-name">${fert.name}</div>
+        <div class="selected-fertilizer-composition">${composition}</div>
+      </div>
       <div class="selected-fertilizer-amount">${fert.grams.toFixed(2)} g</div>
     `;
 
@@ -3371,10 +3431,16 @@ function displayFormulaResults(result, targets, volume) {
   Object.entries(result.formula).forEach(([fertId, grams]) => {
     const fert = FERTILIZERS.find(f => f.id === fertId);
     if (fert) {
+      const composition = Object.entries(fert.pct)
+        .map(([key, val]) => `${key}: ${val}%`)
+        .join(', ');
       html += `
         <div class="formula-fertilizer">
-          <span><strong>${fert.name}</strong></span>
-          <span><strong>${grams.toFixed(2)}</strong> grams</span>
+          <div class="formula-fertilizer-info">
+            <div class="formula-fertilizer-name">${fert.name}</div>
+            <div class="formula-fertilizer-composition">${composition}</div>
+          </div>
+          <div class="formula-fertilizer-amount">${grams.toFixed(2)} g</div>
         </div>
       `;
     }
@@ -3771,10 +3837,16 @@ function displayReverseResults(result, targets, volume) {
     Object.entries(result.formula).forEach(([fertId, grams]) => {
       const fert = FERTILIZERS.find(f => f.id === fertId);
       if (fert && grams > 0.01) { // Only show if significant amount
+        const composition = Object.entries(fert.pct)
+          .map(([key, val]) => `${key}: ${val}%`)
+          .join(', ');
         html += `
           <div class="formula-fertilizer">
-            <span><strong>${fert.name}</strong></span>
-            <span><strong>${grams.toFixed(2)}</strong> grams</span>
+            <div class="formula-fertilizer-info">
+              <div class="formula-fertilizer-name">${fert.name}</div>
+              <div class="formula-fertilizer-composition">${composition}</div>
+            </div>
+            <div class="formula-fertilizer-amount">${grams.toFixed(2)} g</div>
           </div>
         `;
       }
