@@ -1085,6 +1085,11 @@ permalink: /fertilizer-calculator/
       <div class="search-box">
         <input type="text" id="search" placeholder="Search fertilizers...">
       </div>
+      <div class="selection-controls">
+        <button onclick="selectAllPpmFertilizers()">Select All</button>
+        <button onclick="deselectAllPpmFertilizers()">Deselect All</button>
+        <button onclick="selectCommonPpmFertilizers()">Select Common Only</button>
+      </div>
       <div id="fertilizer-list"></div>
     </div>
   </div>
@@ -2380,6 +2385,42 @@ function toggleFertilizer(id) {
   if (document.getElementById('results').style.display !== 'none') {
     calculate();
   }
+}
+
+// Select all fertilizers in PPM calculator
+function selectAllPpmFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`check-${fert.id}`);
+    if (checkbox && !checkbox.checked) {
+      checkbox.checked = true;
+      toggleFertilizer(fert.id);
+    }
+  });
+}
+
+// Deselect all fertilizers in PPM calculator
+function deselectAllPpmFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`check-${fert.id}`);
+    if (checkbox && checkbox.checked) {
+      checkbox.checked = false;
+      toggleFertilizer(fert.id);
+    }
+  });
+}
+
+// Select common fertilizers only in PPM calculator
+function selectCommonPpmFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`check-${fert.id}`);
+    if (checkbox) {
+      const shouldBeChecked = COMMON_FERTILIZERS.includes(fert.id);
+      if (checkbox.checked !== shouldBeChecked) {
+        checkbox.checked = shouldBeChecked;
+        toggleFertilizer(fert.id);
+      }
+    }
+  });
 }
 
 // Handle grams input change
