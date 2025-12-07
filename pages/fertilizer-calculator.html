@@ -1050,7 +1050,7 @@ permalink: /fertilizer-calculator/
   <div id="reverse-calc" class="tab-content">
     <div class="input-section">
       <h3>Target Nutrient Values</h3>
-      <p style="margin-bottom: 15px; color: #666;">Enter your desired NPK, Calcium, and Magnesium values. The calculator will determine the fertilizer amounts needed.</p>
+      <p style="margin-bottom: 15px; color: #666;">Enter your desired NPK values (required). Calcium, Magnesium, and Sulfur are optional and can be zero. The calculator will determine the fertilizer amounts needed.</p>
 
       <div class="target-input-grid">
         <div class="target-input-field">
@@ -1066,16 +1066,16 @@ permalink: /fertilizer-calculator/
           <input type="number" id="reverse-k" min="0.1" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
-          <label for="reverse-ca">Calcium (Ca) *</label>
-          <input type="number" id="reverse-ca" min="0" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
+          <label for="reverse-ca">Calcium (Ca)</label>
+          <input type="number" id="reverse-ca" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
-          <label for="reverse-mg">Magnesium (Mg) *</label>
-          <input type="number" id="reverse-mg" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
+          <label for="reverse-mg">Magnesium (Mg)</label>
+          <input type="number" id="reverse-mg" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
           <label for="reverse-s">Sulfur (S)</label>
-          <input type="number" id="reverse-s" min="0" step="1" placeholder="Optional" oninput="validateTargetInput(this, true)">
+          <input type="number" id="reverse-s" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this, true)">
         </div>
       </div>
 
@@ -3483,13 +3483,27 @@ function calculateReverse() {
 
   // Validate inputs
   let hasError = false;
-  const requiredFields = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg'];
+  const requiredFields = ['reverse-n', 'reverse-p', 'reverse-k'];
+  const optionalFields = ['reverse-ca', 'reverse-mg', 'reverse-s']; // Can be zero
 
   requiredFields.forEach(id => {
     const input = document.getElementById(id);
     const value = parseFloat(input.value);
 
     if (!value || value <= 0) {
+      input.classList.add('input-error');
+      hasError = true;
+    } else {
+      input.classList.remove('input-error');
+    }
+  });
+
+  // Validate optional fields - just check they're valid numbers (can be zero)
+  optionalFields.forEach(id => {
+    const input = document.getElementById(id);
+    const value = input.value.trim();
+
+    if (value === '' || isNaN(parseFloat(value)) || parseFloat(value) < 0) {
       input.classList.add('input-error');
       hasError = true;
     } else {
@@ -3507,7 +3521,7 @@ function calculateReverse() {
   }
 
   if (hasError) {
-    alert('Please fill in all required fields with positive values.');
+    alert('Please fill in all fields. N, P, and K must be positive values. Ca, Mg, and S can be zero or positive.');
     return;
   }
 
