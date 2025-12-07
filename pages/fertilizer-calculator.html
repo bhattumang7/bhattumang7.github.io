@@ -295,10 +295,16 @@ permalink: /fertilizer-calculator/
     border-left: 4px solid #28a745;
   }
 
+  .comparison-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 15px;
+  }
+
   .comparison-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
+    margin-top: 0;
   }
 
   .comparison-table th,
@@ -542,6 +548,28 @@ permalink: /fertilizer-calculator/
     .tab {
       width: 100%;
       text-align: center;
+    }
+
+    .comparison-table {
+      font-size: 14px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 8px 4px;
+      font-size: 12px;
+    }
+
+    .comparison-table th:first-child,
+    .comparison-table td:first-child {
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 1;
+    }
+
+    .comparison-table th:first-child {
+      background: #f8f9fa;
     }
 
     .selected-fertilizer-item {
@@ -3267,6 +3295,7 @@ function displayFormulaResults(result, targets, volume) {
 
   // Comparison table
   html += '<h3>Target vs Achieved</h3>';
+  html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
   html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Difference</th></tr>';
 
@@ -3318,6 +3347,7 @@ function displayFormulaResults(result, targets, volume) {
   });
 
   html += '</table>';
+  html += '</div>';
 
   // NH4-N percentage
   const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
@@ -3685,6 +3715,7 @@ function displayReverseResults(result, targets, volume) {
 
   // Comparison table - showing ratios
   html += '<h3>Target vs Achieved Ratios</h3>';
+  html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
   html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
 
@@ -3737,6 +3768,7 @@ function displayReverseResults(result, targets, volume) {
   });
 
   html += '</table>';
+  html += '</div>';
 
   // NH4-N percentage
   const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
