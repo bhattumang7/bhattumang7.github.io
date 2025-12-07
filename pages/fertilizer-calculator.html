@@ -329,6 +329,20 @@ permalink: /fertilizer-calculator/
     border-radius: 4px;
   }
 
+  .nutrient-ratio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .nutrient-ratio-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    border-left: 4px solid #007bff;
+  }
+
   .comparison-table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -624,6 +638,15 @@ permalink: /fertilizer-calculator/
       flex-direction: column;
       gap: 5px;
       text-align: left;
+    }
+
+    .nutrient-ratio-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .nutrient-ratio-card {
+      padding: 12px;
     }
 
     .selected-fertilizer-item {
@@ -3419,16 +3442,16 @@ function displayFormulaResults(result, targets, volume) {
   const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
 
   html += '<h3 style="margin-top: 20px;">Ion Balance</h3>';
-  html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 10px;">
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
+    <div class="ion-balance-card">
       <div style="font-size: 0.9em; color: #666;">Cations</div>
       <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalCations.toFixed(2)} meq/L</div>
     </div>
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+    <div class="ion-balance-card">
       <div style="font-size: 0.9em; color: #666;">Anions</div>
       <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalAnions.toFixed(2)} meq/L</div>
     </div>
-    <div style="background: ${ionBalance.statusColor}20; padding: 15px; border-radius: 4px; text-align: center; border: 2px solid ${ionBalance.statusColor};">
+    <div class="ion-balance-card status" style="background: ${ionBalance.statusColor}20; border-color: ${ionBalance.statusColor};">
       <div style="font-size: 0.9em; color: #666;">Imbalance</div>
       <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${ionBalance.imbalance.toFixed(1)}%</div>
       <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
@@ -3439,12 +3462,12 @@ function displayFormulaResults(result, targets, volume) {
   const ratios = calculateNutrientRatios(result.achieved);
   if (ratios.length > 0) {
     html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
-    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 10px;">';
+    html += '<div class="nutrient-ratio-grid">';
 
     ratios.forEach(ratio => {
       const unit = ratio.unit || 'ppm';
       html += `
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+        <div class="nutrient-ratio-card">
           <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
             ${ratio.name}
           </div>
@@ -3840,16 +3863,16 @@ function displayReverseResults(result, targets, volume) {
   const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
 
   html += '<h3 style="margin-top: 20px;">Ion Balance</h3>';
-  html += `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 10px;">
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
+    <div class="ion-balance-card">
       <div style="font-size: 0.9em; color: #666;">Cations</div>
       <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalCations.toFixed(2)} meq/L</div>
     </div>
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+    <div class="ion-balance-card">
       <div style="font-size: 0.9em; color: #666;">Anions</div>
       <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalAnions.toFixed(2)} meq/L</div>
     </div>
-    <div style="background: ${ionBalance.statusColor}20; padding: 15px; border-radius: 4px; text-align: center; border: 2px solid ${ionBalance.statusColor};">
+    <div class="ion-balance-card status" style="background: ${ionBalance.statusColor}20; border-color: ${ionBalance.statusColor};">
       <div style="font-size: 0.9em; color: #666;">Imbalance</div>
       <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${ionBalance.imbalance.toFixed(1)}%</div>
       <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
@@ -3860,12 +3883,12 @@ function displayReverseResults(result, targets, volume) {
   const ratios = calculateNutrientRatios(result.achieved);
   if (ratios.length > 0) {
     html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
-    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 10px;">';
+    html += '<div class="nutrient-ratio-grid">';
 
     ratios.forEach(ratio => {
       const unit = ratio.unit || 'ppm';
       html += `
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+        <div class="nutrient-ratio-card">
           <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
             ${ratio.name}
           </div>
