@@ -1049,8 +1049,8 @@ permalink: /fertilizer-calculator/
   <!-- Reverse Calculator Tab -->
   <div id="reverse-calc" class="tab-content">
     <div class="input-section">
-      <h3>Target Nutrient Values</h3>
-      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient values. At least one nutrient must be greater than zero. The calculator will determine the fertilizer amounts needed.</p>
+      <h3>Target Nutrient Ratios</h3>
+      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one nutrient must be greater than zero. The calculator will find fertilizer amounts that match these ratios.</p>
 
       <div class="target-input-grid">
         <div class="target-input-field">
@@ -3027,7 +3027,22 @@ function buildFormula() {
 }
 
 // Optimization algorithm - finds best fertilizer combination from available fertilizers
-function optimizeFormula(targets, volume, availableFertilizers) {
+function optimizeFormula(targetRatios, volume, availableFertilizers) {
+  // Normalize ratios - find the largest non-zero value and scale to that
+  const ratioValues = [targetRatios.N, targetRatios.P, targetRatios.K, targetRatios.Ca, targetRatios.Mg, targetRatios.S];
+  const maxRatio = Math.max(...ratioValues.filter(v => v > 0));
+
+  // Scale up ratios to get reasonable PPM targets (using max ratio as base of 150 ppm)
+  const basePPM = 150;
+  const scaledTargets = {
+    N: targetRatios.N > 0 ? (targetRatios.N / maxRatio) * basePPM : 0,
+    P: targetRatios.P > 0 ? (targetRatios.P / maxRatio) * basePPM : 0,
+    K: targetRatios.K > 0 ? (targetRatios.K / maxRatio) * basePPM : 0,
+    Ca: targetRatios.Ca > 0 ? (targetRatios.Ca / maxRatio) * basePPM : 0,
+    Mg: targetRatios.Mg > 0 ? (targetRatios.Mg / maxRatio) * basePPM : 0,
+    S: targetRatios.S > 0 ? (targetRatios.S / maxRatio) * basePPM : 0
+  };
+
   const formula = {};
   const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
 
@@ -3094,25 +3109,27 @@ function optimizeFormula(targets, volume, availableFertilizers) {
 
   // Step 1: Add Calcium
   const caFert = findBestFor('Ca');
-  if (caFert && caFert.pct.Ca) {
-    const gramsNeeded = (targets.Ca * volume) / (caFert.pct.Ca * 10);
+  if (caFert && caFert.pct.Ca && scaledTargets.Ca > 0) {
+    const gramsNeeded = (scaledTargets.Ca * volume) / (caFert.pct.Ca * 10);
     addFertilizer(caFert, gramsNeeded);
   }
 
   // Step 2: Add NH4-N source (targeting 10% of total N as NH4)
-  const targetNH4 = targets.N * 0.10;
-  const needNH4 = Math.max(0, targetNH4 - achieved.N_NH4);
+  if (scaledTargets.N > 0) {
+    const targetNH4 = scaledTargets.N * 0.10;
+    const needNH4 = Math.max(0, targetNH4 - achieved.N_NH4);
 
-  if (needNH4 > 0) {
-    const nh4Fert = availableFertilizers.find(f => f.pct.N_NH4 && f.pct.N_NH4 > 0);
-    if (nh4Fert) {
-      const gramsNeeded = (needNH4 * volume) / (nh4Fert.pct.N_NH4 * 10);
-      addFertilizer(nh4Fert, gramsNeeded);
+    if (needNH4 > 0) {
+      const nh4Fert = availableFertilizers.find(f => f.pct.N_NH4 && f.pct.N_NH4 > 0);
+      if (nh4Fert) {
+        const gramsNeeded = (needNH4 * volume) / (nh4Fert.pct.N_NH4 * 10);
+        addFertilizer(nh4Fert, gramsNeeded);
+      }
     }
   }
 
   // Step 3: Add Phosphorus
-  const needP = Math.max(0, targets.P - achieved.P);
+  const needP = Math.max(0, scaledTargets.P - achieved.P);
   if (needP > 0) {
     const pFert = findBestFor('P');
     if (pFert && pFert.pct.P2O5) {
@@ -3123,9 +3140,9 @@ function optimizeFormula(targets, volume, availableFertilizers) {
   }
 
   // Step 4: Add Potassium
-  const needK = Math.max(0, targets.K - achieved.K);
+  const needK = Math.max(0, scaledTargets.K - achieved.K);
   if (needK > 0) {
-    const needsS = targets.S > 0 && achieved.S < targets.S;
+    const needsS = scaledTargets.S > 0 && achieved.S < scaledTargets.S;
     const kFert = findBestFor('K', false, needsS);
     if (kFert && kFert.pct.K2O) {
       const ppmK2ONeeded = needK / OXIDE_CONVERSIONS.K2O_to_K;
@@ -3135,9 +3152,9 @@ function optimizeFormula(targets, volume, availableFertilizers) {
   }
 
   // Step 5: Add Magnesium
-  const needMg = Math.max(0, targets.Mg - achieved.Mg);
+  const needMg = Math.max(0, scaledTargets.Mg - achieved.Mg);
   if (needMg > 0) {
-    const needsS = targets.S > 0 && achieved.S < targets.S;
+    const needsS = scaledTargets.S > 0 && achieved.S < scaledTargets.S;
     const mgFert = findBestFor('Mg', false, needsS);
     if (mgFert && mgFert.pct.Mg) {
       const gramsNeeded = (needMg * volume) / (mgFert.pct.Mg * 10);
@@ -3146,8 +3163,8 @@ function optimizeFormula(targets, volume, availableFertilizers) {
   }
 
   // Step 6: Balance Nitrogen if needed
-  const needN = Math.max(0, targets.N - achieved.N_total);
-  if (needN > targets.N * 0.05) { // More than 5% short
+  const needN = Math.max(0, scaledTargets.N - achieved.N_total);
+  if (needN > scaledTargets.N * 0.05) { // More than 5% short
     // Find a nitrogen fertilizer
     const nFert = availableFertilizers.find(f => f.pct.N_total && f.pct.N_total > 10);
     if (nFert) {
@@ -3156,7 +3173,7 @@ function optimizeFormula(targets, volume, availableFertilizers) {
     }
   }
 
-  return { formula, achieved };
+  return { formula, achieved, targetRatios, scaledTargets };
 }
 
 // Display formula results
@@ -3549,7 +3566,7 @@ function displayReverseResults(result, targets, volume) {
 
   // Display formula
   if (Object.keys(result.formula).length === 0) {
-    html += '<div class="error-box"><strong>Unable to calculate formula</strong><p>The selected fertilizers cannot achieve the target nutrient values. Try selecting different fertilizers or adjusting your targets.</p></div>';
+    html += '<div class="error-box"><strong>Unable to calculate formula</strong><p>The selected fertilizers cannot achieve the target nutrient ratios. Try selecting different fertilizers or adjusting your targets.</p></div>';
   } else {
     Object.entries(result.formula).forEach(([fertId, grams]) => {
       const fert = FERTILIZERS.find(f => f.id === fertId);
@@ -3566,14 +3583,48 @@ function displayReverseResults(result, targets, volume) {
 
   html += '</div>';
 
-  // Comparison table
-  html += '<h3>Target vs Achieved</h3>';
-  html += '<table class="comparison-table">';
-  html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Difference</th></tr>';
+  // Calculate achieved ratios
+  const achievedPPM = {
+    N: result.achieved.N_total,
+    P: result.achieved.P,
+    K: result.achieved.K,
+    Ca: result.achieved.Ca,
+    Mg: result.achieved.Mg,
+    S: result.achieved.S
+  };
 
-  const nutrients = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S'];
+  // Normalize achieved values to ratios (find smallest non-zero value)
+  const achievedValues = Object.values(achievedPPM).filter(v => v > 0);
+  const minAchieved = achievedValues.length > 0 ? Math.min(...achievedValues) : 1;
+  const achievedRatios = {
+    N: achievedPPM.N > 0 ? achievedPPM.N / minAchieved : 0,
+    P: achievedPPM.P > 0 ? achievedPPM.P / minAchieved : 0,
+    K: achievedPPM.K > 0 ? achievedPPM.K / minAchieved : 0,
+    Ca: achievedPPM.Ca > 0 ? achievedPPM.Ca / minAchieved : 0,
+    Mg: achievedPPM.Mg > 0 ? achievedPPM.Mg / minAchieved : 0,
+    S: achievedPPM.S > 0 ? achievedPPM.S / minAchieved : 0
+  };
+
+  // Normalize target values to ratios
+  const targetValues = Object.values(targets).filter(v => v > 0);
+  const minTarget = targetValues.length > 0 ? Math.min(...targetValues) : 1;
+  const targetRatios = {
+    N: targets.N > 0 ? targets.N / minTarget : 0,
+    P: targets.P > 0 ? targets.P / minTarget : 0,
+    K: targets.K > 0 ? targets.K / minTarget : 0,
+    Ca: targets.Ca > 0 ? targets.Ca / minTarget : 0,
+    Mg: targets.Mg > 0 ? targets.Mg / minTarget : 0,
+    S: targets.S > 0 ? targets.S / minTarget : 0
+  };
+
+  // Comparison table - showing ratios
+  html += '<h3>Target vs Achieved Ratios</h3>';
+  html += '<table class="comparison-table">';
+  html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
+
+  const nutrients = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
   const labels = {
-    N_total: 'Nitrogen (N)',
+    N: 'Nitrogen (N)',
     P: 'Phosphorus (P)',
     K: 'Potassium (K)',
     Ca: 'Calcium (Ca)',
@@ -3585,35 +3636,36 @@ function displayReverseResults(result, targets, volume) {
   const warnings = [];
 
   nutrients.forEach(nutrient => {
-    const targetKey = nutrient === 'N_total' ? 'N' : nutrient;
-    const target = targets[targetKey];
-    const achieved = result.achieved[nutrient] || 0;
+    const targetRatio = targetRatios[nutrient];
+    const achievedRatio = achievedRatios[nutrient];
+    const achievedPPMValue = achievedPPM[nutrient];
 
-    if (target === 0 && nutrient === 'S') return; // Skip S if not specified
+    // Skip if both target and achieved are zero
+    if (targetRatio === 0 && achievedRatio === 0) return;
 
-    const diff = achieved - target;
-    const percentDiff = target > 0 ? (Math.abs(diff) / target * 100) : 0;
+    // Calculate ratio difference
+    const ratioDiff = targetRatio > 0 ? Math.abs((achievedRatio - targetRatio) / targetRatio * 100) : 0;
 
     let className = 'match';
     let status = '✓';
 
-    if (percentDiff > 20) {
+    if (ratioDiff > 15) {
       className = 'miss';
       status = '✗';
       allGood = false;
-      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target`);
-    } else if (percentDiff > 10) {
+      warnings.push(`${labels[nutrient]} ratio is ${ratioDiff.toFixed(1)}% off target`);
+    } else if (ratioDiff > 5) {
       className = 'close';
       status = '⚠';
-      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target (acceptable range)`);
+      warnings.push(`${labels[nutrient]} ratio is ${ratioDiff.toFixed(1)}% off target (acceptable range)`);
     }
 
     html += `
       <tr>
         <td>${labels[nutrient]}</td>
-        <td>${target.toFixed(1)}</td>
-        <td class="${className}">${achieved.toFixed(1)} ${status}</td>
-        <td class="${className}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)} (${percentDiff.toFixed(1)}%)</td>
+        <td>${targetRatio > 0 ? targetRatio.toFixed(2) : '0'}</td>
+        <td class="${className}">${achievedRatio.toFixed(2)} ${status}</td>
+        <td>${achievedPPMValue.toFixed(1)} ppm</td>
       </tr>
     `;
   });
