@@ -1525,7 +1525,129 @@ permalink: /fertilizer-calculator/
   </div>
 </div>
 
+<!-- MILP dependencies -->
+<script src="/assets/vendor/lp-model/lp-model.min.js"></script>
+<script src="/assets/vendor/highs/highs.js"></script>
+
 <script>
+// MILP solver helper (browser) using highs.js + lp-model
+async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01 }) {
+  const highsFactory = window.highs || window.Module;
+  if (!window.LPModel || typeof highsFactory !== 'function') {
+    throw new Error('MILP dependencies not loaded');
+  }
+
+  const { Model } = window.LPModel;
+  const highs = await highsFactory({
+    locateFile: (f) => `/assets/vendor/highs/${f}`
+  });
+
+  const nutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
+  const tPlus = {}, tMinus = {};
+  nutrients.forEach(n => {
+    const t = targets[n] || 0;
+    tPlus[n] = t > 0 ? t * (1 + tolerance) : 0;
+    tMinus[n] = t > 0 ? t * (1 - tolerance) : 0;
+  });
+
+  const model = new Model();
+  const x = {}, y = {}, slackPlus = {}, slackMinus = {};
+  fertilizers.forEach(f => {
+    x[f.id] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `x_${f.id}` });
+    y[f.id] = model.addVar({ lb: 0, ub: 1, vtype: 'BINARY', name: `y_${f.id}` });
+  });
+  nutrients.forEach(n => {
+    slackPlus[n] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `s_plus_${n}` });
+    slackMinus[n] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `s_minus_${n}` });
+  });
+
+  const BIG_M = 50;
+  fertilizers.forEach(f => {
+    model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
+  });
+
+  function perGramContrib(fert) {
+    const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0 };
+    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+    Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+      const ppm = (1 * 1000 * (pct / 100)) / volume;
+      if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+        c.N_total += ppm;
+      } else if (nutrient === 'N_total') {
+        if (!hasNForms) c.N_total += ppm;
+      } else if (nutrient === 'P2O5' || nutrient === 'K2O' || nutrient === 'Ca' || nutrient === 'Mg' || nutrient === 'S') {
+        c[nutrient] += ppm;
+      }
+    });
+    return c;
+  }
+
+  nutrients.forEach(n => {
+    const terms = [];
+    fertilizers.forEach(f => {
+      const c = perGramContrib(f);
+      if (c[n] !== 0) terms.push([c[n], x[f.id]]);
+    });
+    if (tMinus[n] > 0) {
+      model.addConstr([...terms, [-1, slackMinus[n]]], '>=', tMinus[n]);
+    }
+    const ub = tPlus[n] > 0 ? tPlus[n] : 0;
+    model.addConstr([...terms, [-1, slackPlus[n]]], '<=', ub);
+  });
+
+  const objective = [];
+  fertilizers.forEach(f => objective.push([1, y[f.id]]));
+  nutrients.forEach(n => {
+    const isTargeted = (targets[n] || 0) > 0;
+    const slackPenalty = isTargeted ? 100 : 50;
+    objective.push([slackPenalty, slackPlus[n]]);
+    objective.push([slackPenalty, slackMinus[n]]);
+  });
+  model.setObjective(objective, 'MINIMIZE');
+
+  const lp = model.toLPFormat();
+  const solution = highs.solve(lp);
+  if (!solution || !model.variables) throw new Error('MILP solver failed');
+
+  const formula = {};
+  if (solution.Columns) {
+    fertilizers.forEach(f => {
+      const col = solution.Columns[`x_${f.id}`] || solution.Columns[f.id];
+      const grams = col && typeof col.Primal === 'number' ? col.Primal : 0;
+      if (grams > 1e-4) formula[f.id] = grams;
+    });
+  }
+
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+  Object.entries(formula).forEach(([fid, grams]) => {
+    const fert = fertilizers.find(f => f.id === fid);
+    if (!fert) return;
+    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+    Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+      const ppm = (grams * 1000 * (pct / 100)) / volume;
+      if (nutrient === 'N_NO3') {
+        achieved.N_NO3 += ppm;
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_NH4') {
+        achieved.N_NH4 += ppm;
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_total') {
+        if (!hasNForms) achieved.N_total += ppm;
+      } else if (nutrient === 'P2O5') {
+        achieved.P2O5 += ppm;
+        achieved.P += ppm * 0.436; // P2O5 to P conversion
+      } else if (nutrient === 'K2O') {
+        achieved.K2O += ppm;
+        achieved.K += ppm * 0.830; // K2O to K conversion
+      } else if (achieved[nutrient] !== undefined) {
+        achieved[nutrient] += ppm;
+      }
+    });
+  });
+
+  return { formula, achieved };
+}
+
 // Fertilizer database
 const FERTILIZERS = [
   {
@@ -3191,7 +3313,7 @@ function clearFormulaBuilder() {
 }
 
 // Formula builder - main function
-function buildFormula() {
+async function buildFormula() {
   // Validate volume first
   const volumeInput = document.getElementById('formula-volume');
   const volume = parseFloat(volumeInput.value);
@@ -3273,14 +3395,198 @@ function buildFormula() {
   const mode = document.getElementById('formula-calculation-mode').value;
 
   // Run optimization algorithm using absolute PPM targets
-  const result = optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true });
+  const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true });
 
   // Display results
   displayFormulaResults(result, targets, volume, mode);
 }
 
+// Simple weighted projected gradient NNLS solver for fertilizer grams
+function solveNonNegativeLeastSquares(matrix, target, iterations = 1500, weights = []) {
+  const rows = matrix.length;
+  const cols = target.length;
+
+  if (rows === 0 || cols === 0) {
+    return { x: [], error: 0 };
+  }
+
+  let x = new Array(rows).fill(0);
+  let bestX = x.slice();
+  let bestError = Number.POSITIVE_INFINITY;
+  const w = weights.length === cols ? weights.slice() : new Array(cols).fill(1);
+  const w2 = w.map(v => v * v);
+
+  for (let iter = 0; iter < iterations; iter++) {
+    // Compute Ax
+    const Ax = new Array(cols).fill(0);
+    for (let i = 0; i < rows; i++) {
+      const xi = x[i];
+      if (xi === 0) continue;
+      const row = matrix[i];
+      for (let j = 0; j < cols; j++) {
+        Ax[j] += row[j] * xi;
+      }
+    }
+
+    // Compute residual and error
+    const residual = new Array(cols);
+    let error = 0;
+    for (let j = 0; j < cols; j++) {
+      residual[j] = Ax[j] - target[j];
+      const scaled = residual[j] * w[j];
+      error += scaled * scaled;
+    }
+
+    if (error < bestError) {
+      bestError = error;
+      bestX = x.slice();
+    }
+
+    // Step size schedule
+    const lr = iter < iterations * 0.5 ? 0.0006 : iter < iterations * 0.8 ? 0.0003 : 0.00015;
+    const reg = 1e-4; // tiny L2 to discourage runaway solutions
+
+    // Compute gradient for each fertilizer
+    const grad = new Array(rows).fill(0);
+    for (let i = 0; i < rows; i++) {
+      const row = matrix[i];
+      let g = 0;
+      for (let j = 0; j < cols; j++) {
+        g += row[j] * residual[j] * w2[j];
+      }
+      grad[i] = g + reg * x[i];
+    }
+
+    // Gradient descent step with projection to non-negative
+    for (let i = 0; i < rows; i++) {
+      x[i] = Math.max(0, x[i] - lr * grad[i]);
+    }
+  }
+
+  return { x: bestX, error: bestError };
+}
+
+// Try to prune fertilizers while staying within tolerance
+function pruneSolution(matrix, targetVector, weights, baseSolution, fertilizers, tolerance = 0.01, iterations = 800) {
+  // Start from current solution and try removing fertilizers greedily while staying within tolerance.
+  let activeIndices = baseSolution.x
+    .map((grams, idx) => ({ idx, grams }))
+    .filter(item => item.grams > 1e-4)
+    .map(item => item.idx);
+
+  let best = { x: baseSolution.x.slice(), error: baseSolution.error, active: activeIndices.slice() };
+
+  // Helper to compute achieved vector for a solution
+  function computeAchieved(solX) {
+    const cols = targetVector.length;
+    const achieved = new Array(cols).fill(0);
+    for (let i = 0; i < solX.length; i++) {
+      const xi = solX[i];
+      if (xi === 0) continue;
+      const row = matrix[i];
+      for (let j = 0; j < cols; j++) {
+        achieved[j] += row[j] * xi;
+      }
+    }
+    return achieved;
+  }
+
+  function withinTolerance(achieved) {
+    for (let j = 0; j < targetVector.length; j++) {
+      const target = targetVector[j];
+      // Only enforce tolerance on nutrients with a positive target
+      if (target > 0) {
+        const diff = Math.abs(achieved[j] - target) / target;
+        if (diff > tolerance) return false;
+      }
+    }
+    return true;
+  }
+
+  // Greedy pruning: at each step, try removing each active fertilizer and keep the best feasible removal
+  let improved = true;
+  while (improved && activeIndices.length > 1) {
+    improved = false;
+    let bestCandidate = null;
+
+    activeIndices.forEach(removeIdx => {
+      const remaining = activeIndices.filter(idx => idx !== removeIdx);
+      if (remaining.length === 0) return;
+
+      const reducedMatrix = remaining.map(idx => matrix[idx]);
+      const reducedSolution = solveNonNegativeLeastSquares(reducedMatrix, targetVector, iterations, weights);
+
+      // Expand reduced solution back to full vector
+      const fullX = new Array(matrix.length).fill(0);
+      remaining.forEach((idx, pos) => {
+        fullX[idx] = reducedSolution.x[pos];
+      });
+
+      const achieved = computeAchieved(fullX);
+
+      if (withinTolerance(achieved)) {
+        const candidate = {
+          x: fullX,
+          error: reducedSolution.error,
+          active: remaining.slice()
+        };
+
+        if (
+          !bestCandidate ||
+          candidate.active.length < bestCandidate.active.length ||
+          (candidate.active.length === bestCandidate.active.length && candidate.error < bestCandidate.error)
+        ) {
+          bestCandidate = candidate;
+        }
+      }
+    });
+
+    if (bestCandidate) {
+      best = bestCandidate;
+      activeIndices = bestCandidate.active;
+      improved = true;
+    }
+  }
+
+  return best;
+}
+
 // Optimization algorithm - finds best fertilizer combination from available fertilizers
-function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide', options = {}) {
+async function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide', options = {}) {
+  // Optional MILP path (uses highs.js if available)
+  if (options.useMilp && typeof solveMilpBrowser === 'function') {
+    // Build absolute ppm targets based on ratio/concentration
+    const ratioValues = Object.values(targetRatios).filter(v => v > 0);
+    const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
+    const normalizedRatios = {
+      N: targetRatios.N / minRatio,
+      P: targetRatios.P / minRatio,
+      K: targetRatios.K / minRatio,
+      Ca: targetRatios.Ca / minRatio,
+      Mg: targetRatios.Mg / minRatio,
+      S: targetRatios.S / minRatio
+    };
+    const basePPMForMinRatio = concentration;
+    const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
+    const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
+
+    const ppmTargets = {
+      N_total: normalizedRatios.N * basePPMForMinRatio,
+      P2O5: mode === 'elemental'
+        ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
+        : normalizedRatios.P * basePPMForMinRatio,
+      K2O: mode === 'elemental'
+        ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
+        : normalizedRatios.K * basePPMForMinRatio,
+      Ca: normalizedRatios.Ca * basePPMForMinRatio,
+      Mg: normalizedRatios.Mg * basePPMForMinRatio,
+      S: normalizedRatios.S * basePPMForMinRatio
+    };
+
+    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01 });
+    return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
+  }
+
   // Normalize target ratios - find smallest non-zero value and normalize to that
   const ratioValues = Object.values(targetRatios).filter(v => v > 0);
   const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
@@ -3359,6 +3665,12 @@ function optimizeFormula(targetRatios, volume, availableFertilizers, concentrati
         if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
           contribution.N_total += ppm;
         }
+      } else if (nutrient === 'CaO' && OXIDE_CONVERSIONS.CaO_to_Ca) {
+        contribution.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
+      } else if (nutrient === 'MgO' && OXIDE_CONVERSIONS.MgO_to_Mg) {
+        contribution.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
+      } else if (nutrient === 'SO3' && OXIDE_CONVERSIONS.SO3_to_S) {
+        contribution.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
       } else {
         contribution[nutrient] = (contribution[nutrient] || 0) + ppm;
       }
@@ -3430,63 +3742,141 @@ function optimizeFormula(targetRatios, volume, availableFertilizers, concentrati
     return grams;
   }
 
-  // Step 1: Add Phosphorus (if needed)
-  // Using commercial P2O5 directly, no conversion
-  if (targetPPM_Commercial.P2O5 > 0) {
-    const pFert = findBestFor('P');
-    if (pFert && pFert.pct.P2O5) {
-      const gramsNeeded = (targetPPM_Commercial.P2O5 * volume) / (pFert.pct.P2O5 * 10);
-      addFertilizer(pFert, gramsNeeded);
-    }
+  // Build matrix (fertilizers x nutrients) for least-squares solver
+  // Use hard weights for nutrients the user targeted (>0), and soft weights for untargeted nutrients to discourage excess without blocking solutions
+  const allNutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
+  const targetedKeys = allNutrients.filter(key => (targetPPM_Commercial[key] || 0) > 0);
+  const extraKeys = allNutrients.filter(key => (targetPPM_Commercial[key] || 0) === 0);
+  const nutrientKeys = targetedKeys.concat(extraKeys);
+
+  const weights = [];
+  const targetVector = [];
+  const softWeight = 0.1; // softer penalty for nutrients with 0 target
+
+  nutrientKeys.forEach(key => {
+    const isTargeted = (targetPPM_Commercial[key] || 0) > 0;
+    weights.push(isTargeted ? 1 : softWeight);
+    targetVector.push(targetPPM_Commercial[key] || 0);
+  });
+
+  // If no nutrients were targeted, fall back to equal weights to keep the solver stable
+  if (targetedKeys.length === 0) {
+    weights.fill(1);
   }
 
-  // Step 2: Add Potassium (if needed)
-  // Using commercial K2O directly, no conversion
-  if (targetPPM_Commercial.K2O > 0) {
-    const kFert = findBestFor('K');
-    if (kFert && kFert.pct.K2O) {
-      const gramsNeeded = (targetPPM_Commercial.K2O * volume) / (kFert.pct.K2O * 10);
-      addFertilizer(kFert, gramsNeeded);
-    }
+  const matrix = availableFertilizers.map(fert => {
+    // Contribution per gram of this fertilizer
+    const contrib = calculatePPM(fert, 1);
+    return nutrientKeys.map(key => contrib[key] || 0);
+  });
+
+  const pruneTolerance = typeof options.pruneTolerance === 'number' ? options.pruneTolerance : 0.01;
+
+  // Helper to solve and optionally prune for a given subset of indices
+  function solveForSubset(indices) {
+    const subsetMatrix = indices.map(idx => matrix[idx]);
+    const subsetFerts = indices.map(idx => availableFertilizers[idx]);
+    const baseSolution = solveNonNegativeLeastSquares(subsetMatrix, targetVector, 1500, weights);
+    const pruned = pruneSolution(subsetMatrix, targetVector, weights, baseSolution, subsetFerts, pruneTolerance, 800);
+    return pruned && pruned.x ? { solution: pruned, indices } : { solution: baseSolution, indices };
   }
 
-  // Step 3: Add Calcium (if needed)
-  if (targetPPM_Commercial.Ca > 0) {
-    const caFert = findBestFor('Ca');
-    if (caFert && caFert.pct.Ca) {
-      const gramsNeeded = (targetPPM_Commercial.Ca * volume) / (caFert.pct.Ca * 10);
-      addFertilizer(caFert, gramsNeeded);
-    }
+  // Evaluate error for positive targets only
+  function evaluateSolution(solObj) {
+    const achievedVec = new Array(targetVector.length).fill(0);
+    solObj.solution.x.forEach((xi, pos) => {
+      if (xi === 0) return;
+      const row = solObj.indices.map(idx => matrix[idx])[pos];
+      row.forEach((val, j) => {
+        achievedVec[j] += val * xi;
+      });
+    });
+    let err = 0;
+    targetVector.forEach((t, j) => {
+      if (t > 0) {
+        const diff = Math.abs(achievedVec[j] - t) / t;
+        err += diff * diff;
+      } else {
+        err += achievedVec[j] * achievedVec[j] * 1e-6;
+      }
+    });
+    return { err, achievedVec };
   }
 
-  // Step 4: Add Magnesium (if needed)
-  if (targetPPM_Commercial.Mg > 0) {
-    const mgFert = findBestFor('Mg');
-    if (mgFert && mgFert.pct.Mg) {
-      const gramsNeeded = (targetPPM_Commercial.Mg * volume) / (mgFert.pct.Mg * 10);
-      addFertilizer(mgFert, gramsNeeded);
-    }
-  }
+  // Try exhaustive search of small subsets (up to 3 fertilizers) to favor sparse solutions
+  let best = null;
+  let bestWithin = null;
+  const maxCombo = Math.min(4, availableFertilizers.length);
 
-  // Step 5: Add Sulfur (if needed)
-  if (targetPPM_Commercial.S > 0) {
-    const sFert = availableFertilizers.find(f => f.pct.S && f.pct.S > 0);
-    if (sFert) {
-      const gramsNeeded = (targetPPM_Commercial.S * volume) / (sFert.pct.S * 10);
-      addFertilizer(sFert, gramsNeeded);
-    }
-  }
+  if (availableFertilizers.length <= 8) {
+    function choose(start, depth, combo) {
+      if (depth === 0) {
+        const sol = solveForSubset(combo);
+        const { err } = evaluateSolution(sol);
+        const usedCount = sol.solution.x.filter(v => v > 1e-4).length;
+        const withinTol = targetVector.every((t, j) => {
+          if (t <= 0) return true;
+          const achieved = sol.solution.x.reduce((sum, xi, pos) => {
+            const row = sol.indices.map(idx => matrix[idx])[pos];
+            return sum + xi * row[j];
+          }, 0);
+          return Math.abs(achieved - t) / t <= pruneTolerance;
+        });
 
-  // Step 6: Add Nitrogen (if needed and not achieved through other fertilizers)
-  if (targetPPM_Commercial.N > 0) {
-    const needN = Math.max(0, targetPPM_Commercial.N - achieved.N_total);
-    if (needN > targetPPM_Commercial.N * 0.1) {
-      const nFert = availableFertilizers.find(f => f.pct.N_total && f.pct.N_total > 15 && !f.pct.P2O5);
-      if (nFert) {
-        const gramsNeeded = (needN * volume) / (nFert.pct.N_total * 10);
-        addFertilizer(nFert, gramsNeeded);
+        if (withinTol) {
+          if (!bestWithin || usedCount < bestWithin.usedCount || (usedCount === bestWithin.usedCount && err < bestWithin.err)) {
+            bestWithin = { sol, err, usedCount };
+          }
+        }
+        if (
+          !best ||
+          usedCount < best.usedCount ||
+          (usedCount === best.usedCount && err < best.err)
+        ) {
+          best = { sol, err, usedCount };
+        }
+        return;
+      }
+      for (let i = start; i <= availableFertilizers.length - depth; i++) {
+        combo.push(i);
+        choose(i + 1, depth - 1, combo);
+        combo.pop();
       }
     }
+
+    for (let size = 1; size <= maxCombo; size++) {
+      choose(0, size, []);
+      if (best && best.usedCount === size) break;
+    }
+  }
+
+  // Fallback to full set if no best found
+  let chosen = bestWithin;
+
+  if (!chosen) {
+    const baseSolution = solveNonNegativeLeastSquares(matrix, targetVector, 1500, weights);
+    const pruned = pruneSolution(matrix, targetVector, weights, baseSolution, availableFertilizers, pruneTolerance, 800);
+    chosen = { sol: pruned && pruned.x ? pruned : baseSolution, err: 0, usedCount: availableFertilizers.length };
+  }
+
+  // Apply solved grams to formula/achieved using chosen subset
+  const finalSol = chosen.sol.solution || chosen.sol;
+  const finalIndices = chosen.sol.active || chosen.sol.indices || availableFertilizers.map((_, i) => i);
+  finalSol.x.forEach((grams, pos) => {
+    if (grams > 0.0001) {
+      const fertIdx = finalIndices[pos] !== undefined ? finalIndices[pos] : pos;
+      addFertilizer(availableFertilizers[fertIdx], grams);
+    }
+  });
+
+  // Safety fallback: if nothing was added, use the full set without pruning
+  if (Object.keys(formula).length === 0) {
+    const baseSolution = solveNonNegativeLeastSquares(matrix, targetVector, 1500, weights);
+    baseSolution.x.forEach((grams, index) => {
+      if (grams > 0.0001) {
+        addFertilizer(availableFertilizers[index], grams);
+      }
+    });
   }
 
   return { formula, achieved, targetRatios, targetPPM: targetPPM_Commercial };
@@ -3884,7 +4274,7 @@ function clearReverseCalculator() {
 }
 
 // Main reverse calculator function
-function calculateReverse() {
+async function calculateReverse() {
   // Get target values
   // Note: P and K inputs are treated as P2O5 and K2O (industry standard N-P2O5-K2O)
   const targets = {
@@ -3953,7 +4343,7 @@ function calculateReverse() {
   const calculationMode = document.getElementById('reverse-calculation-mode').value;
 
   // Run optimization
-  const result = optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode);
+  const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
 
   // Display results
   displayReverseResults(result, targets, volume);
@@ -4072,28 +4462,28 @@ function displayReverseResults(result, targets, volume) {
 
     // Get the ratio values for comparison (normalized)
     if (nutrient.key === 'N') {
-      targetRatio = targetRatios.N;
-      achievedRatio = achievedRatios.N;
-      achievedPPM = result.achieved.N_total;
+      targetRatio = targetRatios.N || 0;
+      achievedRatio = achievedRatios.N || 0;
+      achievedPPM = result.achieved.N_total || 0;
     } else if (nutrient.key === 'P') {
       // Elemental P - use P2O5 ratio but show elemental PPM
-      targetRatio = targetRatios.P2O5;
-      achievedRatio = achievedRatios.P2O5;
+      targetRatio = targetRatios.P2O5 || 0;
+      achievedRatio = achievedRatios.P2O5 || 0;
       achievedPPM = result.achieved.P || 0;
     } else if (nutrient.key === 'P2O5') {
       // Oxide form P2O5 (commercial)
-      targetRatio = targetRatios.P2O5;
-      achievedRatio = achievedRatios.P2O5;
+      targetRatio = targetRatios.P2O5 || 0;
+      achievedRatio = achievedRatios.P2O5 || 0;
       achievedPPM = result.achieved.P2O5 || 0;
     } else if (nutrient.key === 'K') {
       // Elemental K - use K2O ratio but show elemental PPM
-      targetRatio = targetRatios.K2O;
-      achievedRatio = achievedRatios.K2O;
+      targetRatio = targetRatios.K2O || 0;
+      achievedRatio = achievedRatios.K2O || 0;
       achievedPPM = result.achieved.K || 0;
     } else if (nutrient.key === 'K2O') {
       // Oxide form K2O (commercial)
-      targetRatio = targetRatios.K2O;
-      achievedRatio = achievedRatios.K2O;
+      targetRatio = targetRatios.K2O || 0;
+      achievedRatio = achievedRatios.K2O || 0;
       achievedPPM = result.achieved.K2O || 0;
     } else {
       // Ca, Mg, S - already elemental
@@ -4129,9 +4519,9 @@ function displayReverseResults(result, targets, volume) {
     html += `
       <tr>
         <td>${nutrient.label}</td>
-        <td>${targetRatio.toFixed(2)}</td>
-        <td class="${className}">${achievedRatio.toFixed(2)} ${status}</td>
-        <td>${achievedPPM.toFixed(1)} ppm</td>
+        <td>${Number(targetRatio || 0).toFixed(2)}</td>
+        <td class="${className}">${Number(achievedRatio || 0).toFixed(2)} ${status}</td>
+        <td>${Number(achievedPPM || 0).toFixed(1)} ppm</td>
       </tr>
     `;
   });
