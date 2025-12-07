@@ -469,19 +469,32 @@ permalink: /fertilizer-calculator/
 
   .fertilizer-checkbox-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     padding: 5px;
   }
 
   .fertilizer-checkbox-item input[type="checkbox"] {
     cursor: pointer;
+    margin-top: 3px;
   }
 
   .fertilizer-checkbox-item label {
     cursor: pointer;
     font-size: 0.9em;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fertilizer-label-name {
+    font-weight: bold;
+  }
+
+  .fertilizer-label-aliases {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 2px;
   }
 
   .selection-controls {
@@ -2247,7 +2260,18 @@ function renderAvailableFertilizersList() {
 
     const label = document.createElement('label');
     label.htmlFor = `available-${fert.id}`;
-    label.textContent = fert.name;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'fertilizer-label-name';
+    nameSpan.textContent = fert.name;
+    label.appendChild(nameSpan);
+
+    if (fert.aliases && fert.aliases.length > 0) {
+      const aliasSpan = document.createElement('span');
+      aliasSpan.className = 'fertilizer-label-aliases';
+      aliasSpan.textContent = fert.aliases.join(', ');
+      label.appendChild(aliasSpan);
+    }
 
     item.appendChild(checkbox);
     item.appendChild(label);
@@ -3641,7 +3665,18 @@ function renderReverseFertilizersList() {
 
     const label = document.createElement('label');
     label.htmlFor = `reverse-${fert.id}`;
-    label.textContent = fert.name;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'fertilizer-label-name';
+    nameSpan.textContent = fert.name;
+    label.appendChild(nameSpan);
+
+    if (fert.aliases && fert.aliases.length > 0) {
+      const aliasSpan = document.createElement('span');
+      aliasSpan.className = 'fertilizer-label-aliases';
+      aliasSpan.textContent = fert.aliases.join(', ');
+      label.appendChild(aliasSpan);
+    }
 
     item.appendChild(checkbox);
     item.appendChild(label);
