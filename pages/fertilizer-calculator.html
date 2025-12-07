@@ -1067,9 +1067,9 @@ permalink: /fertilizer-calculator/
   <p>Calculate nutrient concentrations (PPM) from fertilizer additions to water.</p>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('ppm-calc')">Grams to PPM</button>
-    <button class="tab" onclick="switchTab('formula-builder')">PPM to Grams</button>
-    <button class="tab" onclick="switchTab('reverse-calc')">NPK Ratio to Grams</button>
+    <button class="tab active" data-tab-target="ppm-calc" onclick="switchTab('ppm-calc', this)">Grams to PPM</button>
+    <button class="tab" data-tab-target="formula-builder" onclick="switchTab('formula-builder', this)">PPM to Grams</button>
+    <button class="tab" data-tab-target="reverse-calc" onclick="switchTab('reverse-calc', this)">NPK Ratio to Grams</button>
   </div>
 
   <!-- PPM Calculator Tab -->
@@ -3138,18 +3138,30 @@ function clearAll() {
 }
 
 // Tab switching
-function switchTab(tabId) {
+function switchTab(tabId, tabButton) {
   // Hide all tabs
   document.querySelectorAll('.tab-content').forEach(tab => {
     tab.classList.remove('active');
   });
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.remove('active');
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.classList.remove('active');
   });
 
   // Show selected tab
-  document.getElementById(tabId).classList.add('active');
-  event.target.classList.add('active');
+  const targetTab = document.getElementById(tabId);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
+
+  // Mark the clicked tab active (or fall back by data attribute)
+  if (tabButton instanceof HTMLElement) {
+    tabButton.classList.add('active');
+  } else {
+    const fallbackButton = document.querySelector(`.tab[data-tab-target="${tabId}"]`);
+    if (fallbackButton) {
+      fallbackButton.classList.add('active');
+    }
+  }
 }
 
 // Clear formula builder
@@ -3260,15 +3272,15 @@ function buildFormula() {
   // Get calculation mode
   const mode = document.getElementById('formula-calculation-mode').value;
 
-  // Run optimization algorithm
-  const result = optimizeFormula(targets, volume, availableFertilizers, 75, mode);
+  // Run optimization algorithm using absolute PPM targets
+  const result = optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true });
 
   // Display results
   displayFormulaResults(result, targets, volume, mode);
 }
 
 // Optimization algorithm - finds best fertilizer combination from available fertilizers
-function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide') {
+function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide', options = {}) {
   // Normalize target ratios - find smallest non-zero value and normalize to that
   const ratioValues = Object.values(targetRatios).filter(v => v > 0);
   const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
@@ -3304,6 +3316,20 @@ function optimizeFormula(targetRatios, volume, availableFertilizers, concentrati
     Mg: normalizedRatios.Mg * basePPMForMinRatio,
     S: normalizedRatios.S * basePPMForMinRatio
   };
+
+  // If user wants absolute ppm targets (not ratios), override with direct values
+  if (options.useAbsoluteTargets) {
+    targetPPM_Commercial.N = targetRatios.N || 0;
+    targetPPM_Commercial.P2O5 = mode === 'elemental'
+      ? (targetRatios.P || 0) * P_to_P2O5
+      : (targetRatios.P || 0);
+    targetPPM_Commercial.K2O = mode === 'elemental'
+      ? (targetRatios.K || 0) * K_to_K2O
+      : (targetRatios.K || 0);
+    targetPPM_Commercial.Ca = targetRatios.Ca || 0;
+    targetPPM_Commercial.Mg = targetRatios.Mg || 0;
+    targetPPM_Commercial.S = targetRatios.S || 0;
+  }
 
   const formula = {};
   const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
@@ -3923,8 +3949,11 @@ function calculateReverse() {
     return;
   }
 
+  // Get calculation mode (oxide vs elemental)
+  const calculationMode = document.getElementById('reverse-calculation-mode').value;
+
   // Run optimization
-  const result = optimizeFormula(targets, volume, selectedFertilizers, concentration);
+  const result = optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode);
 
   // Display results
   displayReverseResults(result, targets, volume);
