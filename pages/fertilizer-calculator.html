@@ -3056,10 +3056,10 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
   };
 
   // Use base PPM for the minimum ratio nutrient
-  // 25 ppm for the minimum ratio gives reasonable fertilizer amounts
-  // For 1:5:6, this means N=25ppm, P=125ppm, K=150ppm
+  // 10 ppm for the minimum ratio gives reasonable fertilizer amounts
+  // For 1:5:6, this means N=10ppm, P=50ppm, K=60ppm
   // This gives approximately 2g MAP, 3g SOP, 1g MgSO4 for 10L
-  const basePPMForMinRatio = 25;
+  const basePPMForMinRatio = 10;
 
   const targetPPM = {
     N: normalizedRatios.N * basePPMForMinRatio,
