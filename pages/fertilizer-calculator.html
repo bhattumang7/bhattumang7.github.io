@@ -356,6 +356,25 @@ permalink: /fertilizer-calculator/
     margin-bottom: 10px;
   }
 
+  .fertilizer-search {
+    margin-bottom: 10px;
+  }
+
+  .fertilizer-search input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+
+  .fertilizer-search input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  }
+
   .fertilizer-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -964,6 +983,9 @@ permalink: /fertilizer-calculator/
       <div class="fertilizer-selection">
         <h4>Available Fertilizers</h4>
         <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Select the fertilizers you have available. The calculator will use only these to build your formula.</p>
+        <div class="fertilizer-search">
+          <input type="text" id="available-fertilizer-search" placeholder="Search fertilizers..." oninput="filterAvailableFertilizers(this.value)">
+        </div>
         <div class="selection-controls">
           <button onclick="selectAllAvailableFertilizers()">Select All</button>
           <button onclick="deselectAllAvailableFertilizers()">Deselect All</button>
@@ -1060,6 +1082,9 @@ permalink: /fertilizer-calculator/
       <div class="fertilizer-selection">
         <h4>Select Fertilizers to Use</h4>
         <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Choose which fertilizers you want to use. The calculator will find the best combination from your selection.</p>
+        <div class="fertilizer-search">
+          <input type="text" id="reverse-fertilizer-search" placeholder="Search fertilizers..." oninput="filterReverseFertilizers(this.value)">
+        </div>
         <div class="selection-controls">
           <button onclick="selectAllReverseFertilizers()">Select All</button>
           <button onclick="deselectAllReverseFertilizers()">Deselect All</button>
@@ -2032,6 +2057,7 @@ function renderAvailableFertilizersList() {
   FERTILIZERS.forEach(fert => {
     const item = document.createElement('div');
     item.className = 'fertilizer-checkbox-item';
+    item.id = `available-item-${fert.id}`;
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -2070,6 +2096,29 @@ function selectCommonFertilizers() {
     const checkbox = document.getElementById(`available-${fert.id}`);
     if (checkbox) {
       checkbox.checked = COMMON_FERTILIZERS.includes(fert.id);
+    }
+  });
+}
+
+// Filter available fertilizers based on search term
+function filterAvailableFertilizers(searchTerm) {
+  const normalizedSearch = searchTerm.toLowerCase().trim();
+
+  FERTILIZERS.forEach(fert => {
+    const item = document.getElementById(`available-item-${fert.id}`);
+    if (!item) return;
+
+    // Search in name and aliases
+    const nameMatch = fert.name.toLowerCase().includes(normalizedSearch);
+    const aliasMatch = fert.aliases && fert.aliases.some(alias =>
+      alias.toLowerCase().includes(normalizedSearch)
+    );
+
+    // Show/hide based on match
+    if (nameMatch || aliasMatch || normalizedSearch === '') {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
     }
   });
 }
@@ -2880,6 +2929,13 @@ function clearFormulaBuilder() {
   volumeInput.value = '10';
   volumeInput.classList.remove('input-error');
 
+  // Clear search box
+  const searchInput = document.getElementById('available-fertilizer-search');
+  if (searchInput) {
+    searchInput.value = '';
+    filterAvailableFertilizers('');
+  }
+
   // Hide results
   document.getElementById('formula-results').style.display = 'none';
 }
@@ -3309,6 +3365,7 @@ function renderReverseFertilizersList() {
   FERTILIZERS.forEach(fert => {
     const item = document.createElement('div');
     item.className = 'fertilizer-checkbox-item';
+    item.id = `reverse-item-${fert.id}`;
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -3351,6 +3408,29 @@ function selectCommonReverseFertilizers() {
   });
 }
 
+// Filter reverse fertilizers based on search term
+function filterReverseFertilizers(searchTerm) {
+  const normalizedSearch = searchTerm.toLowerCase().trim();
+
+  FERTILIZERS.forEach(fert => {
+    const item = document.getElementById(`reverse-item-${fert.id}`);
+    if (!item) return;
+
+    // Search in name and aliases
+    const nameMatch = fert.name.toLowerCase().includes(normalizedSearch);
+    const aliasMatch = fert.aliases && fert.aliases.some(alias =>
+      alias.toLowerCase().includes(normalizedSearch)
+    );
+
+    // Show/hide based on match
+    if (nameMatch || aliasMatch || normalizedSearch === '') {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
 // Clear reverse calculator
 function clearReverseCalculator() {
   // Clear target inputs and remove error states
@@ -3372,6 +3452,13 @@ function clearReverseCalculator() {
 
   // Reset fertilizer selections to common only
   selectCommonReverseFertilizers();
+
+  // Clear search box
+  const searchInput = document.getElementById('reverse-fertilizer-search');
+  if (searchInput) {
+    searchInput.value = '';
+    filterReverseFertilizers('');
+  }
 
   // Hide results
   const resultsSection = document.getElementById('reverse-results');
