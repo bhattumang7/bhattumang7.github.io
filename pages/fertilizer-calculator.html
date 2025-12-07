@@ -3055,21 +3055,19 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
     S: targetRatios.S / minRatio
   };
 
-  // Use a base amount that gives reasonable fertilizer quantities
-  // For a 1:5:6 ratio, this gives ~2g:3g:1g for typical fertilizers at 10L
-  const baseGramsPerTenLiters = 0.4;
-  const scaleFactor = volume / 10; // Adjust for actual volume
-  const baseGrams = baseGramsPerTenLiters * scaleFactor;
+  // Use base PPM for the minimum ratio nutrient
+  // 25 ppm for the minimum ratio gives reasonable fertilizer amounts
+  // For 1:5:6, this means N=25ppm, P=125ppm, K=150ppm
+  // This gives approximately 2g MAP, 3g SOP, 1g MgSO4 for 10L
+  const basePPMForMinRatio = 25;
 
-  // Calculate target grams for each nutrient based on ratios
-  // These are NOT PPM targets, but proportional amounts
-  const targetGrams = {
-    N: normalizedRatios.N * baseGrams,
-    P: normalizedRatios.P * baseGrams,
-    K: normalizedRatios.K * baseGrams,
-    Ca: normalizedRatios.Ca * baseGrams,
-    Mg: normalizedRatios.Mg * baseGrams,
-    S: normalizedRatios.S * baseGrams
+  const targetPPM = {
+    N: normalizedRatios.N * basePPMForMinRatio,
+    P: normalizedRatios.P * basePPMForMinRatio,
+    K: normalizedRatios.K * basePPMForMinRatio,
+    Ca: normalizedRatios.Ca * basePPMForMinRatio,
+    Mg: normalizedRatios.Mg * basePPMForMinRatio,
+    S: normalizedRatios.S * basePPMForMinRatio
   };
 
   const formula = {};
@@ -3170,74 +3168,65 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
   }
 
   // Step 1: Add Phosphorus (if needed)
-  if (targetGrams.P > 0) {
+  if (targetPPM.P > 0) {
     const pFert = findBestFor('P');
     if (pFert && pFert.pct.P2O5) {
-      const p2o5Needed = targetGrams.P / OXIDE_CONVERSIONS.P2O5_to_P;
-      const gramsNeeded = p2o5Needed / (pFert.pct.P2O5 / 100);
+      const ppmP2O5Needed = targetPPM.P / OXIDE_CONVERSIONS.P2O5_to_P;
+      const gramsNeeded = (ppmP2O5Needed * volume) / (pFert.pct.P2O5 * 10);
       addFertilizer(pFert, gramsNeeded);
     }
   }
 
   // Step 2: Add Potassium (if needed)
-  if (targetGrams.K > 0) {
+  if (targetPPM.K > 0) {
     const kFert = findBestFor('K');
     if (kFert && kFert.pct.K2O) {
-      const k2oNeeded = targetGrams.K / OXIDE_CONVERSIONS.K2O_to_K;
-      const gramsNeeded = k2oNeeded / (kFert.pct.K2O / 100);
+      const ppmK2ONeeded = targetPPM.K / OXIDE_CONVERSIONS.K2O_to_K;
+      const gramsNeeded = (ppmK2ONeeded * volume) / (kFert.pct.K2O * 10);
       addFertilizer(kFert, gramsNeeded);
     }
   }
 
   // Step 3: Add Calcium (if needed)
-  if (targetGrams.Ca > 0) {
+  if (targetPPM.Ca > 0) {
     const caFert = findBestFor('Ca');
     if (caFert && caFert.pct.Ca) {
-      const gramsNeeded = targetGrams.Ca / (caFert.pct.Ca / 100);
+      const gramsNeeded = (targetPPM.Ca * volume) / (caFert.pct.Ca * 10);
       addFertilizer(caFert, gramsNeeded);
     }
   }
 
   // Step 4: Add Magnesium (if needed)
-  if (targetGrams.Mg > 0) {
+  if (targetPPM.Mg > 0) {
     const mgFert = findBestFor('Mg');
     if (mgFert && mgFert.pct.Mg) {
-      const gramsNeeded = targetGrams.Mg / (mgFert.pct.Mg / 100);
+      const gramsNeeded = (targetPPM.Mg * volume) / (mgFert.pct.Mg * 10);
       addFertilizer(mgFert, gramsNeeded);
     }
   }
 
   // Step 5: Add Sulfur (if needed)
-  if (targetGrams.S > 0) {
+  if (targetPPM.S > 0) {
     const sFert = availableFertilizers.find(f => f.pct.S && f.pct.S > 0);
     if (sFert) {
-      const gramsNeeded = targetGrams.S / (sFert.pct.S / 100);
+      const gramsNeeded = (targetPPM.S * volume) / (sFert.pct.S * 10);
       addFertilizer(sFert, gramsNeeded);
     }
   }
 
   // Step 6: Add Nitrogen (if needed and not achieved through other fertilizers)
-  if (targetGrams.N > 0) {
-    const currentNGrams = Object.values(formula).reduce((sum, grams, idx) => {
-      const fert = availableFertilizers[idx];
-      if (fert) {
-        const nGrams = calculateNutrientGrams(fert, grams);
-        return sum + nGrams.N;
-      }
-      return sum;
-    }, 0);
-
-    const needN = targetGrams.N - currentNGrams;
-    if (needN > targetGrams.N * 0.1) {
+  if (targetPPM.N > 0) {
+    const needN = Math.max(0, targetPPM.N - achieved.N_total);
+    if (needN > targetPPM.N * 0.1) {
       const nFert = availableFertilizers.find(f => f.pct.N_total && f.pct.N_total > 15 && !f.pct.P2O5);
       if (nFert) {
-        const gramsNeeded = needN / (nFert.pct.N_total / 100);
+        const gramsNeeded = (needN * volume) / (nFert.pct.N_total * 10);
         addFertilizer(nFert, gramsNeeded);
       }
     }
   }
 
-  return { formula, achieved, targetRatios, scaledTargets };
+  return { formula, achieved, targetRatios, targetPPM };
 }
 
 // Display formula results
