@@ -2471,7 +2471,21 @@ function calculate() {
       if (!ppmResults[nutrient]) {
         ppmResults[nutrient] = 0;
       }
-      ppmResults[nutrient] += ppm;
+
+      // Handle nitrogen forms properly to avoid double counting
+      if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+        ppmResults[nutrient] += ppm;
+        // Also add to N_total
+        if (!ppmResults.N_total) ppmResults.N_total = 0;
+        ppmResults.N_total += ppm;
+      } else if (nutrient === 'N_total') {
+        // Only use N_total if there are no specific nitrogen forms
+        if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
+          ppmResults[nutrient] += ppm;
+        }
+      } else {
+        ppmResults[nutrient] += ppm;
+      }
     });
   });
 
@@ -3057,8 +3071,18 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
         contribution.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
       } else if (nutrient === 'K2O') {
         contribution.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-      } else if (nutrient === 'N_total' || nutrient === 'N_NO3' || nutrient === 'N_NH4') {
-        contribution[nutrient] += ppm;
+      } else if (nutrient === 'N_NO3') {
+        contribution.N_NO3 += ppm;
+        contribution.N_total += ppm;
+      } else if (nutrient === 'N_NH4') {
+        contribution.N_NH4 += ppm;
+        contribution.N_total += ppm;
+      } else if (nutrient === 'N_total') {
+        // Skip N_total if we have specific forms (N_NO3/N_NH4)
+        // Only use N_total if there are no specific nitrogen forms defined
+        if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
+          contribution.N_total += ppm;
+        }
       } else {
         contribution[nutrient] = (contribution[nutrient] || 0) + ppm;
       }
