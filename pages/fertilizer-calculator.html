@@ -3055,11 +3055,11 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
     S: targetRatios.S / minRatio
   };
 
-  // Use base PPM for the minimum ratio nutrient
-  // 10 ppm for the minimum ratio gives reasonable fertilizer amounts
-  // For 1:5:6, this means N=10ppm, P=50ppm, K=60ppm
-  // This gives approximately 2g MAP, 3g SOP, 1g MgSO4 for 10L
-  const basePPMForMinRatio = 10;
+  // Use 1 ppm for the minimum ratio nutrient
+  // This gives truly minimal amounts that users can scale by multiplying
+  // For 1:5:6, this means N=1ppm, P=5ppm, K=6ppm
+  // Users multiply the result by 10, 20, 50, etc. to get desired concentration
+  const basePPMForMinRatio = 1;
 
   const targetPPM = {
     N: normalizedRatios.N * basePPMForMinRatio,
@@ -3616,6 +3616,7 @@ function displayReverseResults(result, targets, volume) {
   resultsSection.style.display = 'block';
 
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
+  html += '<p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">These are minimal amounts. Multiply by 10-50× for typical concentrations.</p>';
 
   // Display formula
   if (Object.keys(result.formula).length === 0) {
