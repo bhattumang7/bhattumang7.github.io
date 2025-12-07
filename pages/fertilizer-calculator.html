@@ -3485,12 +3485,13 @@ function calculateReverse() {
   let hasError = false;
   const allNutrientFields = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg', 'reverse-s'];
 
-  // Validate all nutrient fields - must be valid numbers >= 0
+  // Validate all nutrient fields - must be valid numbers >= 0 or blank (treated as 0)
   allNutrientFields.forEach(id => {
     const input = document.getElementById(id);
     const value = input.value.trim();
 
-    if (value === '' || isNaN(parseFloat(value)) || parseFloat(value) < 0) {
+    // Allow empty fields (treated as 0) or valid numbers >= 0
+    if (value !== '' && (isNaN(parseFloat(value)) || parseFloat(value) < 0)) {
       input.classList.add('input-error');
       hasError = true;
     } else {
