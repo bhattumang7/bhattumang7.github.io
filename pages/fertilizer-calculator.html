@@ -3056,34 +3056,36 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
   };
 
   // Use 1 ppm for the minimum ratio nutrient
-  // This gives truly minimal amounts that users can scale by multiplying
-  // For 1:5:6, this means N=1ppm, P=5ppm, K=6ppm
+  // IMPORTANT: Work with COMMERCIAL ratios (N:P2O5:K2O), not elemental
+  // For 1:5:6, this means N=1ppm, P2O5=5ppm, K2O=6ppm
   // Users multiply the result by 10, 20, 50, etc. to get desired concentration
   const basePPMForMinRatio = 1;
 
-  const targetPPM = {
+  const targetPPM_Commercial = {
     N: normalizedRatios.N * basePPMForMinRatio,
-    P: normalizedRatios.P * basePPMForMinRatio,
-    K: normalizedRatios.K * basePPMForMinRatio,
+    P2O5: normalizedRatios.P * basePPMForMinRatio,  // P input is treated as P2O5
+    K2O: normalizedRatios.K * basePPMForMinRatio,   // K input is treated as K2O
     Ca: normalizedRatios.Ca * basePPMForMinRatio,
     Mg: normalizedRatios.Mg * basePPMForMinRatio,
     S: normalizedRatios.S * basePPMForMinRatio
   };
 
   const formula = {};
-  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
 
   // Helper function to calculate PPM contribution from a fertilizer
   function calculatePPM(fert, grams) {
-    const contribution = { N_total: 0, N_NO3: 0, N_NH4: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+    const contribution = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
 
     Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
       const ppm = (grams * 1000 * (percentage / 100)) / volume;
 
       if (nutrient === 'P2O5') {
-        contribution.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+        contribution.P2O5 += ppm;  // Track commercial P2O5
+        contribution.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;  // Also track elemental
       } else if (nutrient === 'K2O') {
-        contribution.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+        contribution.K2O += ppm;  // Track commercial K2O
+        contribution.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;  // Also track elemental
       } else if (nutrient === 'N_NO3') {
         contribution.N_NO3 += ppm;
         contribution.N_total += ppm;
@@ -3168,56 +3170,56 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
   }
 
   // Step 1: Add Phosphorus (if needed)
-  if (targetPPM.P > 0) {
+  // Using commercial P2O5 directly, no conversion
+  if (targetPPM_Commercial.P2O5 > 0) {
     const pFert = findBestFor('P');
     if (pFert && pFert.pct.P2O5) {
-      const ppmP2O5Needed = targetPPM.P / OXIDE_CONVERSIONS.P2O5_to_P;
-      const gramsNeeded = (ppmP2O5Needed * volume) / (pFert.pct.P2O5 * 10);
+      const gramsNeeded = (targetPPM_Commercial.P2O5 * volume) / (pFert.pct.P2O5 * 10);
       addFertilizer(pFert, gramsNeeded);
     }
   }
 
   // Step 2: Add Potassium (if needed)
-  if (targetPPM.K > 0) {
+  // Using commercial K2O directly, no conversion
+  if (targetPPM_Commercial.K2O > 0) {
     const kFert = findBestFor('K');
     if (kFert && kFert.pct.K2O) {
-      const ppmK2ONeeded = targetPPM.K / OXIDE_CONVERSIONS.K2O_to_K;
-      const gramsNeeded = (ppmK2ONeeded * volume) / (kFert.pct.K2O * 10);
+      const gramsNeeded = (targetPPM_Commercial.K2O * volume) / (kFert.pct.K2O * 10);
       addFertilizer(kFert, gramsNeeded);
     }
   }
 
   // Step 3: Add Calcium (if needed)
-  if (targetPPM.Ca > 0) {
+  if (targetPPM_Commercial.Ca > 0) {
     const caFert = findBestFor('Ca');
     if (caFert && caFert.pct.Ca) {
-      const gramsNeeded = (targetPPM.Ca * volume) / (caFert.pct.Ca * 10);
+      const gramsNeeded = (targetPPM_Commercial.Ca * volume) / (caFert.pct.Ca * 10);
       addFertilizer(caFert, gramsNeeded);
     }
   }
 
   // Step 4: Add Magnesium (if needed)
-  if (targetPPM.Mg > 0) {
+  if (targetPPM_Commercial.Mg > 0) {
     const mgFert = findBestFor('Mg');
     if (mgFert && mgFert.pct.Mg) {
-      const gramsNeeded = (targetPPM.Mg * volume) / (mgFert.pct.Mg * 10);
+      const gramsNeeded = (targetPPM_Commercial.Mg * volume) / (mgFert.pct.Mg * 10);
       addFertilizer(mgFert, gramsNeeded);
     }
   }
 
   // Step 5: Add Sulfur (if needed)
-  if (targetPPM.S > 0) {
+  if (targetPPM_Commercial.S > 0) {
     const sFert = availableFertilizers.find(f => f.pct.S && f.pct.S > 0);
     if (sFert) {
-      const gramsNeeded = (targetPPM.S * volume) / (sFert.pct.S * 10);
+      const gramsNeeded = (targetPPM_Commercial.S * volume) / (sFert.pct.S * 10);
       addFertilizer(sFert, gramsNeeded);
     }
   }
 
   // Step 6: Add Nitrogen (if needed and not achieved through other fertilizers)
-  if (targetPPM.N > 0) {
-    const needN = Math.max(0, targetPPM.N - achieved.N_total);
-    if (needN > targetPPM.N * 0.1) {
+  if (targetPPM_Commercial.N > 0) {
+    const needN = Math.max(0, targetPPM_Commercial.N - achieved.N_total);
+    if (needN > targetPPM_Commercial.N * 0.1) {
       const nFert = availableFertilizers.find(f => f.pct.N_total && f.pct.N_total > 15 && !f.pct.P2O5);
       if (nFert) {
         const gramsNeeded = (needN * volume) / (nFert.pct.N_total * 10);
@@ -3226,7 +3228,7 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
     }
   }
 
-  return { formula, achieved, targetRatios, targetPPM };
+  return { formula, achieved, targetRatios, targetPPM: targetPPM_Commercial };
 }
 
 // Display formula results
@@ -3637,26 +3639,26 @@ function displayReverseResults(result, targets, volume) {
 
   html += '</div>';
 
-  // Calculate achieved ratios
-  const achievedPPM = {
+  // Calculate achieved ratios using COMMERCIAL values (N:P2O5:K2O)
+  const achievedPPM_Commercial = {
     N: result.achieved.N_total,
-    P: result.achieved.P,
-    K: result.achieved.K,
+    P2O5: result.achieved.P2O5,
+    K2O: result.achieved.K2O,
     Ca: result.achieved.Ca,
     Mg: result.achieved.Mg,
     S: result.achieved.S
   };
 
   // Normalize achieved values to ratios (find smallest non-zero value)
-  const achievedValues = Object.values(achievedPPM).filter(v => v > 0);
+  const achievedValues = Object.values(achievedPPM_Commercial).filter(v => v > 0);
   const minAchieved = achievedValues.length > 0 ? Math.min(...achievedValues) : 1;
   const achievedRatios = {
-    N: achievedPPM.N > 0 ? achievedPPM.N / minAchieved : 0,
-    P: achievedPPM.P > 0 ? achievedPPM.P / minAchieved : 0,
-    K: achievedPPM.K > 0 ? achievedPPM.K / minAchieved : 0,
-    Ca: achievedPPM.Ca > 0 ? achievedPPM.Ca / minAchieved : 0,
-    Mg: achievedPPM.Mg > 0 ? achievedPPM.Mg / minAchieved : 0,
-    S: achievedPPM.S > 0 ? achievedPPM.S / minAchieved : 0
+    N: achievedPPM_Commercial.N > 0 ? achievedPPM_Commercial.N / minAchieved : 0,
+    P2O5: achievedPPM_Commercial.P2O5 > 0 ? achievedPPM_Commercial.P2O5 / minAchieved : 0,
+    K2O: achievedPPM_Commercial.K2O > 0 ? achievedPPM_Commercial.K2O / minAchieved : 0,
+    Ca: achievedPPM_Commercial.Ca > 0 ? achievedPPM_Commercial.Ca / minAchieved : 0,
+    Mg: achievedPPM_Commercial.Mg > 0 ? achievedPPM_Commercial.Mg / minAchieved : 0,
+    S: achievedPPM_Commercial.S > 0 ? achievedPPM_Commercial.S / minAchieved : 0
   };
 
   // Normalize target values to ratios
@@ -3664,8 +3666,8 @@ function displayReverseResults(result, targets, volume) {
   const minTarget = targetValues.length > 0 ? Math.min(...targetValues) : 1;
   const targetRatios = {
     N: targets.N > 0 ? targets.N / minTarget : 0,
-    P: targets.P > 0 ? targets.P / minTarget : 0,
-    K: targets.K > 0 ? targets.K / minTarget : 0,
+    P2O5: targets.P > 0 ? targets.P / minTarget : 0,  // P input is treated as P2O5
+    K2O: targets.K > 0 ? targets.K / minTarget : 0,   // K input is treated as K2O
     Ca: targets.Ca > 0 ? targets.Ca / minTarget : 0,
     Mg: targets.Mg > 0 ? targets.Mg / minTarget : 0,
     S: targets.S > 0 ? targets.S / minTarget : 0
@@ -3676,11 +3678,11 @@ function displayReverseResults(result, targets, volume) {
   html += '<table class="comparison-table">';
   html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
 
-  const nutrients = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+  const nutrients = ['N', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
   const labels = {
     N: 'Nitrogen (N)',
-    P: 'Phosphorus (P)',
-    K: 'Potassium (K)',
+    P2O5: 'Phosphorus (P₂O₅)',
+    K2O: 'Potassium (K₂O)',
     Ca: 'Calcium (Ca)',
     Mg: 'Magnesium (Mg)',
     S: 'Sulfur (S)'
@@ -3692,7 +3694,7 @@ function displayReverseResults(result, targets, volume) {
   nutrients.forEach(nutrient => {
     const targetRatio = targetRatios[nutrient];
     const achievedRatio = achievedRatios[nutrient];
-    const achievedPPMValue = achievedPPM[nutrient];
+    const achievedPPMValue = achievedPPM_Commercial[nutrient];
 
     // Skip if both target and achieved are zero
     if (targetRatio === 0 && achievedRatio === 0) return;
