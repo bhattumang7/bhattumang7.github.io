@@ -1079,6 +1079,17 @@ permalink: /fertilizer-calculator/
         </div>
       </div>
 
+      <div style="margin-top: 20px; margin-bottom: 20px;">
+        <label for="reverse-concentration" style="display: block; margin-bottom: 8px; font-weight: bold;">Target Concentration</label>
+        <select id="reverse-concentration" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="50">Light (EC ~1.0) - Seedlings/Cuttings</option>
+          <option value="75" selected>Moderate (EC ~1.5) - General Purpose</option>
+          <option value="100">Strong (EC ~2.0) - Vegetative Growth</option>
+          <option value="125">Very Strong (EC ~2.5) - Heavy Feeders</option>
+        </select>
+        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">This determines the fertilizer amounts while maintaining your ratio.</p>
+      </div>
+
       <div class="fertilizer-selection">
         <h4>Select Fertilizers to Use</h4>
         <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Choose which fertilizers you want to use. The calculator will find the best combination from your selection.</p>
@@ -3041,7 +3052,7 @@ function buildFormula() {
 }
 
 // Optimization algorithm - finds best fertilizer combination from available fertilizers
-function optimizeFormula(targetRatios, volume, availableFertilizers) {
+function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75) {
   // Normalize target ratios - find smallest non-zero value and normalize to that
   const ratioValues = Object.values(targetRatios).filter(v => v > 0);
   const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
@@ -3055,11 +3066,10 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
     S: targetRatios.S / minRatio
   };
 
-  // Use 75 ppm for the minimum ratio nutrient
+  // Use user-selected concentration (base PPM for minimum ratio nutrient)
   // IMPORTANT: Work with COMMERCIAL ratios (N:P2O5:K2O), not elemental
-  // For 1:5:6, this means N=75ppm, P2O5=375ppm, K2O=450ppm
-  // This gives approximately 1.5g total fertilizer per liter (industry standard concentration)
-  const basePPMForMinRatio = 75;
+  // concentration=50 → EC~1.0, concentration=75 → EC~1.5, concentration=100 → EC~2.0
+  const basePPMForMinRatio = concentration;
 
   const targetPPM_Commercial = {
     N: normalizedRatios.N * basePPMForMinRatio,
@@ -3552,6 +3562,7 @@ function calculateReverse() {
   };
 
   const volume = parseFloat(document.getElementById('reverse-volume').value) || 10;
+  const concentration = parseFloat(document.getElementById('reverse-concentration').value) || 75;
 
   // Validate inputs
   let hasError = false;
@@ -3604,7 +3615,7 @@ function calculateReverse() {
   }
 
   // Run optimization
-  const result = optimizeFormula(targets, volume, selectedFertilizers);
+  const result = optimizeFormula(targets, volume, selectedFertilizers, concentration);
 
   // Display results
   displayReverseResults(result, targets, volume);
@@ -3618,7 +3629,6 @@ function displayReverseResults(result, targets, volume) {
   resultsSection.style.display = 'block';
 
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
-  html += '<p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">Standard concentration: approximately 1.5g total per liter.</p>';
 
   // Display formula
   if (Object.keys(result.formula).length === 0) {
