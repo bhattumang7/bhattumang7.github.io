@@ -3055,11 +3055,11 @@ function optimizeFormula(targetRatios, volume, availableFertilizers) {
     S: targetRatios.S / minRatio
   };
 
-  // Use 1 ppm for the minimum ratio nutrient
+  // Use 75 ppm for the minimum ratio nutrient
   // IMPORTANT: Work with COMMERCIAL ratios (N:P2O5:K2O), not elemental
-  // For 1:5:6, this means N=1ppm, P2O5=5ppm, K2O=6ppm
-  // Users multiply the result by 10, 20, 50, etc. to get desired concentration
-  const basePPMForMinRatio = 1;
+  // For 1:5:6, this means N=75ppm, P2O5=375ppm, K2O=450ppm
+  // This gives approximately 1.5g total fertilizer per liter (industry standard concentration)
+  const basePPMForMinRatio = 75;
 
   const targetPPM_Commercial = {
     N: normalizedRatios.N * basePPMForMinRatio,
@@ -3618,7 +3618,7 @@ function displayReverseResults(result, targets, volume) {
   resultsSection.style.display = 'block';
 
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
-  html += '<p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">These are minimal amounts. Multiply by 10-50× for typical concentrations.</p>';
+  html += '<p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">Standard concentration: approximately 1.5g total per liter.</p>';
 
   // Display formula
   if (Object.keys(result.formula).length === 0) {
