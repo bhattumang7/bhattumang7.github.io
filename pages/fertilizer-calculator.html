@@ -1132,6 +1132,66 @@ permalink: /fertilizer-calculator/
     .formula-box .formula {
       font-size: 1em;
     }
+
+    /* Mobile-friendly tables */
+    .conversion-table {
+      display: block;
+      overflow-x: auto;
+    }
+
+    .conversion-table thead {
+      display: none;
+    }
+
+    .conversion-table tbody {
+      display: block;
+    }
+
+    .conversion-table tr {
+      display: block;
+      margin-bottom: 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 10px;
+      background: #f8f9fa;
+    }
+
+    .conversion-table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border: none;
+      border-bottom: 1px solid #eee;
+      text-align: right;
+    }
+
+    .conversion-table td:last-child {
+      border-bottom: none;
+    }
+
+    .conversion-table td::before {
+      content: attr(data-label);
+      font-weight: bold;
+      color: #007bff;
+      text-align: left;
+      flex: 1;
+      margin-right: 10px;
+    }
+
+    .conversion-table td[style*="monospace"] {
+      font-size: 0.8em !important;
+      word-break: break-all;
+    }
+
+    /* Step section adjustments for mobile */
+    .step > div[style*="margin-left: 38px"] {
+      margin-left: 0 !important;
+    }
+
+    .step p[style*="margin: 10px 0 10px 38px"] {
+      margin-left: 0 !important;
+    }
   }
 </style>
 
@@ -1532,24 +1592,24 @@ permalink: /fertilizer-calculator/
           </thead>
           <tbody>
             <tr>
-              <td>P₂O₅ (Phosphate)</td>
-              <td>P (Phosphorus)</td>
-              <td>Multiply by 0.436</td>
+              <td data-label="Oxide Form">P₂O₅ (Phosphate)</td>
+              <td data-label="Elemental Form">P (Phosphorus)</td>
+              <td data-label="Conversion Factor">Multiply by 0.436</td>
             </tr>
             <tr>
-              <td>K₂O (Potash)</td>
-              <td>K (Potassium)</td>
-              <td>Multiply by 0.830</td>
+              <td data-label="Oxide Form">K₂O (Potash)</td>
+              <td data-label="Elemental Form">K (Potassium)</td>
+              <td data-label="Conversion Factor">Multiply by 0.830</td>
             </tr>
             <tr>
-              <td>MgO (Magnesium Oxide)</td>
-              <td>Mg (Magnesium)</td>
-              <td>Multiply by 0.603</td>
+              <td data-label="Oxide Form">MgO (Magnesium Oxide)</td>
+              <td data-label="Elemental Form">Mg (Magnesium)</td>
+              <td data-label="Conversion Factor">Multiply by 0.603</td>
             </tr>
             <tr>
-              <td>CaO (Calcium Oxide)</td>
-              <td>Ca (Calcium)</td>
-              <td>Multiply by 0.715</td>
+              <td data-label="Oxide Form">CaO (Calcium Oxide)</td>
+              <td data-label="Elemental Form">Ca (Calcium)</td>
+              <td data-label="Conversion Factor">Multiply by 0.715</td>
             </tr>
           </tbody>
         </table>
@@ -4939,10 +4999,10 @@ function generateExplanationContent() {
 
         content += `
           <tr>
-            <td><strong>${nutrient}</strong></td>
-            <td>${percentage}%</td>
-            <td style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
-            <td><strong>${ppm.toFixed(2)} PPM</strong></td>
+            <td data-label="Nutrient"><strong>${nutrient}</strong></td>
+            <td data-label="% in Fertilizer">${percentage}%</td>
+            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td data-label="PPM"><strong>${ppm.toFixed(2)} PPM</strong></td>
           </tr>
         `;
       });
@@ -5051,36 +5111,36 @@ function generateExplanationContent() {
         if (nutrientContributions['P2O5']) {
           content += `
                 <tr>
-                  <td>P₂O₅ (Phosphate)</td>
-                  <td>P (Phosphorus)</td>
-                  <td>×0.436</td>
+                  <td data-label="Oxide Form">P₂O₅ (Phosphate)</td>
+                  <td data-label="Elemental Form">P (Phosphorus)</td>
+                  <td data-label="Conversion Factor">×0.436</td>
                 </tr>
           `;
         }
         if (nutrientContributions['K2O']) {
           content += `
                 <tr>
-                  <td>K₂O (Potash)</td>
-                  <td>K (Potassium)</td>
-                  <td>×0.830</td>
+                  <td data-label="Oxide Form">K₂O (Potash)</td>
+                  <td data-label="Elemental Form">K (Potassium)</td>
+                  <td data-label="Conversion Factor">×0.830</td>
                 </tr>
           `;
         }
         if (nutrientContributions['MgO']) {
           content += `
                 <tr>
-                  <td>MgO (Magnesium Oxide)</td>
-                  <td>Mg (Magnesium)</td>
-                  <td>×0.603</td>
+                  <td data-label="Oxide Form">MgO (Magnesium Oxide)</td>
+                  <td data-label="Elemental Form">Mg (Magnesium)</td>
+                  <td data-label="Conversion Factor">×0.603</td>
                 </tr>
           `;
         }
         if (nutrientContributions['CaO']) {
           content += `
                 <tr>
-                  <td>CaO (Calcium Oxide)</td>
-                  <td>Ca (Calcium)</td>
-                  <td>×0.715</td>
+                  <td data-label="Oxide Form">CaO (Calcium Oxide)</td>
+                  <td data-label="Elemental Form">Ca (Calcium)</td>
+                  <td data-label="Conversion Factor">×0.715</td>
                 </tr>
           `;
         }
@@ -5346,11 +5406,11 @@ function generateIonBalanceExplanation() {
 
         content += `
           <tr>
-            <td><strong>${ion.ion}</strong></td>
-            <td>${ion.type === 'cation' ? 'Cation (+)' : 'Anion (-)'}</td>
-            <td>${ion.count} × ${ion.charge}</td>
-            <td style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
-            <td><strong>${ion.meq.toFixed(2)} meq/L</strong></td>
+            <td data-label="Ion"><strong>${ion.ion}</strong></td>
+            <td data-label="Type">${ion.type === 'cation' ? 'Cation (+)' : 'Anion (-)'}</td>
+            <td data-label="Count × Charge">${ion.count} × ${ion.charge}</td>
+            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td data-label="meq/L"><strong>${ion.meq.toFixed(2)} meq/L</strong></td>
           </tr>
         `;
       });
