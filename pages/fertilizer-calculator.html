@@ -1747,7 +1747,7 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
     slackMinus[n] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `s_minus_${n}` });
   });
 
-  const BIG_M = 50;
+  const BIG_M = 10000;
   fertilizers.forEach(f => {
     model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
   });
