@@ -86,6 +86,79 @@ permalink: /fertilizer-calculator/
     background-color: #fff5f5 !important;
   }
 
+  /* Progress bar styles */
+  .progress-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .progress-overlay.active {
+    display: flex;
+  }
+
+  .progress-container {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    min-width: 300px;
+    max-width: 400px;
+  }
+
+  .progress-container h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 18px;
+  }
+
+  .progress-bar-wrapper {
+    background: #e9ecef;
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+    margin-bottom: 15px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .progress-bar.indeterminate {
+    width: 30%;
+    animation: indeterminate 1.5s infinite ease-in-out;
+  }
+
+  @keyframes indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(200%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .progress-text {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+  }
+
   .fertilizer-selector {
     margin-bottom: 20px;
   }
@@ -1062,6 +1135,17 @@ permalink: /fertilizer-calculator/
   }
 </style>
 
+<!-- Progress Bar Overlay -->
+<div id="progress-overlay" class="progress-overlay">
+  <div class="progress-container">
+    <h3 id="progress-title">Calculating...</h3>
+    <div class="progress-bar-wrapper">
+      <div id="progress-bar" class="progress-bar"></div>
+    </div>
+    <p id="progress-text" class="progress-text">Initializing solver...</p>
+  </div>
+</div>
+
 <div class="calculator-container">
   <h1>Fertilizer PPM Calculator</h1>
   <p>Calculate nutrient concentrations (PPM) from fertilizer additions to water.</p>
@@ -1530,6 +1614,48 @@ permalink: /fertilizer-calculator/
 <script src="/assets/vendor/highs/highs.js"></script>
 
 <script>
+// Progress bar helper functions
+const progressBar = {
+  overlay: null,
+  bar: null,
+  title: null,
+  text: null,
+
+  init() {
+    this.overlay = document.getElementById('progress-overlay');
+    this.bar = document.getElementById('progress-bar');
+    this.title = document.getElementById('progress-title');
+    this.text = document.getElementById('progress-text');
+  },
+
+  show(title = 'Calculating...') {
+    if (!this.overlay) this.init();
+    this.title.textContent = title;
+    this.bar.style.width = '0%';
+    this.bar.classList.remove('indeterminate');
+    this.text.textContent = 'Initializing...';
+    this.overlay.classList.add('active');
+  },
+
+  update(percent, message) {
+    if (!this.bar) this.init();
+    this.bar.classList.remove('indeterminate');
+    this.bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    if (message) this.text.textContent = message;
+  },
+
+  setIndeterminate(message) {
+    if (!this.bar) this.init();
+    this.bar.classList.add('indeterminate');
+    if (message) this.text.textContent = message;
+  },
+
+  hide() {
+    if (!this.overlay) this.init();
+    this.overlay.classList.remove('active');
+  }
+};
+
 // MILP solver helper (browser) using highs.js + lp-model
 async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01 }) {
   const highsFactory = window.highs || window.Module;
@@ -3394,11 +3520,39 @@ async function buildFormula() {
   // Get calculation mode
   const mode = document.getElementById('formula-calculation-mode').value;
 
-  // Run optimization algorithm using absolute PPM targets
-  const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true });
+  // Show progress bar
+  progressBar.show('Building Formula');
+  progressBar.update(10, 'Validating inputs...');
 
-  // Display results
-  displayFormulaResults(result, targets, volume, mode);
+  try {
+    // Allow UI to update
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    progressBar.update(30, 'Preparing optimization model...');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    progressBar.update(50, 'Running MILP solver...');
+    progressBar.setIndeterminate('Optimizing fertilizer combination...');
+
+    // Run optimization algorithm using absolute PPM targets
+    const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true });
+
+    progressBar.update(90, 'Preparing results...');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    progressBar.update(100, 'Complete!');
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Hide progress bar
+    progressBar.hide();
+
+    // Display results
+    displayFormulaResults(result, targets, volume, mode);
+  } catch (error) {
+    progressBar.hide();
+    console.error('Formula optimization error:', error);
+    alert('An error occurred during calculation. Please try again.');
+  }
 }
 
 // Simple weighted projected gradient NNLS solver for fertilizer grams
@@ -4342,11 +4496,39 @@ async function calculateReverse() {
   // Get calculation mode (oxide vs elemental)
   const calculationMode = document.getElementById('reverse-calculation-mode').value;
 
-  // Run optimization
-  const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
+  // Show progress bar
+  progressBar.show('Calculating Fertilizers');
+  progressBar.update(10, 'Validating inputs...');
 
-  // Display results
-  displayReverseResults(result, targets, volume);
+  try {
+    // Allow UI to update
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    progressBar.update(30, 'Preparing optimization model...');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    progressBar.update(50, 'Running MILP solver...');
+    progressBar.setIndeterminate('Optimizing fertilizer combination...');
+
+    // Run optimization
+    const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
+
+    progressBar.update(90, 'Preparing results...');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    progressBar.update(100, 'Complete!');
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Hide progress bar
+    progressBar.hide();
+
+    // Display results
+    displayReverseResults(result, targets, volume);
+  } catch (error) {
+    progressBar.hide();
+    console.error('Reverse calculation error:', error);
+    alert('An error occurred during calculation. Please try again.');
+  }
 }
 
 // Display reverse calculator results
