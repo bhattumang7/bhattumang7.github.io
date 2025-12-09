@@ -5139,16 +5139,25 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
   if (fertEntries.length === 0) {
     html += '<p style="color: #999; font-style: italic;">No fertilizers in this tank</p>';
   } else {
+    let tankTotal = 0;
     html += '<div class="tank-fertilizers" style="margin-bottom: 15px;">';
     fertEntries.forEach(([fertId, grams]) => {
       const fert = FERTILIZERS.find(f => f.id === fertId);
       if (fert) {
+        tankTotal += grams;
         html += `<div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">`;
         html += `<span>${fert.name}</span>`;
         html += `<strong>${grams.toFixed(2)} g</strong>`;
         html += `</div>`;
       }
     });
+    // Show total for this tank
+    if (fertEntries.length > 1) {
+      html += `<div style="display: flex; justify-content: space-between; padding: 8px 12px; background: ${borderColor}20; border-radius: 4px; border-top: 2px solid ${borderColor}; margin-top: 5px;">`;
+      html += `<span style="color: ${borderColor};"><strong>TOTAL (${fertEntries.length} fertilizers)</strong></span>`;
+      html += `<strong style="color: ${borderColor}; font-size: 1.1em;">${tankTotal.toFixed(2)} g</strong>`;
+      html += `</div>`;
+    }
     html += '</div>';
 
     // Quick summary - PPM and ion balance in compact form
@@ -5870,9 +5879,14 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   if (Object.keys(result.formula).length === 0) {
     html += '<div class="error-box"><strong>Unable to calculate formula</strong><p>The selected fertilizers cannot achieve the target nutrient ratios. Try selecting different fertilizers or adjusting your targets.</p></div>';
   } else {
+    let totalGrams = 0;
+    let fertCount = 0;
+
     Object.entries(result.formula).forEach(([fertId, grams]) => {
       const fert = FERTILIZERS.find(f => f.id === fertId);
       if (fert && grams > 0.01) { // Only show if significant amount
+        totalGrams += grams;
+        fertCount++;
         const composition = Object.entries(fert.pct)
           .map(([key, val]) => `${key}: ${val}%`)
           .join(', ');
@@ -5887,6 +5901,19 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
         `;
       }
     });
+
+    // Show total
+    if (fertCount > 1) {
+      html += `
+        <div class="formula-fertilizer" style="border-top: 2px solid #007bff; margin-top: 10px; padding-top: 10px; background: #e3f2fd;">
+          <div class="formula-fertilizer-info">
+            <div class="formula-fertilizer-name" style="color: #007bff;"><strong>TOTAL (${fertCount} fertilizers)</strong></div>
+            <div class="formula-fertilizer-composition">${(totalGrams / volume).toFixed(2)} g/L</div>
+          </div>
+          <div class="formula-fertilizer-amount" style="color: #007bff; font-size: 1.2em;"><strong>${totalGrams.toFixed(2)} g</strong></div>
+        </div>
+      `;
+    }
   }
 
   html += '</div>';
