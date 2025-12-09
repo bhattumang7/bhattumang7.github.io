@@ -1421,9 +1421,9 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="results-section" id="formula-results" style="display: none;">
-      <div class="results-header">
+      <div class="results-header" id="formula-results-header">
         <h2>Recommended Formula</h2>
-        <div style="display: flex; gap: 10px;">
+        <div id="formula-header-buttons" style="display: flex; gap: 10px;">
           <button class="copy-btn" onclick="displayTwoTankFormulaResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
             Two Tanks
@@ -1525,9 +1525,9 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="results-section" id="reverse-results" style="display: none;">
-      <div class="results-header">
+      <div class="results-header" id="reverse-results-header">
         <h2>Required Fertilizers</h2>
-        <div style="display: flex; gap: 10px;">
+        <div id="reverse-header-buttons" style="display: flex; gap: 10px;">
           <button class="copy-btn" onclick="displayTwoTankReverseResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
             Two Tanks
@@ -4727,7 +4727,7 @@ function displayTwoTankFormulaResults() {
   const { result, targets, volume, mode } = lastFormulaCalculation;
   const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
 
-  displayTwoTankResults(tankA, tankB, volume, mode, 'formula-output', result.achieved);
+  displayTwoTankResults(tankA, tankB, volume, mode, 'formula-output', result.achieved, targets);
 }
 
 // Display two-tank results for reverse calculator
@@ -4737,21 +4737,28 @@ function displayTwoTankReverseResults() {
     return;
   }
 
-  const { result, volume, mode } = lastReverseCalculation;
+  const { result, targets, volume, mode } = lastReverseCalculation;
   const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
 
-  displayTwoTankResults(tankA, tankB, volume, mode, 'reverse-output', result.achieved);
+  displayTwoTankResults(tankA, tankB, volume, mode, 'reverse-output', result.achieved, targets);
 }
 
 // Store current two-tank data for copy function
 let currentTwoTankData = null;
 
 // Common display function for two-tank results
-function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved) {
+function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved, targets) {
   const outputDiv = document.getElementById(outputDivId);
 
+  // Hide header buttons when showing two-tank view
+  const headerButtonsId = outputDivId === 'formula-output' ? 'formula-header-buttons' : 'reverse-header-buttons';
+  const headerButtons = document.getElementById(headerButtonsId);
+  if (headerButtons) {
+    headerButtons.style.display = 'none';
+  }
+
   // Store data for copy function
-  currentTwoTankData = { tankA, tankB, volume, mode, achieved };
+  currentTwoTankData = { tankA, tankB, volume, mode, achieved, targets };
 
   let html = '<div class="two-tank-results">';
 
@@ -4767,10 +4774,10 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
   html += '<p style="margin-bottom: 20px; color: #666;">Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.</p>';
 
   // Tank A
-  html += renderTankSection(tankA, volume, mode, 'A');
+  html += renderTankSection(tankA, volume, mode, 'A', targets);
 
   // Tank B
-  html += renderTankSection(tankB, volume, mode, 'B');
+  html += renderTankSection(tankB, volume, mode, 'B', targets);
 
   // Combined totals note
   html += '<div class="combined-note" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #007bff;">';
@@ -4821,7 +4828,7 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
 }
 
 // Render a single tank section
-function renderTankSection(tank, volume, mode, tankLetter) {
+function renderTankSection(tank, volume, mode, tankLetter, targets) {
   const bgColor = tankLetter === 'A' ? '#f0f7ff' : '#fff7f0';
   const borderColor = tankLetter === 'A' ? '#007bff' : '#fd7e14';
   const detailsId = `tank-details-${tankLetter}`;
@@ -4907,21 +4914,70 @@ function renderTankSection(tank, volume, mode, tankLetter) {
       html += '</div>';
     }
 
-    // NPK Ratio
-    html += '<h5 style="margin-bottom: 10px; color: #333;">Nutrient Ratios</h5>';
+    // NPK:Ca:Mg Ratio relative to original user input
+    html += '<h5 style="margin-bottom: 10px; color: #333;">Nutrient Ratios (relative to your input)</h5>';
     html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">';
 
-    // Calculate NPK ratio
-    const npkValues = [nutrients.N_total, pVal, kVal].filter(v => v > 0.1);
-    if (npkValues.length > 0) {
-      const minNPK = Math.min(...npkValues);
-      const nRatio = minNPK > 0 ? (nutrients.N_total / minNPK).toFixed(1) : '0';
-      const pRatio = minNPK > 0 ? (pVal / minNPK).toFixed(1) : '0';
-      const kRatio = minNPK > 0 ? (kVal / minNPK).toFixed(1) : '0';
-      html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
-      html += `<div style="font-size: 0.8em; color: #666;">N:${pLabel}:${kLabel}</div>`;
-      html += `<div style="font-size: 1.1em; font-weight: bold;">${nRatio} : ${pRatio} : ${kRatio}</div>`;
-      html += `</div>`;
+    // Show the original user-entered ratio (which is what combined tanks should achieve)
+    // Then show this tank's contribution on the same scale
+    if (targets) {
+      const targetValues = [targets.N, targets.P, targets.K, targets.Ca || 0, targets.Mg || 0].filter(v => v > 0);
+      if (targetValues.length > 0) {
+        const minTarget = Math.min(...targetValues);
+
+        // Normalize user's original targets to show as ratio (e.g., if user entered 3:1:2:2:1, show that)
+        const nTarget = targets.N > 0 ? (targets.N / minTarget).toFixed(1) : '0';
+        const pTarget = targets.P > 0 ? (targets.P / minTarget).toFixed(1) : '0';
+        const kTarget = targets.K > 0 ? (targets.K / minTarget).toFixed(1) : '0';
+        const caTarget = targets.Ca > 0 ? (targets.Ca / minTarget).toFixed(1) : '0';
+        const mgTarget = targets.Mg > 0 ? (targets.Mg / minTarget).toFixed(1) : '0';
+
+        // Build the ratio label and values based on what the user entered
+        let ratioLabel = 'N';
+        let targetRatioValues = nTarget;
+
+        if (targets.P > 0) {
+          ratioLabel += `:${pLabel}`;
+          targetRatioValues += ` : ${pTarget}`;
+        }
+        if (targets.K > 0) {
+          ratioLabel += `:${kLabel}`;
+          targetRatioValues += ` : ${kTarget}`;
+        }
+        if (targets.Ca > 0) {
+          ratioLabel += ':Ca';
+          targetRatioValues += ` : ${caTarget}`;
+        }
+        if (targets.Mg > 0) {
+          ratioLabel += ':Mg';
+          targetRatioValues += ` : ${mgTarget}`;
+        }
+
+        // Show original target ratio (what user entered)
+        html += `<div style="padding: 10px 15px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px; text-align: center;">`;
+        html += `<div style="font-size: 0.8em; color: #2e7d32;">Target (${ratioLabel})</div>`;
+        html += `<div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">${targetRatioValues}</div>`;
+        html += `</div>`;
+
+        // Now show this tank's contribution on the same scale
+        // Achieved ratio = (achieved_ppm / target_ppm) * (target / minTarget)
+        const nAchieved = targets.N > 0 ? (nutrients.N_total / targets.N * (targets.N / minTarget)).toFixed(1) : '0';
+        const pAchieved = targets.P > 0 ? (pVal / targets.P * (targets.P / minTarget)).toFixed(1) : '0';
+        const kAchieved = targets.K > 0 ? (kVal / targets.K * (targets.K / minTarget)).toFixed(1) : '0';
+        const caAchieved = targets.Ca > 0 ? (nutrients.Ca / targets.Ca * (targets.Ca / minTarget)).toFixed(1) : '0';
+        const mgAchieved = targets.Mg > 0 ? (nutrients.Mg / targets.Mg * (targets.Mg / minTarget)).toFixed(1) : '0';
+
+        let tankRatioValues = nAchieved;
+        if (targets.P > 0) tankRatioValues += ` : ${pAchieved}`;
+        if (targets.K > 0) tankRatioValues += ` : ${kAchieved}`;
+        if (targets.Ca > 0) tankRatioValues += ` : ${caAchieved}`;
+        if (targets.Mg > 0) tankRatioValues += ` : ${mgAchieved}`;
+
+        html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
+        html += `<div style="font-size: 0.8em; color: #666;">This Tank (${ratioLabel})</div>`;
+        html += `<div style="font-size: 1.1em; font-weight: bold;">${tankRatioValues}</div>`;
+        html += `</div>`;
+      }
     }
 
     // Ca:Mg ratio
@@ -5159,6 +5215,13 @@ function generateTankCopyText(tank, letter, mode, pLabel, kLabel) {
 
 // Restore single tank view
 function restoreSingleTankView(outputDivId) {
+  // Show header buttons again
+  const headerButtonsId = outputDivId === 'formula-output' ? 'formula-header-buttons' : 'reverse-header-buttons';
+  const headerButtons = document.getElementById(headerButtonsId);
+  if (headerButtons) {
+    headerButtons.style.display = 'flex';
+  }
+
   if (outputDivId === 'formula-output' && lastFormulaCalculation) {
     displayFormulaResults(
       lastFormulaCalculation.result,
