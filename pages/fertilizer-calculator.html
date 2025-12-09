@@ -1414,6 +1414,19 @@ permalink: /fertilizer-calculator/
         <span>liters</span>
       </div>
 
+      <div style="margin-top: 20px; margin-bottom: 20px;">
+        <label for="formula-max-per-liter" style="display: block; margin-bottom: 8px; font-weight: bold;">Max Grams per Liter (per fertilizer)</label>
+        <select id="formula-max-per-liter" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="0" selected>No limit</option>
+          <option value="1">1 g/L - Very light</option>
+          <option value="2">2 g/L - Light</option>
+          <option value="3">3 g/L - Moderate</option>
+          <option value="4">4 g/L - Strong</option>
+          <option value="5">5 g/L - Very strong</option>
+        </select>
+        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">Limits the maximum amount of any single fertilizer per liter. Leave at "No limit" for unconstrained optimization.</p>
+      </div>
+
       <div style="display: flex; gap: 10px; margin-top: 20px;">
         <button onclick="buildFormula()" style="padding: 10px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
           Build Formula
@@ -1500,6 +1513,19 @@ permalink: /fertilizer-calculator/
           <option value="125">Very Strong (EC ~2.5) - Heavy Feeders</option>
         </select>
         <p style="margin-top: 5px; color: #666; font-size: 0.85em;">This determines the fertilizer amounts while maintaining your ratio.</p>
+      </div>
+
+      <div style="margin-top: 20px; margin-bottom: 20px;">
+        <label for="reverse-max-per-liter" style="display: block; margin-bottom: 8px; font-weight: bold;">Max Grams per Liter (per fertilizer)</label>
+        <select id="reverse-max-per-liter" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="0" selected>No limit</option>
+          <option value="1">1 g/L - Very light</option>
+          <option value="2">2 g/L - Light</option>
+          <option value="3">3 g/L - Moderate</option>
+          <option value="4">4 g/L - Strong</option>
+          <option value="5">5 g/L - Very strong</option>
+        </select>
+        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">Limits the maximum amount of any single fertilizer per liter. Leave at "No limit" for unconstrained optimization.</p>
       </div>
 
       <div class="fertilizer-selection">
@@ -1802,7 +1828,7 @@ const progressBar = {
 };
 
 // MILP solver helper (browser) using highs.js + lp-model
-async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01 }) {
+async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01, maxPerLiter = 0 }) {
   const highsFactory = window.highs || window.Module;
   if (!window.LPModel || typeof highsFactory !== 'function') {
     throw new Error('MILP dependencies not loaded');
@@ -1821,10 +1847,15 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
     tMinus[n] = t > 0 ? t * (1 - tolerance) : 0;
   });
 
+  // Calculate upper bound for each fertilizer variable
+  // If maxPerLiter is set (1-5), limit total grams to maxPerLiter * volume
+  // Otherwise use infinity (no constraint)
+  const fertUpperBound = (maxPerLiter > 0) ? maxPerLiter * volume : '+infinity';
+
   const model = new Model();
   const x = {}, y = {}, slackPlus = {}, slackMinus = {};
   fertilizers.forEach(f => {
-    x[f.id] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `x_${f.id}` });
+    x[f.id] = model.addVar({ lb: 0, ub: fertUpperBound, vtype: 'CONTINUOUS', name: `x_${f.id}` });
     y[f.id] = model.addVar({ lb: 0, ub: 1, vtype: 'BINARY', name: `y_${f.id}` });
   });
   nutrients.forEach(n => {
@@ -3715,6 +3746,12 @@ function clearFormulaBuilder() {
   volumeInput.value = '10';
   volumeInput.classList.remove('input-error');
 
+  // Reset max per liter to no limit
+  const maxPerLiterSelect = document.getElementById('formula-max-per-liter');
+  if (maxPerLiterSelect) {
+    maxPerLiterSelect.value = '0';
+  }
+
   // Clear search box
   const searchInput = document.getElementById('available-fertilizer-search');
   if (searchInput) {
@@ -3809,6 +3846,9 @@ async function buildFormula() {
   // Get calculation mode
   const mode = document.getElementById('formula-calculation-mode').value;
 
+  // Get max per liter constraint (0 = no limit, 1-5 = max grams per liter per fertilizer)
+  const maxPerLiter = parseFloat(document.getElementById('formula-max-per-liter').value) || 0;
+
   // Show progress bar
   progressBar.show('Building Formula');
   progressBar.update(10, 'Validating inputs...');
@@ -3824,7 +3864,7 @@ async function buildFormula() {
     progressBar.setIndeterminate('Optimizing fertilizer combination...');
 
     // Run optimization algorithm using absolute PPM targets
-    const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true });
+    const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true, maxPerLiter });
 
     progressBar.update(90, 'Preparing results...');
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -3836,7 +3876,7 @@ async function buildFormula() {
     progressBar.hide();
 
     // Display results
-    displayFormulaResults(result, targets, volume, mode);
+    displayFormulaResults(result, targets, volume, mode, maxPerLiter);
   } catch (error) {
     progressBar.hide();
     console.error('Formula optimization error:', error);
@@ -4029,7 +4069,7 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
       Si: targetRatios.Si || 0  // Si is absolute PPM, not scaled by concentration
     };
 
-    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01 });
+    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, maxPerLiter: options.maxPerLiter || 0 });
     return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
   }
 
@@ -4342,28 +4382,45 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
 let lastFormulaCalculation = null;
 
 // Display formula results
-function displayFormulaResults(result, targets, volume, mode = 'oxide') {
+function displayFormulaResults(result, targets, volume, mode = 'oxide', maxPerLiter = 0) {
   // Store data for explanation modals
-  lastFormulaCalculation = { result, targets, volume, mode };
+  lastFormulaCalculation = { result, targets, volume, mode, maxPerLiter };
 
   const resultsSection = document.getElementById('formula-results');
   const outputDiv = document.getElementById('formula-output');
 
   resultsSection.style.display = 'block';
 
+  // Check if any fertilizer hit the max per liter limit
+  const maxGramsAllowed = maxPerLiter > 0 ? maxPerLiter * volume : null;
+  const fertilizersAtLimit = [];
+  if (maxGramsAllowed) {
+    Object.entries(result.formula).forEach(([fertId, grams]) => {
+      // Check if grams is at or very close to the limit (within 1% tolerance)
+      if (grams >= maxGramsAllowed * 0.99) {
+        const fert = FERTILIZERS.find(f => f.id === fertId);
+        if (fert) {
+          fertilizersAtLimit.push(fert.name);
+        }
+      }
+    });
+  }
+
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
 
-  // Display formula
+  // Display formula with limit indicators
   Object.entries(result.formula).forEach(([fertId, grams]) => {
     const fert = FERTILIZERS.find(f => f.id === fertId);
     if (fert) {
       const composition = Object.entries(fert.pct)
         .map(([key, val]) => `${key}: ${val}%`)
         .join(', ');
+      const isAtLimit = maxGramsAllowed && grams >= maxGramsAllowed * 0.99;
+      const limitIndicator = isAtLimit ? ' <span style="color: #dc3545; font-size: 0.85em;" title="This fertilizer is at the maximum limit">(at limit)</span>' : '';
       html += `
-        <div class="formula-fertilizer">
+        <div class="formula-fertilizer"${isAtLimit ? ' style="border-left-color: #ffc107;"' : ''}>
           <div class="formula-fertilizer-info">
-            <div class="formula-fertilizer-name">${fert.name}</div>
+            <div class="formula-fertilizer-name">${fert.name}${limitIndicator}</div>
             <div class="formula-fertilizer-composition">${composition}</div>
           </div>
           <div class="formula-fertilizer-amount">${grams.toFixed(2)} g</div>
@@ -4522,6 +4579,20 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
     });
 
     html += '</div>';
+  }
+
+  // Warning about max per liter limit if fertilizers are at limit and targets not met
+  if (fertilizersAtLimit.length > 0 && !allGood) {
+    html += `<div class="warning-box" style="background: #fff3cd; border-left-color: #ffc107;">
+      <strong>⚠ Max grams/liter limit reached</strong>
+      <p style="margin: 8px 0;">The following fertilizer(s) are at the ${maxPerLiter} g/L limit: <strong>${fertilizersAtLimit.join(', ')}</strong></p>
+      <p style="margin: 0;">This constraint is preventing the calculator from achieving your target PPM values. Consider:</p>
+      <ul style="margin: 8px 0 0 0;">
+        <li>Increasing the max grams per liter setting</li>
+        <li>Selecting "No limit" for unconstrained optimization</li>
+        <li>Using a larger solution volume</li>
+      </ul>
+    </div>`;
   }
 
   // Warnings or errors
@@ -5451,6 +5522,12 @@ function clearReverseCalculator() {
     volumeInput.classList.remove('input-error');
   }
 
+  // Reset max per liter to no limit
+  const maxPerLiterSelect = document.getElementById('reverse-max-per-liter');
+  if (maxPerLiterSelect) {
+    maxPerLiterSelect.value = '0';
+  }
+
   // Reset fertilizer selections to common only
   selectCommonReverseFertilizers();
 
@@ -5538,6 +5615,9 @@ async function calculateReverse() {
   // Get calculation mode (oxide vs elemental)
   const calculationMode = document.getElementById('reverse-calculation-mode').value;
 
+  // Get max per liter constraint (0 = no limit, 1-5 = max grams per liter per fertilizer)
+  const maxPerLiter = parseFloat(document.getElementById('reverse-max-per-liter').value) || 0;
+
   // Show progress bar
   progressBar.show('Calculating Fertilizers');
   progressBar.update(10, 'Validating inputs...');
@@ -5553,7 +5633,7 @@ async function calculateReverse() {
     progressBar.setIndeterminate('Optimizing fertilizer combination...');
 
     // Run optimization
-    const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
+    const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true, maxPerLiter });
 
     progressBar.update(90, 'Preparing results...');
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -5565,7 +5645,7 @@ async function calculateReverse() {
     progressBar.hide();
 
     // Display results
-    displayReverseResults(result, targets, volume);
+    displayReverseResults(result, targets, volume, maxPerLiter);
   } catch (error) {
     progressBar.hide();
     console.error('Reverse calculation error:', error);
@@ -5577,16 +5657,31 @@ async function calculateReverse() {
 let lastReverseCalculation = null;
 
 // Display reverse calculator results
-function displayReverseResults(result, targets, volume) {
+function displayReverseResults(result, targets, volume, maxPerLiter = 0) {
   // Get calculation mode for storage
   const mode = document.getElementById('reverse-calculation-mode').value;
   // Store data for explanation modals and two-tank feature
-  lastReverseCalculation = { result, targets, volume, mode };
+  lastReverseCalculation = { result, targets, volume, mode, maxPerLiter };
 
   const resultsSection = document.getElementById('reverse-results');
   const outputDiv = document.getElementById('reverse-output');
 
   resultsSection.style.display = 'block';
+
+  // Check if any fertilizer hit the max per liter limit
+  const maxGramsAllowed = maxPerLiter > 0 ? maxPerLiter * volume : null;
+  const fertilizersAtLimit = [];
+  if (maxGramsAllowed) {
+    Object.entries(result.formula).forEach(([fertId, grams]) => {
+      // Check if grams is at or very close to the limit (within 1% tolerance)
+      if (grams >= maxGramsAllowed * 0.99) {
+        const fert = FERTILIZERS.find(f => f.id === fertId);
+        if (fert) {
+          fertilizersAtLimit.push(fert.name);
+        }
+      }
+    });
+  }
 
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
 
@@ -5600,10 +5695,12 @@ function displayReverseResults(result, targets, volume) {
         const composition = Object.entries(fert.pct)
           .map(([key, val]) => `${key}: ${val}%`)
           .join(', ');
+        const isAtLimit = maxGramsAllowed && grams >= maxGramsAllowed * 0.99;
+        const limitIndicator = isAtLimit ? ' <span style="color: #dc3545; font-size: 0.85em;" title="This fertilizer is at the maximum limit">(at limit)</span>' : '';
         html += `
-          <div class="formula-fertilizer">
+          <div class="formula-fertilizer"${isAtLimit ? ' style="border-left-color: #ffc107;"' : ''}>
             <div class="formula-fertilizer-info">
-              <div class="formula-fertilizer-name">${fert.name}</div>
+              <div class="formula-fertilizer-name">${fert.name}${limitIndicator}</div>
               <div class="formula-fertilizer-composition">${composition}</div>
             </div>
             <div class="formula-fertilizer-amount">${grams.toFixed(2)} g</div>
@@ -5879,6 +5976,20 @@ function displayReverseResults(result, targets, volume) {
     });
 
     html += '</div>';
+  }
+
+  // Warning about max per liter limit if fertilizers are at limit and targets not met
+  if (fertilizersAtLimit.length > 0 && !allGood) {
+    html += `<div class="warning-box" style="background: #fff3cd; border-left-color: #ffc107;">
+      <strong>⚠ Max grams/liter limit reached</strong>
+      <p style="margin: 8px 0;">The following fertilizer(s) are at the ${maxPerLiter} g/L limit: <strong>${fertilizersAtLimit.join(', ')}</strong></p>
+      <p style="margin: 0;">This constraint is preventing the calculator from achieving your target ratios. Consider:</p>
+      <ul style="margin: 8px 0 0 0;">
+        <li>Increasing the max grams per liter setting</li>
+        <li>Selecting "No limit" for unconstrained optimization</li>
+        <li>Using a larger solution volume</li>
+      </ul>
+    </div>`;
   }
 
   // Warnings or errors
