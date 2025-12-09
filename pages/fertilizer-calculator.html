@@ -4919,73 +4919,65 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">';
 
     // Show the original user-entered ratio and this tank's proportional contribution
-    // Tank's contribution = (tank_ppm / combined_ppm) * target_ratio_value
+    // Tank's contribution = (tank_ppm / combined_ppm) * original_target_value
     if (targets && combinedNutrients) {
-      const targetValues = [targets.N, targets.P, targets.K, targets.Ca || 0, targets.Mg || 0].filter(v => v > 0);
-      if (targetValues.length > 0) {
-        const minTarget = Math.min(...targetValues);
+      // Use original target values (what user entered), not normalized
+      const nTarget = targets.N || 0;
+      const pTarget = targets.P || 0;
+      const kTarget = targets.K || 0;
+      const caTarget = targets.Ca || 0;
+      const mgTarget = targets.Mg || 0;
 
-        // Normalize user's original targets to show as ratio (e.g., if user entered 3:1:2:2:1, show that)
-        const nTargetRatio = targets.N > 0 ? (targets.N / minTarget) : 0;
-        const pTargetRatio = targets.P > 0 ? (targets.P / minTarget) : 0;
-        const kTargetRatio = targets.K > 0 ? (targets.K / minTarget) : 0;
-        const caTargetRatio = targets.Ca > 0 ? (targets.Ca / minTarget) : 0;
-        const mgTargetRatio = targets.Mg > 0 ? (targets.Mg / minTarget) : 0;
+      // Build the ratio label based on what the user entered
+      let ratioLabel = 'N';
+      let targetRatioValues = nTarget.toString();
 
-        // Build the ratio label based on what the user entered
-        let ratioLabel = 'N';
-        let targetRatioValues = nTargetRatio.toFixed(1);
-
-        if (targets.P > 0) {
-          ratioLabel += `:${pLabel}`;
-          targetRatioValues += ` : ${pTargetRatio.toFixed(1)}`;
-        }
-        if (targets.K > 0) {
-          ratioLabel += `:${kLabel}`;
-          targetRatioValues += ` : ${kTargetRatio.toFixed(1)}`;
-        }
-        if (targets.Ca > 0) {
-          ratioLabel += ':Ca';
-          targetRatioValues += ` : ${caTargetRatio.toFixed(1)}`;
-        }
-        if (targets.Mg > 0) {
-          ratioLabel += ':Mg';
-          targetRatioValues += ` : ${mgTargetRatio.toFixed(1)}`;
-        }
-
-        // Show original target ratio (what user entered)
-        html += `<div style="padding: 10px 15px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px; text-align: center;">`;
-        html += `<div style="font-size: 0.8em; color: #2e7d32;">Target (${ratioLabel})</div>`;
-        html += `<div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">${targetRatioValues}</div>`;
-        html += `</div>`;
-
-        // Calculate this tank's contribution as proportion of target ratio
-        // Formula: (tank_ppm / combined_ppm) * target_ratio_value
-        // If combined is 0 for a nutrient, this tank contributes 0
-        const combinedP = mode === 'elemental' ? combinedNutrients.P : combinedNutrients.P2O5;
-        const combinedK = mode === 'elemental' ? combinedNutrients.K : combinedNutrients.K2O;
-
-        const nContrib = combinedNutrients.N_total > 0 ? (nutrients.N_total / combinedNutrients.N_total) * nTargetRatio : 0;
-        const pContrib = combinedP > 0 ? (pVal / combinedP) * pTargetRatio : 0;
-        const kContrib = combinedK > 0 ? (kVal / combinedK) * kTargetRatio : 0;
-        const caContrib = combinedNutrients.Ca > 0 ? (nutrients.Ca / combinedNutrients.Ca) * caTargetRatio : 0;
-        const mgContrib = combinedNutrients.Mg > 0 ? (nutrients.Mg / combinedNutrients.Mg) * mgTargetRatio : 0;
-
-        // Debug: show actual values used in calculation
-        html += `<div style="font-size: 0.7em; color: #999; margin-bottom: 5px;">Debug: Tank N=${nutrients.N_total.toFixed(1)}, Combined N=${combinedNutrients.N_total.toFixed(1)}, Ratio=${(nutrients.N_total/combinedNutrients.N_total).toFixed(2)}</div>`;
-
-        // Build tank ratio values - only include nutrients that the user targeted
-        let tankRatioValues = nContrib.toFixed(1);
-        if (targets.P > 0) tankRatioValues += ` : ${pContrib.toFixed(1)}`;
-        if (targets.K > 0) tankRatioValues += ` : ${kContrib.toFixed(1)}`;
-        if (targets.Ca > 0) tankRatioValues += ` : ${caContrib.toFixed(1)}`;
-        if (targets.Mg > 0) tankRatioValues += ` : ${mgContrib.toFixed(1)}`;
-
-        html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
-        html += `<div style="font-size: 0.8em; color: #666;">This Tank (${ratioLabel})</div>`;
-        html += `<div style="font-size: 1.1em; font-weight: bold;">${tankRatioValues}</div>`;
-        html += `</div>`;
+      if (pTarget > 0) {
+        ratioLabel += `:${pLabel}`;
+        targetRatioValues += ` : ${pTarget}`;
       }
+      if (kTarget > 0) {
+        ratioLabel += `:${kLabel}`;
+        targetRatioValues += ` : ${kTarget}`;
+      }
+      if (caTarget > 0) {
+        ratioLabel += ':Ca';
+        targetRatioValues += ` : ${caTarget}`;
+      }
+      if (mgTarget > 0) {
+        ratioLabel += ':Mg';
+        targetRatioValues += ` : ${mgTarget}`;
+      }
+
+      // Show original target ratio (what user entered)
+      html += `<div style="padding: 10px 15px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px; text-align: center;">`;
+      html += `<div style="font-size: 0.8em; color: #2e7d32;">Target (${ratioLabel})</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">${targetRatioValues}</div>`;
+      html += `</div>`;
+
+      // Calculate this tank's contribution as proportion of target
+      // Formula: (tank_ppm / combined_ppm) * original_target_value
+      // Tank A contrib + Tank B contrib = original target value
+      const combinedP = mode === 'elemental' ? combinedNutrients.P : combinedNutrients.P2O5;
+      const combinedK = mode === 'elemental' ? combinedNutrients.K : combinedNutrients.K2O;
+
+      const nContrib = combinedNutrients.N_total > 0 ? (nutrients.N_total / combinedNutrients.N_total) * nTarget : 0;
+      const pContrib = combinedP > 0 ? (pVal / combinedP) * pTarget : 0;
+      const kContrib = combinedK > 0 ? (kVal / combinedK) * kTarget : 0;
+      const caContrib = combinedNutrients.Ca > 0 ? (nutrients.Ca / combinedNutrients.Ca) * caTarget : 0;
+      const mgContrib = combinedNutrients.Mg > 0 ? (nutrients.Mg / combinedNutrients.Mg) * mgTarget : 0;
+
+      // Build tank ratio values - only include nutrients that the user targeted
+      let tankRatioValues = nContrib.toFixed(1);
+      if (pTarget > 0) tankRatioValues += ` : ${pContrib.toFixed(1)}`;
+      if (kTarget > 0) tankRatioValues += ` : ${kContrib.toFixed(1)}`;
+      if (caTarget > 0) tankRatioValues += ` : ${caContrib.toFixed(1)}`;
+      if (mgTarget > 0) tankRatioValues += ` : ${mgContrib.toFixed(1)}`;
+
+      html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
+      html += `<div style="font-size: 0.8em; color: #666;">This Tank (${ratioLabel})</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${tankRatioValues}</div>`;
+      html += `</div>`;
     }
 
     // Ca:Mg ratio
