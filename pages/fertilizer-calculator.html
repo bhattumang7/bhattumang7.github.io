@@ -4216,36 +4216,56 @@ function pruneSolution(matrix, targetVector, weights, baseSolution, fertilizers,
 async function optimizeFormula(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide', options = {}) {
   // Optional MILP path (uses highs.js if available)
   if (options.useMilp && typeof solveMilpBrowser === 'function') {
-    // Build absolute ppm targets based on ratio/concentration
-    // Note: Si is treated as absolute PPM, not as a ratio like N-P-K
-    const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
-    const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
-    const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
-    const normalizedRatios = {
-      N: targetRatios.N / minRatio,
-      P: targetRatios.P / minRatio,
-      K: targetRatios.K / minRatio,
-      Ca: targetRatios.Ca / minRatio,
-      Mg: targetRatios.Mg / minRatio,
-      S: targetRatios.S / minRatio
-    };
-    const basePPMForMinRatio = concentration;
     const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
     const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
 
-    const ppmTargets = {
-      N_total: normalizedRatios.N * basePPMForMinRatio,
-      P2O5: mode === 'elemental'
-        ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
-        : normalizedRatios.P * basePPMForMinRatio,
-      K2O: mode === 'elemental'
-        ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
-        : normalizedRatios.K * basePPMForMinRatio,
-      Ca: normalizedRatios.Ca * basePPMForMinRatio,
-      Mg: normalizedRatios.Mg * basePPMForMinRatio,
-      S: normalizedRatios.S * basePPMForMinRatio,
-      Si: targetRatios.Si || 0  // Si is absolute PPM, not scaled by concentration
-    };
+    let ppmTargets;
+
+    // If useAbsoluteTargets is true, use the input values directly as PPM targets
+    if (options.useAbsoluteTargets) {
+      ppmTargets = {
+        N_total: targetRatios.N || 0,
+        P2O5: mode === 'elemental'
+          ? (targetRatios.P || 0) * P_to_P2O5
+          : (targetRatios.P || 0),
+        K2O: mode === 'elemental'
+          ? (targetRatios.K || 0) * K_to_K2O
+          : (targetRatios.K || 0),
+        Ca: targetRatios.Ca || 0,
+        Mg: targetRatios.Mg || 0,
+        S: targetRatios.S || 0,
+        Si: targetRatios.Si || 0
+      };
+    } else {
+      // Build absolute ppm targets based on ratio/concentration
+      // Note: Si is treated as absolute PPM, not as a ratio like N-P-K
+      const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
+      const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
+      const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
+      const normalizedRatios = {
+        N: targetRatios.N / minRatio,
+        P: targetRatios.P / minRatio,
+        K: targetRatios.K / minRatio,
+        Ca: targetRatios.Ca / minRatio,
+        Mg: targetRatios.Mg / minRatio,
+        S: targetRatios.S / minRatio
+      };
+      const basePPMForMinRatio = concentration;
+
+      ppmTargets = {
+        N_total: normalizedRatios.N * basePPMForMinRatio,
+        P2O5: mode === 'elemental'
+          ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
+          : normalizedRatios.P * basePPMForMinRatio,
+        K2O: mode === 'elemental'
+          ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
+          : normalizedRatios.K * basePPMForMinRatio,
+        Ca: normalizedRatios.Ca * basePPMForMinRatio,
+        Mg: normalizedRatios.Mg * basePPMForMinRatio,
+        S: normalizedRatios.S * basePPMForMinRatio,
+        Si: targetRatios.Si || 0  // Si is absolute PPM, not scaled by concentration
+      };
+    }
 
     const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01 });
     return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
