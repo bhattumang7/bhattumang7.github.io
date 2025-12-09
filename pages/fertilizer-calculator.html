@@ -570,6 +570,29 @@ permalink: /fertilizer-calculator/
     margin-top: 2px;
   }
 
+  .fertilizer-priority {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .fertilizer-priority input {
+    width: 45px;
+    padding: 2px 4px;
+    font-size: 0.85em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    text-align: center;
+  }
+
+  .fertilizer-priority label {
+    font-size: 0.75em;
+    color: #666;
+    white-space: nowrap;
+  }
+
   .selection-controls {
     display: flex;
     gap: 10px;
@@ -1520,7 +1543,8 @@ permalink: /fertilizer-calculator/
 
       <div class="fertilizer-selection">
         <h4>Select Fertilizers to Use</h4>
-        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Choose which fertilizers you want to use. The calculator will find the best combination from your selection.</p>
+        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Choose which fertilizers you want to use. The calculator will find the best combination from your selection.<br>
+        <strong>Priority:</strong> Lower values (1-10) = more preferred. The solver will try to use higher-priority fertilizers first.</p>
         <div class="fertilizer-search">
           <input type="text" id="reverse-fertilizer-search" placeholder="Search fertilizers..." oninput="filterReverseFertilizers(this.value)">
         </div>
@@ -1889,7 +1913,12 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
   });
 
   const objective = [];
-  fertilizers.forEach(f => objective.push([1, y[f.id]]));
+  // Use priority value as coefficient (lower priority = more preferred)
+  // Normalize to 0.1-10 range so priorities don't overwhelm slack penalties
+  fertilizers.forEach(f => {
+    const priorityCoeff = (f.priority || 10) / 10; // 1->0.1, 10->1, 100->10
+    objective.push([priorityCoeff, y[f.id]]);
+  });
   nutrients.forEach(n => {
     const isTargeted = (targets[n] || 0) > 0;
     const slackPenalty = isTargeted ? 100 : 50;
@@ -5924,8 +5953,29 @@ function renderReverseFertilizersList() {
       label.appendChild(aliasSpan);
     }
 
+    // Priority input (lower = more preferred, default 10)
+    const priorityDiv = document.createElement('div');
+    priorityDiv.className = 'fertilizer-priority';
+
+    const priorityInput = document.createElement('input');
+    priorityInput.type = 'number';
+    priorityInput.id = `priority-${fert.id}`;
+    priorityInput.min = '1';
+    priorityInput.max = '100';
+    priorityInput.value = '10';
+    priorityInput.title = 'Priority (1-100, lower = more preferred)';
+
+    const priorityLabel = document.createElement('label');
+    priorityLabel.htmlFor = `priority-${fert.id}`;
+    priorityLabel.textContent = 'priority';
+    priorityLabel.title = 'Lower value = higher priority (more preferred)';
+
+    priorityDiv.appendChild(priorityInput);
+    priorityDiv.appendChild(priorityLabel);
+
     item.appendChild(checkbox);
     item.appendChild(label);
+    item.appendChild(priorityDiv);
     container.appendChild(item);
   });
 }
@@ -6111,10 +6161,14 @@ async function calculateReverse() {
     return;
   }
 
-  // Get selected fertilizers
+  // Get selected fertilizers with their priorities
   const selectedFertilizers = FERTILIZERS.filter(fert => {
     const checkbox = document.getElementById(`reverse-${fert.id}`);
     return checkbox && checkbox.checked;
+  }).map(fert => {
+    const priorityInput = document.getElementById(`priority-${fert.id}`);
+    const priority = priorityInput ? parseFloat(priorityInput.value) || 10 : 10;
+    return { ...fert, priority: Math.max(1, Math.min(100, priority)) }; // Clamp 1-100
   });
 
   if (selectedFertilizers.length === 0) {
