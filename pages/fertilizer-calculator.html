@@ -1423,10 +1423,16 @@ permalink: /fertilizer-calculator/
     <div class="results-section" id="formula-results" style="display: none;">
       <div class="results-header">
         <h2>Recommended Formula</h2>
-        <button class="copy-btn" onclick="copyPPMToGramsResults()" title="Copy results to clipboard">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          Copy Results
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <button class="copy-btn" onclick="displayTwoTankFormulaResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
+            Two Tanks
+          </button>
+          <button class="copy-btn" onclick="copyPPMToGramsResults()" title="Copy results to clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy Results
+          </button>
+        </div>
       </div>
       <div id="formula-output"></div>
     </div>
@@ -1521,10 +1527,16 @@ permalink: /fertilizer-calculator/
     <div class="results-section" id="reverse-results" style="display: none;">
       <div class="results-header">
         <h2>Required Fertilizers</h2>
-        <button class="copy-btn" onclick="copyNPKRatioResults()" title="Copy results to clipboard">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          Copy Results
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <button class="copy-btn" onclick="displayTwoTankReverseResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
+            Two Tanks
+          </button>
+          <button class="copy-btn" onclick="copyNPKRatioResults()" title="Copy results to clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy Results
+          </button>
+        </div>
       </div>
       <div id="reverse-output"></div>
     </div>
@@ -2563,6 +2575,82 @@ const COMMON_FERTILIZERS = [
   'potassium_sulfate_common',
   'ammonium_sulfate_common'
 ];
+
+// Fertilizer compatibility groups for two-tank system
+// Main incompatibility: Calcium + Sulfate = Calcium Sulfate (gypsum) precipitation
+// Also: Calcium + Phosphate at high concentrations can precipitate
+const FERTILIZER_COMPATIBILITY = {
+  // Fertilizers containing Calcium (Tank A candidates)
+  calcium_sources: [
+    'calcium_nitrate_calcinit_typical',
+    'calcium_nitrate_4h2o',
+    'calcium_nitrate_anhydrous',
+    'calcium_nitrate_liquid',
+    'calcium_chloride_dihydrate_common',
+    'calcium_chloride_solid',
+    'calcium_chloride_liquid'
+  ],
+  // Fertilizers containing Sulfate (Tank B candidates)
+  sulfate_sources: [
+    'magnesium_sulfate_heptahydrate_common',
+    'magnesium_sulfate_anhydrous',
+    'potassium_sulfate_common',
+    'ammonium_sulfate_common',
+    'langbeinite_common',
+    'ammonium_thiosulfate_common',
+    'potassium_thiosulfate_common',
+    'manganese_sulfate',
+    'zinc_sulfate_heptahydrate_common',
+    'zinc_sulfate_mono',
+    'copper_sulfate'
+  ],
+  // Fertilizers containing Phosphate (can go with sulfates, caution with calcium at high conc)
+  phosphate_sources: [
+    'map_typical',
+    'mkp_typical',
+    'dap_common',
+    'ssp_typical',
+    'phosphoric_acid_49',
+    'urea_phosphate'
+  ],
+  // Neutral fertilizers (compatible with both tanks)
+  neutral: [
+    'potassium_nitrate_typical',
+    'magnesium_nitrate_hexahydrate_typical',
+    'magnesium_nitrate_liquid',
+    'ammonium_nitrate_common',
+    'ammonium_nitrate_liquid',
+    'potassium_chloride_common',
+    'nitric_acid_38',
+    'nitric_acid_60',
+    'urea_common',
+    'urea_liquid',
+    'uan32_solution_typical',
+    'potassium_bicarbonate',
+    'boric_acid_common',
+    'borax',
+    'sodium_molybdate',
+    'ammonium_molybdate'
+  ]
+};
+
+// Helper function to check if a fertilizer contains calcium
+function hasCaContent(fertId) {
+  const fert = FERTILIZERS.find(f => f.id === fertId);
+  return fert && fert.pct && fert.pct.Ca > 0;
+}
+
+// Helper function to check if a fertilizer contains sulfate
+function hasSulfateContent(fertId) {
+  const fert = FERTILIZERS.find(f => f.id === fertId);
+  return fert && fert.pct && fert.pct.S > 0;
+}
+
+// Helper function to check if a fertilizer contains phosphate
+function hasPhosphateContent(fertId) {
+  const fert = FERTILIZERS.find(f => f.id === fertId);
+  return fert && fert.pct && (fert.pct.P2O5 > 0 || fert.pct.P > 0);
+}
 
 // Validation functions
 function validateVolumeInput(input) {
@@ -4430,6 +4518,485 @@ function calculateIonBalanceForFormula(activeFertilizers, volume) {
 }
 
 // ============================================================================
+// TWO-TANK SYSTEM FUNCTIONS
+// ============================================================================
+
+// Split fertilizers into two compatible tanks
+// Tank A: Calcium-containing fertilizers + compatible neutrals
+// Tank B: Sulfate/Phosphate-containing fertilizers + compatible neutrals
+// Neutral fertilizers can be split between tanks to help balance ions
+function splitIntoTwoTanks(formula, volume) {
+  const tankA = { fertilizers: {}, name: 'Tank A (Calcium)', description: 'Contains calcium sources - keep separate from sulfates' };
+  const tankB = { fertilizers: {}, name: 'Tank B (Sulfates/Phosphates)', description: 'Contains sulfate and phosphate sources' };
+
+  const neutralFertilizers = [];
+
+  // First pass: categorize fertilizers
+  Object.entries(formula).forEach(([fertId, grams]) => {
+    if (grams <= 0) return;
+
+    const hasCa = hasCaContent(fertId);
+    const hasS = hasSulfateContent(fertId);
+    const hasP = hasPhosphateContent(fertId);
+
+    if (hasCa && !hasS) {
+      // Pure calcium source -> Tank A
+      tankA.fertilizers[fertId] = grams;
+    } else if (hasS && !hasCa) {
+      // Sulfate source (no calcium) -> Tank B
+      tankB.fertilizers[fertId] = grams;
+    } else if (hasP && !hasCa && !hasS) {
+      // Pure phosphate source -> Tank B (safer with sulfates than calcium at high conc)
+      tankB.fertilizers[fertId] = grams;
+    } else if (hasCa && hasS) {
+      // Contains both Ca and S - problematic, put in Tank A with warning
+      tankA.fertilizers[fertId] = grams;
+    } else {
+      // Neutral fertilizer - will be assigned to help balance
+      neutralFertilizers.push({ fertId, grams });
+    }
+  });
+
+  // Calculate initial ion balance for each tank
+  let tankABalance = calculateTankIonBalance(tankA.fertilizers, volume);
+  let tankBBalance = calculateTankIonBalance(tankB.fertilizers, volume);
+
+  // Second pass: distribute neutral fertilizers to help balance tanks
+  neutralFertilizers.forEach(({ fertId, grams }) => {
+    // Get ion contribution of this fertilizer
+    const ionData = ION_DATA[fertId];
+
+    // Determine which tank needs more help with balance
+    // Also consider if one tank is empty
+    const tankAEmpty = Object.keys(tankA.fertilizers).length === 0;
+    const tankBEmpty = Object.keys(tankB.fertilizers).length === 0;
+
+    if (tankAEmpty && tankBEmpty) {
+      // Both empty, put in Tank A
+      tankA.fertilizers[fertId] = grams;
+    } else if (tankAEmpty) {
+      // Tank A is empty, put there to give it something
+      tankA.fertilizers[fertId] = grams;
+    } else if (tankBEmpty) {
+      // Tank B is empty, put there
+      tankB.fertilizers[fertId] = grams;
+    } else {
+      // Both tanks have items - assign to the one with worse balance
+      // or split if both are similar
+      const tankAImbalance = tankABalance.imbalance;
+      const tankBImbalance = tankBBalance.imbalance;
+
+      if (Math.abs(tankAImbalance - tankBImbalance) < 5) {
+        // Similar imbalance - check which direction each tank leans
+        // and assign to help correct it
+        const tankAExcess = tankABalance.totalCations - tankABalance.totalAnions;
+        const tankBExcess = tankBBalance.totalCations - tankBBalance.totalAnions;
+
+        // Check if this fertilizer contributes more cations or anions
+        let fertCations = 0, fertAnions = 0;
+        if (ionData) {
+          const testFert = [{ id: fertId, grams: grams }];
+          const testBalance = calculateTankIonBalance({ [fertId]: grams }, volume);
+          fertCations = testBalance.totalCations;
+          fertAnions = testBalance.totalAnions;
+        }
+
+        const fertExcess = fertCations - fertAnions;
+
+        // Assign to tank where it helps balance
+        if (tankAExcess > 0 && fertExcess < 0) {
+          tankA.fertilizers[fertId] = grams;
+        } else if (tankBExcess > 0 && fertExcess < 0) {
+          tankB.fertilizers[fertId] = grams;
+        } else if (tankAExcess < 0 && fertExcess > 0) {
+          tankA.fertilizers[fertId] = grams;
+        } else if (tankBExcess < 0 && fertExcess > 0) {
+          tankB.fertilizers[fertId] = grams;
+        } else {
+          // Can't help balance either way - put in tank with higher imbalance
+          if (tankAImbalance >= tankBImbalance) {
+            tankA.fertilizers[fertId] = grams;
+          } else {
+            tankB.fertilizers[fertId] = grams;
+          }
+        }
+      } else if (tankAImbalance > tankBImbalance) {
+        tankA.fertilizers[fertId] = grams;
+      } else {
+        tankB.fertilizers[fertId] = grams;
+      }
+    }
+
+    // Recalculate balances after assignment
+    tankABalance = calculateTankIonBalance(tankA.fertilizers, volume);
+    tankBBalance = calculateTankIonBalance(tankB.fertilizers, volume);
+  });
+
+  // Final balance calculation
+  tankA.ionBalance = calculateTankIonBalance(tankA.fertilizers, volume);
+  tankB.ionBalance = calculateTankIonBalance(tankB.fertilizers, volume);
+
+  // Calculate nutrient contributions for each tank
+  tankA.nutrients = calculateTankNutrients(tankA.fertilizers, volume);
+  tankB.nutrients = calculateTankNutrients(tankB.fertilizers, volume);
+
+  return { tankA, tankB };
+}
+
+// Calculate ion balance for a single tank
+function calculateTankIonBalance(fertilizers, volume) {
+  let totalCations = 0;
+  let totalAnions = 0;
+
+  Object.entries(fertilizers).forEach(([fertId, grams]) => {
+    const ionData = ION_DATA[fertId];
+    if (!ionData) return;
+
+    const moles = grams / ionData.molarMass;
+
+    ionData.ions.forEach(ionInfo => {
+      const meq = moles * ionInfo.count * ionInfo.charge * 1000;
+      const meqPerLiter = meq / volume;
+
+      if (ionInfo.type === 'cation') {
+        totalCations += meqPerLiter;
+      } else {
+        totalAnions += meqPerLiter;
+      }
+    });
+  });
+
+  const average = (totalCations + totalAnions) / 2;
+  const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
+
+  let statusColor, statusText;
+  if (imbalance <= 10) {
+    statusColor = '#28a745';
+    statusText = 'Balanced';
+  } else if (imbalance <= 20) {
+    statusColor = '#ffc107';
+    statusText = 'Caution';
+  } else {
+    statusColor = '#dc3545';
+    statusText = 'Imbalanced';
+  }
+
+  return { totalCations, totalAnions, imbalance, statusColor, statusText };
+}
+
+// Calculate nutrient PPM contributions for a tank
+function calculateTankNutrients(fertilizers, volume) {
+  const nutrients = {
+    N_total: 0, N_NO3: 0, N_NH4: 0,
+    P2O5: 0, P: 0, K2O: 0, K: 0,
+    Ca: 0, Mg: 0, S: 0
+  };
+
+  Object.entries(fertilizers).forEach(([fertId, grams]) => {
+    const fert = FERTILIZERS.find(f => f.id === fertId);
+    if (!fert) return;
+
+    Object.keys(nutrients).forEach(nutrient => {
+      if (fert.pct[nutrient]) {
+        nutrients[nutrient] += (grams * fert.pct[nutrient] / 100) / volume * 1000;
+      }
+    });
+  });
+
+  // Calculate total N
+  nutrients.N_total = nutrients.N_NO3 + nutrients.N_NH4;
+
+  // Calculate elemental from oxide if not directly available
+  if (nutrients.P2O5 > 0 && nutrients.P === 0) {
+    nutrients.P = nutrients.P2O5 * OXIDE_CONVERSIONS.P2O5_to_P;
+  }
+  if (nutrients.K2O > 0 && nutrients.K === 0) {
+    nutrients.K = nutrients.K2O * OXIDE_CONVERSIONS.K2O_to_K;
+  }
+
+  return nutrients;
+}
+
+// Display two-tank results for formula builder
+function displayTwoTankFormulaResults() {
+  if (!lastFormulaCalculation) {
+    alert('No formula results to split. Please build a formula first.');
+    return;
+  }
+
+  const { result, targets, volume, mode } = lastFormulaCalculation;
+  const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
+
+  displayTwoTankResults(tankA, tankB, volume, mode, 'formula-output', result.achieved);
+}
+
+// Display two-tank results for reverse calculator
+function displayTwoTankReverseResults() {
+  if (!lastReverseCalculation) {
+    alert('No calculation results to split. Please calculate fertilizers first.');
+    return;
+  }
+
+  const { result, volume, mode } = lastReverseCalculation;
+  const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
+
+  displayTwoTankResults(tankA, tankB, volume, mode, 'reverse-output', result.achieved);
+}
+
+// Common display function for two-tank results
+function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved) {
+  const outputDiv = document.getElementById(outputDivId);
+
+  let html = '<div class="two-tank-results">';
+  html += '<h3 style="margin-bottom: 15px; color: #007bff;">Two-Tank Stock Solution System</h3>';
+  html += '<p style="margin-bottom: 20px; color: #666;">Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.</p>';
+
+  // Tank A
+  html += renderTankSection(tankA, volume, mode, 'A');
+
+  // Tank B
+  html += renderTankSection(tankB, volume, mode, 'B');
+
+  // Combined totals note
+  html += '<div class="combined-note" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #007bff;">';
+  html += '<h4 style="margin-bottom: 10px;">Combined Solution (when mixed)</h4>';
+  html += '<p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">When both tanks are diluted and combined in the final reservoir, you will achieve:</p>';
+
+  // Show combined PPM
+  const combinedNutrients = {
+    N_total: tankA.nutrients.N_total + tankB.nutrients.N_total,
+    P2O5: tankA.nutrients.P2O5 + tankB.nutrients.P2O5,
+    P: tankA.nutrients.P + tankB.nutrients.P,
+    K2O: tankA.nutrients.K2O + tankB.nutrients.K2O,
+    K: tankA.nutrients.K + tankB.nutrients.K,
+    Ca: tankA.nutrients.Ca + tankB.nutrients.Ca,
+    Mg: tankA.nutrients.Mg + tankB.nutrients.Mg,
+    S: tankA.nutrients.S + tankB.nutrients.S
+  };
+
+  const nutrientLabels = mode === 'elemental'
+    ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
+    : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
+
+  html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.N}:</strong> ${combinedNutrients.N_total.toFixed(1)} ppm</span>`;
+  if (mode === 'elemental') {
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.P}:</strong> ${combinedNutrients.P.toFixed(1)} ppm</span>`;
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.K}:</strong> ${combinedNutrients.K.toFixed(1)} ppm</span>`;
+  } else {
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.P}:</strong> ${combinedNutrients.P2O5.toFixed(1)} ppm</span>`;
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.K}:</strong> ${combinedNutrients.K2O.toFixed(1)} ppm</span>`;
+  }
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Ca:</strong> ${combinedNutrients.Ca.toFixed(1)} ppm</span>`;
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Mg:</strong> ${combinedNutrients.Mg.toFixed(1)} ppm</span>`;
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>S:</strong> ${combinedNutrients.S.toFixed(1)} ppm</span>`;
+  html += '</div>';
+  html += '</div>';
+
+  // Back button
+  html += '<div style="margin-top: 20px;">';
+  html += '<button onclick="restoreSingleTankView(\'' + outputDivId + '\')" style="padding: 10px 20px; font-size: 14px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">';
+  html += 'Back to Single View';
+  html += '</button>';
+  html += '</div>';
+
+  html += '</div>';
+
+  outputDiv.innerHTML = html;
+}
+
+// Render a single tank section
+function renderTankSection(tank, volume, mode, tankLetter) {
+  const bgColor = tankLetter === 'A' ? '#f0f7ff' : '#fff7f0';
+  const borderColor = tankLetter === 'A' ? '#007bff' : '#fd7e14';
+  const detailsId = `tank-details-${tankLetter}`;
+
+  let html = `<div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: ${bgColor}; border-radius: 8px; border-left: 4px solid ${borderColor};">`;
+
+  // Header with name and Show Details button
+  html += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">`;
+  html += `<h4 style="margin: 0; color: ${borderColor};">${tank.name}</h4>`;
+
+  const fertEntries = Object.entries(tank.fertilizers);
+  if (fertEntries.length > 0) {
+    html += `<button onclick="toggleTankDetails('${detailsId}')" id="btn-${detailsId}" style="padding: 5px 12px; font-size: 12px; background: ${borderColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">Show Details</button>`;
+  }
+  html += `</div>`;
+
+  html += `<p style="margin-bottom: 15px; color: #666; font-size: 0.9em;">${tank.description}</p>`;
+
+  // Fertilizers list
+  if (fertEntries.length === 0) {
+    html += '<p style="color: #999; font-style: italic;">No fertilizers in this tank</p>';
+  } else {
+    html += '<div class="tank-fertilizers" style="margin-bottom: 15px;">';
+    fertEntries.forEach(([fertId, grams]) => {
+      const fert = FERTILIZERS.find(f => f.id === fertId);
+      if (fert) {
+        html += `<div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">`;
+        html += `<span>${fert.name}</span>`;
+        html += `<strong>${grams.toFixed(2)} g</strong>`;
+        html += `</div>`;
+      }
+    });
+    html += '</div>';
+
+    // Quick summary - PPM and ion balance in compact form
+    const nutrients = tank.nutrients;
+    const pVal = mode === 'elemental' ? nutrients.P : nutrients.P2O5;
+    const kVal = mode === 'elemental' ? nutrients.K : nutrients.K2O;
+    const pLabel = mode === 'elemental' ? 'P' : 'P₂O₅';
+    const kLabel = mode === 'elemental' ? 'K' : 'K₂O';
+
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">';
+    if (nutrients.N_total > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>N:</strong> ${nutrients.N_total.toFixed(1)}</span>`;
+    if (pVal > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>${pLabel}:</strong> ${pVal.toFixed(1)}</span>`;
+    if (kVal > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>${kLabel}:</strong> ${kVal.toFixed(1)}</span>`;
+    if (nutrients.Ca > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>Ca:</strong> ${nutrients.Ca.toFixed(1)}</span>`;
+    if (nutrients.Mg > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>Mg:</strong> ${nutrients.Mg.toFixed(1)}</span>`;
+    if (nutrients.S > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>S:</strong> ${nutrients.S.toFixed(1)}</span>`;
+    html += `<span style="padding: 4px 8px; background: ${tank.ionBalance.statusColor}20; border: 1px solid ${tank.ionBalance.statusColor}; border-radius: 4px; font-size: 0.85em;"><strong style="color: ${tank.ionBalance.statusColor};">${tank.ionBalance.imbalance.toFixed(1)}% ${tank.ionBalance.statusText}</strong></span>`;
+    html += '</div>';
+
+    // Collapsible details section
+    html += `<div id="${detailsId}" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed ${borderColor};">`;
+
+    // Full PPM Table
+    html += '<h5 style="margin-bottom: 10px; color: #333;">Nutrient PPM Values</h5>';
+    html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.9em;">';
+    html += '<tr style="background: white;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Nutrient</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">PPM</th></tr>';
+
+    const ppmData = [
+      { label: 'Nitrogen (N)', value: nutrients.N_total },
+      { label: mode === 'elemental' ? 'Phosphorus (P)' : 'Phosphorus (P₂O₅)', value: pVal },
+      { label: mode === 'elemental' ? 'Potassium (K)' : 'Potassium (K₂O)', value: kVal },
+      { label: 'Calcium (Ca)', value: nutrients.Ca },
+      { label: 'Magnesium (Mg)', value: nutrients.Mg },
+      { label: 'Sulfur (S)', value: nutrients.S }
+    ];
+
+    ppmData.forEach(item => {
+      if (item.value > 0.01) {
+        html += `<tr style="background: white;"><td style="padding: 8px; border-bottom: 1px solid #eee;">${item.label}</td><td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">${item.value.toFixed(2)}</td></tr>`;
+      }
+    });
+    html += '</table>';
+
+    // Nitrogen form breakdown
+    if (nutrients.N_total > 0.1) {
+      const nh4Pct = (nutrients.N_NH4 / nutrients.N_total * 100) || 0;
+      const no3Pct = (nutrients.N_NO3 / nutrients.N_total * 100) || 0;
+      html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px;">';
+      html += '<strong style="font-size: 0.9em;">Nitrogen Forms:</strong><br>';
+      html += `<span style="font-size: 0.85em;">NH₄-N: ${nutrients.N_NH4.toFixed(2)} ppm (${nh4Pct.toFixed(1)}%) | NO₃-N: ${nutrients.N_NO3.toFixed(2)} ppm (${no3Pct.toFixed(1)}%)</span>`;
+      html += '</div>';
+    }
+
+    // NPK Ratio
+    html += '<h5 style="margin-bottom: 10px; color: #333;">Nutrient Ratios</h5>';
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">';
+
+    // Calculate NPK ratio
+    const npkValues = [nutrients.N_total, pVal, kVal].filter(v => v > 0.1);
+    if (npkValues.length > 0) {
+      const minNPK = Math.min(...npkValues);
+      const nRatio = minNPK > 0 ? (nutrients.N_total / minNPK).toFixed(1) : '0';
+      const pRatio = minNPK > 0 ? (pVal / minNPK).toFixed(1) : '0';
+      const kRatio = minNPK > 0 ? (kVal / minNPK).toFixed(1) : '0';
+      html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
+      html += `<div style="font-size: 0.8em; color: #666;">N:${pLabel}:${kLabel}</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${nRatio} : ${pRatio} : ${kRatio}</div>`;
+      html += `</div>`;
+    }
+
+    // Ca:Mg ratio
+    if (nutrients.Ca > 0.1 && nutrients.Mg > 0.1) {
+      const caMgRatio = (nutrients.Ca / nutrients.Mg).toFixed(2);
+      html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
+      html += `<div style="font-size: 0.8em; color: #666;">Ca:Mg</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${caMgRatio} : 1</div>`;
+      html += `</div>`;
+    }
+
+    // N:Ca ratio
+    if (nutrients.N_total > 0.1 && nutrients.Ca > 0.1) {
+      const nCaRatio = (nutrients.N_total / nutrients.Ca).toFixed(2);
+      html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
+      html += `<div style="font-size: 0.8em; color: #666;">N:Ca</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${nCaRatio} : 1</div>`;
+      html += `</div>`;
+    }
+
+    // K:Ca ratio
+    if (kVal > 0.1 && nutrients.Ca > 0.1) {
+      const kCaRatio = (kVal / nutrients.Ca).toFixed(2);
+      html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
+      html += `<div style="font-size: 0.8em; color: #666;">${kLabel}:Ca</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${kCaRatio} : 1</div>`;
+      html += `</div>`;
+    }
+
+    html += '</div>';
+
+    // Ion balance details
+    html += '<h5 style="margin-bottom: 10px; color: #333;">Ion Balance Details</h5>';
+    html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
+    html += `<div style="padding: 10px 15px; background: white; border-radius: 4px;">`;
+    html += `<div style="font-size: 0.8em; color: #666;">Total Cations</div>`;
+    html += `<div style="font-size: 1.1em; font-weight: bold;">${tank.ionBalance.totalCations.toFixed(2)} meq/L</div>`;
+    html += `</div>`;
+    html += `<div style="padding: 10px 15px; background: white; border-radius: 4px;">`;
+    html += `<div style="font-size: 0.8em; color: #666;">Total Anions</div>`;
+    html += `<div style="font-size: 1.1em; font-weight: bold;">${tank.ionBalance.totalAnions.toFixed(2)} meq/L</div>`;
+    html += `</div>`;
+    html += `<div style="padding: 10px 15px; background: ${tank.ionBalance.statusColor}20; border: 1px solid ${tank.ionBalance.statusColor}; border-radius: 4px;">`;
+    html += `<div style="font-size: 0.8em; color: #666;">Imbalance</div>`;
+    html += `<div style="font-size: 1.1em; font-weight: bold; color: ${tank.ionBalance.statusColor};">${tank.ionBalance.imbalance.toFixed(1)}%</div>`;
+    html += `<div style="font-size: 0.8em; color: ${tank.ionBalance.statusColor};">${tank.ionBalance.statusText}</div>`;
+    html += `</div>`;
+    html += '</div>';
+
+    html += '</div>'; // End details section
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Toggle tank details visibility
+function toggleTankDetails(detailsId) {
+  const details = document.getElementById(detailsId);
+  const btn = document.getElementById('btn-' + detailsId);
+
+  if (details.style.display === 'none') {
+    details.style.display = 'block';
+    btn.textContent = 'Hide Details';
+  } else {
+    details.style.display = 'none';
+    btn.textContent = 'Show Details';
+  }
+}
+
+// Restore single tank view
+function restoreSingleTankView(outputDivId) {
+  if (outputDivId === 'formula-output' && lastFormulaCalculation) {
+    displayFormulaResults(
+      lastFormulaCalculation.result,
+      lastFormulaCalculation.targets,
+      lastFormulaCalculation.volume,
+      lastFormulaCalculation.mode
+    );
+  } else if (outputDivId === 'reverse-output' && lastReverseCalculation) {
+    displayReverseResults(
+      lastReverseCalculation.result,
+      lastReverseCalculation.targets,
+      lastReverseCalculation.volume,
+      lastReverseCalculation.mode
+    );
+  }
+}
+
+// ============================================================================
 // REVERSE CALCULATOR FUNCTIONS
 // ============================================================================
 
@@ -4695,8 +5262,10 @@ let lastReverseCalculation = null;
 
 // Display reverse calculator results
 function displayReverseResults(result, targets, volume) {
-  // Store data for explanation modals
-  lastReverseCalculation = { result, targets, volume };
+  // Get calculation mode for storage
+  const mode = document.getElementById('reverse-calculation-mode').value;
+  // Store data for explanation modals and two-tank feature
+  lastReverseCalculation = { result, targets, volume, mode };
 
   const resultsSection = document.getElementById('reverse-results');
   const outputDiv = document.getElementById('reverse-output');
