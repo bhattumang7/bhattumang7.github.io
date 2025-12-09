@@ -4743,12 +4743,27 @@ function displayTwoTankReverseResults() {
   displayTwoTankResults(tankA, tankB, volume, mode, 'reverse-output', result.achieved);
 }
 
+// Store current two-tank data for copy function
+let currentTwoTankData = null;
+
 // Common display function for two-tank results
 function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved) {
   const outputDiv = document.getElementById(outputDivId);
 
+  // Store data for copy function
+  currentTwoTankData = { tankA, tankB, volume, mode, achieved };
+
   let html = '<div class="two-tank-results">';
-  html += '<h3 style="margin-bottom: 15px; color: #007bff;">Two-Tank Stock Solution System</h3>';
+
+  // Header with copy button
+  html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">';
+  html += '<h3 style="margin: 0; color: #007bff;">Two-Tank Stock Solution System</h3>';
+  html += `<button class="copy-btn" onclick="copyTwoTankResults()" title="Copy two-tank results to clipboard">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    Copy Results
+  </button>`;
+  html += '</div>';
+
   html += '<p style="margin-bottom: 20px; color: #666;">Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.</p>';
 
   // Tank A
@@ -4975,6 +4990,171 @@ function toggleTankDetails(detailsId) {
     details.style.display = 'none';
     btn.textContent = 'Show Details';
   }
+}
+
+// Copy two-tank results to clipboard
+function copyTwoTankResults() {
+  if (!currentTwoTankData) {
+    alert('No two-tank data to copy.');
+    return;
+  }
+
+  const { tankA, tankB, volume, mode, achieved } = currentTwoTankData;
+  const pLabel = mode === 'elemental' ? 'P' : 'P₂O₅';
+  const kLabel = mode === 'elemental' ? 'K' : 'K₂O';
+
+  let text = '═══════════════════════════════════════════\n';
+  text += '       TWO-TANK STOCK SOLUTION SYSTEM\n';
+  text += '═══════════════════════════════════════════\n';
+  text += `Volume: ${volume}L per tank\n\n`;
+
+  // Tank A
+  text += generateTankCopyText(tankA, 'A', mode, pLabel, kLabel);
+
+  // Tank B
+  text += generateTankCopyText(tankB, 'B', mode, pLabel, kLabel);
+
+  // Combined solution
+  const combinedNutrients = {
+    N_total: tankA.nutrients.N_total + tankB.nutrients.N_total,
+    N_NH4: tankA.nutrients.N_NH4 + tankB.nutrients.N_NH4,
+    N_NO3: tankA.nutrients.N_NO3 + tankB.nutrients.N_NO3,
+    P2O5: tankA.nutrients.P2O5 + tankB.nutrients.P2O5,
+    P: tankA.nutrients.P + tankB.nutrients.P,
+    K2O: tankA.nutrients.K2O + tankB.nutrients.K2O,
+    K: tankA.nutrients.K + tankB.nutrients.K,
+    Ca: tankA.nutrients.Ca + tankB.nutrients.Ca,
+    Mg: tankA.nutrients.Mg + tankB.nutrients.Mg,
+    S: tankA.nutrients.S + tankB.nutrients.S
+  };
+
+  text += '═══════════════════════════════════════════\n';
+  text += '         COMBINED SOLUTION (Final Mix)\n';
+  text += '═══════════════════════════════════════════\n\n';
+
+  text += 'PPM Values:\n';
+  text += '───────────────────────────────────────────\n';
+  text += `  Nitrogen (N):      ${combinedNutrients.N_total.toFixed(2)} ppm\n`;
+  const pVal = mode === 'elemental' ? combinedNutrients.P : combinedNutrients.P2O5;
+  const kVal = mode === 'elemental' ? combinedNutrients.K : combinedNutrients.K2O;
+  text += `  ${pLabel.padEnd(16)} ${pVal.toFixed(2)} ppm\n`;
+  text += `  ${kLabel.padEnd(16)} ${kVal.toFixed(2)} ppm\n`;
+  text += `  Calcium (Ca):      ${combinedNutrients.Ca.toFixed(2)} ppm\n`;
+  text += `  Magnesium (Mg):    ${combinedNutrients.Mg.toFixed(2)} ppm\n`;
+  text += `  Sulfur (S):        ${combinedNutrients.S.toFixed(2)} ppm\n\n`;
+
+  // Nitrogen forms
+  if (combinedNutrients.N_total > 0.1) {
+    const nh4Pct = (combinedNutrients.N_NH4 / combinedNutrients.N_total * 100) || 0;
+    const no3Pct = (combinedNutrients.N_NO3 / combinedNutrients.N_total * 100) || 0;
+    text += 'Nitrogen Forms:\n';
+    text += `  NH₄-N: ${combinedNutrients.N_NH4.toFixed(2)} ppm (${nh4Pct.toFixed(1)}%)\n`;
+    text += `  NO₃-N: ${combinedNutrients.N_NO3.toFixed(2)} ppm (${no3Pct.toFixed(1)}%)\n\n`;
+  }
+
+  // Combined ratios
+  const npkValues = [combinedNutrients.N_total, pVal, kVal].filter(v => v > 0.1);
+  if (npkValues.length > 0) {
+    const minNPK = Math.min(...npkValues);
+    text += 'Nutrient Ratios:\n';
+    text += '───────────────────────────────────────────\n';
+    text += `  N:${pLabel}:${kLabel} = ${(combinedNutrients.N_total/minNPK).toFixed(1)} : ${(pVal/minNPK).toFixed(1)} : ${(kVal/minNPK).toFixed(1)}\n`;
+    if (combinedNutrients.Ca > 0.1 && combinedNutrients.Mg > 0.1) {
+      text += `  Ca:Mg = ${(combinedNutrients.Ca/combinedNutrients.Mg).toFixed(2)} : 1\n`;
+    }
+  }
+
+  text += '\n═══════════════════════════════════════════\n';
+  text += 'Generated by Fertilizer Calculator\n';
+  text += 'https://bhattumang7.github.io/pages/fertilizer-calculator.html\n';
+  text += '═══════════════════════════════════════════\n';
+
+  navigator.clipboard.writeText(text).then(() => {
+    // Show success feedback
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!';
+    btn.style.background = '#28a745';
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.style.background = '';
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+    alert('Failed to copy to clipboard');
+  });
+}
+
+// Generate copy text for a single tank
+function generateTankCopyText(tank, letter, mode, pLabel, kLabel) {
+  let text = '';
+  text += `───────────────────────────────────────────\n`;
+  text += `  TANK ${letter}: ${tank.name.replace('Tank ' + letter + ' ', '').toUpperCase()}\n`;
+  text += `───────────────────────────────────────────\n`;
+  text += `${tank.description}\n\n`;
+
+  const fertEntries = Object.entries(tank.fertilizers);
+  if (fertEntries.length === 0) {
+    text += 'No fertilizers in this tank\n\n';
+    return text;
+  }
+
+  text += 'Fertilizers:\n';
+  fertEntries.forEach(([fertId, grams]) => {
+    const fert = FERTILIZERS.find(f => f.id === fertId);
+    if (fert) {
+      text += `  • ${fert.name}: ${grams.toFixed(2)} g\n`;
+    }
+  });
+  text += '\n';
+
+  // PPM values
+  const nutrients = tank.nutrients;
+  const pVal = mode === 'elemental' ? nutrients.P : nutrients.P2O5;
+  const kVal = mode === 'elemental' ? nutrients.K : nutrients.K2O;
+
+  text += 'PPM Values:\n';
+  if (nutrients.N_total > 0.01) text += `  Nitrogen (N):      ${nutrients.N_total.toFixed(2)} ppm\n`;
+  if (pVal > 0.01) text += `  ${pLabel.padEnd(16)} ${pVal.toFixed(2)} ppm\n`;
+  if (kVal > 0.01) text += `  ${kLabel.padEnd(16)} ${kVal.toFixed(2)} ppm\n`;
+  if (nutrients.Ca > 0.01) text += `  Calcium (Ca):      ${nutrients.Ca.toFixed(2)} ppm\n`;
+  if (nutrients.Mg > 0.01) text += `  Magnesium (Mg):    ${nutrients.Mg.toFixed(2)} ppm\n`;
+  if (nutrients.S > 0.01) text += `  Sulfur (S):        ${nutrients.S.toFixed(2)} ppm\n`;
+  text += '\n';
+
+  // Nitrogen forms
+  if (nutrients.N_total > 0.1) {
+    const nh4Pct = (nutrients.N_NH4 / nutrients.N_total * 100) || 0;
+    const no3Pct = (nutrients.N_NO3 / nutrients.N_total * 100) || 0;
+    text += 'Nitrogen Forms:\n';
+    text += `  NH₄-N: ${nutrients.N_NH4.toFixed(2)} ppm (${nh4Pct.toFixed(1)}%)\n`;
+    text += `  NO₃-N: ${nutrients.N_NO3.toFixed(2)} ppm (${no3Pct.toFixed(1)}%)\n\n`;
+  }
+
+  // Ratios
+  const npkValues = [nutrients.N_total, pVal, kVal].filter(v => v > 0.1);
+  if (npkValues.length > 0 || (nutrients.Ca > 0.1 && nutrients.Mg > 0.1)) {
+    text += 'Ratios:\n';
+    if (npkValues.length > 0) {
+      const minNPK = Math.min(...npkValues);
+      text += `  N:${pLabel}:${kLabel} = ${(nutrients.N_total/minNPK).toFixed(1)} : ${(pVal/minNPK).toFixed(1)} : ${(kVal/minNPK).toFixed(1)}\n`;
+    }
+    if (nutrients.Ca > 0.1 && nutrients.Mg > 0.1) {
+      text += `  Ca:Mg = ${(nutrients.Ca/nutrients.Mg).toFixed(2)} : 1\n`;
+    }
+    if (nutrients.N_total > 0.1 && nutrients.Ca > 0.1) {
+      text += `  N:Ca = ${(nutrients.N_total/nutrients.Ca).toFixed(2)} : 1\n`;
+    }
+    text += '\n';
+  }
+
+  // Ion balance
+  text += 'Ion Balance:\n';
+  text += `  Cations: ${tank.ionBalance.totalCations.toFixed(2)} meq/L\n`;
+  text += `  Anions:  ${tank.ionBalance.totalAnions.toFixed(2)} meq/L\n`;
+  text += `  Balance: ${tank.ionBalance.imbalance.toFixed(1)}% (${tank.ionBalance.statusText})\n\n`;
+
+  return text;
 }
 
 // Restore single tank view
