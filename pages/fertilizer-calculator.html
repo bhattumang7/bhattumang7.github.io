@@ -1363,7 +1363,7 @@ permalink: /fertilizer-calculator/
       </div>
 
       <h3>Target PPM Values</h3>
-      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient concentrations. The calculator will find the best fertilizer combination to match your targets.</p>
+      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient concentrations (at least one required). The calculator will find the best fertilizer combination to match your targets.</p>
 
       <div style="margin-bottom: 20px;">
         <label for="formula-calculation-mode" style="display: block; margin-bottom: 8px; font-weight: bold;">Input Mode</label>
@@ -1379,16 +1379,16 @@ permalink: /fertilizer-calculator/
 
       <div class="target-input-grid">
         <div class="target-input-field">
-          <label for="target-n">Nitrogen (N) *</label>
-          <input type="number" id="target-n" min="0.1" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this)">
+          <label for="target-n">Nitrogen (N)</label>
+          <input type="number" id="target-n" min="0" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
-          <label for="target-p" id="target-p-label">Phosphorus (P₂O₅) *</label>
-          <input type="number" id="target-p" min="0.1" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this)">
+          <label for="target-p" id="target-p-label">Phosphorus (P₂O₅)</label>
+          <input type="number" id="target-p" min="0" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
-          <label for="target-k" id="target-k-label">Potassium (K₂O) *</label>
-          <input type="number" id="target-k" min="0.1" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this)">
+          <label for="target-k" id="target-k-label">Potassium (K₂O)</label>
+          <input type="number" id="target-k" min="0" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-ca">Calcium (Ca)</label>
@@ -3971,37 +3971,30 @@ async function buildFormula() {
 
   const targets = {};
   let hasInvalidInput = false;
-  const missingRequired = [];
+  let hasAtLeastOneTarget = false;
 
   Object.entries(targetInputs).forEach(([key, input]) => {
     const value = parseFloat(input.value);
-    const isRequired = key === 'N' || key === 'P' || key === 'K';
 
     if (input.value === '' || isNaN(value)) {
-      if (isRequired) {
-        input.classList.add('input-error');
-        hasInvalidInput = true;
-        missingRequired.push(key);
-      }
+      input.classList.remove('input-error');
       targets[key] = 0;
     } else if (value < 0) {
       input.classList.add('input-error');
       hasInvalidInput = true;
       targets[key] = 0;
-    } else if (isRequired && value === 0) {
-      input.classList.add('input-error');
-      hasInvalidInput = true;
-      missingRequired.push(key);
-      targets[key] = 0;
     } else {
       input.classList.remove('input-error');
       targets[key] = value;
+      if (value > 0) {
+        hasAtLeastOneTarget = true;
+      }
     }
   });
 
-  // Validate required fields
-  if (missingRequired.length > 0) {
-    alert(`Please enter positive values for the following required nutrients: ${missingRequired.join(', ')}`);
+  // Validate at least one nutrient target is specified
+  if (!hasAtLeastOneTarget) {
+    alert('Please enter a positive value for at least one nutrient target');
     return;
   }
 
