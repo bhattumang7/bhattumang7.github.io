@@ -1492,23 +1492,23 @@ permalink: /fertilizer-calculator/
       </div>
 
       <div style="margin-top: 20px; margin-bottom: 20px;">
-        <label for="reverse-concentration" style="display: block; margin-bottom: 8px; font-weight: bold;">Target Concentration</label>
+        <label for="reverse-concentration" style="display: block; margin-bottom: 8px; font-weight: bold;">Target EC (mS/cm)</label>
         <select id="reverse-concentration" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
-          <option value="5">Trace (5 PPM base) - Plain Water Supplement</option>
-          <option value="10">Minimal (10 PPM base) - Recovery/Flush</option>
-          <option value="15">Very Weak (15 PPM base) - Sensitive Plants</option>
-          <option value="20">Weak (20 PPM base) - Fresh Clones</option>
-          <option value="25">Ultra Light (25 PPM base) - Rooted Cuttings</option>
-          <option value="35">Very Light (35 PPM base) - Delicate Seedlings</option>
-          <option value="50">Light (50 PPM base) - Seedlings/Young Plants</option>
-          <option value="75" selected>Moderate (75 PPM base) - General Purpose</option>
-          <option value="100">Strong (100 PPM base) - Vegetative Growth</option>
-          <option value="125">Very Strong (125 PPM base) - Heavy Feeders</option>
-          <option value="150">Maximum (150 PPM base) - Heavy Feeders/Fruiting</option>
+          <option value="ec:0.2">0.2 mS/cm - Plain Water Supplement</option>
+          <option value="ec:0.4">0.4 mS/cm - Recovery/Flush</option>
+          <option value="ec:0.6">0.6 mS/cm - Fresh Clones/Cuttings</option>
+          <option value="ec:0.8">0.8 mS/cm - Rooted Cuttings</option>
+          <option value="ec:1.0">1.0 mS/cm - Seedlings/Young Plants</option>
+          <option value="ec:1.2" selected>1.2 mS/cm - General Purpose</option>
+          <option value="ec:1.5">1.5 mS/cm - Vegetative Growth</option>
+          <option value="ec:1.8">1.8 mS/cm - Active Growth</option>
+          <option value="ec:2.0">2.0 mS/cm - Heavy Feeders</option>
+          <option value="ec:2.5">2.5 mS/cm - Flowering/Fruiting</option>
+          <option value="ec:3.0">3.0 mS/cm - Maximum (experienced growers)</option>
         </select>
         <p style="margin-top: 5px; color: #666; font-size: 0.85em;">
-          Base PPM = target for your smallest ratio nutrient. All others scale proportionally.<br>
-          <strong>Actual EC will be shown in results</strong> (depends on fertilizer selection).
+          Select your target EC. Fertilizer amounts will be scaled to achieve this conductivity.<br>
+          <strong>Ratios are preserved</strong> while adjusting overall concentration.
         </p>
       </div>
 
@@ -5701,7 +5701,17 @@ async function calculateReverse() {
   };
 
   const volume = parseFloat(document.getElementById('reverse-volume').value) || 10;
-  const concentration = parseFloat(document.getElementById('reverse-concentration').value) || 75;
+  const concentrationValue = document.getElementById('reverse-concentration').value;
+
+  // Check if targeting EC or PPM base
+  let targetEC = null;
+  let concentration = 100;  // Default reference concentration for EC-based calculation
+
+  if (concentrationValue.startsWith('ec:')) {
+    targetEC = parseFloat(concentrationValue.substring(3));
+  } else {
+    concentration = parseFloat(concentrationValue) || 75;
+  }
 
   // Validate inputs
   let hasError = false;
@@ -5771,7 +5781,55 @@ async function calculateReverse() {
     progressBar.setIndeterminate('Optimizing fertilizer combination...');
 
     // Run optimization
-    const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
+    let result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
+
+    // If targeting EC, scale fertilizer amounts to achieve target EC
+    if (targetEC !== null && Object.keys(result.formula).length > 0) {
+      progressBar.update(70, 'Scaling to target EC...');
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Calculate predicted EC from initial result
+      const initialEC = estimateECFromPPM(result.achieved);
+      const predictedEC = initialEC.ec_mS_cm;
+
+      if (predictedEC > 0) {
+        // Scale factor to achieve target EC
+        const scaleFactor = targetEC / predictedEC;
+
+        // Scale all fertilizer grams
+        const scaledFormula = {};
+        for (const [fertId, grams] of Object.entries(result.formula)) {
+          scaledFormula[fertId] = grams * scaleFactor;
+        }
+
+        // Recalculate achieved values based on scaled grams
+        const scaledAchieved = {
+          N_total: result.achieved.N_total * scaleFactor,
+          N_NO3: result.achieved.N_NO3 * scaleFactor,
+          N_NH4: result.achieved.N_NH4 * scaleFactor,
+          P2O5: result.achieved.P2O5 * scaleFactor,
+          K2O: result.achieved.K2O * scaleFactor,
+          P: result.achieved.P * scaleFactor,
+          K: result.achieved.K * scaleFactor,
+          Ca: result.achieved.Ca * scaleFactor,
+          Mg: result.achieved.Mg * scaleFactor,
+          S: result.achieved.S * scaleFactor,
+          Si: result.achieved.Si * scaleFactor
+        };
+
+        // Update result with scaled values
+        result = {
+          ...result,
+          formula: scaledFormula,
+          achieved: scaledAchieved,
+          ecScaling: {
+            targetEC: targetEC,
+            initialEC: predictedEC,
+            scaleFactor: scaleFactor
+          }
+        };
+      }
+    }
 
     progressBar.update(90, 'Preparing results...');
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -5783,7 +5841,7 @@ async function calculateReverse() {
     progressBar.hide();
 
     // Display results
-    displayReverseResults(result, targets, volume);
+    displayReverseResults(result, targets, volume, targetEC);
   } catch (error) {
     progressBar.hide();
     console.error('Reverse calculation error:', error);
@@ -5795,11 +5853,11 @@ async function calculateReverse() {
 let lastReverseCalculation = null;
 
 // Display reverse calculator results
-function displayReverseResults(result, targets, volume) {
+function displayReverseResults(result, targets, volume, targetEC = null) {
   // Get calculation mode for storage
   const mode = document.getElementById('reverse-calculation-mode').value;
   // Store data for explanation modals and two-tank feature
-  lastReverseCalculation = { result, targets, volume, mode };
+  lastReverseCalculation = { result, targets, volume, mode, targetEC };
 
   const resultsSection = document.getElementById('reverse-results');
   const outputDiv = document.getElementById('reverse-output');
@@ -6099,18 +6157,47 @@ function displayReverseResults(result, targets, volume) {
     ecStatusText = 'Very High!';
   }
 
-  html += '<h3 style="margin-top: 20px;">Predicted EC</h3>';
-  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
-    <div class="ion-balance-card" style="flex: 2;">
-      <div style="font-size: 0.9em; color: #666;">Electrical Conductivity (25°C)</div>
-      <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${ecValue.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
-      <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
-    </div>
-    <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${(ecPrediction.ionicStrength * 1000).toFixed(1)} <span style="font-size: 0.7em;">mM</span></div>
-    </div>
-  </div>`;
+  // Show different header based on whether EC was targeted
+  if (targetEC !== null) {
+    html += '<h3 style="margin-top: 20px;">Target EC Achieved</h3>';
+    html += `<div class="ion-balance-summary" style="margin-top: 10px;">
+      <div class="ion-balance-card">
+        <div style="font-size: 0.9em; color: #666;">Target EC</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${targetEC.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
+      </div>
+      <div class="ion-balance-card" style="flex: 2;">
+        <div style="font-size: 0.9em; color: #666;">Achieved EC (25°C)</div>
+        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${ecValue.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
+        <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
+      </div>
+      <div class="ion-balance-card">
+        <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
+        <div style="font-size: 1.3em; font-weight: bold;">${(ecPrediction.ionicStrength * 1000).toFixed(1)} <span style="font-size: 0.7em;">mM</span></div>
+      </div>
+    </div>`;
+
+    // Show scaling info if available
+    if (result.ecScaling) {
+      const accuracy = ((ecValue / targetEC) * 100).toFixed(1);
+      html += `<div style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 4px; font-size: 0.9em;">
+        <strong>EC Scaling Applied:</strong> Fertilizer amounts scaled by ${result.ecScaling.scaleFactor.toFixed(3)}x to achieve target EC.
+        <br><span style="color: #666;">Accuracy: ${accuracy}% of target</span>
+      </div>`;
+    }
+  } else {
+    html += '<h3 style="margin-top: 20px;">Predicted EC</h3>';
+    html += `<div class="ion-balance-summary" style="margin-top: 10px;">
+      <div class="ion-balance-card" style="flex: 2;">
+        <div style="font-size: 0.9em; color: #666;">Electrical Conductivity (25°C)</div>
+        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${ecValue.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
+        <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
+      </div>
+      <div class="ion-balance-card">
+        <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
+        <div style="font-size: 1.3em; font-weight: bold;">${(ecPrediction.ionicStrength * 1000).toFixed(1)} <span style="font-size: 0.7em;">mM</span></div>
+      </div>
+    </div>`;
+  }
 
   // EC breakdown by ion (collapsible)
   const ionContributions = Object.entries(ecPrediction.contributions)
