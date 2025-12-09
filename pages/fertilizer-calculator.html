@@ -1354,20 +1354,6 @@ permalink: /fertilizer-calculator/
   <!-- Formula Builder Tab -->
   <div id="formula-builder" class="tab-content">
     <div class="input-section">
-      <div class="fertilizer-selection">
-        <h4>Available Fertilizers</h4>
-        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Select the fertilizers you have available. The calculator will use only these to build your formula.</p>
-        <div class="fertilizer-search">
-          <input type="text" id="available-fertilizer-search" placeholder="Search fertilizers..." oninput="filterAvailableFertilizers(this.value)">
-        </div>
-        <div class="selection-controls">
-          <button onclick="selectAllAvailableFertilizers()">Select All</button>
-          <button onclick="deselectAllAvailableFertilizers()">Deselect All</button>
-          <button onclick="selectCommonFertilizers()">Select Common Only</button>
-        </div>
-        <div class="fertilizer-grid" id="available-fertilizers-list"></div>
-      </div>
-
       <h3>Target PPM Values</h3>
       <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient concentrations (at least one required). The calculator will find the best fertilizer combination to match your targets.</p>
 
@@ -1412,6 +1398,20 @@ permalink: /fertilizer-calculator/
           <label for="target-si">Silicon (Si) <small style="color:#666">PPM</small></label>
           <input type="number" id="target-si" min="0" step="1" value="0" placeholder="Target PPM" oninput="validateTargetInput(this, true)">
         </div>
+      </div>
+
+      <div class="fertilizer-selection">
+        <h4>Available Fertilizers</h4>
+        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Select the fertilizers you have available. The calculator will use only these to build your formula.</p>
+        <div class="fertilizer-search">
+          <input type="text" id="available-fertilizer-search" placeholder="Search fertilizers..." oninput="filterAvailableFertilizers(this.value)">
+        </div>
+        <div class="selection-controls">
+          <button onclick="selectAllAvailableFertilizers()">Select All</button>
+          <button onclick="deselectAllAvailableFertilizers()">Deselect All</button>
+          <button onclick="selectCommonFertilizers()">Select Common Only</button>
+        </div>
+        <div class="fertilizer-grid" id="available-fertilizers-list"></div>
       </div>
 
       <div class="volume-input">
@@ -3201,7 +3201,7 @@ function calculateECTDS(results) {
 }
 
 // Check for warnings (incompatibilities and imbalances)
-function checkWarnings(results, activeFertilizers) {
+function checkWarnings(results, activeFertilizers, ionBalance = null) {
   const warnings = [];
 
   // Extract common values
@@ -3488,35 +3488,14 @@ function checkWarnings(results, activeFertilizers) {
   // SECTION F: CALCULATOR SANITY CHECK
   // ============================================================================
 
-  // 23. Charge balance (electroneutrality) - catches bugs in calculations
-  // Calculate cations and anions in meq/L
-  const cations_meq =
-    (ca / 20.04) * 2 +      // Ca²⁺
-    (mg / 12.15) * 2 +      // Mg²⁺
-    (k / 39.10) * 1 +       // K⁺
-    (na / 22.99) * 1 +      // Na⁺
-    (nh4 / 14.01) * 1 +     // NH₄⁺
-    (fe / 55.85) * 2 +      // Fe²⁺ (assuming ferrous)
-    (mn / 54.94) * 2 +      // Mn²⁺
-    (zn / 65.38) * 2 +      // Zn²⁺
-    (cu / 63.55) * 2;       // Cu²⁺
-
-  const anions_meq =
-    (no3 / 14.01) * 1 +     // NO₃⁻
-    (p / 30.97) * 1.8 +     // H₂PO₄⁻ (using avg charge ~1.8 at pH 5.5-6.5)
-    (s / 32.07) * 2 +       // SO₄²⁻
-    (cl / 35.45) * 1 +      // Cl⁻
-    (b / 10.81) * 0.5 +     // B(OH)₄⁻ (partial)
-    (mo / 95.94) * 2;       // MoO₄²⁻
-
-  const avgMeq = (cations_meq + anions_meq) / 2;
-  if (avgMeq > 0.1) { // Only check if there's meaningful ion content
-    const imbalancePercent = Math.abs(cations_meq - anions_meq) / avgMeq * 100;
-    if (imbalancePercent > 15) {
+  // 23. Charge balance (electroneutrality) - use data from ion balance section if available
+  if (ionBalance && ionBalance.totalCations > 0.1) {
+    // Use the properly calculated ion balance data
+    if (ionBalance.imbalance > 15) {
       warnings.push({
         level: 'info',
         category: 'Charge Balance',
-        message: `Ion charge imbalance detected (${imbalancePercent.toFixed(1)}% difference). Cations: ${cations_meq.toFixed(2)} meq/L, Anions: ${anions_meq.toFixed(2)} meq/L. This may indicate missing ions in the formula or reflect natural variation. Values within ~10-15% are typically acceptable.`
+        message: `Ion charge imbalance detected (${ionBalance.imbalance.toFixed(1)}% difference). Cations: ${ionBalance.totalCations.toFixed(2)} meq/L, Anions: ${ionBalance.totalAnions.toFixed(2)} meq/L. This may indicate missing ions in the formula or reflect natural variation. Values within ~10-15% are typically acceptable.`
       });
     }
   }
@@ -3724,12 +3703,12 @@ function calculate() {
   const ecData = calculateECTDS(finalResults);
   displayECTDS(ecData);
 
-  // Check and display warnings
-  const warnings = checkWarnings(finalResults, activeFertilizers);
-  displayWarnings(warnings);
-
-  // Calculate and display ion balance
+  // Calculate and display ion balance (must be before warnings so we can use the data)
   const ionBalance = calculateIonBalance(activeFertilizers, volume);
+
+  // Check and display warnings (pass ion balance data)
+  const warnings = checkWarnings(finalResults, activeFertilizers, ionBalance);
+  displayWarnings(warnings);
 
   // Calculate and display nutrient ratios
   const ratios = calculateNutrientRatios(finalResults);
