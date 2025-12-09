@@ -1402,6 +1402,10 @@ permalink: /fertilizer-calculator/
           <label for="target-s">Sulfur (S)</label>
           <input type="number" id="target-s" min="0" step="1" placeholder="Optional" oninput="validateTargetInput(this, true)">
         </div>
+        <div class="target-input-field">
+          <label for="target-si">Silicon (Si)</label>
+          <input type="number" id="target-si" min="0" step="1" value="0" placeholder="Optional" oninput="validateTargetInput(this, true)">
+        </div>
       </div>
 
       <div class="volume-input">
@@ -1468,6 +1472,10 @@ permalink: /fertilizer-calculator/
         <div class="target-input-field">
           <label for="reverse-s">Sulfur (S)</label>
           <input type="number" id="reverse-s" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this, true)">
+        </div>
+        <div class="target-input-field">
+          <label for="reverse-si">Silicon (Si)</label>
+          <input type="number" id="reverse-si" min="0" step="1" value="0" placeholder="Optional (0 or more)" oninput="validateTargetInput(this, true)">
         </div>
       </div>
 
@@ -1805,7 +1813,7 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
     locateFile: (f) => `/assets/vendor/highs/${f}`
   });
 
-  const nutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
+  const nutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S', 'Si'];
   const tPlus = {}, tMinus = {};
   nutrients.forEach(n => {
     const t = targets[n] || 0;
@@ -1830,7 +1838,7 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
   });
 
   function perGramContrib(fert) {
-    const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0 };
+    const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
     const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
     Object.entries(fert.pct).forEach(([nutrient, pct]) => {
       const ppm = (1 * 1000 * (pct / 100)) / volume;
@@ -1840,6 +1848,12 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
         if (!hasNForms) c.N_total += ppm;
       } else if (nutrient === 'P2O5' || nutrient === 'K2O' || nutrient === 'Ca' || nutrient === 'Mg' || nutrient === 'S') {
         c[nutrient] += ppm;
+      } else if (nutrient === 'SiO2') {
+        c.Si += ppm * 0.46744; // SiO2 to Si conversion
+      } else if (nutrient === 'SiOH4') {
+        c.Si += ppm * 0.2922; // Si(OH)4 to Si conversion
+      } else if (nutrient === 'Si') {
+        c.Si += ppm;
       }
     });
     return c;
@@ -1881,7 +1895,7 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
     });
   }
 
-  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
   Object.entries(formula).forEach(([fid, grams]) => {
     const fert = fertilizers.find(f => f.id === fid);
     if (!fert) return;
@@ -1902,6 +1916,10 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
       } else if (nutrient === 'K2O') {
         achieved.K2O += ppm;
         achieved.K += ppm * 0.830; // K2O to K conversion
+      } else if (nutrient === 'SiO2') {
+        achieved.Si += ppm * 0.46744; // SiO2 to Si conversion
+      } else if (nutrient === 'SiOH4') {
+        achieved.Si += ppm * 0.2922; // Si(OH)4 to Si conversion
       } else if (achieved[nutrient] !== undefined) {
         achieved[nutrient] += ppm;
       }
@@ -2216,7 +2234,8 @@ const OXIDE_CONVERSIONS = {
   CaO_to_Ca: 0.71469,
   MgO_to_Mg: 0.60317,
   SO3_to_S: 0.40059,
-  SiO2_to_Si: 0.46744
+  SiO2_to_Si: 0.46744,
+  SiOH4_to_Si: 0.2922  // Si(OH)4 orthosilicic acid to elemental Si
 };
 
 // Molar masses for nutrients (g/mol) - for EC calculation
@@ -2613,6 +2632,10 @@ const FERTILIZER_COMPATIBILITY = {
     'phosphoric_acid_49',
     'urea_phosphate'
   ],
+  // Silicate sources (Tank B - incompatible with calcium, alkaline pH)
+  silicate_sources: [
+    'potassium_silicate_liquid_typical'
+  ],
   // Neutral fertilizers (compatible with both tanks)
   neutral: [
     'potassium_nitrate_typical',
@@ -2650,6 +2673,12 @@ function hasSulfateContent(fertId) {
 function hasPhosphateContent(fertId) {
   const fert = FERTILIZERS.find(f => f.id === fertId);
   return fert && fert.pct && (fert.pct.P2O5 > 0 || fert.pct.P > 0);
+}
+
+// Helper function to check if a fertilizer contains silicate (incompatible with calcium)
+function hasSilicateContent(fertId) {
+  const fert = FERTILIZERS.find(f => f.id === fertId);
+  return fert && fert.pct && (fert.pct.SiO2 > 0 || fert.pct.SiOH4 > 0 || fert.pct.Si > 0);
 }
 
 // Validation functions
@@ -3209,6 +3238,11 @@ function calculate() {
     finalResults.Si = (finalResults.Si || 0) + (ppmResults.SiO2 * OXIDE_CONVERSIONS.SiO2_to_Si);
   }
 
+  // Si from SiOH4 (orthosilicic acid)
+  if (ppmResults.SiOH4) {
+    finalResults.Si = (finalResults.Si || 0) + (ppmResults.SiOH4 * OXIDE_CONVERSIONS.SiOH4_to_Si);
+  }
+
   // Display selected fertilizers
   displaySelectedFertilizers(activeFertilizers);
 
@@ -3656,10 +3690,10 @@ function switchTab(tabId, tabButton) {
 // Clear formula builder
 function clearFormulaBuilder() {
   // Clear target inputs and remove error states
-  const targetIds = ['target-n', 'target-p', 'target-k', 'target-ca', 'target-mg', 'target-s'];
+  const targetIds = ['target-n', 'target-p', 'target-k', 'target-ca', 'target-mg', 'target-s', 'target-si'];
   targetIds.forEach(id => {
     const input = document.getElementById(id);
-    input.value = '';
+    input.value = id === 'target-si' ? '0' : '';  // Si defaults to 0
     input.classList.remove('input-error');
   });
 
@@ -3700,7 +3734,8 @@ async function buildFormula() {
     K: document.getElementById('target-k'),
     Ca: document.getElementById('target-ca'),
     Mg: document.getElementById('target-mg'),
-    S: document.getElementById('target-s')
+    S: document.getElementById('target-s'),
+    Si: document.getElementById('target-si')
   };
 
   const targets = {};
@@ -3959,7 +3994,8 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
       K: targetRatios.K / minRatio,
       Ca: targetRatios.Ca / minRatio,
       Mg: targetRatios.Mg / minRatio,
-      S: targetRatios.S / minRatio
+      S: targetRatios.S / minRatio,
+      Si: (targetRatios.Si || 0) / minRatio
     };
     const basePPMForMinRatio = concentration;
     const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
@@ -3975,7 +4011,8 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
         : normalizedRatios.K * basePPMForMinRatio,
       Ca: normalizedRatios.Ca * basePPMForMinRatio,
       Mg: normalizedRatios.Mg * basePPMForMinRatio,
-      S: normalizedRatios.S * basePPMForMinRatio
+      S: normalizedRatios.S * basePPMForMinRatio,
+      Si: normalizedRatios.Si * basePPMForMinRatio
     };
 
     const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01 });
@@ -3992,7 +4029,8 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
     K: targetRatios.K / minRatio,
     Ca: targetRatios.Ca / minRatio,
     Mg: targetRatios.Mg / minRatio,
-    S: targetRatios.S / minRatio
+    S: targetRatios.S / minRatio,
+    Si: (targetRatios.Si || 0) / minRatio
   };
 
   // Use user-selected concentration (base PPM for minimum ratio nutrient)
@@ -4015,7 +4053,8 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
       : normalizedRatios.K * basePPMForMinRatio,              // Already K2O
     Ca: normalizedRatios.Ca * basePPMForMinRatio,
     Mg: normalizedRatios.Mg * basePPMForMinRatio,
-    S: normalizedRatios.S * basePPMForMinRatio
+    S: normalizedRatios.S * basePPMForMinRatio,
+    Si: normalizedRatios.Si * basePPMForMinRatio
   };
 
   // If user wants absolute ppm targets (not ratios), override with direct values
@@ -4030,14 +4069,15 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
     targetPPM_Commercial.Ca = targetRatios.Ca || 0;
     targetPPM_Commercial.Mg = targetRatios.Mg || 0;
     targetPPM_Commercial.S = targetRatios.S || 0;
+    targetPPM_Commercial.Si = targetRatios.Si || 0;
   }
 
   const formula = {};
-  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
 
   // Helper function to calculate PPM contribution from a fertilizer
   function calculatePPM(fert, grams) {
-    const contribution = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+    const contribution = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
 
     Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
       const ppm = (grams * 1000 * (percentage / 100)) / volume;
@@ -4066,6 +4106,12 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
         contribution.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
       } else if (nutrient === 'SO3' && OXIDE_CONVERSIONS.SO3_to_S) {
         contribution.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
+      } else if (nutrient === 'SiO2' && OXIDE_CONVERSIONS.SiO2_to_Si) {
+        contribution.Si += ppm * OXIDE_CONVERSIONS.SiO2_to_Si;
+      } else if (nutrient === 'SiOH4' && OXIDE_CONVERSIONS.SiOH4_to_Si) {
+        contribution.Si += ppm * OXIDE_CONVERSIONS.SiOH4_to_Si;
+      } else if (nutrient === 'Si') {
+        contribution.Si += ppm;
       } else {
         contribution[nutrient] = (contribution[nutrient] || 0) + ppm;
       }
@@ -4321,8 +4367,8 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
 
   // Choose nutrients and labels based on mode
   const nutrients = mode === 'elemental'
-    ? ['N_total', 'P', 'K', 'Ca', 'Mg', 'S']
-    : ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
+    ? ['N_total', 'P', 'K', 'Ca', 'Mg', 'S', 'Si']
+    : ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S', 'Si'];
 
   const labels = mode === 'elemental'
     ? {
@@ -4331,7 +4377,8 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
         K: 'Potassium (K)',
         Ca: 'Calcium (Ca)',
         Mg: 'Magnesium (Mg)',
-        S: 'Sulfur (S)'
+        S: 'Sulfur (S)',
+        Si: 'Silicon (Si)'
       }
     : {
         N_total: 'Nitrogen (N)',
@@ -4339,7 +4386,8 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
         K2O: 'Potassium (K₂O)',
         Ca: 'Calcium (Ca)',
         Mg: 'Magnesium (Mg)',
-        S: 'Sulfur (S)'
+        S: 'Sulfur (S)',
+        Si: 'Silicon (Si)'
       };
 
   let allGood = true;
@@ -4356,7 +4404,7 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
     const target = targets[targetKey];
     const achieved = result.achieved[nutrient] || 0;
 
-    if (target === 0 && nutrient === 'S') return; // Skip S if not specified
+    if (target === 0 && (nutrient === 'S' || nutrient === 'Si')) return; // Skip S/Si if not specified
 
     const diff = achieved - target;
     const percentDiff = target > 0 ? (Math.abs(diff) / target * 100) : 0;
@@ -4526,8 +4574,8 @@ function calculateIonBalanceForFormula(activeFertilizers, volume) {
 // Tank B: Sulfate/Phosphate-containing fertilizers + compatible neutrals
 // Neutral fertilizers can be split between tanks to help balance ions
 function splitIntoTwoTanks(formula, volume) {
-  const tankA = { fertilizers: {}, name: 'Tank A (Calcium)', description: 'Contains calcium sources - keep separate from sulfates' };
-  const tankB = { fertilizers: {}, name: 'Tank B (Sulfates/Phosphates)', description: 'Contains sulfate and phosphate sources' };
+  const tankA = { fertilizers: {}, name: 'Tank A (Calcium)', description: 'Contains calcium sources - keep separate from sulfates and silicates' };
+  const tankB = { fertilizers: {}, name: 'Tank B (Sulfates/Phosphates/Silicates)', description: 'Contains sulfate, phosphate, and silicate sources' };
 
   const neutralFertilizers = [];
 
@@ -4538,8 +4586,9 @@ function splitIntoTwoTanks(formula, volume) {
     const hasCa = hasCaContent(fertId);
     const hasS = hasSulfateContent(fertId);
     const hasP = hasPhosphateContent(fertId);
+    const hasSi = hasSilicateContent(fertId);
 
-    if (hasCa && !hasS) {
+    if (hasCa && !hasS && !hasSi) {
       // Pure calcium source -> Tank A
       tankA.fertilizers[fertId] = grams;
     } else if (hasS && !hasCa) {
@@ -4548,8 +4597,14 @@ function splitIntoTwoTanks(formula, volume) {
     } else if (hasP && !hasCa && !hasS) {
       // Pure phosphate source -> Tank B (safer with sulfates than calcium at high conc)
       tankB.fertilizers[fertId] = grams;
+    } else if (hasSi && !hasCa) {
+      // Silicate source (no calcium) -> Tank B (silicates precipitate with calcium)
+      tankB.fertilizers[fertId] = grams;
     } else if (hasCa && hasS) {
       // Contains both Ca and S - problematic, put in Tank A with warning
+      tankA.fertilizers[fertId] = grams;
+    } else if (hasCa && hasSi) {
+      // Contains both Ca and Si - problematic, put in Tank A with warning
       tankA.fertilizers[fertId] = grams;
     } else {
       // Neutral fertilizer - will be assigned to help balance
@@ -5365,11 +5420,11 @@ function updateFormulaCalculationMode() {
 
 function clearReverseCalculator() {
   // Clear target inputs and remove error states
-  const targetIds = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg', 'reverse-s'];
+  const targetIds = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg', 'reverse-s', 'reverse-si'];
   targetIds.forEach(id => {
     const input = document.getElementById(id);
     if (input) {
-      input.value = '';
+      input.value = id === 'reverse-si' ? '0' : '';  // Si defaults to 0
       input.classList.remove('input-error');
     }
   });
@@ -5408,7 +5463,8 @@ async function calculateReverse() {
     K: parseFloat(document.getElementById('reverse-k').value) || 0,
     Ca: parseFloat(document.getElementById('reverse-ca').value) || 0,
     Mg: parseFloat(document.getElementById('reverse-mg').value) || 0,
-    S: parseFloat(document.getElementById('reverse-s').value) || 0
+    S: parseFloat(document.getElementById('reverse-s').value) || 0,
+    Si: parseFloat(document.getElementById('reverse-si').value) || 0
   };
 
   const volume = parseFloat(document.getElementById('reverse-volume').value) || 10;
@@ -5416,7 +5472,7 @@ async function calculateReverse() {
 
   // Validate inputs
   let hasError = false;
-  const allNutrientFields = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg', 'reverse-s'];
+  const allNutrientFields = ['reverse-n', 'reverse-p', 'reverse-k', 'reverse-ca', 'reverse-mg', 'reverse-s', 'reverse-si'];
 
   // Validate all nutrient fields - must be valid numbers >= 0 or blank (treated as 0)
   allNutrientFields.forEach(id => {
@@ -5555,7 +5611,8 @@ function displayReverseResults(result, targets, volume) {
     K2O: result.achieved.K2O,
     Ca: result.achieved.Ca,
     Mg: result.achieved.Mg,
-    S: result.achieved.S
+    S: result.achieved.S,
+    Si: result.achieved.Si || 0
   };
 
   // Normalize achieved values to ratios (find smallest non-zero value)
@@ -5567,7 +5624,8 @@ function displayReverseResults(result, targets, volume) {
     K2O: achievedPPM_Commercial.K2O > 0 ? achievedPPM_Commercial.K2O / minAchieved : 0,
     Ca: achievedPPM_Commercial.Ca > 0 ? achievedPPM_Commercial.Ca / minAchieved : 0,
     Mg: achievedPPM_Commercial.Mg > 0 ? achievedPPM_Commercial.Mg / minAchieved : 0,
-    S: achievedPPM_Commercial.S > 0 ? achievedPPM_Commercial.S / minAchieved : 0
+    S: achievedPPM_Commercial.S > 0 ? achievedPPM_Commercial.S / minAchieved : 0,
+    Si: achievedPPM_Commercial.Si > 0 ? achievedPPM_Commercial.Si / minAchieved : 0
   };
 
   // Normalize target values to ratios
@@ -5579,7 +5637,8 @@ function displayReverseResults(result, targets, volume) {
     K2O: targets.K > 0 ? targets.K / minTarget : 0,   // K input is treated as K2O
     Ca: targets.Ca > 0 ? targets.Ca / minTarget : 0,
     Mg: targets.Mg > 0 ? targets.Mg / minTarget : 0,
-    S: targets.S > 0 ? targets.S / minTarget : 0
+    S: targets.S > 0 ? targets.S / minTarget : 0,
+    Si: targets.Si > 0 ? targets.Si / minTarget : 0
   };
 
   // Get calculation mode preference
@@ -5601,7 +5660,8 @@ function displayReverseResults(result, targets, volume) {
       { key: 'K', label: 'Potassium (K)', isCommercial: false },
       { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
       { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
-      { key: 'S', label: 'Sulfur (S)', isCommercial: false }
+      { key: 'S', label: 'Sulfur (S)', isCommercial: false },
+      { key: 'Si', label: 'Silicon (Si)', isCommercial: false }
     ];
   } else {
     // Oxide mode: Show P₂O₅ and K₂O (commercial standard)
@@ -5611,7 +5671,8 @@ function displayReverseResults(result, targets, volume) {
       { key: 'K2O', label: 'Potassium (K₂O)', isCommercial: true },
       { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
       { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
-      { key: 'S', label: 'Sulfur (S)', isCommercial: false }
+      { key: 'S', label: 'Sulfur (S)', isCommercial: false },
+      { key: 'Si', label: 'Silicon (Si)', isCommercial: false }
     ];
   }
 
@@ -5647,7 +5708,7 @@ function displayReverseResults(result, targets, volume) {
       achievedRatio = achievedRatios.K2O || 0;
       achievedPPM = result.achieved.K2O || 0;
     } else {
-      // Ca, Mg, S - already elemental
+      // Ca, Mg, S, Si - already elemental
       targetRatio = targetRatios[nutrient.key] || 0;
       achievedRatio = achievedRatios[nutrient.key] || 0;
       achievedPPM = result.achieved[nutrient.key] || 0;
