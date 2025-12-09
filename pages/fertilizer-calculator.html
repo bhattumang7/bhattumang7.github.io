@@ -4685,7 +4685,7 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
 
   // Build matrix (fertilizers x nutrients) for least-squares solver
   // Use hard weights for nutrients the user targeted (>0), and soft weights for untargeted nutrients to discourage excess without blocking solutions
-  const allNutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
+  const allNutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S', 'Si'];
   const targetedKeys = allNutrients.filter(key => (targetPPM_Commercial[key] || 0) > 0);
   const extraKeys = allNutrients.filter(key => (targetPPM_Commercial[key] || 0) === 0);
   const nutrientKeys = targetedKeys.concat(extraKeys);
