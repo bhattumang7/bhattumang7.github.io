@@ -913,6 +913,53 @@ permalink: /fertilizer-calculator/
     transform: scale(1.1);
   }
 
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .copy-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+  }
+
+  .copy-btn:active {
+    transform: translateY(0);
+  }
+
+  .copy-btn.copied {
+    background: #17a2b8;
+  }
+
+  .copy-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .results-header h2,
+  .results-header h3 {
+    margin: 0;
+  }
+
   .modal-overlay {
     display: none;
     position: fixed;
@@ -1247,7 +1294,13 @@ permalink: /fertilizer-calculator/
   </div>
 
   <div class="results-section" id="selected-fertilizers-section" style="display: none;">
-    <h2>Selected Fertilizers</h2>
+    <div class="results-header">
+      <h2>Selected Fertilizers</h2>
+      <button class="copy-btn" onclick="copyGramsToPPMResults()" title="Copy results to clipboard">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copy Results
+      </button>
+    </div>
     <div id="selected-fertilizers-list"></div>
   </div>
 
@@ -1368,7 +1421,13 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="results-section" id="formula-results" style="display: none;">
-      <h2>Recommended Formula</h2>
+      <div class="results-header">
+        <h2>Recommended Formula</h2>
+        <button class="copy-btn" onclick="copyPPMToGramsResults()" title="Copy results to clipboard">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy Results
+        </button>
+      </div>
       <div id="formula-output"></div>
     </div>
   </div>
@@ -1460,7 +1519,13 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="results-section" id="reverse-results" style="display: none;">
-      <h2>Required Fertilizers</h2>
+      <div class="results-header">
+        <h2>Required Fertilizers</h2>
+        <button class="copy-btn" onclick="copyNPKRatioResults()" title="Copy results to clipboard">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy Results
+        </button>
+      </div>
       <div id="reverse-output"></div>
     </div>
   </div>
@@ -2944,6 +3009,9 @@ function displayWarnings(warnings) {
   outputDiv.innerHTML = html;
 }
 
+// Store last Grams to PPM calculation result for copy function
+let lastGramsToPPMCalculation = null;
+
 // Main calculation function
 function calculate() {
   const volumeInput = document.getElementById('volume');
@@ -3068,11 +3136,21 @@ function calculate() {
   displayWarnings(warnings);
 
   // Calculate and display ion balance
-  calculateIonBalance(activeFertilizers, volume);
+  const ionBalance = calculateIonBalance(activeFertilizers, volume);
 
   // Calculate and display nutrient ratios
   const ratios = calculateNutrientRatios(finalResults);
   displayNutrientRatios(ratios);
+
+  // Store calculation data for copy function
+  lastGramsToPPMCalculation = {
+    activeFertilizers,
+    volume,
+    results: finalResults,
+    ecData,
+    ionBalance,
+    ratios
+  };
 }
 
 // Display selected fertilizers
@@ -3412,6 +3490,15 @@ function calculateIonBalance(activeFertilizers, volume) {
   }
 
   ionBalanceResult.innerHTML = html;
+
+  // Return ion balance data for copy function
+  return {
+    totalCations,
+    totalAnions,
+    imbalance,
+    statusText: statusText.replace(/[✓⚠✗]/g, '').trim(),
+    ionDetails
+  };
 }
 
 // Clear all selections and reset the form
@@ -6354,6 +6441,315 @@ function generateFormulaIonBalanceExplanation() {
   `;
 
   return content;
+}
+
+// ==========================================
+// Copy Results Functions (WhatsApp Friendly)
+// ==========================================
+
+// Helper function to copy text to clipboard and show feedback
+async function copyToClipboard(text, button) {
+  try {
+    await navigator.clipboard.writeText(text);
+
+    // Show feedback
+    const originalText = button.innerHTML;
+    button.classList.add('copied');
+    button.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      Copied!
+    `;
+
+    setTimeout(() => {
+      button.classList.remove('copied');
+      button.innerHTML = originalText;
+    }, 2000);
+  } catch (err) {
+    console.error('Failed to copy:', err);
+    alert('Failed to copy to clipboard. Please try again.');
+  }
+}
+
+// Copy Grams to PPM results (Tab 1)
+function copyGramsToPPMResults() {
+  if (!lastGramsToPPMCalculation) {
+    alert('Please run a calculation first.');
+    return;
+  }
+
+  const { activeFertilizers, volume, results, ecData, ionBalance, ratios } = lastGramsToPPMCalculation;
+
+  let text = `*🌱 Fertilizer Calculator Results*\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  // Fertilizers used
+  text += `*📦 Fertilizers Used* (${volume}L solution)\n`;
+  activeFertilizers.forEach(fert => {
+    text += `• ${fert.name}: *${fert.grams.toFixed(2)}g*\n`;
+  });
+  text += `\n`;
+
+  // PPM Results
+  text += `*📊 Nutrient Concentrations (PPM)*\n`;
+
+  const displayOrder = [
+    { key: 'N_total', label: 'Total N' },
+    { key: 'N_NO3', label: 'NO₃-N' },
+    { key: 'N_NH4', label: 'NH₄-N' },
+    { key: 'P', label: 'P' },
+    { key: 'K', label: 'K' },
+    { key: 'Ca', label: 'Ca' },
+    { key: 'Mg', label: 'Mg' },
+    { key: 'S', label: 'S' },
+    { key: 'Fe', label: 'Fe' },
+    { key: 'Mn', label: 'Mn' },
+    { key: 'Zn', label: 'Zn' },
+    { key: 'B', label: 'B' },
+    { key: 'Cu', label: 'Cu' },
+    { key: 'Mo', label: 'Mo' }
+  ];
+
+  displayOrder.forEach(item => {
+    if (results[item.key] !== undefined && results[item.key] > 0.01) {
+      text += `• ${item.label}: *${results[item.key].toFixed(2)} ppm*\n`;
+    }
+  });
+  text += `\n`;
+
+  // Ion Balance
+  if (ionBalance) {
+    text += `*⚖️ Ion Balance*\n`;
+    text += `• Cations: *${ionBalance.totalCations.toFixed(2)} meq/L*\n`;
+    text += `• Anions: *${ionBalance.totalAnions.toFixed(2)} meq/L*\n`;
+    text += `• Imbalance: *${ionBalance.imbalance.toFixed(1)}%* (${ionBalance.statusText})\n`;
+    text += `\n`;
+  }
+
+  // EC Prediction
+  if (ecData && ecData.ec) {
+    text += `*⚡ EC Prediction*\n`;
+    text += `• EC: *${ecData.ec.toFixed(2)} mS/cm*\n`;
+    text += `\n`;
+  }
+
+  // Key Ratios
+  if (ratios && ratios.length > 0) {
+    text += `*📐 Key Ratios*\n`;
+    ratios.slice(0, 4).forEach(ratio => {
+      text += `• ${ratio.name}: *${ratio.ratio}*\n`;
+    });
+    text += `\n`;
+  }
+
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `_Generated by Fertilizer Calculator_`;
+
+  const button = event.target.closest('.copy-btn');
+  copyToClipboard(text, button);
+}
+
+// Copy PPM to Grams results (Tab 2 - Formula Builder)
+function copyPPMToGramsResults() {
+  if (!lastFormulaCalculation) {
+    alert('Please run a calculation first.');
+    return;
+  }
+
+  const { result, targets, volume, mode } = lastFormulaCalculation;
+
+  let text = `*🌱 Formula Builder Results*\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  // Target values
+  text += `*🎯 Target PPM Values*\n`;
+  const targetLabels = mode === 'elemental'
+    ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
+    : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
+
+  Object.entries(targets).forEach(([key, value]) => {
+    if (value > 0) {
+      const label = targetLabels[key] || key;
+      text += `• ${label}: *${value} ppm*\n`;
+    }
+  });
+  text += `\n`;
+
+  // Fertilizers to add
+  text += `*📦 Fertilizers to Add* (${volume}L)\n`;
+  const activeFertilizers = Object.entries(result.formula)
+    .filter(([fertId, grams]) => grams > 0.01)
+    .map(([fertId, grams]) => {
+      const fert = FERTILIZERS.find(f => f.id === fertId);
+      return { name: fert ? fert.name : fertId, grams };
+    });
+
+  if (activeFertilizers.length === 0) {
+    text += `_No suitable formula found_\n`;
+  } else {
+    activeFertilizers.forEach(fert => {
+      text += `• ${fert.name}: *${fert.grams.toFixed(2)}g*\n`;
+    });
+  }
+  text += `\n`;
+
+  // Achieved values
+  text += `*✅ Achieved PPM*\n`;
+  const achievedOrder = mode === 'elemental'
+    ? [
+        { key: 'N_total', label: 'N' },
+        { key: 'P', label: 'P' },
+        { key: 'K', label: 'K' },
+        { key: 'Ca', label: 'Ca' },
+        { key: 'Mg', label: 'Mg' },
+        { key: 'S', label: 'S' }
+      ]
+    : [
+        { key: 'N_total', label: 'N' },
+        { key: 'P2O5', label: 'P₂O₅' },
+        { key: 'K2O', label: 'K₂O' },
+        { key: 'Ca', label: 'Ca' },
+        { key: 'Mg', label: 'Mg' },
+        { key: 'S', label: 'S' }
+      ];
+
+  achievedOrder.forEach(item => {
+    const value = result.achieved[item.key];
+    if (value !== undefined && value > 0.01) {
+      text += `• ${item.label}: *${value.toFixed(1)} ppm*\n`;
+    }
+  });
+  text += `\n`;
+
+  // Ion Balance
+  const ionBalance = calculateIonBalanceForFormula(
+    Object.entries(result.formula).map(([fertId, grams]) => {
+      const fert = FERTILIZERS.find(f => f.id === fertId);
+      return { ...fert, grams };
+    }),
+    volume
+  );
+
+  if (ionBalance) {
+    text += `*⚖️ Ion Balance*\n`;
+    text += `• Cations: *${ionBalance.totalCations.toFixed(2)} meq/L*\n`;
+    text += `• Anions: *${ionBalance.totalAnions.toFixed(2)} meq/L*\n`;
+    text += `• Imbalance: *${ionBalance.imbalance.toFixed(1)}%* (${ionBalance.statusText})\n`;
+    text += `\n`;
+  }
+
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `_Generated by Fertilizer Calculator_`;
+
+  const button = event.target.closest('.copy-btn');
+  copyToClipboard(text, button);
+}
+
+// Copy NPK Ratio to Grams results (Tab 3 - Reverse Calculator)
+function copyNPKRatioResults() {
+  if (!lastReverseCalculation) {
+    alert('Please run a calculation first.');
+    return;
+  }
+
+  const { result, targets, volume } = lastReverseCalculation;
+  const calculationMode = document.getElementById('reverse-calculation-mode').value;
+
+  let text = `*🌱 NPK Ratio Calculator Results*\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  // Target ratios
+  text += `*🎯 Target Ratios*\n`;
+  const targetLabels = calculationMode === 'elemental'
+    ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
+    : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
+
+  const targetParts = [];
+  ['N', 'P', 'K', 'Ca', 'Mg', 'S'].forEach(key => {
+    if (targets[key] > 0) {
+      const label = targetLabels[key] || key;
+      targetParts.push(`${label}:${targets[key]}`);
+    }
+  });
+  text += `• Ratio: *${targetParts.join(' : ')}*\n\n`;
+
+  // Fertilizers to add
+  text += `*📦 Fertilizers to Add* (${volume}L)\n`;
+  const activeFertilizers = Object.entries(result.formula)
+    .filter(([fertId, grams]) => grams > 0.01)
+    .map(([fertId, grams]) => {
+      const fert = FERTILIZERS.find(f => f.id === fertId);
+      return { name: fert ? fert.name : fertId, grams };
+    });
+
+  if (activeFertilizers.length === 0) {
+    text += `_No suitable formula found_\n`;
+  } else {
+    activeFertilizers.forEach(fert => {
+      text += `• ${fert.name}: *${fert.grams.toFixed(2)}g*\n`;
+    });
+  }
+  text += `\n`;
+
+  // Achieved PPM values
+  text += `*✅ Achieved PPM*\n`;
+  const achievedOrder = calculationMode === 'elemental'
+    ? [
+        { key: 'N_total', label: 'N' },
+        { key: 'P', label: 'P' },
+        { key: 'K', label: 'K' },
+        { key: 'Ca', label: 'Ca' },
+        { key: 'Mg', label: 'Mg' },
+        { key: 'S', label: 'S' }
+      ]
+    : [
+        { key: 'N_total', label: 'N' },
+        { key: 'P2O5', label: 'P₂O₅' },
+        { key: 'K2O', label: 'K₂O' },
+        { key: 'Ca', label: 'Ca' },
+        { key: 'Mg', label: 'Mg' },
+        { key: 'S', label: 'S' }
+      ];
+
+  achievedOrder.forEach(item => {
+    const value = result.achieved[item.key];
+    if (value !== undefined && value > 0.01) {
+      text += `• ${item.label}: *${value.toFixed(1)} ppm*\n`;
+    }
+  });
+  text += `\n`;
+
+  // Nitrogen breakdown
+  if (result.achieved.N_NO3 > 0 || result.achieved.N_NH4 > 0) {
+    text += `*🧪 Nitrogen Forms*\n`;
+    text += `• NO₃-N: *${result.achieved.N_NO3.toFixed(1)} ppm*\n`;
+    text += `• NH₄-N: *${result.achieved.N_NH4.toFixed(1)} ppm*\n`;
+    const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
+    text += `• NH₄ ratio: *${nh4Percent.toFixed(0)}%*\n`;
+    text += `\n`;
+  }
+
+  // Ion Balance
+  const ionBalance = calculateIonBalanceForFormula(
+    Object.entries(result.formula).map(([fertId, grams]) => {
+      const fert = FERTILIZERS.find(f => f.id === fertId);
+      return { ...fert, grams };
+    }),
+    volume
+  );
+
+  if (ionBalance) {
+    text += `*⚖️ Ion Balance*\n`;
+    text += `• Cations: *${ionBalance.totalCations.toFixed(2)} meq/L*\n`;
+    text += `• Anions: *${ionBalance.totalAnions.toFixed(2)} meq/L*\n`;
+    text += `• Imbalance: *${ionBalance.imbalance.toFixed(1)}%* (${ionBalance.statusText})\n`;
+    text += `\n`;
+  }
+
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `_Generated by Fertilizer Calculator_`;
+
+  const button = event.target.closest('.copy-btn');
+  copyToClipboard(text, button);
 }
 
 // Initialize when page loads
