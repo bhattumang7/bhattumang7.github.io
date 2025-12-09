@@ -4591,10 +4591,14 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
 
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
 
-  // Display formula
-  Object.entries(result.formula).forEach(([fertId, grams]) => {
+  // Display formula and calculate total grams
+  let totalGrams = 0;
+  const fertEntries = Object.entries(result.formula);
+
+  fertEntries.forEach(([fertId, grams]) => {
     const fert = FERTILIZERS.find(f => f.id === fertId);
     if (fert) {
+      totalGrams += grams;
       const composition = Object.entries(fert.pct)
         .map(([key, val]) => `${key}: ${val}%`)
         .join(', ');
@@ -4609,6 +4613,18 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
       `;
     }
   });
+
+  // Show total grams
+  if (fertEntries.length > 1) {
+    html += `
+      <div class="formula-fertilizer" style="background: #e8f5e9; border-left: 4px solid #4caf50; margin-top: 10px;">
+        <div class="formula-fertilizer-info">
+          <div class="formula-fertilizer-name" style="color: #2e7d32; font-weight: bold;">TOTAL (${fertEntries.length} fertilizers)</div>
+        </div>
+        <div class="formula-fertilizer-amount" style="color: #2e7d32; font-size: 1.2em;">${totalGrams.toFixed(2)} g</div>
+      </div>
+    `;
+  }
 
   html += '</div>';
 
@@ -4735,6 +4751,25 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
       <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
     </div>
   </div>`;
+
+  // Add EC prediction
+  const ecData = calculateECTDS(result.achieved);
+  const ecColor = ecData.ec > 3.5 ? '#dc3545' : ecData.ec < 0.5 ? '#ffc107' : '#28a745';
+  const ecStatus = ecData.ec > 3.5 ? 'High' : ecData.ec < 0.5 ? 'Low' : 'Good';
+
+  html += '<h3 style="margin-top: 20px;">EC Prediction</h3>';
+  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
+    <div class="ion-balance-card" style="background: ${ecColor}15; border-color: ${ecColor};">
+      <div style="font-size: 0.9em; color: #666;">Predicted EC</div>
+      <div style="font-size: 1.5em; font-weight: bold; color: ${ecColor};">${ecData.ec.toFixed(2)} mS/cm</div>
+      <div style="font-size: 0.9em; color: ${ecColor};">${ecStatus}</div>
+    </div>
+    <div class="ion-balance-card">
+      <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${ecData.ionicStrength.toFixed(4)} mol/L</div>
+    </div>
+  </div>`;
+  html += '<div class="conversion-note" style="margin-top: 10px;"><strong>Note:</strong> EC prediction uses the LMCv2 ion conductivity model. Optimal EC for most crops is 1.5-2.5 mS/cm.</div>';
 
   // Add nutrient ratio analysis
   const ratios = calculateNutrientRatios(result.achieved);
@@ -5099,6 +5134,16 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
   // Tank B
   html += renderTankSection(tankB, volume, mode, 'B', targets, combinedNutrients);
 
+  // Calculate combined totals
+  let totalGramsA = Object.values(tankA.fertilizers).reduce((sum, g) => sum + g, 0);
+  let totalGramsB = Object.values(tankB.fertilizers).reduce((sum, g) => sum + g, 0);
+  let grandTotalGrams = totalGramsA + totalGramsB;
+
+  // Calculate combined EC
+  const combinedEC = calculateECTDS(combinedNutrients);
+  const combinedECColor = combinedEC.ec > 3.5 ? '#dc3545' : combinedEC.ec < 0.5 ? '#ffc107' : '#28a745';
+  const combinedECStatus = combinedEC.ec > 3.5 ? 'High' : combinedEC.ec < 0.5 ? 'Low' : 'Good';
+
   // Combined totals note
   html += '<div class="combined-note" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #007bff;">';
   html += '<h4 style="margin-bottom: 10px;">Combined Solution (when mixed)</h4>';
@@ -5108,7 +5153,7 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
     ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
     : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
 
-  html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
+  html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">';
   html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.N}:</strong> ${combinedNutrients.N_total.toFixed(1)} ppm</span>`;
   if (mode === 'elemental') {
     html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.P}:</strong> ${combinedNutrients.P.toFixed(1)} ppm</span>`;
@@ -5120,6 +5165,12 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
   html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Ca:</strong> ${combinedNutrients.Ca.toFixed(1)} ppm</span>`;
   html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Mg:</strong> ${combinedNutrients.Mg.toFixed(1)} ppm</span>`;
   html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>S:</strong> ${combinedNutrients.S.toFixed(1)} ppm</span>`;
+  html += '</div>';
+
+  // EC and Totals row
+  html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 10px; border-top: 1px dashed #007bff;">';
+  html += `<span style="padding: 5px 10px; background: ${combinedECColor}15; border: 1px solid ${combinedECColor}; border-radius: 4px;"><strong style="color: ${combinedECColor};">Combined EC: ${combinedEC.ec.toFixed(2)} mS/cm (${combinedECStatus})</strong></span>`;
+  html += `<span style="padding: 5px 10px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px;"><strong style="color: #2e7d32;">Total: ${grandTotalGrams.toFixed(2)} g</strong> <span style="color: #666; font-size: 0.85em;">(Tank A: ${totalGramsA.toFixed(2)}g + Tank B: ${totalGramsB.toFixed(2)}g)</span></span>`;
   html += '</div>';
   html += '</div>';
 
@@ -5187,6 +5238,10 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     const pLabel = mode === 'elemental' ? 'P' : 'P₂O₅';
     const kLabel = mode === 'elemental' ? 'K' : 'K₂O';
 
+    // Calculate EC for this tank
+    const tankEC = calculateECTDS(nutrients);
+    const tankECColor = tankEC.ec > 3.5 ? '#dc3545' : tankEC.ec < 0.5 ? '#6c757d' : '#28a745';
+
     html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">';
     if (nutrients.N_total > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>N:</strong> ${nutrients.N_total.toFixed(1)}</span>`;
     if (pVal > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>${pLabel}:</strong> ${pVal.toFixed(1)}</span>`;
@@ -5195,6 +5250,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     if (nutrients.Mg > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>Mg:</strong> ${nutrients.Mg.toFixed(1)}</span>`;
     if (nutrients.S > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>S:</strong> ${nutrients.S.toFixed(1)}</span>`;
     html += `<span style="padding: 4px 8px; background: ${tank.ionBalance.statusColor}20; border: 1px solid ${tank.ionBalance.statusColor}; border-radius: 4px; font-size: 0.85em;"><strong style="color: ${tank.ionBalance.statusColor};">${tank.ionBalance.imbalance.toFixed(1)}% ${tank.ionBalance.statusText}</strong></span>`;
+    html += `<span style="padding: 4px 8px; background: ${tankECColor}15; border: 1px solid ${tankECColor}; border-radius: 4px; font-size: 0.85em;"><strong style="color: ${tankECColor};">EC: ${tankEC.ec.toFixed(2)}</strong></span>`;
     html += '</div>';
 
     // Collapsible details section
