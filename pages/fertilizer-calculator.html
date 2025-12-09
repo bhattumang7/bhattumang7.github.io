@@ -4773,18 +4773,7 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
 
   html += '<p style="margin-bottom: 20px; color: #666;">Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.</p>';
 
-  // Tank A
-  html += renderTankSection(tankA, volume, mode, 'A', targets);
-
-  // Tank B
-  html += renderTankSection(tankB, volume, mode, 'B', targets);
-
-  // Combined totals note
-  html += '<div class="combined-note" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #007bff;">';
-  html += '<h4 style="margin-bottom: 10px;">Combined Solution (when mixed)</h4>';
-  html += '<p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">When both tanks are diluted and combined in the final reservoir, you will achieve:</p>';
-
-  // Show combined PPM
+  // Calculate combined nutrients first (needed for ratio calculations)
   const combinedNutrients = {
     N_total: tankA.nutrients.N_total + tankB.nutrients.N_total,
     P2O5: tankA.nutrients.P2O5 + tankB.nutrients.P2O5,
@@ -4795,6 +4784,17 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
     Mg: tankA.nutrients.Mg + tankB.nutrients.Mg,
     S: tankA.nutrients.S + tankB.nutrients.S
   };
+
+  // Tank A
+  html += renderTankSection(tankA, volume, mode, 'A', targets, combinedNutrients);
+
+  // Tank B
+  html += renderTankSection(tankB, volume, mode, 'B', targets, combinedNutrients);
+
+  // Combined totals note
+  html += '<div class="combined-note" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #007bff;">';
+  html += '<h4 style="margin-bottom: 10px;">Combined Solution (when mixed)</h4>';
+  html += '<p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">When both tanks are diluted and combined in the final reservoir, you will achieve:</p>';
 
   const nutrientLabels = mode === 'elemental'
     ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
@@ -4828,7 +4828,7 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
 }
 
 // Render a single tank section
-function renderTankSection(tank, volume, mode, tankLetter, targets) {
+function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutrients) {
   const bgColor = tankLetter === 'A' ? '#f0f7ff' : '#fff7f0';
   const borderColor = tankLetter === 'A' ? '#007bff' : '#fd7e14';
   const detailsId = `tank-details-${tankLetter}`;
@@ -4918,39 +4918,39 @@ function renderTankSection(tank, volume, mode, tankLetter, targets) {
     html += '<h5 style="margin-bottom: 10px; color: #333;">Nutrient Ratios (relative to your input)</h5>';
     html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">';
 
-    // Show the original user-entered ratio (which is what combined tanks should achieve)
-    // Then show this tank's contribution on the same scale
-    if (targets) {
+    // Show the original user-entered ratio and this tank's proportional contribution
+    // Tank's contribution = (tank_ppm / combined_ppm) * target_ratio_value
+    if (targets && combinedNutrients) {
       const targetValues = [targets.N, targets.P, targets.K, targets.Ca || 0, targets.Mg || 0].filter(v => v > 0);
       if (targetValues.length > 0) {
         const minTarget = Math.min(...targetValues);
 
         // Normalize user's original targets to show as ratio (e.g., if user entered 3:1:2:2:1, show that)
-        const nTarget = targets.N > 0 ? (targets.N / minTarget).toFixed(1) : '0';
-        const pTarget = targets.P > 0 ? (targets.P / minTarget).toFixed(1) : '0';
-        const kTarget = targets.K > 0 ? (targets.K / minTarget).toFixed(1) : '0';
-        const caTarget = targets.Ca > 0 ? (targets.Ca / minTarget).toFixed(1) : '0';
-        const mgTarget = targets.Mg > 0 ? (targets.Mg / minTarget).toFixed(1) : '0';
+        const nTargetRatio = targets.N > 0 ? (targets.N / minTarget) : 0;
+        const pTargetRatio = targets.P > 0 ? (targets.P / minTarget) : 0;
+        const kTargetRatio = targets.K > 0 ? (targets.K / minTarget) : 0;
+        const caTargetRatio = targets.Ca > 0 ? (targets.Ca / minTarget) : 0;
+        const mgTargetRatio = targets.Mg > 0 ? (targets.Mg / minTarget) : 0;
 
-        // Build the ratio label and values based on what the user entered
+        // Build the ratio label based on what the user entered
         let ratioLabel = 'N';
-        let targetRatioValues = nTarget;
+        let targetRatioValues = nTargetRatio.toFixed(1);
 
         if (targets.P > 0) {
           ratioLabel += `:${pLabel}`;
-          targetRatioValues += ` : ${pTarget}`;
+          targetRatioValues += ` : ${pTargetRatio.toFixed(1)}`;
         }
         if (targets.K > 0) {
           ratioLabel += `:${kLabel}`;
-          targetRatioValues += ` : ${kTarget}`;
+          targetRatioValues += ` : ${kTargetRatio.toFixed(1)}`;
         }
         if (targets.Ca > 0) {
           ratioLabel += ':Ca';
-          targetRatioValues += ` : ${caTarget}`;
+          targetRatioValues += ` : ${caTargetRatio.toFixed(1)}`;
         }
         if (targets.Mg > 0) {
           ratioLabel += ':Mg';
-          targetRatioValues += ` : ${mgTarget}`;
+          targetRatioValues += ` : ${mgTargetRatio.toFixed(1)}`;
         }
 
         // Show original target ratio (what user entered)
@@ -4959,19 +4959,24 @@ function renderTankSection(tank, volume, mode, tankLetter, targets) {
         html += `<div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">${targetRatioValues}</div>`;
         html += `</div>`;
 
-        // Now show this tank's contribution on the same scale
-        // Achieved ratio = (achieved_ppm / target_ppm) * (target / minTarget)
-        const nAchieved = targets.N > 0 ? (nutrients.N_total / targets.N * (targets.N / minTarget)).toFixed(1) : '0';
-        const pAchieved = targets.P > 0 ? (pVal / targets.P * (targets.P / minTarget)).toFixed(1) : '0';
-        const kAchieved = targets.K > 0 ? (kVal / targets.K * (targets.K / minTarget)).toFixed(1) : '0';
-        const caAchieved = targets.Ca > 0 ? (nutrients.Ca / targets.Ca * (targets.Ca / minTarget)).toFixed(1) : '0';
-        const mgAchieved = targets.Mg > 0 ? (nutrients.Mg / targets.Mg * (targets.Mg / minTarget)).toFixed(1) : '0';
+        // Calculate this tank's contribution as proportion of target ratio
+        // Formula: (tank_ppm / combined_ppm) * target_ratio_value
+        // If combined is 0 for a nutrient, this tank contributes 0
+        const combinedP = mode === 'elemental' ? combinedNutrients.P : combinedNutrients.P2O5;
+        const combinedK = mode === 'elemental' ? combinedNutrients.K : combinedNutrients.K2O;
 
-        let tankRatioValues = nAchieved;
-        if (targets.P > 0) tankRatioValues += ` : ${pAchieved}`;
-        if (targets.K > 0) tankRatioValues += ` : ${kAchieved}`;
-        if (targets.Ca > 0) tankRatioValues += ` : ${caAchieved}`;
-        if (targets.Mg > 0) tankRatioValues += ` : ${mgAchieved}`;
+        const nContrib = combinedNutrients.N_total > 0 ? (nutrients.N_total / combinedNutrients.N_total) * nTargetRatio : 0;
+        const pContrib = combinedP > 0 ? (pVal / combinedP) * pTargetRatio : 0;
+        const kContrib = combinedK > 0 ? (kVal / combinedK) * kTargetRatio : 0;
+        const caContrib = combinedNutrients.Ca > 0 ? (nutrients.Ca / combinedNutrients.Ca) * caTargetRatio : 0;
+        const mgContrib = combinedNutrients.Mg > 0 ? (nutrients.Mg / combinedNutrients.Mg) * mgTargetRatio : 0;
+
+        // Build tank ratio values - only include nutrients that the user targeted
+        let tankRatioValues = nContrib.toFixed(1);
+        if (targets.P > 0) tankRatioValues += ` : ${pContrib.toFixed(1)}`;
+        if (targets.K > 0) tankRatioValues += ` : ${kContrib.toFixed(1)}`;
+        if (targets.Ca > 0) tankRatioValues += ` : ${caContrib.toFixed(1)}`;
+        if (targets.Mg > 0) tankRatioValues += ` : ${mgContrib.toFixed(1)}`;
 
         html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
         html += `<div style="font-size: 0.8em; color: #666;">This Tank (${ratioLabel})</div>`;
