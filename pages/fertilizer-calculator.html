@@ -4965,17 +4965,11 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
         const combinedP = mode === 'elemental' ? combinedNutrients.P : combinedNutrients.P2O5;
         const combinedK = mode === 'elemental' ? combinedNutrients.K : combinedNutrients.K2O;
 
-        // Debug: log values to verify calculation
-        console.log(`Tank ${tankLetter} nutrients:`, { N: nutrients.N_total, P: pVal, K: kVal, Ca: nutrients.Ca, Mg: nutrients.Mg });
-        console.log(`Combined nutrients:`, { N: combinedNutrients.N_total, P: combinedP, K: combinedK, Ca: combinedNutrients.Ca, Mg: combinedNutrients.Mg });
-
         const nContrib = combinedNutrients.N_total > 0 ? (nutrients.N_total / combinedNutrients.N_total) * nTargetRatio : 0;
         const pContrib = combinedP > 0 ? (pVal / combinedP) * pTargetRatio : 0;
         const kContrib = combinedK > 0 ? (kVal / combinedK) * kTargetRatio : 0;
         const caContrib = combinedNutrients.Ca > 0 ? (nutrients.Ca / combinedNutrients.Ca) * caTargetRatio : 0;
         const mgContrib = combinedNutrients.Mg > 0 ? (nutrients.Mg / combinedNutrients.Mg) * mgTargetRatio : 0;
-
-        console.log(`Tank ${tankLetter} contributions:`, { nContrib, pContrib, kContrib, caContrib, mgContrib });
 
         // Build tank ratio values - only include nutrients that the user targeted
         let tankRatioValues = nContrib.toFixed(1);
