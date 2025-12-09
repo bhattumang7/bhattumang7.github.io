@@ -1505,27 +1505,15 @@ permalink: /fertilizer-calculator/
       </div>
 
       <div style="margin-top: 20px; margin-bottom: 20px;">
-        <label for="reverse-concentration" style="display: block; margin-bottom: 8px; font-weight: bold;">Target Concentration</label>
-        <select id="reverse-concentration" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
-          <option value="50">Light (EC ~1.0) - Seedlings/Cuttings</option>
-          <option value="75" selected>Moderate (EC ~1.5) - General Purpose</option>
-          <option value="100">Strong (EC ~2.0) - Vegetative Growth</option>
-          <option value="125">Very Strong (EC ~2.5) - Heavy Feeders</option>
-        </select>
-        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">This determines the fertilizer amounts while maintaining your ratio.</p>
-      </div>
-
-      <div style="margin-top: 20px; margin-bottom: 20px;">
         <label for="reverse-max-per-liter" style="display: block; margin-bottom: 8px; font-weight: bold;">Max Total Grams per Liter</label>
         <select id="reverse-max-per-liter" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
-          <option value="0" selected>No limit</option>
           <option value="1">1 g/L - Very light</option>
-          <option value="2">2 g/L - Light</option>
+          <option value="2" selected>2 g/L - Light</option>
           <option value="3">3 g/L - Moderate</option>
           <option value="4">4 g/L - Strong</option>
           <option value="5">5 g/L - Very strong</option>
         </select>
-        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">Limits the total combined weight of all fertilizers per liter. Leave at "No limit" for unconstrained optimization.</p>
+        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">Controls the total fertilizer amount. The calculator will maximize nutrients while maintaining your ratio within this budget.</p>
       </div>
 
       <div class="fertilizer-selection">
@@ -1961,6 +1949,196 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
   });
 
   return { formula, achieved };
+}
+
+// MILP solver for ratio-based optimization (gram-first approach)
+// Maximizes nutrients while maintaining ratios and staying within gram budget
+async function solveMilpRatioBased({ fertilizers, ratios, volume, maxPerLiter, mode = 'oxide' }) {
+  const highsFactory = window.highs || window.Module;
+  if (!window.LPModel || typeof highsFactory !== 'function') {
+    throw new Error('MILP dependencies not loaded');
+  }
+
+  const { Model } = window.LPModel;
+  const highs = await highsFactory({
+    locateFile: (f) => `/assets/vendor/highs/${f}`
+  });
+
+  // Normalize ratios - find smallest non-zero value
+  // Si is treated as absolute PPM, not a ratio
+  const ratioNutrients = { N: ratios.N || 0, P: ratios.P || 0, K: ratios.K || 0, Ca: ratios.Ca || 0, Mg: ratios.Mg || 0, S: ratios.S || 0 };
+  const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
+  const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
+
+  const normalizedRatios = {};
+  Object.keys(ratioNutrients).forEach(k => {
+    normalizedRatios[k] = ratioNutrients[k] / minRatio;
+  });
+
+  // Convert P and K ratios to oxide form if in elemental mode
+  const P_to_P2O5 = 2.2914; // 1 / 0.436
+  const K_to_K2O = 1.2046;  // 1 / 0.830
+
+  const oxideRatios = {
+    N_total: normalizedRatios.N,
+    P2O5: mode === 'elemental' ? normalizedRatios.P * P_to_P2O5 : normalizedRatios.P,
+    K2O: mode === 'elemental' ? normalizedRatios.K * K_to_K2O : normalizedRatios.K,
+    Ca: normalizedRatios.Ca,
+    Mg: normalizedRatios.Mg,
+    S: normalizedRatios.S
+  };
+
+  const model = new Model();
+
+  // Variables: x[f] = grams of fertilizer f, scale = scaling factor for PPM
+  const x = {};
+  const y = {}; // Binary: is fertilizer used?
+  fertilizers.forEach(f => {
+    x[f.id] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `x_${f.id}` });
+    y[f.id] = model.addVar({ lb: 0, ub: 1, vtype: 'BINARY', name: `y_${f.id}` });
+  });
+
+  // Scale variable - represents the PPM of the minimum ratio nutrient
+  const scale = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 'scale' });
+
+  // Slack variables for ratio deviations
+  const slackPlus = {}, slackMinus = {};
+  const nutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S'];
+  nutrients.forEach(n => {
+    slackPlus[n] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `s_plus_${n}` });
+    slackMinus[n] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `s_minus_${n}` });
+  });
+
+  // Big-M constraint for fertilizer selection
+  const BIG_M = 10000;
+  fertilizers.forEach(f => {
+    model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
+  });
+
+  // Gram limit constraint (required for this solver)
+  const totalGramsLimit = maxPerLiter * volume;
+  const totalGramsTerms = fertilizers.map(f => [1, x[f.id]]);
+  model.addConstr(totalGramsTerms, '<=', totalGramsLimit);
+
+  // Helper: calculate PPM contribution per gram of fertilizer
+  function perGramContrib(fert) {
+    const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+    Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+      const ppm = (1 * 1000 * (pct / 100)) / volume;
+      if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+        c.N_total += ppm;
+      } else if (nutrient === 'N_total') {
+        if (!hasNForms) c.N_total += ppm;
+      } else if (nutrient === 'P2O5' || nutrient === 'K2O' || nutrient === 'Ca' || nutrient === 'Mg' || nutrient === 'S') {
+        c[nutrient] += ppm;
+      } else if (nutrient === 'SiO2') {
+        c.Si += ppm * 0.46744;
+      } else if (nutrient === 'SiOH4') {
+        c.Si += ppm * 0.2922;
+      } else if (nutrient === 'Si') {
+        c.Si += ppm;
+      }
+    });
+    return c;
+  }
+
+  // Ratio constraints: achieved PPM should equal scale * ratio (with slack)
+  // For each nutrient with a target ratio > 0:
+  // sum(x[f] * contrib[f][n]) = scale * ratio[n] + slack_plus - slack_minus
+  nutrients.forEach(n => {
+    const targetRatio = oxideRatios[n] || 0;
+    if (targetRatio > 0) {
+      const terms = [];
+      fertilizers.forEach(f => {
+        const c = perGramContrib(f);
+        if (c[n] !== 0) terms.push([c[n], x[f.id]]);
+      });
+      // sum(contributions) - scale*ratio = slack_plus - slack_minus
+      // Rearranged: sum(contributions) - slack_plus + slack_minus = scale * ratio
+      terms.push([-targetRatio, scale]);
+      terms.push([-1, slackPlus[n]]);
+      terms.push([1, slackMinus[n]]);
+      model.addConstr(terms, '=', 0);
+    }
+  });
+
+  // Si constraint (absolute PPM, not ratio-based)
+  const siTarget = ratios.Si || 0;
+  if (siTarget > 0) {
+    const siTerms = [];
+    fertilizers.forEach(f => {
+      const c = perGramContrib(f);
+      if (c.Si !== 0) siTerms.push([c.Si, x[f.id]]);
+    });
+    if (siTerms.length > 0) {
+      // Allow 10% tolerance on Si
+      model.addConstr(siTerms, '>=', siTarget * 0.9);
+      model.addConstr(siTerms, '<=', siTarget * 1.1);
+    }
+  }
+
+  // Objective: MAXIMIZE scale (to get highest PPM possible within gram budget)
+  // Penalize slack (ratio deviations) and number of fertilizers used
+  const objective = [];
+  objective.push([-100, scale]); // Negative because we minimize, so this maximizes scale
+  fertilizers.forEach(f => objective.push([0.1, y[f.id]])); // Small penalty for using more fertilizers
+  nutrients.forEach(n => {
+    const targetRatio = oxideRatios[n] || 0;
+    if (targetRatio > 0) {
+      objective.push([10, slackPlus[n]]);
+      objective.push([10, slackMinus[n]]);
+    }
+  });
+  model.setObjective(objective, 'MINIMIZE');
+
+  const lp = model.toLPFormat();
+  const solution = highs.solve(lp);
+  if (!solution || !model.variables) throw new Error('MILP solver failed');
+
+  // Extract results
+  const formula = {};
+  if (solution.Columns) {
+    fertilizers.forEach(f => {
+      const col = solution.Columns[`x_${f.id}`] || solution.Columns[f.id];
+      const grams = col && typeof col.Primal === 'number' ? col.Primal : 0;
+      if (grams > 1e-4) formula[f.id] = grams;
+    });
+  }
+
+  // Calculate achieved PPM
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+  Object.entries(formula).forEach(([fid, grams]) => {
+    const fert = fertilizers.find(f => f.id === fid);
+    if (!fert) return;
+    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+    Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+      const ppm = (grams * 1000 * (pct / 100)) / volume;
+      if (nutrient === 'N_NO3') {
+        achieved.N_NO3 += ppm;
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_NH4') {
+        achieved.N_NH4 += ppm;
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_total') {
+        if (!hasNForms) achieved.N_total += ppm;
+      } else if (nutrient === 'P2O5') {
+        achieved.P2O5 += ppm;
+        achieved.P += ppm * 0.436;
+      } else if (nutrient === 'K2O') {
+        achieved.K2O += ppm;
+        achieved.K += ppm * 0.830;
+      } else if (nutrient === 'SiO2') {
+        achieved.Si += ppm * 0.46744;
+      } else if (nutrient === 'SiOH4') {
+        achieved.Si += ppm * 0.2922;
+      } else if (achieved[nutrient] !== undefined) {
+        achieved[nutrient] += ppm;
+      }
+    });
+  });
+
+  return { formula, achieved, targetRatios: ratios };
 }
 
 // Fertilizer database
@@ -5564,7 +5742,6 @@ async function calculateReverse() {
   };
 
   const volume = parseFloat(document.getElementById('reverse-volume').value) || 10;
-  const concentration = parseFloat(document.getElementById('reverse-concentration').value) || 75;
 
   // Validate inputs
   let hasError = false;
@@ -5619,8 +5796,8 @@ async function calculateReverse() {
   // Get calculation mode (oxide vs elemental)
   const calculationMode = document.getElementById('reverse-calculation-mode').value;
 
-  // Get max per liter constraint (0 = no limit, 1-5 = max grams per liter per fertilizer)
-  const maxPerLiter = parseFloat(document.getElementById('reverse-max-per-liter').value) || 0;
+  // Get max per liter constraint (required - gram-first approach)
+  const maxPerLiter = parseFloat(document.getElementById('reverse-max-per-liter').value) || 2;
 
   // Show progress bar
   progressBar.show('Calculating Fertilizers');
@@ -5636,8 +5813,15 @@ async function calculateReverse() {
     progressBar.update(50, 'Running MILP solver...');
     progressBar.setIndeterminate('Optimizing fertilizer combination...');
 
-    // Run optimization
-    const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true, maxPerLiter });
+    // Run ratio-based optimization (gram-first approach)
+    // Maximizes nutrients while maintaining ratios within gram budget
+    const result = await solveMilpRatioBased({
+      fertilizers: selectedFertilizers,
+      ratios: targets,
+      volume,
+      maxPerLiter,
+      mode: calculationMode
+    });
 
     progressBar.update(90, 'Preparing results...');
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -5765,7 +5949,7 @@ function displayReverseResults(result, targets, volume, maxPerLiter = 0) {
   const calculationMode = document.getElementById('reverse-calculation-mode').value; // 'oxide' or 'elemental'
 
   // Comparison table - showing nutrients based on selected mode
-  html += '<h3>Target vs Achieved Ratios <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>';
+  html += '<h3>Achieved PPM (within ' + maxPerLiter + ' g/L budget) <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
   html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
