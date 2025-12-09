@@ -3192,42 +3192,143 @@ function calculateECTDS(results) {
 function checkWarnings(results, activeFertilizers) {
   const warnings = [];
 
-  // 1. Check for Calcium + Sulfate incompatibility (in stock solutions)
-  // This is critical for concentrated stock solutions
-  const hasCa = (results.Ca || 0) > 10;
-  const hasS = (results.S || 0) > 10;
-
-  if (hasCa && hasS) {
-    const caFertilizers = activeFertilizers.filter(f => f.pct.Ca).map(f => f.name).join(', ');
-    const sFertilizers = activeFertilizers.filter(f => f.pct.S).map(f => f.name).join(', ');
-
-    warnings.push({
-      level: 'warning',
-      category: 'Stock Solution Incompatibility',
-      message: `Calcium and sulfate are both present. When making STOCK SOLUTIONS (not final mix), keep calcium sources (${caFertilizers}) separate from sulfate sources (${sFertilizers}) to prevent calcium sulfate precipitation (gypsum). This warning doesn't apply to the final diluted nutrient solution.`
-    });
-  }
-
-  // 2. Check for high NH4:NO3 ratio (should be < 20%)
+  // Extract common values
+  const ca = results.Ca || 0;
+  const mg = results.Mg || 0;
+  const k = results.K || 0;
+  const p = results.P || 0;
+  const s = results.S || 0;
+  const si = results.Si || 0;
+  const cl = results.Cl || 0;
+  const na = results.Na || 0;
+  const fe = results.Fe || 0;
+  const mn = results.Mn || 0;
+  const zn = results.Zn || 0;
+  const cu = results.Cu || 0;
+  const b = results.B || 0;
+  const mo = results.Mo || 0;
   const nh4 = results.N_NH4 || 0;
   const no3 = results.N_NO3 || 0;
   const totalN = nh4 + no3;
 
+  // ============================================================================
+  // SECTION A: STOCK SOLUTION / MIXING COMPATIBILITY (HARD warnings)
+  // ============================================================================
+
+  // 1. Calcium + Sulfate incompatibility (in stock solutions)
+  if (ca > 10 && s > 10) {
+    const caFertilizers = activeFertilizers.filter(f => f.pct && f.pct.Ca).map(f => f.name).join(', ');
+    const sFertilizers = activeFertilizers.filter(f => f.pct && f.pct.S).map(f => f.name).join(', ');
+    warnings.push({
+      level: 'warning',
+      category: 'Stock Solution: Ca + Sulfate',
+      message: `Calcium and sulfate are both present. When making STOCK SOLUTIONS, keep calcium sources (${caFertilizers || 'calcium fertilizers'}) separate from sulfate sources (${sFertilizers || 'sulfate fertilizers'}) to prevent calcium sulfate precipitation (gypsum). This warning doesn't apply to the final diluted nutrient solution.`
+    });
+  }
+
+  // 8. Calcium + Phosphate incompatibility (Ca-P precipitate)
+  if (ca > 10 && p > 10) {
+    const caFertilizers = activeFertilizers.filter(f => f.pct && f.pct.Ca).map(f => f.name).join(', ');
+    const pFertilizers = activeFertilizers.filter(f => f.pct && (f.pct.P || f.pct.P2O5)).map(f => f.name).join(', ');
+    warnings.push({
+      level: 'warning',
+      category: 'Stock Solution: Ca + Phosphate',
+      message: `Calcium (${ca.toFixed(1)} ppm) and phosphate (${p.toFixed(1)} ppm P) are both present. When making STOCK SOLUTIONS, keep calcium sources (${caFertilizers || 'calcium fertilizers'}) in Tank A and phosphate sources (${pFertilizers || 'phosphate fertilizers'}) in Tank B to prevent calcium phosphate precipitation.`
+    });
+  }
+
+  // 9. Calcium + Silicate incompatibility (Ca-silicate gel/scale)
+  if (ca > 10 && si > 10) {
+    warnings.push({
+      level: 'warning',
+      category: 'Stock Solution: Ca + Silicate',
+      message: `Calcium (${ca.toFixed(1)} ppm) and silicate (${si.toFixed(1)} ppm Si) are both present. When making STOCK SOLUTIONS, keep calcium and potassium silicate in separate concentrates to prevent calcium silicate gel/scale formation. Often silicate needs its own tank or sequential dosing.`
+    });
+  }
+
+  // ============================================================================
+  // SECTION B: NITROGEN / AMMONIUM BALANCE
+  // ============================================================================
+
+  // 2. High NH4 ratio (>30% - HARD warning)
   if (totalN > 0) {
     const nh4Ratio = (nh4 / totalN) * 100;
     if (nh4Ratio > 30) {
       warnings.push({
         level: 'warning',
-        category: 'Nitrogen Balance',
-        message: `High ammonium ratio (${nh4Ratio.toFixed(1)}% NH₄⁺). Recommended: Keep NH₄⁺ below 20-30% of total N to avoid toxicity and acidification. Consider using more nitrate-based fertilizers.`
+        category: 'High Ammonium',
+        message: `High ammonium ratio (${nh4Ratio.toFixed(1)}% NH₄⁺). Recommended: Keep NH₄⁺ below 20-30% of total N to avoid toxicity and root zone acidification. Consider using more nitrate-based fertilizers.`
       });
     }
   }
 
-  // 3. Check for Ca:Mg ratio (optimal is 3:1 to 5:1)
-  const ca = results.Ca || 0;
-  const mg = results.Mg || 0;
+  // 12. Zero Ammonium (SOFT warning - optional guidance)
+  if (totalN > 0 && nh4 === 0) {
+    warnings.push({
+      level: 'info',
+      category: 'Zero Ammonium',
+      message: `No ammonium nitrogen in formula. A small NH₄⁺ share (5-15% of total N) can help with nutrient uptake and provide mild acidifying effect. This is optional—0% NH₄⁺ works fine if pH and media are managed.`
+    });
+  }
 
+  // 13. Very Low Ammonium (<3% - SOFT warning)
+  if (totalN > 0 && nh4 > 0) {
+    const nh4Ratio = (nh4 / totalN) * 100;
+    if (nh4Ratio < 3) {
+      warnings.push({
+        level: 'info',
+        category: 'Very Low Ammonium',
+        message: `Very low ammonium ratio (${nh4Ratio.toFixed(1)}% NH₄⁺). Consider increasing to 5-15% of total N for better uptake behavior and mild acidifying effect. This is optional guidance.`
+      });
+    }
+  }
+
+  // ============================================================================
+  // SECTION C: NUTRIENT PRESENCE CHECKS (important for RO water)
+  // ============================================================================
+
+  // 14. Missing Calcium baseline
+  if (ca < 20 && totalN > 0) {
+    warnings.push({
+      level: 'info',
+      category: 'Low Calcium',
+      message: `Calcium is low (${ca.toFixed(1)} ppm). RO/soft water often needs intentional Ca supply. Typical hydroponic feeds target 40-120 ppm Ca depending on crop and system.`
+    });
+  }
+
+  // 15. Missing Magnesium baseline
+  if (mg < 10 && totalN > 0) {
+    warnings.push({
+      level: 'info',
+      category: 'Low Magnesium',
+      message: `Magnesium is low (${mg.toFixed(1)} ppm). RO/soft water often needs Mg added. Common targets are 15-50 ppm Mg depending on crop and system.`
+    });
+  }
+
+  // 16. Micronutrients missing (sanity check for complete feeds)
+  if (totalN > 0) {
+    const missingMicros = [];
+    if (fe === 0) missingMicros.push('Fe');
+    if (b === 0) missingMicros.push('B');
+    if (mn === 0) missingMicros.push('Mn');
+    if (zn === 0) missingMicros.push('Zn');
+    if (cu === 0) missingMicros.push('Cu');
+    if (mo === 0) missingMicros.push('Mo');
+
+    if (missingMicros.length > 0) {
+      warnings.push({
+        level: 'info',
+        category: 'Missing Micronutrients',
+        message: `Missing micronutrients: ${missingMicros.join(', ')}. If formulating a complete feed, ensure all essential micros are included. Ignore if using a separate micro mix.`
+      });
+    }
+  }
+
+  // ============================================================================
+  // SECTION D: RATIO / ANTAGONISM RULES (SOFT warnings)
+  // ============================================================================
+
+  // 3. Ca:Mg ratio (optimal is 3:1 to 5:1)
   if (ca > 10 && mg > 5) {
     const ratio = ca / mg;
     if (ratio < 2) {
@@ -3245,8 +3346,7 @@ function checkWarnings(results, activeFertilizers) {
     }
   }
 
-  // 4. Check for K:Ca ratio (should be reasonably balanced)
-  const k = results.K || 0;
+  // 4. K:Ca ratio (should be reasonably balanced)
   if (k > 10 && ca > 10) {
     const kCaRatio = k / ca;
     if (kCaRatio > 3) {
@@ -3258,7 +3358,51 @@ function checkWarnings(results, activeFertilizers) {
     }
   }
 
-  // 5. Check for very high EC
+  // 17. K:Mg antagonism risk
+  if (k > 10 && mg > 5) {
+    const kMgRatio = k / mg;
+    if (kMgRatio > 6) {
+      warnings.push({
+        level: 'info',
+        category: 'K:Mg Ratio',
+        message: `K:Mg ratio is ${kMgRatio.toFixed(2)}:1 (${k.toFixed(1)} ppm K : ${mg.toFixed(1)} ppm Mg). Optimal range is 2:1 to 4:1. Too much K can suppress Mg uptake, causing Mg deficiency symptoms.`
+      });
+    } else if (kMgRatio < 1.5) {
+      warnings.push({
+        level: 'info',
+        category: 'K:Mg Ratio',
+        message: `K:Mg ratio is ${kMgRatio.toFixed(2)}:1 (${k.toFixed(1)} ppm K : ${mg.toFixed(1)} ppm Mg). Optimal range is 2:1 to 4:1. Low K relative to Mg may limit growth and quality.`
+      });
+    }
+  }
+
+  // 18. (Ca + Mg):K balance
+  if (k > 10 && (ca + mg) > 10) {
+    const caMgSum = ca + mg;
+    if (k > caMgSum * 1.5) {
+      warnings.push({
+        level: 'info',
+        category: '(Ca+Mg):K Balance',
+        message: `Potassium (${k.toFixed(1)} ppm) is high relative to Ca+Mg (${caMgSum.toFixed(1)} ppm). Excess K vs Ca+Mg increases risk of Ca/Mg deficiencies even when totals look adequate. Consider balancing.`
+      });
+    }
+  }
+
+  // 19. N:K ratio (vegetative vs generative style)
+  if (totalN > 0 && k > 0) {
+    const nkRatio = totalN / k;
+    warnings.push({
+      level: 'info',
+      category: 'N:K Ratio',
+      message: `N:K ratio is 1:${(k/totalN).toFixed(2)} (${totalN.toFixed(1)} ppm N : ${k.toFixed(1)} ppm K). Vegetative feeds typically use N:K ~ 1:1 to 1:1.5; flowering/fruiting feeds use N:K ~ 1:1.5 to 1:2+. Adjust based on growth stage.`
+    });
+  }
+
+  // ============================================================================
+  // SECTION E: TOXICITY / UNDESIRABLE IONS
+  // ============================================================================
+
+  // 5. EC levels (high and low)
   const ecData = calculateECTDS(results);
   if (ecData.ec > 3.5) {
     warnings.push({
@@ -3274,14 +3418,95 @@ function checkWarnings(results, activeFertilizers) {
     });
   }
 
-  // 6. Check for Cl- levels (chloride can be toxic at high levels)
-  const cl = results.Cl || 0;
+  // 6. High Chloride
   if (cl > 100) {
     warnings.push({
       level: 'warning',
       category: 'High Chloride',
       message: `Chloride level is ${cl.toFixed(1)} ppm. High chloride (>100 ppm) can be toxic to sensitive crops. Consider using sulfate-based fertilizers instead of chloride-based ones.`
     });
+  }
+
+  // 20. High Sodium
+  if (na > 50) {
+    const severity = na > 100 ? 'warning' : 'info';
+    warnings.push({
+      level: severity,
+      category: 'High Sodium',
+      message: `Sodium level is ${na.toFixed(1)} ppm. ${na > 100 ? 'This is very high!' : ''} Sodium can accumulate and compete with K/Ca/Mg uptake. Keep Na as low as possible, ideally <50 ppm.`
+    });
+  }
+
+  // 21. High Boron (narrow safe window)
+  if (b > 0.5) {
+    const severity = b > 1.0 ? 'warning' : 'info';
+    warnings.push({
+      level: severity,
+      category: 'High Boron',
+      message: `Boron level is ${b.toFixed(2)} ppm. ${b > 1.0 ? 'This may cause toxicity!' : 'This is on the high end.'} Boron has a narrow safe window (typically 0.2-0.5 ppm). Many crops show toxicity not far above sufficiency levels.`
+    });
+  }
+
+  // 22. High Cu/Zn/Mn (micros can go toxic fast)
+  if (cu > 0.1) {
+    warnings.push({
+      level: cu > 0.2 ? 'warning' : 'info',
+      category: 'High Copper',
+      message: `Copper level is ${cu.toFixed(2)} ppm. ${cu > 0.2 ? 'This may cause toxicity!' : 'This is on the high end.'} Typical range is 0.02-0.1 ppm Cu.`
+    });
+  }
+
+  if (zn > 0.5) {
+    warnings.push({
+      level: zn > 1.0 ? 'warning' : 'info',
+      category: 'High Zinc',
+      message: `Zinc level is ${zn.toFixed(2)} ppm. ${zn > 1.0 ? 'This may cause toxicity!' : 'This is on the high end.'} Typical range is 0.05-0.3 ppm Zn.`
+    });
+  }
+
+  if (mn > 2) {
+    warnings.push({
+      level: mn > 3 ? 'warning' : 'info',
+      category: 'High Manganese',
+      message: `Manganese level is ${mn.toFixed(2)} ppm. ${mn > 3 ? 'This may cause toxicity!' : 'This is on the high end.'} Typical range is 0.1-1.0 ppm Mn.`
+    });
+  }
+
+  // ============================================================================
+  // SECTION F: CALCULATOR SANITY CHECK
+  // ============================================================================
+
+  // 23. Charge balance (electroneutrality) - catches bugs in calculations
+  // Calculate cations and anions in meq/L
+  const cations_meq =
+    (ca / 20.04) * 2 +      // Ca²⁺
+    (mg / 12.15) * 2 +      // Mg²⁺
+    (k / 39.10) * 1 +       // K⁺
+    (na / 22.99) * 1 +      // Na⁺
+    (nh4 / 14.01) * 1 +     // NH₄⁺
+    (fe / 55.85) * 2 +      // Fe²⁺ (assuming ferrous)
+    (mn / 54.94) * 2 +      // Mn²⁺
+    (zn / 65.38) * 2 +      // Zn²⁺
+    (cu / 63.55) * 2;       // Cu²⁺
+
+  const anions_meq =
+    (no3 / 14.01) * 1 +     // NO₃⁻
+    (p / 30.97) * 1.8 +     // H₂PO₄⁻ (using avg charge ~1.8 at pH 5.5-6.5)
+    (s / 32.07) * 2 +       // SO₄²⁻
+    (cl / 35.45) * 1 +      // Cl⁻
+    (b / 10.81) * 0.5 +     // B(OH)₄⁻ (partial)
+    (mo / 95.94) * 2;       // MoO₄²⁻
+
+  const avgMeq = (cations_meq + anions_meq) / 2;
+  if (avgMeq > 0.1) { // Only check if there's meaningful ion content
+    const imbalancePercent = Math.abs(cations_meq - anions_meq) / avgMeq * 100;
+    if (imbalancePercent > 15) {
+      warnings.push({
+        level: 'info',
+        category: 'Charge Balance',
+        message: `Ion charge imbalance detected (${imbalancePercent.toFixed(1)}% difference). Cations: ${cations_meq.toFixed(2)} meq/L, Anions: ${anions_meq.toFixed(2)} meq/L. This may indicate missing ions in the formula or reflect natural variation. Values within ~10-15% are typically acceptable.`
+      });
+    }
   }
 
   return warnings;
