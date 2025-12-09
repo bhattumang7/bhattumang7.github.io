@@ -4954,7 +4954,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     html += `<div id="${detailsId}" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed ${borderColor};">`;
 
     // Full PPM Table
-    html += '<h5 style="margin-bottom: 10px; color: #333;">Nutrient PPM Values <span class="info-icon" onclick="openPPMExplanation()" title="Click to learn how we calculate PPM" style="font-size: 0.7em; width: 18px; height: 18px; line-height: 18px;">?</span></h5>';
+    html += '<h5 style="margin-bottom: 10px; color: #333;">Nutrient PPM Values <span class="info-icon" onclick="openTwoTankPPMExplanation()" title="Click to learn how we calculate PPM" style="font-size: 0.7em; width: 18px; height: 18px; line-height: 18px;">?</span></h5>';
     html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.9em;">';
     html += '<tr style="background: white;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Nutrient</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">PPM</th></tr>';
 
@@ -5081,7 +5081,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     html += '</div>';
 
     // Ion balance details
-    html += '<h5 style="margin-bottom: 10px; color: #333;">Ion Balance Details <span class="info-icon" onclick="openIonBalanceExplanation()" title="Click to learn how we calculate Ion Balance" style="font-size: 0.7em; width: 18px; height: 18px; line-height: 18px;">?</span></h5>';
+    html += '<h5 style="margin-bottom: 10px; color: #333;">Ion Balance Details <span class="info-icon" onclick="openTwoTankIonBalanceExplanation()" title="Click to learn how we calculate Ion Balance" style="font-size: 0.7em; width: 18px; height: 18px; line-height: 18px;">?</span></h5>';
     html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
     html += `<div style="padding: 10px 15px; background: white; border-radius: 4px;">`;
     html += `<div style="font-size: 0.8em; color: #666;">Total Cations</div>`;
@@ -7121,6 +7121,541 @@ function generateReverseIonBalanceExplanation() {
   }
 
   // Always include interpretation guide
+  content += `
+    <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
+      <h3 style="color: #28a745;">Interpreting Your Results</h3>
+      <ul style="line-height: 1.8;">
+        <li><strong>≤10% Imbalance:</strong> Balanced - Excellent! Your solution has good charge balance</li>
+        <li><strong>10-20% Imbalance:</strong> Caution - Acceptable, but monitor pH closely</li>
+        <li><strong>>20% Imbalance:</strong> Imbalanced - May cause pH swings and nutrient lockouts</li>
+      </ul>
+      <p style="margin-top: 15px;">
+        <strong>Why does this matter?</strong> Charge imbalance can cause pH to drift up or down,
+        which may lock out certain nutrients even if they're present in your solution.
+      </p>
+    </div>
+  `;
+
+  return content;
+}
+
+// ==========================================
+// Two-Tank View Explanation Functions
+// ==========================================
+
+// Open PPM explanation for two-tank view
+function openTwoTankPPMExplanation() {
+  const modal = document.getElementById('ppm-modal');
+  const modalBody = modal.querySelector('.modal-body');
+
+  modalBody.innerHTML = generateTwoTankPPMExplanation();
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+// Open Ion Balance explanation for two-tank view
+function openTwoTankIonBalanceExplanation() {
+  const modal = document.getElementById('ion-balance-modal');
+  const modalBody = modal.querySelector('#ion-balance-modal-body');
+
+  modalBody.innerHTML = generateTwoTankIonBalanceExplanation();
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+// Helper function to convert tank fertilizers object to array with full fertilizer data
+// Used by both PPM and Ion Balance explanation functions
+function getTankFertilizerArray(tankFertilizers, tankLabel) {
+  return Object.entries(tankFertilizers)
+    .filter(([id, grams]) => grams > 0.01)
+    .map(([fertId, grams]) => {
+      const fert = FERTILIZERS.find(f => f.id === fertId);
+      return fert ? { ...fert, grams, tank: tankLabel } : null;
+    })
+    .filter(f => f !== null);
+}
+
+// Generate PPM explanation content for two-tank view
+function generateTwoTankPPMExplanation() {
+  if (!currentTwoTankData) {
+    return `
+      <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
+        <h3 style="color: #856404;">No Calculation Yet</h3>
+        <p>Please run a calculation first to see the explanation.</p>
+      </div>
+    `;
+  }
+
+  const { tankA, tankB, volume } = currentTwoTankData;
+
+  // Use helper function to convert fertilizer objects to arrays with full fertilizer data
+  const tankAFerts = getTankFertilizerArray(tankA.fertilizers, 'A');
+  const tankBFerts = getTankFertilizerArray(tankB.fertilizers, 'B');
+  const allFertilizers = [...tankAFerts, ...tankBFerts];
+
+  let content = `
+    <!-- What is PPM? -->
+    <div class="explanation-section">
+      <h3>What is PPM?</h3>
+      <p>
+        <strong>PPM stands for "Parts Per Million"</strong> - it's a way to measure very small concentrations.
+        Think of it like this: <span class="highlight">1 PPM = 1 milligram per liter (mg/L)</span>.
+      </p>
+      <p>
+        For example, 100 PPM of Nitrogen means there are 100 milligrams of nitrogen in every liter of water.
+      </p>
+    </div>
+
+    <!-- The Basic Formula -->
+    <div class="explanation-section">
+      <h3>The Basic Formula</h3>
+      <div class="formula-box">
+        <div class="formula">PPM = (grams × 1000 × percentage) ÷ liters</div>
+        <div class="description">This tells us the concentration of nutrients in your solution</div>
+      </div>
+      <p><strong>Where:</strong></p>
+      <ul style="line-height: 1.8;">
+        <li><strong>grams</strong> = Amount of fertilizer you're adding</li>
+        <li><strong>1000</strong> = Converts grams to milligrams (mg)</li>
+        <li><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
+        <li><strong>liters</strong> = Volume of water in your solution</li>
+      </ul>
+    </div>
+
+    <!-- Two-Tank Note -->
+    <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
+      <h3 style="color: #17a2b8;">Two-Tank System</h3>
+      <p><strong>Solution Volume:</strong> ${volume} liters per tank</p>
+      <p><strong>Tank A Fertilizers:</strong> ${tankAFerts.length}</p>
+      <p><strong>Tank B Fertilizers:</strong> ${tankBFerts.length}</p>
+      <p style="margin-top: 10px;">
+        <strong>Important:</strong> Each tank is prepared separately with ${volume}L of water.
+        When mixed at equal rates, the PPM values from both tanks combine to give your final solution concentration.
+      </p>
+    </div>
+  `;
+
+  if (allFertilizers.length === 0) {
+    content += `
+      <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
+        <h3 style="color: #856404;">No Fertilizers in Formula</h3>
+        <p>The calculation did not produce a valid formula.</p>
+      </div>
+    `;
+  } else {
+    // Calculate contributions from each fertilizer
+    const nutrientContributions = {};
+
+    content += `
+      <div class="explanation-section">
+        <h3>Step-by-Step Breakdown</h3>
+        <p>Here's exactly how each fertilizer contributes to the PPM values:</p>
+    `;
+
+    allFertilizers.forEach((fert, index) => {
+      const tankLabel = fert.tank === 'A' ?
+        '<span style="background: #c8e6c9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 8px;">Tank A</span>' :
+        '<span style="background: #bbdefb; color: #1565c0; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 8px;">Tank B</span>';
+
+      content += `
+        <div class="step">
+          <h4 style="margin-top: 0; color: #007bff;">
+            <span class="step-number">${index + 1}</span>
+            ${fert.name}
+            ${tankLabel}
+          </h4>
+          <p style="margin: 10px 0 10px 38px;"><strong>Amount:</strong> ${fert.grams.toFixed(2)} grams</p>
+          <div style="margin-left: 38px;">
+            <table class="conversion-table" style="font-size: 0.9em;">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>% in Fertilizer</th>
+                  <th>Calculation</th>
+                  <th>PPM</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+
+      Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
+        const ppm = (fert.grams * 1000 * (percentage / 100)) / volume;
+        const calculation = `(${fert.grams.toFixed(2)} × 1000 × ${(percentage / 100).toFixed(4)}) ÷ ${volume}`;
+
+        // Track contributions for summary
+        if (!nutrientContributions[nutrient]) {
+          nutrientContributions[nutrient] = { tankA: [], tankB: [] };
+        }
+        nutrientContributions[nutrient][fert.tank === 'A' ? 'tankA' : 'tankB'].push({
+          fertilizer: fert.name,
+          ppm: ppm,
+          percentage: percentage
+        });
+
+        content += `
+          <tr>
+            <td data-label="Nutrient"><strong>${nutrient}</strong></td>
+            <td data-label="% in Fertilizer">${percentage}%</td>
+            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td data-label="PPM"><strong>${ppm.toFixed(2)} PPM</strong></td>
+          </tr>
+        `;
+      });
+
+      content += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    });
+
+    content += `</div>`;
+
+    // Summary table showing totals by tank
+    content += `
+      <div class="explanation-section">
+        <h3>Nutrient Totals by Tank</h3>
+        <p>When nutrients come from multiple fertilizers, we add them together:</p>
+        <table class="conversion-table">
+          <thead>
+            <tr>
+              <th>Nutrient</th>
+              <th>Tank A PPM</th>
+              <th>Tank B PPM</th>
+              <th>Combined PPM</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    Object.entries(nutrientContributions).forEach(([nutrient, sources]) => {
+      const tankATotal = sources.tankA.reduce((sum, s) => sum + s.ppm, 0);
+      const tankBTotal = sources.tankB.reduce((sum, s) => sum + s.ppm, 0);
+      const combined = tankATotal + tankBTotal;
+
+      content += `
+        <tr>
+          <td data-label="Nutrient"><strong>${nutrient}</strong></td>
+          <td data-label="Tank A PPM" style="color: #2e7d32;">${tankATotal.toFixed(2)}</td>
+          <td data-label="Tank B PPM" style="color: #1565c0;">${tankBTotal.toFixed(2)}</td>
+          <td data-label="Combined PPM"><strong>${combined.toFixed(2)} PPM</strong></td>
+        </tr>
+      `;
+    });
+
+    content += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Oxide conversions info
+  content += `
+    <div class="explanation-section">
+      <h3>Understanding Oxide Conversions</h3>
+      <p>
+        Many fertilizers list nutrients in their <strong>oxide form</strong> (like P₂O₅ for phosphorus or K₂O for potassium),
+        but plants actually use the <strong>elemental form</strong>. The calculator handles this automatically!
+      </p>
+      <table class="conversion-table">
+        <thead>
+          <tr>
+            <th>Oxide Form</th>
+            <th>Elemental Form</th>
+            <th>Conversion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>P₂O₅</td>
+            <td>P</td>
+            <td>× 0.436</td>
+          </tr>
+          <tr>
+            <td>K₂O</td>
+            <td>K</td>
+            <td>× 0.830</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return content;
+}
+
+// Generate Ion Balance explanation content for two-tank view
+function generateTwoTankIonBalanceExplanation() {
+  if (!currentTwoTankData) {
+    return `
+      <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
+        <h3 style="color: #856404;">No Calculation Yet</h3>
+        <p>Please run a calculation first to see the explanation.</p>
+      </div>
+    `;
+  }
+
+  const { tankA, tankB, volume } = currentTwoTankData;
+
+  // Combine fertilizers from both tanks using the helper function
+  const allFertilizers = [
+    ...getTankFertilizerArray(tankA.fertilizers, 'A'),
+    ...getTankFertilizerArray(tankB.fertilizers, 'B')
+  ];
+
+  let content = `
+    <!-- What is Ion Balance? -->
+    <div class="explanation-section">
+      <h3>What is Ion Balance?</h3>
+      <p>
+        When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:
+      </p>
+      <ul style="line-height: 1.8;">
+        <li><strong>Cations (+)</strong> - Positively charged ions like K⁺, Ca²⁺, Mg²⁺, NH₄⁺</li>
+        <li><strong>Anions (-)</strong> - Negatively charged ions like NO₃⁻, SO₄²⁻, H₂PO₄⁻</li>
+      </ul>
+      <p>
+        For a <span class="highlight">healthy nutrient solution</span>, the total positive charges should roughly equal the total negative charges.
+        This keeps the pH stable and prevents nutrient lockout.
+      </p>
+    </div>
+
+    <!-- What is meq/L? -->
+    <div class="explanation-section">
+      <h3>Understanding meq/L (Milliequivalents per Liter)</h3>
+      <p>
+        <strong>meq/L</strong> is a unit that measures the <strong>electrical charge</strong> of ions in solution, not their weight.
+      </p>
+      <p>
+        Think of it like this: A calcium ion (Ca²⁺) has twice the charge of a potassium ion (K⁺), even if they weigh the same.
+        meq/L accounts for this difference in charge.
+      </p>
+      <div class="formula-box">
+        <div class="formula">meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters</div>
+        <div class="description">This tells us the electrical charge contribution of each ion</div>
+      </div>
+      <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
+        <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
+          <strong>Important Notes:</strong>
+        </p>
+        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
+          <li><strong>Hydration water</strong> (e.g., ·7H₂O, ·4H₂O) adds to molar mass but NOT to charge</li>
+          <li><strong>Urea</strong> doesn't form charged ions, so it's excluded from ion balance</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Two-Tank Note -->
+    <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
+      <h3 style="color: #17a2b8;">Two-Tank System Ion Balance</h3>
+      <p><strong>Solution Volume:</strong> ${volume} liters per tank</p>
+      <p style="margin-top: 10px;">
+        <strong>Important:</strong> Each tank has its own ion balance. When mixed at equal rates,
+        the ion concentrations combine. The individual tank ion balances shown below help you understand
+        each tank's chemistry independently.
+      </p>
+    </div>
+  `;
+
+  if (allFertilizers.length === 0) {
+    content += `
+      <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
+        <h3 style="color: #856404;">No Fertilizers in Formula</h3>
+        <p>The calculation did not produce a valid formula.</p>
+      </div>
+    `;
+  } else {
+    // Calculate ion balance for each tank
+    const tankResults = { A: { cations: 0, anions: 0, ions: {}, breakdown: [] }, B: { cations: 0, anions: 0, ions: {}, breakdown: [] } };
+
+    allFertilizers.forEach(fert => {
+      const ionData = ION_DATA[fert.id];
+      if (!ionData) return;
+
+      const tankKey = fert.tank;
+      const moles = fert.grams / ionData.molarMass;
+      const fertIons = [];
+
+      ionData.ions.forEach(ionInfo => {
+        const meq = moles * ionInfo.count * ionInfo.charge * 1000;
+        const meqPerLiter = meq / volume;
+
+        fertIons.push({
+          ...ionInfo,
+          meq: meqPerLiter,
+          calculation: { moles, meq, meqPerLiter }
+        });
+
+        if (!tankResults[tankKey].ions[ionInfo.ion]) {
+          tankResults[tankKey].ions[ionInfo.ion] = { meq: 0, type: ionInfo.type };
+        }
+        tankResults[tankKey].ions[ionInfo.ion].meq += meqPerLiter;
+
+        if (ionInfo.type === 'cation') {
+          tankResults[tankKey].cations += meqPerLiter;
+        } else {
+          tankResults[tankKey].anions += meqPerLiter;
+        }
+      });
+
+      tankResults[tankKey].breakdown.push({
+        fert: fert,
+        ionData: ionData,
+        moles: moles,
+        ions: fertIons
+      });
+    });
+
+    // Show breakdown for each tank
+    ['A', 'B'].forEach(tankKey => {
+      const tank = tankResults[tankKey];
+      const tankColor = tankKey === 'A' ? '#2e7d32' : '#1565c0';
+      const tankBg = tankKey === 'A' ? '#c8e6c9' : '#bbdefb';
+
+      if (tank.breakdown.length === 0) return;
+
+      const average = (tank.cations + tank.anions) / 2;
+      const imbalance = average > 0 ? Math.abs(tank.cations - tank.anions) / average * 100 : 0;
+
+      let statusColor = '#28a745';
+      let statusText = 'Balanced';
+      if (imbalance > 20) {
+        statusColor = '#dc3545';
+        statusText = 'Imbalanced';
+      } else if (imbalance > 10) {
+        statusColor = '#ffc107';
+        statusText = 'Caution';
+      }
+
+      content += `
+        <div class="explanation-section" style="background: ${tankBg}40; border-left-color: ${tankColor};">
+          <h3 style="color: ${tankColor};">Tank ${tankKey} Ion Calculations</h3>
+      `;
+
+      tank.breakdown.forEach((item, index) => {
+        const formulaDisplay = item.ionData.formula ?
+          `<span style="background: #e8f4f8; padding: 4px 8px; border-radius: 4px; font-family: monospace; margin-left: 10px; font-size: 0.9em;">${item.ionData.formula}</span>` :
+          '';
+
+        content += `
+          <div class="step">
+            <h4 style="margin-top: 0; color: #007bff;">
+              <span class="step-number">${index + 1}</span>
+              ${item.fert.name}
+              ${formulaDisplay}
+            </h4>
+            <p style="margin: 10px 0 10px 38px;">
+              <strong>Amount:</strong> ${item.fert.grams.toFixed(2)} grams<br>
+              <strong>Molar Mass:</strong> ${item.ionData.molarMass} g/mol<br>
+              <strong>Moles:</strong> ${item.fert.grams.toFixed(2)} ÷ ${item.ionData.molarMass} = <strong>${item.moles.toFixed(4)} mol</strong>
+            </p>
+            <div style="margin-left: 38px;">
+              <table class="conversion-table" style="font-size: 0.9em;">
+                <thead>
+                  <tr>
+                    <th>Ion</th>
+                    <th>Type</th>
+                    <th>Calculation</th>
+                    <th>meq/L</th>
+                  </tr>
+                </thead>
+                <tbody>
+        `;
+
+        item.ions.forEach(ionInfo => {
+          const typeColor = ionInfo.type === 'cation' ? '#28a745' : '#dc3545';
+          const typeSymbol = ionInfo.type === 'cation' ? '+' : '-';
+          content += `
+            <tr>
+              <td data-label="Ion"><strong>${ionInfo.ion}</strong></td>
+              <td data-label="Type" style="color: ${typeColor};">${ionInfo.type} (${typeSymbol})</td>
+              <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">
+                ${item.moles.toFixed(4)} × ${ionInfo.count} × ${ionInfo.charge} × 1000 ÷ ${volume}
+              </td>
+              <td data-label="meq/L"><strong>${ionInfo.meq.toFixed(2)}</strong></td>
+            </tr>
+          `;
+        });
+
+        content += `
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      });
+
+      // Tank summary
+      content += `
+          <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border: 2px solid ${statusColor};">
+            <h4 style="margin-top: 0;">Tank ${tankKey} Summary</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
+              <div>
+                <div style="font-size: 0.85em; color: #666;">Cations</div>
+                <div style="font-size: 1.3em; font-weight: bold;">${tank.cations.toFixed(2)} meq/L</div>
+              </div>
+              <div>
+                <div style="font-size: 0.85em; color: #666;">Anions</div>
+                <div style="font-size: 1.3em; font-weight: bold;">${tank.anions.toFixed(2)} meq/L</div>
+              </div>
+              <div>
+                <div style="font-size: 0.85em; color: #666;">Imbalance</div>
+                <div style="font-size: 1.3em; font-weight: bold; color: ${statusColor};">${imbalance.toFixed(1)}% ${statusText}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    // Combined totals
+    const combinedCations = tankResults.A.cations + tankResults.B.cations;
+    const combinedAnions = tankResults.A.anions + tankResults.B.anions;
+    const combinedAverage = (combinedCations + combinedAnions) / 2;
+    const combinedImbalance = combinedAverage > 0 ? Math.abs(combinedCations - combinedAnions) / combinedAverage * 100 : 0;
+
+    let combinedStatusColor = '#28a745';
+    let combinedStatusText = 'Balanced';
+    if (combinedImbalance > 20) {
+      combinedStatusColor = '#dc3545';
+      combinedStatusText = 'Imbalanced';
+    } else if (combinedImbalance > 10) {
+      combinedStatusColor = '#ffc107';
+      combinedStatusText = 'Caution';
+    }
+
+    content += `
+      <div class="explanation-section" style="background: ${combinedStatusColor}15; border-left-color: ${combinedStatusColor};">
+        <h3 style="color: ${combinedStatusColor};">Combined Solution Results</h3>
+        <p>When Tank A and Tank B are mixed at equal rates:</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Cations (+)</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${combinedCations.toFixed(2)}</div>
+            <div style="font-size: 0.9em; color: #666;">meq/L</div>
+          </div>
+          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Anions (-)</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${combinedAnions.toFixed(2)}</div>
+            <div style="font-size: 0.9em; color: #666;">meq/L</div>
+          </div>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${combinedStatusColor};">
+          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Combined Imbalance</div>
+          <div style="font-size: 2em; font-weight: bold; color: ${combinedStatusColor};">${combinedImbalance.toFixed(1)}%</div>
+          <div style="font-size: 1em; color: ${combinedStatusColor}; margin-top: 5px;">${combinedStatusText}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Interpretation guide
   content += `
     <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
       <h3 style="color: #28a745;">Interpreting Your Results</h3>
