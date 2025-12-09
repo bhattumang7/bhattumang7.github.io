@@ -2224,6 +2224,12 @@ const FERTILIZERS = [
     name: "Ammonium Molybdate",
     aliases: ["(NH4)6Mo7O24·4H2O"],
     pct: { Mo: 52.0, N_total: 8.0, N_NH4: 8.0 }
+  },
+  {
+    id: "potassium_silicate_liquid_typical",
+    name: "Potassium Silicate (18% K2O, 12% Si(OH)4)",
+    aliases: ["Potassium Silicate", "K2SiO3 (generic)", "Liquid Potassium Silicate", "SILFERT / similar products"],
+    pct: { K2O: 18.0, SiOH4: 12.0 }
   }
 ];
 
@@ -2579,6 +2585,13 @@ const ION_DATA = {
     ions: [
       {ion: 'Na⁺', charge: 1, count: 2, type: 'cation'},
       {ion: 'B₄O₇²⁻', charge: 2, count: 1, type: 'anion'}
+    ]
+  },
+  potassium_silicate_liquid_typical: {
+    molarMass: 154.3,  // K2SiO3
+    ions: [
+      {ion: 'K⁺', charge: 1, count: 2, type: 'cation'},
+      {ion: 'SiO₃²⁻', charge: 2, count: 1, type: 'anion'}
     ]
   }
 };
