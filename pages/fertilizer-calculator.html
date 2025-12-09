@@ -1296,10 +1296,16 @@ permalink: /fertilizer-calculator/
   <div class="results-section" id="selected-fertilizers-section" style="display: none;">
     <div class="results-header">
       <h2>Selected Fertilizers</h2>
-      <button class="copy-btn" onclick="copyGramsToPPMResults()" title="Copy results to clipboard">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        Copy Results
-      </button>
+      <div id="grams-to-ppm-header-buttons" style="display: flex; gap: 10px;">
+        <button class="copy-btn" onclick="displayTwoTankGramsToPPMResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
+          Two Tanks
+        </button>
+        <button class="copy-btn" onclick="copyGramsToPPMResults()" title="Copy results to clipboard">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy Results
+        </button>
+      </div>
     </div>
     <div id="selected-fertilizers-list"></div>
   </div>
@@ -2292,7 +2298,7 @@ const IONIC_CHARGES = {
   'Cl': 1
 };
 
-// EC contribution factors (LMCv2 model from HydroBuddy) - LEGACY, kept for backward compatibility
+// EC contribution factors - LEGACY, kept for backward compatibility
 // Units: S·cm²/mol (molar conductivity)
 const EC_CONTRIBUTIONS = {
   'N_NO3': 71.46,
@@ -3149,7 +3155,7 @@ function handleGramsChange(id) {
   }
 }
 
-// Calculate EC using LMCv2 model (based on HydroBuddy)
+// Calculate EC using ionic molar conductivity model
 function calculateECTDS(results) {
   // Calculate ionic strength
   let ionicStrength = 0;
@@ -3163,7 +3169,7 @@ function calculateECTDS(results) {
   }
   ionicStrength = ionicStrength / 2; // Ionic strength formula
 
-  // Calculate EC using LMCv2 model
+  // Calculate EC using ionic molar conductivity
   // Result is directly in mS/cm (EC contribution factors are calibrated for this)
   let predictedEC = 0;
 
@@ -4787,7 +4793,25 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
     html += '</div>';
   }
 
-  // Warnings or errors
+  // Nutritional warnings (from checkWarnings function)
+  const nutritionalWarnings = checkWarnings(result.achieved, activeFertilizers);
+  if (nutritionalWarnings.length > 0) {
+    html += '<h3 style="margin-top: 20px;">Warnings & Recommendations</h3>';
+    nutritionalWarnings.forEach(warning => {
+      const boxClass = warning.level === 'warning' ? 'warning-box' :
+                       warning.level === 'error' ? 'error-box' : 'conversion-note';
+      const icon = warning.level === 'warning' ? '⚠️' :
+                   warning.level === 'error' ? '❌' : 'ℹ️';
+      html += `
+        <div class="${boxClass}" style="margin-bottom: 10px;">
+          <strong>${icon} ${warning.category}</strong><br>
+          ${warning.message}
+        </div>
+      `;
+    });
+  }
+
+  // Warnings or errors (target deviation warnings)
   if (!allGood) {
     html += '<div class="error-box"><strong>⚠ Cannot achieve exact targets</strong><ul>';
     warnings.forEach(w => html += `<li>${w}</li>`);
@@ -5076,6 +5100,27 @@ function displayTwoTankReverseResults() {
   displayTwoTankResults(tankA, tankB, volume, mode, 'reverse-output', result.achieved, targets);
 }
 
+// Display two-tank results for Grams to PPM calculator (Tab 1)
+function displayTwoTankGramsToPPMResults() {
+  if (!lastGramsToPPMCalculation) {
+    alert('No calculation results to split. Please calculate PPM values first.');
+    return;
+  }
+
+  const { activeFertilizers, volume, results } = lastGramsToPPMCalculation;
+
+  // Convert activeFertilizers array to formula object format
+  const formula = {};
+  activeFertilizers.forEach(fert => {
+    formula[fert.id] = fert.grams;
+  });
+
+  const { tankA, tankB } = splitIntoTwoTanks(formula, volume);
+
+  // For Grams to PPM, we use elemental mode and no specific targets
+  displayTwoTankResults(tankA, tankB, volume, 'elemental', 'selected-fertilizers-list', results, null);
+}
+
 // Store current two-tank data for copy function
 let currentTwoTankData = null;
 
@@ -5084,7 +5129,14 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
   const outputDiv = document.getElementById(outputDivId);
 
   // Hide header buttons when showing two-tank view
-  const headerButtonsId = outputDivId === 'formula-output' ? 'formula-header-buttons' : 'reverse-header-buttons';
+  let headerButtonsId;
+  if (outputDivId === 'formula-output') {
+    headerButtonsId = 'formula-header-buttons';
+  } else if (outputDivId === 'reverse-output') {
+    headerButtonsId = 'reverse-header-buttons';
+  } else if (outputDivId === 'selected-fertilizers-list') {
+    headerButtonsId = 'grams-to-ppm-header-buttons';
+  }
   const headerButtons = document.getElementById(headerButtonsId);
   if (headerButtons) {
     headerButtons.style.display = 'none';
@@ -5581,7 +5633,14 @@ function generateTankCopyText(tank, letter, mode, pLabel, kLabel) {
 // Restore single tank view
 function restoreSingleTankView(outputDivId) {
   // Show header buttons again
-  const headerButtonsId = outputDivId === 'formula-output' ? 'formula-header-buttons' : 'reverse-header-buttons';
+  let headerButtonsId;
+  if (outputDivId === 'formula-output') {
+    headerButtonsId = 'formula-header-buttons';
+  } else if (outputDivId === 'reverse-output') {
+    headerButtonsId = 'reverse-header-buttons';
+  } else if (outputDivId === 'selected-fertilizers-list') {
+    headerButtonsId = 'grams-to-ppm-header-buttons';
+  }
   const headerButtons = document.getElementById(headerButtonsId);
   if (headerButtons) {
     headerButtons.style.display = 'flex';
@@ -5601,6 +5660,9 @@ function restoreSingleTankView(outputDivId) {
       lastReverseCalculation.volume,
       lastReverseCalculation.targetEC
     );
+  } else if (outputDivId === 'selected-fertilizers-list' && lastGramsToPPMCalculation) {
+    // For Grams to PPM, re-display the selected fertilizers list
+    displaySelectedFertilizers(lastGramsToPPMCalculation.activeFertilizers);
   }
 }
 
@@ -6359,7 +6421,25 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
     html += '</div>';
   }
 
-  // Warnings or errors
+  // Nutritional warnings (from checkWarnings function)
+  const nutritionalWarnings = checkWarnings(result.achieved, activeFertilizers);
+  if (nutritionalWarnings.length > 0) {
+    html += '<h3 style="margin-top: 20px;">Warnings & Recommendations</h3>';
+    nutritionalWarnings.forEach(warning => {
+      const boxClass = warning.level === 'warning' ? 'warning-box' :
+                       warning.level === 'error' ? 'error-box' : 'conversion-note';
+      const icon = warning.level === 'warning' ? '⚠️' :
+                   warning.level === 'error' ? '❌' : 'ℹ️';
+      html += `
+        <div class="${boxClass}" style="margin-bottom: 10px;">
+          <strong>${icon} ${warning.category}</strong><br>
+          ${warning.message}
+        </div>
+      `;
+    });
+  }
+
+  // Warnings or errors (target deviation warnings)
   if (!allGood) {
     html += '<div class="error-box"><strong>⚠ Cannot achieve exact targets</strong><ul>';
     warnings.forEach(w => html += `<li>${w}</li>`);
