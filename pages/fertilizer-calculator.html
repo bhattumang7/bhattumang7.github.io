@@ -2243,9 +2243,9 @@ const FERTILIZERS = [
   },
   {
     id: "potassium_silicate_liquid_typical",
-    name: "Potassium Silicate (3.7% Si, 7.8% K2O)",
+    name: "Potassium Silicate (12% Si, 18% K2O)",
     aliases: ["Potassium Silicate", "Pro-TeKt", "Liquid Potassium Silicate", "K2SiO3 solution"],
-    pct: { K2O: 7.8, Si: 3.7 }
+    pct: { K2O: 18, Si: 12 }
   },
   {
     id: "rexolin_cxk",
@@ -6313,7 +6313,7 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   html += '<h3>Target vs Achieved Ratios <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
-  html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
+  html += '<tr><th>Nutrient</th><th>Your Input</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
 
   // Display nutrients based on calculation mode
   let displayNutrients;
@@ -6345,44 +6345,51 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   const warnings = [];
 
   displayNutrients.forEach(nutrient => {
-    let targetRatio, achievedRatio, achievedPPM;
+    let targetRatio, achievedRatio, achievedPPM, userInput;
 
-    // Get the ratio values for comparison (normalized)
+    // Get the ratio values for comparison (normalized) and user's original input
     if (nutrient.key === 'N') {
       targetRatio = targetRatios.N || 0;
       achievedRatio = achievedRatios.N || 0;
       achievedPPM = result.achieved.N_total || 0;
+      userInput = targets.N || 0;
     } else if (nutrient.key === 'P') {
       // Elemental P - use P2O5 ratio but show elemental PPM
       targetRatio = targetRatios.P2O5 || 0;
       achievedRatio = achievedRatios.P2O5 || 0;
       achievedPPM = result.achieved.P || 0;
+      userInput = targets.P || 0;
     } else if (nutrient.key === 'P2O5') {
       // Oxide form P2O5 (commercial)
       targetRatio = targetRatios.P2O5 || 0;
       achievedRatio = achievedRatios.P2O5 || 0;
       achievedPPM = result.achieved.P2O5 || 0;
+      userInput = targets.P || 0;
     } else if (nutrient.key === 'K') {
       // Elemental K - use K2O ratio but show elemental PPM
       targetRatio = targetRatios.K2O || 0;
       achievedRatio = achievedRatios.K2O || 0;
       achievedPPM = result.achieved.K || 0;
+      userInput = targets.K || 0;
     } else if (nutrient.key === 'K2O') {
       // Oxide form K2O (commercial)
       targetRatio = targetRatios.K2O || 0;
       achievedRatio = achievedRatios.K2O || 0;
       achievedPPM = result.achieved.K2O || 0;
+      userInput = targets.K || 0;
     } else if (nutrient.key === 'Si') {
       // Silicon is treated as absolute PPM, not ratio
       // Handle specially below
       targetRatio = null;
       achievedRatio = null;
       achievedPPM = achievedSiPPM;
+      userInput = targets.Si || 0;
     } else {
       // Ca, Mg, S - already elemental
       targetRatio = targetRatios[nutrient.key] || 0;
       achievedRatio = achievedRatios[nutrient.key] || 0;
       achievedPPM = result.achieved[nutrient.key] || 0;
+      userInput = targets[nutrient.key] || 0;
     }
 
     // Special handling for Silicon (PPM-based, not ratio-based)
@@ -6445,7 +6452,7 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
     html += `
       <tr>
         <td>${nutrient.label}</td>
-        <td>${Number(targetRatio || 0).toFixed(2)}</td>
+        <td>${Number(userInput || 0).toFixed(2)}</td>
         <td class="${className}">${Number(achievedRatio || 0).toFixed(2)} ${status}</td>
         <td>${Number(achievedPPM || 0).toFixed(1)} ppm</td>
       </tr>
