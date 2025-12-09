@@ -1414,19 +1414,6 @@ permalink: /fertilizer-calculator/
         <span>liters</span>
       </div>
 
-      <div style="margin-top: 20px; margin-bottom: 20px;">
-        <label for="formula-max-per-liter" style="display: block; margin-bottom: 8px; font-weight: bold;">Max Total Grams per Liter</label>
-        <select id="formula-max-per-liter" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
-          <option value="0" selected>No limit</option>
-          <option value="1">1 g/L - Very light</option>
-          <option value="2">2 g/L - Light</option>
-          <option value="3">3 g/L - Moderate</option>
-          <option value="4">4 g/L - Strong</option>
-          <option value="5">5 g/L - Very strong</option>
-        </select>
-        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">Limits the total combined weight of all fertilizers per liter. Leave at "No limit" for unconstrained optimization.</p>
-      </div>
-
       <div style="display: flex; gap: 10px; margin-top: 20px;">
         <button onclick="buildFormula()" style="padding: 10px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
           Build Formula
@@ -1505,15 +1492,24 @@ permalink: /fertilizer-calculator/
       </div>
 
       <div style="margin-top: 20px; margin-bottom: 20px;">
-        <label for="reverse-max-per-liter" style="display: block; margin-bottom: 8px; font-weight: bold;">Max Total Grams per Liter</label>
-        <select id="reverse-max-per-liter" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
-          <option value="1">1 g/L - Very light</option>
-          <option value="2" selected>2 g/L - Light</option>
-          <option value="3">3 g/L - Moderate</option>
-          <option value="4">4 g/L - Strong</option>
-          <option value="5">5 g/L - Very strong</option>
+        <label for="reverse-concentration" style="display: block; margin-bottom: 8px; font-weight: bold;">Target Concentration</label>
+        <select id="reverse-concentration" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="5">Trace (5 PPM base) - Plain Water Supplement</option>
+          <option value="10">Minimal (10 PPM base) - Recovery/Flush</option>
+          <option value="15">Very Weak (15 PPM base) - Sensitive Plants</option>
+          <option value="20">Weak (20 PPM base) - Fresh Clones</option>
+          <option value="25">Ultra Light (25 PPM base) - Rooted Cuttings</option>
+          <option value="35">Very Light (35 PPM base) - Delicate Seedlings</option>
+          <option value="50">Light (50 PPM base) - Seedlings/Young Plants</option>
+          <option value="75" selected>Moderate (75 PPM base) - General Purpose</option>
+          <option value="100">Strong (100 PPM base) - Vegetative Growth</option>
+          <option value="125">Very Strong (125 PPM base) - Heavy Feeders</option>
+          <option value="150">Maximum (150 PPM base) - Heavy Feeders/Fruiting</option>
         </select>
-        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">Controls the total fertilizer amount. The calculator will maximize nutrients while maintaining your ratio within this budget.</p>
+        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">
+          Base PPM = target for your smallest ratio nutrient. All others scale proportionally.<br>
+          <strong>Actual EC will be shown in results</strong> (depends on fertilizer selection).
+        </p>
       </div>
 
       <div class="fertilizer-selection">
@@ -1816,7 +1812,7 @@ const progressBar = {
 };
 
 // MILP solver helper (browser) using highs.js + lp-model
-async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01, maxPerLiter = 0 }) {
+async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01 }) {
   const highsFactory = window.highs || window.Module;
   if (!window.LPModel || typeof highsFactory !== 'function') {
     throw new Error('MILP dependencies not loaded');
@@ -1850,14 +1846,6 @@ async function solveMilpBrowser({ fertilizers, targets, volume, tolerance = 0.01
   fertilizers.forEach(f => {
     model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
   });
-
-  // If maxPerLiter is set (1-5), add constraint on TOTAL grams of all fertilizers
-  // Sum of all x[f.id] <= maxPerLiter * volume
-  if (maxPerLiter > 0) {
-    const totalGramsLimit = maxPerLiter * volume;
-    const totalGramsTerms = fertilizers.map(f => [1, x[f.id]]);
-    model.addConstr(totalGramsTerms, '<=', totalGramsLimit);
-  }
 
   function perGramContrib(fert) {
     const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
@@ -2304,7 +2292,7 @@ const IONIC_CHARGES = {
   'Cl': 1
 };
 
-// EC contribution factors (LMCv2 model from HydroBuddy)
+// EC contribution factors (LMCv2 model from HydroBuddy) - LEGACY, kept for backward compatibility
 // Units: S·cm²/mol (molar conductivity)
 const EC_CONTRIBUTIONS = {
   'N_NO3': 71.46,
@@ -2323,6 +2311,214 @@ const EC_CONTRIBUTIONS = {
   'Na': 50.01,
   'Cl': 0
 };
+
+// ============================================================================
+// NEW EC ESTIMATION MODEL - Ionic Molar Conductivity at Infinite Dilution (25°C)
+// ============================================================================
+// λ (lambda) values in S·cm²/mol at 25°C
+// Formula: EC (mS/cm) = 0.001 × Σ(λᵢ × cᵢ) where cᵢ is in mmol/L
+const IONIC_MOLAR_CONDUCTIVITY = {
+  // CATIONS
+  'K+': 73.5,
+  'Na+': 50.1,
+  'NH4+': 73.5,
+  'Ca2+': 119.0,
+  'Mg2+': 106.0,
+  'Fe2+': 108.0,
+  'Fe3+': 204.0,
+  'Mn2+': 107.0,
+  'Zn2+': 105.6,
+  'Cu2+': 107.2,
+  // ANIONS
+  'NO3-': 71.5,
+  'Cl-': 76.3,
+  'SO4^2-': 160.0,
+  'H2PO4-': 33.5,
+  'HPO4^2-': 114.0,
+  'HCO3-': 44.5,
+  'OH-': 198.0,
+  'H+': 349.8
+};
+
+// Ionic charges for EC calculation
+const ION_CHARGES = {
+  'K+': 1,
+  'Na+': 1,
+  'NH4+': 1,
+  'Ca2+': 2,
+  'Mg2+': 2,
+  'Fe2+': 2,
+  'Fe3+': 3,
+  'Mn2+': 2,
+  'Zn2+': 2,
+  'Cu2+': 2,
+  'NO3-': 1,
+  'Cl-': 1,
+  'SO4^2-': 2,
+  'H2PO4-': 1,
+  'HPO4^2-': 2,
+  'HCO3-': 1,
+  'OH-': 1,
+  'H+': 1
+};
+
+/**
+ * Estimate EC from ion concentrations using the sum of ionic molar conductivities model.
+ *
+ * @param {Object} ions_mmolL - Ion concentrations in mmol/L, e.g., { 'K+': 4.0, 'Ca2+': 3.0, 'NO3-': 7.0 }
+ * @param {Object} options - Optional settings
+ * @param {number} options.temperatureC - Temperature in Celsius (default 25). Applies 2%/°C correction.
+ * @param {boolean} options.applyIonicStrengthCorrection - Apply non-ideality correction (default true)
+ * @param {number} options.ionicStrengthK - Dampening factor for ionic strength correction (default 0.5)
+ * @returns {Object} { ec_mS_cm, ec_at_temp, ionicStrength, contributions, temperatureC }
+ */
+function estimateEC(ions_mmolL, options = {}) {
+  const {
+    temperatureC = 25,
+    applyIonicStrengthCorrection = true,
+    ionicStrengthK = 0.5  // Tunable dampening factor
+  } = options;
+
+  // Calculate raw EC at 25°C and per-ion contributions
+  let ec_raw = 0;
+  const contributions = {};
+
+  for (const [ion, c_mmolL] of Object.entries(ions_mmolL)) {
+    if (IONIC_MOLAR_CONDUCTIVITY[ion] && c_mmolL > 0) {
+      // EC (mS/cm) = 0.001 × λᵢ × cᵢ (mmol/L)
+      const contrib = 0.001 * IONIC_MOLAR_CONDUCTIVITY[ion] * c_mmolL;
+      contributions[ion] = {
+        concentration_mmolL: c_mmolL,
+        lambda: IONIC_MOLAR_CONDUCTIVITY[ion],
+        contribution_mS_cm: contrib
+      };
+      ec_raw += contrib;
+    }
+  }
+
+  // Calculate ionic strength: I = 0.5 × Σ(cᵢ × zᵢ²) where cᵢ is in mol/L
+  let ionicStrength = 0;
+  for (const [ion, c_mmolL] of Object.entries(ions_mmolL)) {
+    if (ION_CHARGES[ion] && c_mmolL > 0) {
+      const c_molL = c_mmolL / 1000;  // Convert mmol/L to mol/L
+      const z = ION_CHARGES[ion];
+      ionicStrength += c_molL * z * z;
+    }
+  }
+  ionicStrength = ionicStrength / 2;
+
+  // Apply ionic strength correction (non-ideality at real concentrations)
+  // ec_corrected = ec_raw / (1 + k × √I)
+  let ec_25 = ec_raw;
+  if (applyIonicStrengthCorrection && ionicStrength > 0) {
+    ec_25 = ec_raw / (1 + ionicStrengthK * Math.sqrt(ionicStrength));
+  }
+
+  // Apply temperature correction: 2% per °C deviation from 25°C
+  // ec_T = ec_25 × (1 + 0.02 × (T - 25))
+  const tempCorrectionFactor = 1 + 0.02 * (temperatureC - 25);
+  const ec_at_temp = ec_25 * tempCorrectionFactor;
+
+  return {
+    ec_mS_cm: ec_25,           // EC at 25°C (standard)
+    ec_at_temp: ec_at_temp,    // EC at specified temperature
+    ionicStrength: ionicStrength,
+    contributions: contributions,
+    temperatureC: temperatureC,
+    rawEC: ec_raw,             // Before ionic strength correction
+    correctionApplied: applyIonicStrengthCorrection
+  };
+}
+
+/**
+ * Convert PPM results to ion concentrations in mmol/L for EC estimation.
+ * Maps nutrient PPM values to their ionic forms.
+ *
+ * @param {Object} ppmResults - PPM values from the calculator, e.g., { N_NO3: 150, Ca: 100, ... }
+ * @returns {Object} Ion concentrations in mmol/L
+ */
+function ppmToIonsForEC(ppmResults) {
+  const ions_mmolL = {};
+
+  // Nitrogen forms
+  if (ppmResults.N_NO3 > 0) {
+    // NO3- ion: PPM of N → mmol/L of NO3-
+    // N has molar mass 14.007 g/mol
+    ions_mmolL['NO3-'] = ppmResults.N_NO3 / 14.007;
+  }
+  if (ppmResults.N_NH4 > 0) {
+    // NH4+ ion: PPM of N → mmol/L of NH4+
+    ions_mmolL['NH4+'] = ppmResults.N_NH4 / 14.007;
+  }
+
+  // Phosphorus as H2PO4- (dominant form at pH 5.5-6.5)
+  if (ppmResults.P > 0) {
+    ions_mmolL['H2PO4-'] = ppmResults.P / 30.974;
+  }
+
+  // Potassium as K+
+  if (ppmResults.K > 0) {
+    ions_mmolL['K+'] = ppmResults.K / 39.098;
+  }
+
+  // Calcium as Ca2+
+  if (ppmResults.Ca > 0) {
+    ions_mmolL['Ca2+'] = ppmResults.Ca / 40.078;
+  }
+
+  // Magnesium as Mg2+
+  if (ppmResults.Mg > 0) {
+    ions_mmolL['Mg2+'] = ppmResults.Mg / 24.305;
+  }
+
+  // Sulfur as SO4^2-
+  if (ppmResults.S > 0) {
+    ions_mmolL['SO4^2-'] = ppmResults.S / 32.065;
+  }
+
+  // Sodium as Na+ (if present)
+  if (ppmResults.Na > 0) {
+    ions_mmolL['Na+'] = ppmResults.Na / 22.99;
+  }
+
+  // Chloride as Cl- (if present)
+  if (ppmResults.Cl > 0) {
+    ions_mmolL['Cl-'] = ppmResults.Cl / 35.453;
+  }
+
+  // Iron as Fe2+ (assume ferrous for most fertigation)
+  if (ppmResults.Fe > 0) {
+    ions_mmolL['Fe2+'] = ppmResults.Fe / 55.845;
+  }
+
+  // Manganese as Mn2+
+  if (ppmResults.Mn > 0) {
+    ions_mmolL['Mn2+'] = ppmResults.Mn / 54.938;
+  }
+
+  // Zinc as Zn2+
+  if (ppmResults.Zn > 0) {
+    ions_mmolL['Zn2+'] = ppmResults.Zn / 65.38;
+  }
+
+  // Copper as Cu2+
+  if (ppmResults.Cu > 0) {
+    ions_mmolL['Cu2+'] = ppmResults.Cu / 63.546;
+  }
+
+  return ions_mmolL;
+}
+
+/**
+ * Estimate EC from PPM results (convenience wrapper)
+ * @param {Object} ppmResults - PPM values from the calculator
+ * @param {Object} options - Options passed to estimateEC
+ * @returns {Object} EC estimation results
+ */
+function estimateECFromPPM(ppmResults, options = {}) {
+  const ions_mmolL = ppmToIonsForEC(ppmResults);
+  return estimateEC(ions_mmolL, options);
+}
 
 // Ion balance data: molar mass and ions for each fertilizer
 // Format: {formula: 'chemical formula', ion: 'name', charge: number (absolute value), count: number, type: 'cation'|'anion'}
@@ -3737,12 +3933,6 @@ function clearFormulaBuilder() {
   volumeInput.value = '10';
   volumeInput.classList.remove('input-error');
 
-  // Reset max per liter to no limit
-  const maxPerLiterSelect = document.getElementById('formula-max-per-liter');
-  if (maxPerLiterSelect) {
-    maxPerLiterSelect.value = '0';
-  }
-
   // Clear search box
   const searchInput = document.getElementById('available-fertilizer-search');
   if (searchInput) {
@@ -3837,9 +4027,6 @@ async function buildFormula() {
   // Get calculation mode
   const mode = document.getElementById('formula-calculation-mode').value;
 
-  // Get max per liter constraint (0 = no limit, 1-5 = max grams per liter per fertilizer)
-  const maxPerLiter = parseFloat(document.getElementById('formula-max-per-liter').value) || 0;
-
   // Show progress bar
   progressBar.show('Building Formula');
   progressBar.update(10, 'Validating inputs...');
@@ -3855,7 +4042,7 @@ async function buildFormula() {
     progressBar.setIndeterminate('Optimizing fertilizer combination...');
 
     // Run optimization algorithm using absolute PPM targets
-    const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true, maxPerLiter });
+    const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true });
 
     progressBar.update(90, 'Preparing results...');
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -3867,7 +4054,7 @@ async function buildFormula() {
     progressBar.hide();
 
     // Display results
-    displayFormulaResults(result, targets, volume, mode, maxPerLiter);
+    displayFormulaResults(result, targets, volume, mode);
   } catch (error) {
     progressBar.hide();
     console.error('Formula optimization error:', error);
@@ -4060,7 +4247,7 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
       Si: targetRatios.Si || 0  // Si is absolute PPM, not scaled by concentration
     };
 
-    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, maxPerLiter: options.maxPerLiter || 0 });
+    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01 });
     return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
   }
 
@@ -4373,19 +4560,14 @@ async function optimizeFormula(targetRatios, volume, availableFertilizers, conce
 let lastFormulaCalculation = null;
 
 // Display formula results
-function displayFormulaResults(result, targets, volume, mode = 'oxide', maxPerLiter = 0) {
+function displayFormulaResults(result, targets, volume, mode = 'oxide') {
   // Store data for explanation modals
-  lastFormulaCalculation = { result, targets, volume, mode, maxPerLiter };
+  lastFormulaCalculation = { result, targets, volume, mode };
 
   const resultsSection = document.getElementById('formula-results');
   const outputDiv = document.getElementById('formula-output');
 
   resultsSection.style.display = 'block';
-
-  // Check if TOTAL grams hit the max per liter limit
-  const maxGramsAllowed = maxPerLiter > 0 ? maxPerLiter * volume : null;
-  const totalGrams = Object.values(result.formula).reduce((sum, g) => sum + g, 0);
-  const isAtTotalLimit = maxGramsAllowed && totalGrams >= maxGramsAllowed * 0.99;
 
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
 
@@ -4407,19 +4589,6 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide', maxPerLi
       `;
     }
   });
-
-  // Show total grams with limit indicator if applicable
-  const totalPerLiter = (totalGrams / volume).toFixed(2);
-  const limitIndicator = isAtTotalLimit ? ' <span style="color: #dc3545; font-size: 0.85em;">(at limit)</span>' : '';
-  html += `
-    <div class="formula-fertilizer" style="background: #e9ecef; border-left-color: ${isAtTotalLimit ? '#ffc107' : '#007bff'}; margin-top: 10px;">
-      <div class="formula-fertilizer-info">
-        <div class="formula-fertilizer-name"><strong>Total</strong>${limitIndicator}</div>
-        <div class="formula-fertilizer-composition">${totalPerLiter} g/L</div>
-      </div>
-      <div class="formula-fertilizer-amount"><strong>${totalGrams.toFixed(2)} g</strong></div>
-    </div>
-  `;
 
   html += '</div>';
 
@@ -4571,20 +4740,6 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide', maxPerLi
     });
 
     html += '</div>';
-  }
-
-  // Warning about max per liter limit if total is at limit and targets not met
-  if (isAtTotalLimit && !allGood) {
-    html += `<div class="warning-box" style="background: #fff3cd; border-left-color: #ffc107;">
-      <strong>⚠ Max total grams/liter limit reached</strong>
-      <p style="margin: 8px 0;">Total fertilizer weight (${totalPerLiter} g/L) has reached the ${maxPerLiter} g/L limit.</p>
-      <p style="margin: 0;">This constraint is preventing the calculator from achieving your target PPM values. Consider:</p>
-      <ul style="margin: 8px 0 0 0;">
-        <li>Increasing the max grams per liter setting</li>
-        <li>Selecting "No limit" for unconstrained optimization</li>
-        <li>Using a larger solution volume</li>
-      </ul>
-    </div>`;
   }
 
   // Warnings or errors
@@ -5514,12 +5669,6 @@ function clearReverseCalculator() {
     volumeInput.classList.remove('input-error');
   }
 
-  // Reset max per liter to no limit
-  const maxPerLiterSelect = document.getElementById('reverse-max-per-liter');
-  if (maxPerLiterSelect) {
-    maxPerLiterSelect.value = '0';
-  }
-
   // Reset fertilizer selections to common only
   selectCommonReverseFertilizers();
 
@@ -5552,6 +5701,7 @@ async function calculateReverse() {
   };
 
   const volume = parseFloat(document.getElementById('reverse-volume').value) || 10;
+  const concentration = parseFloat(document.getElementById('reverse-concentration').value) || 75;
 
   // Validate inputs
   let hasError = false;
@@ -5606,9 +5756,6 @@ async function calculateReverse() {
   // Get calculation mode (oxide vs elemental)
   const calculationMode = document.getElementById('reverse-calculation-mode').value;
 
-  // Get max per liter constraint (required - gram-first approach)
-  const maxPerLiter = parseFloat(document.getElementById('reverse-max-per-liter').value) || 2;
-
   // Show progress bar
   progressBar.show('Calculating Fertilizers');
   progressBar.update(10, 'Validating inputs...');
@@ -5623,39 +5770,8 @@ async function calculateReverse() {
     progressBar.update(50, 'Running MILP solver...');
     progressBar.setIndeterminate('Optimizing fertilizer combination...');
 
-    // Gram-first approach: Use high PPM targets based on ratios
-    // The gram constraint will cap the actual output
-    // Normalize ratios and scale to a high base PPM (will be limited by grams)
-    const ratioNutrients = { N: targets.N, P: targets.P, K: targets.K, Ca: targets.Ca, Mg: targets.Mg, S: targets.S };
-    const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
-    const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
-
-    // Use 500 PPM base - high enough to hit gram limit, solver will cap it
-    const basePPM = 500;
-    const P_to_P2O5 = 2.2914;
-    const K_to_K2O = 1.2046;
-
-    const ppmTargets = {
-      N_total: (targets.N / minRatio) * basePPM,
-      P2O5: calculationMode === 'elemental'
-        ? (targets.P / minRatio) * basePPM * P_to_P2O5
-        : (targets.P / minRatio) * basePPM,
-      K2O: calculationMode === 'elemental'
-        ? (targets.K / minRatio) * basePPM * K_to_K2O
-        : (targets.K / minRatio) * basePPM,
-      Ca: (targets.Ca / minRatio) * basePPM,
-      Mg: (targets.Mg / minRatio) * basePPM,
-      S: (targets.S / minRatio) * basePPM,
-      Si: targets.Si || 0
-    };
-
-    const result = await solveMilpBrowser({
-      fertilizers: selectedFertilizers,
-      targets: ppmTargets,
-      volume,
-      tolerance: 0.15,  // Allow 15% tolerance for flexibility
-      maxPerLiter
-    });
+    // Run optimization
+    const result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
 
     progressBar.update(90, 'Preparing results...');
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -5667,7 +5783,7 @@ async function calculateReverse() {
     progressBar.hide();
 
     // Display results
-    displayReverseResults(result, targets, volume, maxPerLiter);
+    displayReverseResults(result, targets, volume);
   } catch (error) {
     progressBar.hide();
     console.error('Reverse calculation error:', error);
@@ -5679,22 +5795,16 @@ async function calculateReverse() {
 let lastReverseCalculation = null;
 
 // Display reverse calculator results
-function displayReverseResults(result, targets, volume, maxPerLiter = 0) {
+function displayReverseResults(result, targets, volume) {
   // Get calculation mode for storage
   const mode = document.getElementById('reverse-calculation-mode').value;
   // Store data for explanation modals and two-tank feature
-  lastReverseCalculation = { result, targets, volume, mode, maxPerLiter };
+  lastReverseCalculation = { result, targets, volume, mode };
 
   const resultsSection = document.getElementById('reverse-results');
   const outputDiv = document.getElementById('reverse-output');
 
   resultsSection.style.display = 'block';
-
-  // Check if TOTAL grams hit the max per liter limit
-  const maxGramsAllowed = maxPerLiter > 0 ? maxPerLiter * volume : null;
-  const totalGrams = Object.values(result.formula).reduce((sum, g) => sum + g, 0);
-  const isAtTotalLimit = maxGramsAllowed && totalGrams >= maxGramsAllowed * 0.99;
-  const totalPerLiter = (totalGrams / volume).toFixed(2);
 
   let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
 
@@ -5719,18 +5829,6 @@ function displayReverseResults(result, targets, volume, maxPerLiter = 0) {
         `;
       }
     });
-
-    // Show total grams with limit indicator if applicable
-    const limitIndicator = isAtTotalLimit ? ' <span style="color: #dc3545; font-size: 0.85em;">(at limit)</span>' : '';
-    html += `
-      <div class="formula-fertilizer" style="background: #e9ecef; border-left-color: ${isAtTotalLimit ? '#ffc107' : '#007bff'}; margin-top: 10px;">
-        <div class="formula-fertilizer-info">
-          <div class="formula-fertilizer-name"><strong>Total</strong>${limitIndicator}</div>
-          <div class="formula-fertilizer-composition">${totalPerLiter} g/L</div>
-        </div>
-        <div class="formula-fertilizer-amount"><strong>${totalGrams.toFixed(2)} g</strong></div>
-      </div>
-    `;
   }
 
   html += '</div>';
@@ -5783,7 +5881,7 @@ function displayReverseResults(result, targets, volume, maxPerLiter = 0) {
   const calculationMode = document.getElementById('reverse-calculation-mode').value; // 'oxide' or 'elemental'
 
   // Comparison table - showing nutrients based on selected mode
-  html += '<h3>Achieved PPM (within ' + maxPerLiter + ' g/L budget) <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>';
+  html += '<h3>Target vs Achieved Ratios <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
   html += '<tr><th>Nutrient</th><th>Target Ratio</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
@@ -5975,6 +6073,86 @@ function displayReverseResults(result, targets, volume, maxPerLiter = 0) {
     </div>
   </div>`;
 
+  // Calculate and display EC prediction using new ionic molar conductivity model
+  const ecPrediction = estimateECFromPPM(result.achieved);
+  const ecValue = ecPrediction.ec_mS_cm;
+
+  // Determine EC status color and text
+  let ecStatusColor, ecStatusText;
+  if (ecValue < 0.8) {
+    ecStatusColor = '#17a2b8';  // Info blue - very light
+    ecStatusText = 'Very Light';
+  } else if (ecValue < 1.2) {
+    ecStatusColor = '#28a745';  // Green - light/seedlings
+    ecStatusText = 'Light';
+  } else if (ecValue < 1.8) {
+    ecStatusColor = '#28a745';  // Green - moderate
+    ecStatusText = 'Moderate';
+  } else if (ecValue < 2.5) {
+    ecStatusColor = '#ffc107';  // Yellow - strong
+    ecStatusText = 'Strong';
+  } else if (ecValue < 3.5) {
+    ecStatusColor = '#fd7e14';  // Orange - very strong
+    ecStatusText = 'Very Strong';
+  } else {
+    ecStatusColor = '#dc3545';  // Red - too high
+    ecStatusText = 'Very High!';
+  }
+
+  html += '<h3 style="margin-top: 20px;">Predicted EC</h3>';
+  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
+    <div class="ion-balance-card" style="flex: 2;">
+      <div style="font-size: 0.9em; color: #666;">Electrical Conductivity (25°C)</div>
+      <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${ecValue.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
+      <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
+    </div>
+    <div class="ion-balance-card">
+      <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${(ecPrediction.ionicStrength * 1000).toFixed(1)} <span style="font-size: 0.7em;">mM</span></div>
+    </div>
+  </div>`;
+
+  // EC breakdown by ion (collapsible)
+  const ionContributions = Object.entries(ecPrediction.contributions)
+    .sort((a, b) => b[1].contribution_mS_cm - a[1].contribution_mS_cm);
+
+  if (ionContributions.length > 0) {
+    html += `<details style="margin-top: 10px;">
+      <summary style="cursor: pointer; color: #007bff; font-size: 0.9em;">Show EC breakdown by ion</summary>
+      <div style="margin-top: 10px; background: #f8f9fa; padding: 15px; border-radius: 4px;">
+        <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 2px solid #dee2e6;">
+              <th style="text-align: left; padding: 8px;">Ion</th>
+              <th style="text-align: right; padding: 8px;">Conc. (mmol/L)</th>
+              <th style="text-align: right; padding: 8px;">λ (S·cm²/mol)</th>
+              <th style="text-align: right; padding: 8px;">EC Contrib.</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    ionContributions.forEach(([ion, data]) => {
+      const percentage = (data.contribution_mS_cm / ecPrediction.rawEC * 100).toFixed(1);
+      html += `
+            <tr style="border-bottom: 1px solid #dee2e6;">
+              <td style="padding: 8px;">${ion}</td>
+              <td style="text-align: right; padding: 8px;">${data.concentration_mmolL.toFixed(2)}</td>
+              <td style="text-align: right; padding: 8px;">${data.lambda}</td>
+              <td style="text-align: right; padding: 8px;">${data.contribution_mS_cm.toFixed(3)} mS/cm (${percentage}%)</td>
+            </tr>`;
+    });
+
+    html += `
+          </tbody>
+        </table>
+        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+          <strong>Note:</strong> Raw EC = ${ecPrediction.rawEC.toFixed(3)} mS/cm.
+          Ionic strength correction applied (factor: ${(ecPrediction.rawEC / ecPrediction.ec_mS_cm).toFixed(3)}).
+        </div>
+      </div>
+    </details>`;
+  }
+
   // Add nutrient ratio analysis
   const ratios = calculateNutrientRatios(result.achieved);
   if (ratios.length > 0) {
@@ -5999,20 +6177,6 @@ function displayReverseResults(result, targets, volume, maxPerLiter = 0) {
     });
 
     html += '</div>';
-  }
-
-  // Warning about max per liter limit if total is at limit and targets not met
-  if (isAtTotalLimit && !allGood) {
-    html += `<div class="warning-box" style="background: #fff3cd; border-left-color: #ffc107;">
-      <strong>⚠ Max total grams/liter limit reached</strong>
-      <p style="margin: 8px 0;">Total fertilizer weight (${totalPerLiter} g/L) has reached the ${maxPerLiter} g/L limit.</p>
-      <p style="margin: 0;">This constraint is preventing the calculator from achieving your target ratios. Consider:</p>
-      <ul style="margin: 8px 0 0 0;">
-        <li>Increasing the max grams per liter setting</li>
-        <li>Selecting "No limit" for unconstrained optimization</li>
-        <li>Using a larger solution volume</li>
-      </ul>
-    </div>`;
   }
 
   // Warnings or errors
