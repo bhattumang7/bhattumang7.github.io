@@ -10646,7 +10646,7 @@ function generateExplanationContent() {
                 <tr>
                   <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('phosphateOxide')}</td>
                   <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('phosphorusElemental')}</td>
-                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.436</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.436')}</td>
                 </tr>
           `;
         }
@@ -10655,7 +10655,7 @@ function generateExplanationContent() {
                 <tr>
                   <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('potassiumOxide')}</td>
                   <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('potassiumElemental')}</td>
-                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.830</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.830')}</td>
                 </tr>
           `;
         }
@@ -10664,7 +10664,7 @@ function generateExplanationContent() {
                 <tr>
                   <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('magnesiumOxide')}</td>
                   <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('magnesiumElemental')}</td>
-                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.603</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.603')}</td>
                 </tr>
           `;
         }
@@ -10673,7 +10673,7 @@ function generateExplanationContent() {
                 <tr>
                   <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('calciumOxide')}</td>
                   <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('calciumElemental')}</td>
-                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.715</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.715')}</td>
                 </tr>
           `;
         }
@@ -10937,7 +10937,7 @@ function generateIonBalanceExplanation() {
             <td data-label="Ion"><strong>${ion.ion}</strong></td>
             <td data-label="Type">${ion.type === 'cation' ? i18n.t('cationType') : i18n.t('anionType')}</td>
             <td data-label="Count × Charge">${i18n.formatNumber(ion.count)} × ${i18n.formatNumber(ion.charge)}</td>
-            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
             <td data-label="meq/L"><strong>${i18n.formatNumber(ion.meq.toFixed(2))} meq/L</strong></td>
           </tr>
         `;
@@ -11246,13 +11246,13 @@ function generateReversePPMExplanation() {
 
     Object.entries(nutrientContributions).forEach(([nutrient, sources]) => {
       const total = sources.reduce((sum, s) => sum + s.ppm, 0);
-      const sourceList = sources.map(s => `${s.fertilizer}: ${s.ppm.toFixed(2)}`).join(' + ');
+      const sourceList = sources.map(s => `${s.fertilizer}: ${i18n.formatNumber(s.ppm.toFixed(2))}`).join(' + ');
 
       content += `
         <tr>
           <td data-label="${i18n.t('nutrientHeader')}"><strong>${i18n.formatNutrientLabel(nutrient)}</strong></td>
-          <td data-label="Sources" style="font-size: 0.85em;">${sourceList}</td>
-          <td data-label="Total PPM"><strong>${total.toFixed(2)} PPM</strong></td>
+          <td data-label="${i18n.t('sourcesHeader')}" style="font-size: 0.85em;">${sourceList}</td>
+          <td data-label="${i18n.t('totalPpmHeader')}"><strong>${i18n.formatNumber(total.toFixed(2))} ${i18n.t('ppmUnit')}</strong></td>
         </tr>
       `;
     });
@@ -11474,10 +11474,10 @@ function generateReverseIonBalanceExplanation() {
             <table class="conversion-table" style="font-size: 0.9em;">
               <thead>
                 <tr>
-                  <th>Ion</th>
-                  <th>Type</th>
-                  <th>Calculation</th>
-                  <th>meq/L</th>
+                  <th>${i18n.t('ionHeader')}</th>
+                  <th>${i18n.t('typeHeader')}</th>
+                  <th>${i18n.t('calculationHeader')}</th>
+                  <th>${i18n.t('meqLHeader')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -11488,12 +11488,12 @@ function generateReverseIonBalanceExplanation() {
         const typeSymbol = ionInfo.type === 'cation' ? '+' : '-';
         content += `
           <tr>
-            <td data-label="Ion"><strong>${ionInfo.ion}</strong></td>
-            <td data-label="Type" style="color: ${typeColor};">${ionInfo.type} (${typeSymbol})</td>
-            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">
-              ${item.moles.toFixed(4)} × ${ionInfo.count} × ${ionInfo.charge} × 1000 ÷ ${volume}
+            <td data-label="${i18n.t('ionHeader')}"><strong>${ionInfo.ion}</strong></td>
+            <td data-label="${i18n.t('typeHeader')}" style="color: ${typeColor};">${ionInfo.type} (${typeSymbol})</td>
+            <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">
+              ${i18n.formatNumber(item.moles.toFixed(4))} × ${i18n.formatNumber(ionInfo.count)} × ${i18n.formatNumber(ionInfo.charge)} × ${i18n.formatNumber(1000)} ÷ ${i18n.formatNumber(volume)}
             </td>
-            <td data-label="meq/L"><strong>${ionInfo.meq.toFixed(2)}</strong></td>
+            <td data-label="${i18n.t('meqLHeader')}"><strong>${i18n.formatNumber(ionInfo.meq.toFixed(2))}</strong></td>
           </tr>
         `;
       });
@@ -12055,7 +12055,7 @@ function generateTwoTankIonBalanceExplanation() {
             <tr>
               <td data-label="Ion"><strong>${ionInfo.ion}</strong></td>
               <td data-label="Type" style="color: ${typeColor};">${ionInfo.type} (${typeSymbol})</td>
-              <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">
+              <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">
                 ${item.moles.toFixed(4)} × ${ionInfo.count} × ${ionInfo.charge} × 1000 ÷ ${volume}
               </td>
               <td data-label="meq/L"><strong>${ionInfo.meq.toFixed(2)}</strong></td>
@@ -12327,10 +12327,10 @@ function generateFormulaIonBalanceExplanation() {
           <tr>
             <td data-label="Ion"><strong>${ionInfo.ion}</strong></td>
             <td data-label="Type" style="color: ${typeColor};">${ionInfo.type}</td>
-            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">
-              ${item.moles.toFixed(4)} × ${ionInfo.count} × ${ionInfo.charge} × 1000 ÷ ${volume}
+            <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">
+              ${i18n.formatNumber(item.moles.toFixed(4))} × ${i18n.formatNumber(ionInfo.count)} × ${i18n.formatNumber(ionInfo.charge)} × ${i18n.formatNumber(1000)} ÷ ${i18n.formatNumber(volume)}
             </td>
-            <td data-label="meq/L"><strong>${ionInfo.meq.toFixed(2)}</strong></td>
+            <td data-label="${i18n.t('meqLHeader')}"><strong>${i18n.formatNumber(ionInfo.meq.toFixed(2))}</strong></td>
           </tr>
         `;
       });
