@@ -6097,7 +6097,7 @@ function filterWizardGramsFertilizers(searchTerm) {
     if (!item) return;
 
     const nameMatch = fert.name.toLowerCase().includes(term) || i18n.getFertilizerName(fert).toLowerCase().includes(term);
-    const aliasMatch = fert.aliases && fert.aliases.some(a => a.toLowerCase().includes(term));
+    const aliasMatch = fert.aliases && (fert.aliases.some(a => a.toLowerCase().includes(term)) || i18n.getFertilizerAliases(fert).toLowerCase().includes(term));
 
     item.style.display = (nameMatch || aliasMatch || term === '') ? '' : 'none';
   });
@@ -6319,7 +6319,7 @@ function filterWizardAvailableFertilizers(searchTerm) {
     if (!item) return;
 
     const nameMatch = fert.name.toLowerCase().includes(term) || i18n.getFertilizerName(fert).toLowerCase().includes(term);
-    const aliasMatch = fert.aliases && fert.aliases.some(a => a.toLowerCase().includes(term));
+    const aliasMatch = fert.aliases && (fert.aliases.some(a => a.toLowerCase().includes(term)) || i18n.getFertilizerAliases(fert).toLowerCase().includes(term));
 
     item.style.display = (nameMatch || aliasMatch || term === '') ? '' : 'none';
   });
@@ -6810,11 +6810,11 @@ function filterAvailableFertilizers(searchTerm) {
     const item = document.getElementById(`available-item-${fert.id}`);
     if (!item) return;
 
-    // Search in name and aliases
+    // Search in name and aliases (both original and localized)
     const nameMatch = fert.name.toLowerCase().includes(normalizedSearch) || i18n.getFertilizerName(fert).toLowerCase().includes(normalizedSearch);
-    const aliasMatch = fert.aliases && fert.aliases.some(alias =>
+    const aliasMatch = fert.aliases && (fert.aliases.some(alias =>
       alias.toLowerCase().includes(normalizedSearch)
-    );
+    ) || i18n.getFertilizerAliases(fert).toLowerCase().includes(normalizedSearch));
 
     // Show/hide based on match
     if (nameMatch || aliasMatch || normalizedSearch === '') {
@@ -6871,7 +6871,8 @@ function renderFertilizerList(filter = '') {
     if (item) {
       const matches = fertilizer.name.toLowerCase().includes(searchText) ||
                      i18n.getFertilizerName(fertilizer).toLowerCase().includes(searchText) ||
-                     fertilizer.aliases.some(a => a.toLowerCase().includes(searchText));
+                     fertilizer.aliases.some(a => a.toLowerCase().includes(searchText)) ||
+                     i18n.getFertilizerAliases(fertilizer).toLowerCase().includes(searchText);
       item.style.display = matches ? '' : 'none';
     }
   });
@@ -9801,11 +9802,11 @@ function filterReverseFertilizers(searchTerm) {
     const item = document.getElementById(`reverse-item-${fert.id}`);
     if (!item) return;
 
-    // Search in name and aliases
+    // Search in name and aliases (both original and localized)
     const nameMatch = fert.name.toLowerCase().includes(normalizedSearch) || i18n.getFertilizerName(fert).toLowerCase().includes(normalizedSearch);
-    const aliasMatch = fert.aliases && fert.aliases.some(alias =>
+    const aliasMatch = fert.aliases && (fert.aliases.some(alias =>
       alias.toLowerCase().includes(normalizedSearch)
-    );
+    ) || i18n.getFertilizerAliases(fert).toLowerCase().includes(normalizedSearch));
 
     // Show/hide based on match
     if (nameMatch || aliasMatch || normalizedSearch === '') {
