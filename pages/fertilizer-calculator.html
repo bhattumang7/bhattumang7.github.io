@@ -2004,8 +2004,8 @@ permalink: /fertilizer-calculator/
     <div class="language-selector" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
       <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
       <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
-        <option value="en" selected>English</option>
-        <!-- Additional language options will be added here as translations become available -->
+        <option value="en">English</option>
+        <option value="gu">ગુજરાતી</option>
       </select>
     </div>
 
@@ -3052,9 +3052,153 @@ const i18n = {
 
       // Priority
       priority: 'Priority'
+    },
+
+    // Gujarati translations
+    gu: {
+      pageTitle: 'ખાતર ગણક',
+      whatWouldYouLikeToDo: 'તમે શું કરવા માંગો છો?',
+      chooseModeDescription: 'તમારી પાસેની માહિતી મુજબ કેલ્ક્યુલેટર મોડ પસંદ કરો.',
+
+      gramsToPpm: 'ગ્રામ્સ → PPM',
+      gramsToPpmDescription: 'નિર્ધારિત માત્રાના ખાતરોથી તમને મળનારી પોષક સાંદ્રતા (PPM) ગણો.',
+      ppmToGrams: 'PPM → ગ્રામ્સ',
+      ppmToGramsDescription: 'તમારા લક્ષ્ય PPM મૂલ્યો દાખલ કરો અને તે મેળવવા માટે કેટલી ખાતર જરૂર છે તે મેળવો.',
+      npkRatioToGrams: 'NPK અનુપાત → ગ્રામ્સ',
+      npkRatioToGramsDescription: 'પોષક અનુપાત (જેમ કે 3-1-2) અને લક્ષ્ય EC દાખલ કરો અને ઇચ્છિત સંતુલન માટે ખાતરની માત્રા મેળવો.',
+      bestFor: 'શ્રેષ્ઠ માટે:',
+      gramsToPpmUseCase: 'તમે ખાતર તોલી લીધાં છે અને દ્રાવણમાં પોષક સ્તર જાણવા માંગો છો.',
+      ppmToGramsUseCase: 'તમારી પાસે ચોક્કસ PPM લક્ષ્યો છે (જેમ કે રેસિપી અથવા છોડની જરૂરિયાત) અને કેટલી ખાતર વાપરવી તે જાણવા માંગો છો.',
+      npkRatioUseCase: 'તમે ઇચ્છિત પોષક અનુપાત જાણો છો અને તેને તમારી ઇચ્છિત EC/શક્તિ મુજબ સ્કેલ કરવા માંગો છો.',
+
+      howMuchSolution: 'તમે કેટલું દ્રાવણ બનાવી રહ્યા છો?',
+      volumeDescription: 'પાણીની કુલ માત્રા દાખલ કરો જેમાં તમે ખાતર ઉમેરી રહ્યા છો.',
+      liters: 'લિટર',
+
+      howToEnterValues: 'મૂલ્યો કેવી રીતે દાખલ કરશો?',
+      calcModeDescription: 'વેપારી ખાતર નિર્દેશન અથવા શુદ્ધ તત્વ મૂલ્યો વચ્ચે પસંદ કરો.',
+      oxideForms: 'ઓક્સાઈડ રૂપ (P₂O₅, K₂O)',
+      oxideFormsDescription: 'વેપારી ધોરણ - ખાતરના બેગના લેબલ સાથે મેળ ખાતું',
+      elementalForms: 'તત્ત્વીય રૂપ (P, K)',
+      elementalFormsDescription: 'શુદ્ધ તત્વો - વૈજ્ઞાનિક ગણતરી માટે',
+
+      whatStrengthSolution: 'તમે દ્રાવણ કેટલી શક્તિનું ઇચ્છો છો?',
+      ecDescription: 'ઈચ્છિત EC (ઈલેક્ટ્રિકલ કન્ડક્ટિવિટી) પસંદ કરો. અમે ખાતરની માત્રા એ મુજબ સ્કેલ કરીશું.',
+
+      ecPlainWater: 'સાદું પાણી પૂરક',
+      ecRecoveryFlush: 'રિકવરી/ફ્લશ',
+      ecFreshClones: 'નવી ક્લોન્સ/કટિંગ્સ',
+      ecRootedCuttings: 'રૂટ થયેલ કટિંગ્સ',
+      ecSeedlings: 'નિકર/યંગ છોડ',
+      ecGeneralPurpose: 'સામાન્ય ઉપયોગ',
+      ecVegetativeGrowth: 'વેજિટેટિવ વૃદ્ધિ',
+      ecActiveGrowth: 'સક્રિય વૃદ્ધિ',
+      ecHeavyFeeders: 'હેવી ફીડર્સ',
+      ecFloweringFruiting: 'ફૂલ/ફળ ધોરણ',
+      ecMaximum: 'મહત્તમ (અનુભવી ઉત્પાદકો માટે)',
+      ecGeneralDescription: 'સક્રિય વૃદ્ધિમાં મોટાભાગના છોડ માટે સારો આરંભ બિંદુ.',
+
+      selectFertilizersAndEnterAmounts: 'ખાતર પસંદ કરો અને માત્રા દાખલ કરો',
+      selectFertilizersDescription: 'તમે કયાં ખાતર વાપરી રહ્યા છો તે પસંદ કરો અને દ્રાવણમાં ઉમેરવાની ગ્રામ માત્રા દાખલ કરો.',
+      enterTargetPpmValues: 'લક્ષ્ય PPM મૂલ્યો દાખલ કરો',
+      targetPpmDescription: 'તમને ઇચ્છિત પોષક સાંદ્રતાઓ દાખલ કરો. ઓછામાં ઓછું એક મૂલ્ય જરૂરી છે.',
+      enterNutrientRatios: 'પોષક અનુપાત દાખલ કરો',
+      nutrientRatiosDescription: 'તમારો ઇચ્છિત પોષક અનુપાત દાખલ કરો (જેમ કે N:P:K = 3:1:2). ઓછામાં ઓછું એક મૂલ્ય શૂન્યથી મોટું હોવું જોઈએ.',
+      selectAvailableFertilizers: 'ઉપલબ્ધ ખાતર પસંદ કરો',
+      selectAvailableFertilizersDescription: 'તમારી પાસે કેવા ખાતર છે તે પસંદ કરો. ગણક માત્ર આ જ ઉપયોગ કરશે.',
+
+      back: '← પાછા',
+      continue: 'ચાલુ રાખો →',
+      calculate: 'ગણતરી કરો',
+      calculatePpm: 'PPM ગણો',
+      calculateFertilizers: 'ખાતર ગણો',
+      buildFormula: 'સૂત્ર બનાવો',
+      clear: 'સાફ કરો',
+      clearAll: 'બધું સાફ કરો',
+      selectAll: 'બધું પસંદ કરો',
+      deselectAll: 'પસંદગી રદ કરો',
+      commonOnly: 'માત્ર સામાન્ય',
+      changeSettings: 'સેટિંગ બદલો',
+      copyResults: 'પરિણામ નકલ કરો',
+      twoTanks: 'બે ટેન્ક',
+
+      twoTankQuestionTitle: 'શું તમે બે-ટેન્ક દેખાવ જોવાનું ઇચ્છો છો?',
+      incompatibleFertilizersDetected: 'અસંગત ખાતર પસંદ થયાં છે',
+      twoTankExplanation: 'તમારી ફોર્મ્યુલામાં એવા ખાતર છે જે ઉંચી સાંદ્રતા પર સાથે મિશ્રિત થાય ત્યારે પ્રતિક્રિયા કરી શકે છે. ખાસ કરીને, કેલ્શિયમ સ્ત્રોત સલ્ફેટ, ફોસ્ફેટ અથવા સિલિકેટ સાથે ખોટા pH પર ઝરમર થઈ શકે છે.',
+      whatIsTwoTankTitle: 'બે-ટેન્ક સિસ્ટમ શું છે?',
+      whatIsTwoTankDescription: 'બે-ટેન્ક સિસ્ટમ અસંગત ખાતરોને બે સાંદ્રિત સ્ટોક દ્રાવણોમાં અલગ કરે છે:',
+      tankALabel: 'ટેન્ક A (કેલ્શિયમ)',
+      tankADescription: 'કેલ્શિયમ આધારિત ખાતર જેમ કે કેલ્શિયમ નાઇટ્રેટ ધરાવે છે',
+      tankBLabel: 'ટેન્ક B (સલ્ફેટ/ફોસ્ફેટ)',
+      tankBDescription: 'સલ્ફેટ, ફોસ્ફેટ અને સિલિકેટ સ્ત્રોત ધરાવે છે',
+      twoTankMixingNote: 'દરેક ટેન્ક અલગથી પાતળી થાય છે, પછી અંતિમ રિઝર્વોયરમાં કામકાજ સાંદ્રતા પર જોડાય છે જ્યાં સાંદ્રતા સલામત હોય છે.',
+      noShowRegularResults: 'ના, સામાન્ય પરિણામ બતાવો',
+      yesShowTwoTanks: 'હા, બે-ટેન્ક દેખાવ બતાવો',
+
+      nitrogen: 'નાઇટ્રોજન (N)',
+      phosphorusOxide: 'ફોસ્ફરસ (P₂O₅)',
+      phosphorusElemental: 'ફોસ્ફરસ (P)',
+      potassiumOxide: 'પોટેશિયમ (K₂O)',
+      potassiumElemental: 'પોટેશિયમ (K)',
+      calcium: 'કેલ્શિયમ (Ca)',
+      magnesium: 'મેગ્નેશિયમ (Mg)',
+      sulfur: 'ગંધક (S)',
+      silicon: 'સિલિકોન (Si)',
+      siliconPpm: 'સિલિકોન (Si) PPM',
+
+      searchFertilizers: 'ખાતર શોધો...',
+      egValue: 'ઉદાહરણ:',
+      optional: 'વૈકલ્પિક',
+      targetPpm: 'લક્ષ્ય PPM',
+
+      selectedFertilizers: 'પસંદ કરેલ ખાતર',
+      resultsPpm: 'પરિણામો (PPM)',
+      ionBalance: 'આયન સંતુલન',
+      nutrientRatioAnalysis: 'પોષક અનુપાત વિશ્લેષણ',
+      ecPrediction: 'EC અનુમાન',
+      warningsRecommendations: 'ચેતવણીઓ અને ભલામણો',
+      recommendedFormula: 'ભલામણ કરેલ સૂત્ર',
+      requiredFertilizers: 'જરૂરી ખાતર',
+
+      tabGramsToPpm: 'ગ્રામ્સ થી PPM',
+      tabPpmToGrams: 'PPM થી ગ્રામ્સ',
+      tabNpkRatioToGrams: 'NPK અનુપાત થી ગ્રામ્સ',
+
+      inputMode: 'ઇનપુટ મોડ',
+      oxideFormsCommercial: 'ઓક્સાઇડ રૂપ (P₂O₅, K₂O) - વેપારી ધોરણ',
+      elementalFormsPure: 'તત્ત્વીય રૂપ (P, K) - શુદ્ધ તત્વ',
+      oxideModeTip: 'P₂O₅ અને K₂O મૂલ્યો દાખલ કરો (ખાતર લેબલ અને NPK અનુપાત થી ગ્રામ્સ આઉટપુટ સાથે મેળ ખાતું)',
+      elementalModeTip: 'શુદ્ધ P અને K મૂલ્યો દાખલ કરો (વૈજ્ઞાનિક ગણતરી)',
+
+      targetNutrientRatios: 'લક્ષ્ય પોષક અનુપાત',
+      targetNutrientRatiosDescription: 'ઇચ્છિત પોષક અનુપાત દાખલ કરો (જેમ કે N:P:K = 3:1:2). ઓછામાં ઓછું એક પોષક શૂન્યથી મોટું હોવું જોઈએ. ગણક અનુપાત મળતા સૂત્ર શોધશે.',
+      calculationMode: 'ગણતરી મોડ',
+      targetEc: 'લક્ષ્ય EC (mS/cm)',
+      targetEcDescription: 'તમારું લક્ષ્ય EC પસંદ કરો. આ કન્ડક્ટિવિટી મેળવવા માટે ખાતરની માત્રા સ્કેલ થશે.',
+      ratiosPreserved: 'એકંદર સાંદ્રતા બદલતી વખતે અનુપાત જાળવાશે.',
+      selectFertilizersToUse: 'કયા ખાતર વાપરશો તે પસંદ કરો',
+      selectFertilizersToUseDescription: 'તમે કયા ખાતર ઉપયોગ કરવા માંગો છો તે પસંદ કરો. ગણક આમાંથી શ્રેષ્ઠ સંયોજન શોધશે.',
+      priorityDescription: 'નાના મૂલ્યો (1-10) = વધુ પ્રાધાન્ય. સોલ્વર પહેલે ઉચ્ચ પ્રાધાન્ય ધરાવતા ખાતર ઉપયોગ કરવાનો પ્રયત્ન કરશે.',
+
+      solutionVolume: 'દ્રાવણનું વોલ્યૂમ:',
+
+      availableFertilizers: 'ઉપલબ્ધ ખાતર',
+      availableFertilizersDescription: 'તમારી પાસે કયા ખાતર ઉપલબ્ધ છે તે પસંદ કરો. ગણક માત્ર આનો ઉપયોગ કરશે.',
+
+      oxideConversionNote: 'ઓક્સાઇડ મૂલ્યો (P₂O₅, K₂O વગેરે)ને પ્રમાણભૂત રૂપાંતર કારકો વડે આપોઆપ તત્ત્વીય રૂપ (P, K વગેરે)માં બદલવામાં આવે છે.',
+      ionBalanceNote: 'ખાતર વિઘટીત થઈને ચાર્જ ધરાવતા આયન બને છે (cation જેમ K⁺, Ca²⁺, NH₄⁺ અને anion જેમ NO₃⁻, SO₄²⁻, H₂PO₄⁻). સંતુલિત ફીડમાં આશરે સમાન સકારાત્મક અને નકારાત્મક ચાર્જ હોય છે. ≤10% અસંતુલન સ્વીકાર્ય છે; વધુ મૂલ્યો pH ફેરફાર અને પોષક લોકઆઉટ કરી શકે છે.',
+      nutrientRatioNote: 'આ અનુપાત મુખ્ય પોષકના સંબંધિત પ્રમાણ બતાવે છે. ઉદાહરણ તરીકે "1 : 0.5 : 2" N:P:K માટે અર્થ છે 1 ભાગ નાઇટ્રોજન, 0.5 ભાગ ફોસ્ફરસ અને 2 ભાગ પોટેશિયમ. આ અનુપાત અલગ સૂત્રો તુલના કરવા અને ચોક્કસ પાકની જરૂરિયાતને મેળ કરવા મદદ કરે છે.',
+
+      stepOf: 'પગલું {current} / {total}',
+
+      calculating: 'ગણતરી કરી રહ્યા છીએ...',
+      initializing: 'પ્રારંભ કરી રહ્યા છીએ...',
+      initializingSolver: 'સોલ્વર શરૂ કરી રહ્યા છીએ...',
+
+      language: 'ભાષા',
+
+      priority: 'પ્રાધાન્ય'
     }
-    // Additional languages can be added here in the future
-    // e.g., es: { ... }, fr: { ... }, de: { ... }
   },
 
   // Get translation for a key
