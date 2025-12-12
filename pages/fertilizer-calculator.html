@@ -534,6 +534,7 @@ permalink: /fertilizer-calculator/
     background: #f8f9fa;
     border: 1px solid #ddd;
     color: #555;
+    order: 1;
   }
 
   .volume-step-buttons .btn-back:hover {
@@ -544,6 +545,7 @@ permalink: /fertilizer-calculator/
     background: #007bff;
     border: 1px solid #007bff;
     color: #fff;
+    order: 2;
   }
 
   .volume-step-buttons .btn-continue:hover {
@@ -911,6 +913,7 @@ permalink: /fertilizer-calculator/
     background: #f8f9fa;
     border: 1px solid #ddd;
     color: #555;
+    order: 1;
   }
 
   .wizard-step-buttons .btn-back:hover {
@@ -921,6 +924,7 @@ permalink: /fertilizer-calculator/
     background: #007bff;
     border: 1px solid #007bff;
     color: #fff;
+    order: 2;
   }
 
   .wizard-step-buttons .btn-continue:hover {
@@ -931,6 +935,7 @@ permalink: /fertilizer-calculator/
     background: #28a745;
     border: 1px solid #28a745;
     color: #fff;
+    order: 2;
   }
 
   .wizard-step-buttons .btn-calculate:hover {
@@ -2118,11 +2123,11 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-back" onclick="backToModeSelector()" data-i18n="back">
-        ← Back
-      </button>
       <button class="btn-continue" onclick="proceedFromVolumeStep()" data-i18n="continue">
         Continue →
+      </button>
+      <button class="btn-back" onclick="backToModeSelector()" data-i18n="back">
+        ← Back
       </button>
     </div>
   </div>
@@ -2151,11 +2156,11 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">
-        ← Back
-      </button>
       <button class="btn-continue" onclick="proceedFromCalcModeStep()" data-i18n="continue">
         Continue →
+      </button>
+      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">
+        ← Back
       </button>
     </div>
   </div>
@@ -2184,11 +2189,11 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">
-        ← Back
-      </button>
       <button class="btn-continue" onclick="proceedFromECStep()" data-i18n="continue">
         Continue →
+      </button>
+      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">
+        ← Back
       </button>
     </div>
   </div>
@@ -2212,8 +2217,8 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">← Back</button>
       <button class="btn-calculate" onclick="calculateFromWizardGrams()" data-i18n="calculatePpm">Calculate PPM</button>
+      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -2255,8 +2260,8 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">← Back</button>
       <button class="btn-continue" onclick="proceedToFormulaFertilizerStep()" data-i18n="continue">Continue →</button>
+      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -2298,8 +2303,8 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" onclick="backToECStep()" data-i18n="back">← Back</button>
       <button class="btn-continue" onclick="proceedToReverseFertilizerStep()" data-i18n="continue">Continue →</button>
+      <button class="btn-back" onclick="backToECStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -2324,8 +2329,8 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" id="fertilizer-select-back-btn" onclick="backFromFertilizerSelectStep()" data-i18n="back">← Back</button>
       <button class="btn-calculate" id="fertilizer-select-calc-btn" onclick="calculateFromWizardFertilizerSelect()" data-i18n="calculate">Calculate</button>
+      <button class="btn-back" id="fertilizer-select-back-btn" onclick="backFromFertilizerSelectStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -2354,8 +2359,8 @@ permalink: /fertilizer-calculator/
       </div>
     </div>
     <div class="wizard-step-buttons two-tank-buttons">
-      <button class="btn-back" onclick="skipTwoTankView()" data-i18n="noShowRegularResults">No, show regular results</button>
       <button class="btn-continue btn-two-tank" onclick="showTwoTankView()" data-i18n="yesShowTwoTanks">Yes, show two-tank view</button>
+      <button class="btn-back" onclick="skipTwoTankView()" data-i18n="noShowRegularResults">No, show regular results</button>
     </div>
   </div>
 
@@ -3161,6 +3166,16 @@ const i18n = {
       warningCategoryHighChloride: 'High Chloride',
       warningCategoryHighSodium: 'High Sodium',
       warningCategoryIonImbalance: 'Ion Imbalance',
+      warningCategoryKMgRatio: 'K:Mg Ratio',
+      warningCategoryCaMgKBalance: '(Ca+Mg):K Balance',
+      warningCategoryNKRatio: 'N:K Ratio',
+      warningCategoryHighEC: 'High EC',
+      warningCategoryLowEC: 'Low EC',
+      warningCategoryHighBoron: 'High Boron',
+      warningCategoryHighCopper: 'High Copper',
+      warningCategoryHighZinc: 'High Zinc',
+      warningCategoryHighManganese: 'High Manganese',
+      warningCategoryChargeBalance: 'Charge Balance',
 
       // Warning messages
       warningMsgCaSulfate: 'Calcium and sulfate are both present. When making STOCK SOLUTIONS, keep calcium sources ({caFertilizers}) separate from sulfate sources ({sFertilizers}) to prevent calcium sulfate precipitation (gypsum). This warning doesn\'t apply to the final diluted nutrient solution.',
@@ -3178,6 +3193,22 @@ const i18n = {
       warningMsgHighChloride: 'Chloride level is {cl} ppm. While some crops tolerate moderate Cl⁻, sensitive crops may suffer above 50-100 ppm. Check your crop\'s Cl tolerance.',
       warningMsgHighSodium: 'Sodium level is {na} ppm. Sodium can compete with K and Ca uptake, and can accumulate in recirculating systems or soil. Keep minimal unless required.',
       warningMsgIonImbalance: 'Ion balance shows {imbalance}% cation/anion imbalance ({status}). Large imbalances may indicate measurement or formula errors. Check your inputs.',
+      warningMsgKMgRatioHigh: 'K:Mg ratio is {ratio}:1 ({k} ppm K : {mg} ppm Mg). Optimal range is 2:1 to 4:1. Too much K can suppress Mg uptake, causing Mg deficiency symptoms.',
+      warningMsgKMgRatioLow: 'K:Mg ratio is {ratio}:1 ({k} ppm K : {mg} ppm Mg). Optimal range is 2:1 to 4:1. Low K relative to Mg may limit growth and quality.',
+      warningMsgCaMgKBalance: 'Potassium ({k} ppm) is high relative to Ca+Mg ({caMgSum} ppm). Excess K vs Ca+Mg increases risk of Ca/Mg deficiencies even when totals look adequate. Consider balancing.',
+      warningMsgNKRatio: 'N:K ratio is 1:{nkRatio} ({n} ppm N : {k} ppm K). Vegetative feeds typically use N:K ~ 1:1 to 1:1.5; flowering/fruiting feeds use N:K ~ 1:1.5 to 1:2+. Adjust based on growth stage.',
+      warningMsgHighEC: 'Electrical conductivity is very high ({ec} mS/cm). This may cause salt stress in plants. Consider reducing fertilizer amounts or increasing solution volume. Most crops prefer EC between 1.5-2.5 mS/cm.',
+      warningMsgLowEC: 'Electrical conductivity is quite low ({ec} mS/cm). This solution may be too dilute for optimal plant growth. Consider increasing fertilizer amounts. Most crops prefer EC between 1.5-2.5 mS/cm.',
+      warningMsgHighChlorideLevel: 'Chloride level is {cl} ppm. High chloride (>100 ppm) can be toxic to sensitive crops. Consider using sulfate-based fertilizers instead of chloride-based ones.',
+      warningMsgHighSodiumLevel: 'Sodium level is {na} ppm. {severity} Sodium can accumulate and compete with K/Ca/Mg uptake. Keep Na as low as possible, ideally <50 ppm.',
+      warningMsgThisIsVeryHigh: 'This is very high!',
+      warningMsgHighBoron: 'Boron level is {b} ppm. {severity} Boron has a narrow safe window (typically 0.2-0.5 ppm). Many crops show toxicity not far above sufficiency levels.',
+      warningMsgThisMayCauseToxicity: 'This may cause toxicity!',
+      warningMsgThisIsOnTheHighEnd: 'This is on the high end.',
+      warningMsgHighCopper: 'Copper level is {cu} ppm. {severity} Typical range is 0.02-0.1 ppm Cu.',
+      warningMsgHighZinc: 'Zinc level is {zn} ppm. {severity} Typical range is 0.05-0.3 ppm Zn.',
+      warningMsgHighManganese: 'Manganese level is {mn} ppm. {severity} Typical range is 0.1-1.0 ppm Mn.',
+      warningMsgChargeBalance: 'Ion charge imbalance detected ({imbalance}% difference). Cations: {cations} meq/L, Anions: {anions} meq/L. This may indicate missing ions in the formula or reflect natural variation. Values within ~10-15% are typically acceptable.',
       calciumFertilizers: 'calcium fertilizers',
       sulfateFertilizers: 'sulfate fertilizers',
       phosphateFertilizers: 'phosphate fertilizers',
@@ -3290,6 +3321,8 @@ const i18n = {
       targetEcLabel: 'Target EC',
       achievedEc: 'Achieved EC (25°C)',
       ionicStrength: 'Ionic Strength',
+      electricalConductivityEC: 'Electrical Conductivity (EC)',
+      molLUnit: 'mol/L',
       mMUnit: 'mM',
       ecVeryLight: 'Very Light',
       ecLight: 'Light',
@@ -3297,6 +3330,8 @@ const i18n = {
       ecStrong: 'Strong',
       ecVeryStrong: 'Very Strong',
       ecVeryHigh: 'Very High!',
+      aboutEcLabel: 'About EC:',
+      aboutEcDescription: 'EC (Electrical Conductivity) measures the solution\'s ability to conduct electricity, indicating total dissolved salts. Most hydroponic crops prefer EC between 1.5-2.5 mS/cm. Calculation uses the LMCv2 model from HydroBuddy.',
       warningsRecommendations: 'Warnings & Recommendations',
       recommendedFormula: 'Recommended Formula',
       requiredFertilizers: 'Required Fertilizers',
@@ -3695,6 +3730,16 @@ const i18n = {
       warningCategoryHighChloride: 'ઉચ્ચ ક્લોરાઇડ',
       warningCategoryHighSodium: 'ઉચ્ચ સોડિયમ',
       warningCategoryIonImbalance: 'આયન અસંતુલન',
+      warningCategoryKMgRatio: 'K:Mg ગુણોત્તર',
+      warningCategoryCaMgKBalance: '(Ca+Mg):K સંતુલન',
+      warningCategoryNKRatio: 'N:K ગુણોત્તર',
+      warningCategoryHighEC: 'ઉચ્ચ EC',
+      warningCategoryLowEC: 'ઓછી EC',
+      warningCategoryHighBoron: 'ઉચ્ચ બોરોન',
+      warningCategoryHighCopper: 'ઉચ્ચ કોપર',
+      warningCategoryHighZinc: 'ઉચ્ચ ઝિંક',
+      warningCategoryHighManganese: 'ઉચ્ચ મેંગેનીઝ',
+      warningCategoryChargeBalance: 'ચાર્જ સંતુલન',
 
       // Warning messages
       warningMsgCaSulfate: 'કેલ્શિયમ અને સલ્ફેટ બંને હાજર છે. સ્ટોક સોલ્યુશન બનાવતી વખતે, કેલ્શિયમ સલ્ફેટ અવક્ષેપ (જિપ્સમ) ટાળવા માટે કેલ્શિયમ સ્ત્રોતો ({caFertilizers}) ને સલ્ફેટ સ્ત્રોતો ({sFertilizers}) થી અલગ રાખો.',
@@ -3712,6 +3757,22 @@ const i18n = {
       warningMsgHighChloride: 'ક્લોરાઇડ સ્તર {cl} ppm છે. કેટલાક પાક મધ્યમ Cl⁻ સહન કરે છે, પરંતુ સંવેદનશીલ પાક 50-100 ppm થી ઉપર પીડાઈ શકે છે.',
       warningMsgHighSodium: 'સોડિયમ સ્તર {na} ppm છે. સોડિયમ K અને Ca શોષણ સાથે સ્પર્ધા કરી શકે છે. જરૂરી ન હોય તો ન્યૂનતમ રાખો.',
       warningMsgIonImbalance: 'આયન સંતુલન {imbalance}% કેશન/એનિયન અસંતુલન ({status}) દર્શાવે છે. મોટા અસંતુલન માપન અથવા ફોર્મ્યુલા ભૂલો સૂચવી શકે છે.',
+      warningMsgKMgRatioHigh: 'K:Mg ગુણોત્તર {ratio}:1 છે ({k} ppm K : {mg} ppm Mg). શ્રેષ્ઠ શ્રેણી 2:1 થી 4:1 છે. વધુ K Mg શોષણ દબાવી શકે છે, Mg ની ઉણપના લક્ષણો પેદા કરે છે.',
+      warningMsgKMgRatioLow: 'K:Mg ગુણોત્તર {ratio}:1 છે ({k} ppm K : {mg} ppm Mg). શ્રેષ્ઠ શ્રેણી 2:1 થી 4:1 છે. Mg ની સરખામણીમાં ઓછું K વૃદ્ધિ અને ગુણવત્તા મર્યાદિત કરી શકે છે.',
+      warningMsgCaMgKBalance: 'પોટેશિયમ ({k} ppm) Ca+Mg ({caMgSum} ppm) ની સરખામણીમાં વધુ છે. K vs Ca+Mg ની વધારે માત્રા Ca/Mg ની ઉણપનું જોખમ વધારે છે જ્યારે કુલ પૂરતા દેખાય છે. સંતુલિત કરવાનું વિચારો.',
+      warningMsgNKRatio: 'N:K ગુણોત્તર 1:{nkRatio} છે ({n} ppm N : {k} ppm K). વનસ્પતિ વૃદ્ધિ માટે N:K ~ 1:1 થી 1:1.5; ફૂલ/ફળ માટે N:K ~ 1:1.5 થી 1:2+. વૃદ્ધિ તબક્કા અનુસાર ગોઠવો.',
+      warningMsgHighEC: 'વિદ્યુત વાહકતા ખૂબ વધારે છે ({ec} mS/cm). આ છોડમાં મીઠાનું તાણ પેદા કરી શકે છે. ખાતરની માત્રા ઘટાડવાનું અથવા દ્રાવણનું પ્રમાણ વધારવાનું વિચારો. મોટાભાગના પાક 1.5-2.5 mS/cm EC પસંદ કરે છે.',
+      warningMsgLowEC: 'વિદ્યુત વાહકતા ઘણી ઓછી છે ({ec} mS/cm). આ દ્રાવણ શ્રેષ્ઠ છોડ વૃદ્ધિ માટે ખૂબ પાતળું હોઈ શકે છે. ખાતરની માત્રા વધારવાનું વિચારો. મોટાભાગના પાક 1.5-2.5 mS/cm EC પસંદ કરે છે.',
+      warningMsgHighChlorideLevel: 'ક્લોરાઇડ સ્તર {cl} ppm છે. ઉચ્ચ ક્લોરાઇડ (>100 ppm) સંવેદનશીલ પાક માટે ઝેરી હોઈ શકે છે. ક્લોરાઇડ-આધારિત ખાતરોને બદલે સલ્ફેટ-આધારિત ખાતરો વાપરવાનું વિચારો.',
+      warningMsgHighSodiumLevel: 'સોડિયમ સ્તર {na} ppm છે. {severity} સોડિયમ K/Ca/Mg શોષણ સાથે સ્પર્ધા કરી શકે છે અને એકઠું થઈ શકે છે. Na શક્ય તેટલો ઓછો રાખો, આદર્શ રીતે <50 ppm.',
+      warningMsgThisIsVeryHigh: 'આ ખૂબ વધારે છે!',
+      warningMsgHighBoron: 'બોરોન સ્તર {b} ppm છે. {severity} બોરોનની સલામત વિંડો સાંકડી છે (સામાન્ય રીતે 0.2-0.5 ppm). ઘણા પાક પૂરતા સ્તરથી થોડા ઉપર ઝેરીતા દર્શાવે છે.',
+      warningMsgThisMayCauseToxicity: 'આ ઝેરીતા પેદા કરી શકે છે!',
+      warningMsgThisIsOnTheHighEnd: 'આ ઉચ્ચ છેડે છે.',
+      warningMsgHighCopper: 'કોપર સ્તર {cu} ppm છે. {severity} સામાન્ય શ્રેણી 0.02-0.1 ppm Cu છે.',
+      warningMsgHighZinc: 'ઝિંક સ્તર {zn} ppm છે. {severity} સામાન્ય શ્રેણી 0.05-0.3 ppm Zn છે.',
+      warningMsgHighManganese: 'મેંગેનીઝ સ્તર {mn} ppm છે. {severity} સામાન્ય શ્રેણી 0.1-1.0 ppm Mn છે.',
+      warningMsgChargeBalance: 'આયન ચાર્જ અસંતુલન મળ્યું ({imbalance}% તફાવત). કેશન: {cations} meq/L, એનિયન: {anions} meq/L. આ ફોર્મ્યુલામાં ખૂટતા આયનો અથવા કુદરતી વિવિધતા સૂચવી શકે છે. ~10-15% ની અંદરના મૂલ્યો સામાન્ય રીતે સ્વીકાર્ય છે.',
       calciumFertilizers: 'કેલ્શિયમ ખાતર',
       sulfateFertilizers: 'સલ્ફેટ ખાતર',
       phosphateFertilizers: 'ફોસ્ફેટ ખાતર',
@@ -3796,7 +3857,7 @@ const i18n = {
       understandingMeqL: 'meq/L (મિલિઇક્વિવેલન્ટ પ્રતિ લિટર) સમજવું',
       meqLDescription: '<strong>meq/L</strong> એ એક એકમ છે, જે દ્રાવણમાં આયનના <strong>વિદ્યુત આવેશ</strong>ને માપે છે—વજનને નહીં.',
       meqLAnalogy: 'આ રીતે સમજો: કૅલ્શિયમ આયન (Ca²⁺) પાસે પોટેશિયમ આયન (K⁺) કરતાં બમણો આવેશ હોય છે, ભલે તેમનું વજન સમાન લાગે. meq/L આ આવેશના તફાવતને ગણતરીમાં લે છે.',
-      meqLFormula: 'meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters',
+      meqLFormula: 'meq/L = (ગ્રામ ÷ મોલર માસ) × આયન સંખ્યા × આવેશ × 1000 ÷ લિટર',
       meqLFormulaDesc: 'આ સૂત્ર દર્શાવે છે કે દરેક આયન કેટલો વિદ્યુત આવેશ "યોગદાન" આપે છે',
       importantNotes: '📌 મહત્વની નોંધો:',
       hydrationWaterNote: '<strong>હાઇડ્રેશનનું પાણી</strong> (જેમ કે ·7H₂O, ·4H₂O) મોલર માસમાં ઉમેરાય છે, પરંતુ આવેશમાં નથી ઉમેરાતું—એ તો ક્રિસ્ટલ સ્ટ્રક્ચરમાં રહેલું પાણી છે',
@@ -3823,6 +3884,8 @@ const i18n = {
       targetEcLabel: 'લક્ષ્ય EC',
       achievedEc: 'પ્રાપ્ત EC (25°C પર)',
       ionicStrength: 'આયનિક તીવ્રતા',
+      electricalConductivityEC: 'વિદ્યુત વાહકતા (EC)',
+      molLUnit: 'mol/L',
       mMUnit: 'mM',
       ecVeryLight: 'ખૂબ હળવું',
       ecLight: 'હળવું',
@@ -3830,6 +3893,8 @@ const i18n = {
       ecStrong: 'તીવ્ર',
       ecVeryStrong: 'ખૂબ તીવ્ર',
       ecVeryHigh: 'ખૂબ ઊંચું!',
+      aboutEcLabel: 'EC વિશે:',
+      aboutEcDescription: 'EC (Electrical Conductivity) દ્રાવણની વીજળી વહન કરવાની ક્ષમતા માપે છે, જે કુલ ઓગળેલા ક્ષારોનું સૂચક છે. મોટાભાગના હાઇડ્રોપોનિક પાકો માટે 1.5-2.5 mS/cm વચ્ચેનું EC યોગ્ય ગણાય છે. ગણતરી HydroBuddy ના LMCv2 મોડેલ પરથી કરવામાં આવે છે.',
       warningsRecommendations: 'ચેતવણીઓ અને ભલામણો',
       recommendedFormula: 'ભલામણ કરેલ સૂત્ર',
       requiredFertilizers: 'જરૂરી ખાતર',
@@ -5838,6 +5903,7 @@ function renderWizardGramsFertilizerList() {
     gramsInput.id = `wizard-grams-input-${fert.id}`;
     gramsInput.className = 'wizard-grams-input';
     gramsInput.placeholder = i18n.t('grams');
+    gramsInput.setAttribute('data-i18n-placeholder', 'grams');
     gramsInput.min = '0';
     gramsInput.step = '0.1';
     gramsInput.oninput = function() {
@@ -6883,14 +6949,14 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (kMgRatio > 6) {
       warnings.push({
         level: 'info',
-        category: 'K:Mg Ratio',
-        message: `K:Mg ratio is ${kMgRatio.toFixed(2)}:1 (${k.toFixed(1)} ppm K : ${mg.toFixed(1)} ppm Mg). Optimal range is 2:1 to 4:1. Too much K can suppress Mg uptake, causing Mg deficiency symptoms.`
+        category: i18n.t('warningCategoryKMgRatio'),
+        message: i18n.t('warningMsgKMgRatioHigh', { ratio: i18n.formatNumber(kMgRatio.toFixed(2)), k: i18n.formatNumber(k.toFixed(1)), mg: i18n.formatNumber(mg.toFixed(1)) })
       });
     } else if (kMgRatio < 1.5) {
       warnings.push({
         level: 'info',
-        category: 'K:Mg Ratio',
-        message: `K:Mg ratio is ${kMgRatio.toFixed(2)}:1 (${k.toFixed(1)} ppm K : ${mg.toFixed(1)} ppm Mg). Optimal range is 2:1 to 4:1. Low K relative to Mg may limit growth and quality.`
+        category: i18n.t('warningCategoryKMgRatio'),
+        message: i18n.t('warningMsgKMgRatioLow', { ratio: i18n.formatNumber(kMgRatio.toFixed(2)), k: i18n.formatNumber(k.toFixed(1)), mg: i18n.formatNumber(mg.toFixed(1)) })
       });
     }
   }
@@ -6901,8 +6967,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (k > caMgSum * 1.5) {
       warnings.push({
         level: 'info',
-        category: '(Ca+Mg):K Balance',
-        message: `Potassium (${k.toFixed(1)} ppm) is high relative to Ca+Mg (${caMgSum.toFixed(1)} ppm). Excess K vs Ca+Mg increases risk of Ca/Mg deficiencies even when totals look adequate. Consider balancing.`
+        category: i18n.t('warningCategoryCaMgKBalance'),
+        message: i18n.t('warningMsgCaMgKBalance', { k: i18n.formatNumber(k.toFixed(1)), caMgSum: i18n.formatNumber(caMgSum.toFixed(1)) })
       });
     }
   }
@@ -6912,8 +6978,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     const nkRatio = totalN / k;
     warnings.push({
       level: 'info',
-      category: 'N:K Ratio',
-      message: `N:K ratio is 1:${(k/totalN).toFixed(2)} (${totalN.toFixed(1)} ppm N : ${k.toFixed(1)} ppm K). Vegetative feeds typically use N:K ~ 1:1 to 1:1.5; flowering/fruiting feeds use N:K ~ 1:1.5 to 1:2+. Adjust based on growth stage.`
+      category: i18n.t('warningCategoryNKRatio'),
+      message: i18n.t('warningMsgNKRatio', { nkRatio: i18n.formatNumber((k/totalN).toFixed(2)), n: i18n.formatNumber(totalN.toFixed(1)), k: i18n.formatNumber(k.toFixed(1)) })
     });
   }
 
@@ -6926,14 +6992,14 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
   if (ecData.ec > 3.5) {
     warnings.push({
       level: 'warning',
-      category: 'High EC',
-      message: `Electrical conductivity is very high (${ecData.ec.toFixed(2)} mS/cm). This may cause salt stress in plants. Consider reducing fertilizer amounts or increasing solution volume. Most crops prefer EC between 1.5-2.5 mS/cm.`
+      category: i18n.t('warningCategoryHighEC'),
+      message: i18n.t('warningMsgHighEC', { ec: i18n.formatNumber(ecData.ec.toFixed(2)) })
     });
   } else if (ecData.ec < 0.5 && totalN > 0) {
     warnings.push({
       level: 'info',
-      category: 'Low EC',
-      message: `Electrical conductivity is quite low (${ecData.ec.toFixed(2)} mS/cm). This solution may be too dilute for optimal plant growth. Consider increasing fertilizer amounts. Most crops prefer EC between 1.5-2.5 mS/cm.`
+      category: i18n.t('warningCategoryLowEC'),
+      message: i18n.t('warningMsgLowEC', { ec: i18n.formatNumber(ecData.ec.toFixed(2)) })
     });
   }
 
@@ -6941,8 +7007,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
   if (cl > 100) {
     warnings.push({
       level: 'warning',
-      category: 'High Chloride',
-      message: `Chloride level is ${cl.toFixed(1)} ppm. High chloride (>100 ppm) can be toxic to sensitive crops. Consider using sulfate-based fertilizers instead of chloride-based ones.`
+      category: i18n.t('warningCategoryHighChloride'),
+      message: i18n.t('warningMsgHighChlorideLevel', { cl: i18n.formatNumber(cl.toFixed(1)) })
     });
   }
 
@@ -6951,8 +7017,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     const severity = na > 100 ? 'warning' : 'info';
     warnings.push({
       level: severity,
-      category: 'High Sodium',
-      message: `Sodium level is ${na.toFixed(1)} ppm. ${na > 100 ? 'This is very high!' : ''} Sodium can accumulate and compete with K/Ca/Mg uptake. Keep Na as low as possible, ideally <50 ppm.`
+      category: i18n.t('warningCategoryHighSodium'),
+      message: i18n.t('warningMsgHighSodiumLevel', { na: i18n.formatNumber(na.toFixed(1)), severity: na > 100 ? i18n.t('warningMsgThisIsVeryHigh') : '' })
     });
   }
 
@@ -6961,8 +7027,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     const severity = b > 1.0 ? 'warning' : 'info';
     warnings.push({
       level: severity,
-      category: 'High Boron',
-      message: `Boron level is ${b.toFixed(2)} ppm. ${b > 1.0 ? 'This may cause toxicity!' : 'This is on the high end.'} Boron has a narrow safe window (typically 0.2-0.5 ppm). Many crops show toxicity not far above sufficiency levels.`
+      category: i18n.t('warningCategoryHighBoron'),
+      message: i18n.t('warningMsgHighBoron', { b: i18n.formatNumber(b.toFixed(2)), severity: b > 1.0 ? i18n.t('warningMsgThisMayCauseToxicity') : i18n.t('warningMsgThisIsOnTheHighEnd') })
     });
   }
 
@@ -6970,24 +7036,24 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
   if (cu > 0.1) {
     warnings.push({
       level: cu > 0.2 ? 'warning' : 'info',
-      category: 'High Copper',
-      message: `Copper level is ${cu.toFixed(2)} ppm. ${cu > 0.2 ? 'This may cause toxicity!' : 'This is on the high end.'} Typical range is 0.02-0.1 ppm Cu.`
+      category: i18n.t('warningCategoryHighCopper'),
+      message: i18n.t('warningMsgHighCopper', { cu: i18n.formatNumber(cu.toFixed(2)), severity: cu > 0.2 ? i18n.t('warningMsgThisMayCauseToxicity') : i18n.t('warningMsgThisIsOnTheHighEnd') })
     });
   }
 
   if (zn > 0.5) {
     warnings.push({
       level: zn > 1.0 ? 'warning' : 'info',
-      category: 'High Zinc',
-      message: `Zinc level is ${zn.toFixed(2)} ppm. ${zn > 1.0 ? 'This may cause toxicity!' : 'This is on the high end.'} Typical range is 0.05-0.3 ppm Zn.`
+      category: i18n.t('warningCategoryHighZinc'),
+      message: i18n.t('warningMsgHighZinc', { zn: i18n.formatNumber(zn.toFixed(2)), severity: zn > 1.0 ? i18n.t('warningMsgThisMayCauseToxicity') : i18n.t('warningMsgThisIsOnTheHighEnd') })
     });
   }
 
   if (mn > 2) {
     warnings.push({
       level: mn > 3 ? 'warning' : 'info',
-      category: 'High Manganese',
-      message: `Manganese level is ${mn.toFixed(2)} ppm. ${mn > 3 ? 'This may cause toxicity!' : 'This is on the high end.'} Typical range is 0.1-1.0 ppm Mn.`
+      category: i18n.t('warningCategoryHighManganese'),
+      message: i18n.t('warningMsgHighManganese', { mn: i18n.formatNumber(mn.toFixed(2)), severity: mn > 3 ? i18n.t('warningMsgThisMayCauseToxicity') : i18n.t('warningMsgThisIsOnTheHighEnd') })
     });
   }
 
@@ -7001,8 +7067,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (ionBalance.imbalance > 15) {
       warnings.push({
         level: 'info',
-        category: 'Charge Balance',
-        message: `Ion charge imbalance detected (${ionBalance.imbalance.toFixed(1)}% difference). Cations: ${ionBalance.totalCations.toFixed(2)} meq/L, Anions: ${ionBalance.totalAnions.toFixed(2)} meq/L. This may indicate missing ions in the formula or reflect natural variation. Values within ~10-15% are typically acceptable.`
+        category: i18n.t('warningCategoryChargeBalance'),
+        message: i18n.t('warningMsgChargeBalance', { imbalance: i18n.formatNumber(ionBalance.imbalance.toFixed(1)), cations: i18n.formatNumber(ionBalance.totalCations.toFixed(2)), anions: i18n.formatNumber(ionBalance.totalAnions.toFixed(2)) })
       });
     }
   }
@@ -7021,20 +7087,20 @@ function displayECTDS(ecData) {
 
   html += `
     <div class="result-card">
-      <div class="result-label">Electrical Conductivity (EC)</div>
+      <div class="result-label">${i18n.t('electricalConductivityEC')}</div>
       <div class="result-value">
-        ${ecData.ec.toFixed(3)}
-        <span class="result-unit">mS/cm</span>
+        ${i18n.formatNumber(ecData.ec.toFixed(3))}
+        <span class="result-unit">${i18n.t('mScmUnit')}</span>
       </div>
     </div>
   `;
 
   html += `
     <div class="result-card">
-      <div class="result-label">Ionic Strength</div>
+      <div class="result-label">${i18n.t('ionicStrength')}</div>
       <div class="result-value">
-        ${ecData.ionicStrength.toFixed(4)}
-        <span class="result-unit">mol/L</span>
+        ${i18n.formatNumber(ecData.ionicStrength.toFixed(4))}
+        <span class="result-unit">${i18n.t('molLUnit')}</span>
       </div>
     </div>
   `;
@@ -7043,9 +7109,7 @@ function displayECTDS(ecData) {
 
   html += `
     <div class="conversion-note" style="margin-top: 15px;">
-      <strong>About EC:</strong> EC (Electrical Conductivity) measures the solution's ability to conduct electricity,
-      indicating total dissolved salts. Most hydroponic crops prefer EC between 1.5-2.5 mS/cm.
-      Calculation uses the LMCv2 model from HydroBuddy.
+      <strong>${i18n.t('aboutEcLabel')}</strong> ${i18n.t('aboutEcDescription')}
     </div>
   `;
 
@@ -10064,9 +10128,9 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
     html += `
       <tr>
         <td>${nutrient.label}</td>
-        <td>${Number(userInput || 0).toFixed(2)}</td>
-        <td class="${className}">${Number(achievedRatio || 0).toFixed(2)} ${status}</td>
-        <td>${Number(achievedPPM || 0).toFixed(1)} ppm</td>
+        <td>${i18n.formatNumber(Number(userInput || 0).toFixed(2))}</td>
+        <td class="${className}">${i18n.formatNumber(Number(achievedRatio || 0).toFixed(2))} ${status}</td>
+        <td>${i18n.formatNumber(Number(achievedPPM || 0).toFixed(1))} ${i18n.t('ppmUnit')}</td>
       </tr>
     `;
   });
