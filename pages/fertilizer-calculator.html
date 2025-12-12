@@ -957,6 +957,90 @@ permalink: /fertilizer-calculator/
     margin-top: 20px;
   }
 
+  /* Two-Tank Question Step Styles */
+  .two-tank-explanation {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .incompatibility-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+  }
+
+  .incompatibility-warning svg {
+    color: #856404;
+    flex-shrink: 0;
+  }
+
+  .incompatibility-warning span {
+    color: #856404;
+    font-weight: 500;
+  }
+
+  .two-tank-explanation > p {
+    color: #495057;
+    line-height: 1.6;
+    margin-bottom: 15px;
+  }
+
+  .two-tank-info {
+    background: #e8f4f8;
+    border-left: 4px solid #17a2b8;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+
+  .two-tank-info h4 {
+    color: #0c5460;
+    margin: 0 0 10px 0;
+    font-size: 1.05em;
+  }
+
+  .two-tank-info p {
+    color: #495057;
+    margin: 0 0 10px 0;
+    line-height: 1.5;
+  }
+
+  .two-tank-info ul {
+    margin: 10px 0;
+    padding-left: 20px;
+  }
+
+  .two-tank-info li {
+    color: #495057;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  .two-tank-info li strong {
+    color: #0c5460;
+  }
+
+  .two-tank-buttons {
+    justify-content: space-between;
+  }
+
+  .btn-two-tank {
+    background: #17a2b8 !important;
+    border-color: #17a2b8 !important;
+  }
+
+  .btn-two-tank:hover {
+    background: #138496 !important;
+    border-color: #138496 !important;
+  }
+
   #wizard-results-container .results-section {
     display: block !important;
   }
@@ -2212,6 +2296,36 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
+  <!-- Two-Tank Question Step (shown when incompatible fertilizers detected) -->
+  <div id="two-tank-question-step" class="wizard-input-step">
+    <p class="step-indicator" id="two-tank-question-step-indicator">Step 6 of 6</p>
+    <h3 data-i18n="twoTankQuestionTitle">Would you like to see a two-tank view?</h3>
+    <div class="two-tank-explanation">
+      <div class="incompatibility-warning">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span data-i18n="incompatibleFertilizersDetected">Incompatible fertilizers detected in your selection</span>
+      </div>
+      <p data-i18n="twoTankExplanation">Your formula contains fertilizers that can react with each other when mixed at high concentrations (stock solutions). Specifically, calcium sources can precipitate when combined with sulfates, phosphates, or silicates at the wrong pH.</p>
+      <div class="two-tank-info">
+        <h4 data-i18n="whatIsTwoTankTitle">What is a Two-Tank System?</h4>
+        <p data-i18n="whatIsTwoTankDescription">A two-tank system separates incompatible fertilizers into two concentrated stock solutions:</p>
+        <ul>
+          <li><strong data-i18n="tankALabel">Tank A (Calcium)</strong>: <span data-i18n="tankADescription">Contains calcium-based fertilizers like Calcium Nitrate</span></li>
+          <li><strong data-i18n="tankBLabel">Tank B (Sulfates/Phosphates)</strong>: <span data-i18n="tankBDescription">Contains sulfate, phosphate, and silicate sources</span></li>
+        </ul>
+        <p data-i18n="twoTankMixingNote">Each tank is diluted separately, then combined in the final reservoir at working strength where the diluted concentrations are safe.</p>
+      </div>
+    </div>
+    <div class="wizard-step-buttons two-tank-buttons">
+      <button class="btn-back" onclick="skipTwoTankView()" data-i18n="noShowRegularResults">No, show regular results</button>
+      <button class="btn-continue btn-two-tank" onclick="showTwoTankView()" data-i18n="yesShowTwoTanks">Yes, show two-tank view</button>
+    </div>
+  </div>
+
   <!-- Wizard Results View (shown after calculation from wizard) -->
   <div id="wizard-results" class="wizard-results">
     <div class="wizard-header">
@@ -2847,6 +2961,20 @@ const i18n = {
       changeSettings: 'Change Settings',
       copyResults: 'Copy Results',
       twoTanks: 'Two Tanks',
+
+      // Two-Tank Question Step
+      twoTankQuestionTitle: 'Would you like to see a two-tank view?',
+      incompatibleFertilizersDetected: 'Incompatible fertilizers detected in your selection',
+      twoTankExplanation: 'Your formula contains fertilizers that can react with each other when mixed at high concentrations (stock solutions). Specifically, calcium sources can precipitate when combined with sulfates, phosphates, or silicates at the wrong pH.',
+      whatIsTwoTankTitle: 'What is a Two-Tank System?',
+      whatIsTwoTankDescription: 'A two-tank system separates incompatible fertilizers into two concentrated stock solutions:',
+      tankALabel: 'Tank A (Calcium)',
+      tankADescription: 'Contains calcium-based fertilizers like Calcium Nitrate',
+      tankBLabel: 'Tank B (Sulfates/Phosphates)',
+      tankBDescription: 'Contains sulfate, phosphate, and silicate sources',
+      twoTankMixingNote: 'Each tank is diluted separately, then combined in the final reservoir at working strength where the diluted concentrations are safe.',
+      noShowRegularResults: 'No, show regular results',
+      yesShowTwoTanks: 'Yes, show two-tank view',
 
       // Nutrient labels
       nitrogen: 'Nitrogen (N)',
@@ -4197,6 +4325,32 @@ function hasSilicateContent(fertId) {
   return fert && fert.pct && (fert.pct.SiO2 > 0 || fert.pct.SiOH4 > 0 || fert.pct.Si > 0);
 }
 
+// Check if a formula/selection contains incompatible fertilizers that would benefit from two-tank separation
+// Returns true if there are calcium sources together with sulfate/phosphate/silicate sources
+function hasIncompatibleFertilizers(formula) {
+  // Get list of fertilizer IDs with grams > 0
+  const activeFertIds = Object.entries(formula)
+    .filter(([id, grams]) => grams > 0)
+    .map(([id]) => id);
+
+  if (activeFertIds.length < 2) return false;
+
+  let hasCalcium = false;
+  let hasSulfate = false;
+  let hasPhosphate = false;
+  let hasSilicate = false;
+
+  activeFertIds.forEach(fertId => {
+    if (hasCaContent(fertId)) hasCalcium = true;
+    if (hasSulfateContent(fertId)) hasSulfate = true;
+    if (hasPhosphateContent(fertId)) hasPhosphate = true;
+    if (hasSilicateContent(fertId)) hasSilicate = true;
+  });
+
+  // Incompatibility exists if calcium is present with sulfate, phosphate, or silicate
+  return hasCalcium && (hasSulfate || hasPhosphate || hasSilicate);
+}
+
 // Validation functions
 function validateVolumeInput(input) {
   const value = parseFloat(input.value);
@@ -4459,6 +4613,7 @@ function proceedToCalculator() {
   document.getElementById('ppm-targets-step').classList.remove('active');
   document.getElementById('npk-ratios-step').classList.remove('active');
   document.getElementById('fertilizer-select-step').classList.remove('active');
+  document.getElementById('two-tank-question-step').classList.remove('active');
 
   // Show the calculator content
   document.getElementById('calculator-content').classList.add('active');
@@ -4576,6 +4731,10 @@ function backToModeSelector() {
   document.getElementById('ppm-targets-step').classList.remove('active');
   document.getElementById('npk-ratios-step').classList.remove('active');
   document.getElementById('fertilizer-select-step').classList.remove('active');
+  document.getElementById('two-tank-question-step').classList.remove('active');
+
+  // Clear pending two-tank calculation
+  pendingWizardCalculation = null;
 
   // Show the mode selector
   document.getElementById('mode-selector').style.display = 'block';
@@ -4694,6 +4853,9 @@ function clearWizardGramsSelections() {
   }
 }
 
+// Store pending wizard calculation for two-tank decision
+let pendingWizardCalculation = null;
+
 function calculateFromWizardGrams() {
   // Get the volume from wizard input
   const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
@@ -4710,8 +4872,9 @@ function calculateFromWizardGrams() {
     if (mainInput) mainInput.value = '';
   });
 
-  // Transfer wizard selections to main calculator
+  // Transfer wizard selections to main calculator and build formula for compatibility check
   let hasSelection = false;
+  const formula = {};
   FERTILIZERS.forEach(fert => {
     const wizardCheckbox = document.getElementById(`wizard-grams-check-${fert.id}`);
     const wizardInput = document.getElementById(`wizard-grams-input-${fert.id}`);
@@ -4724,6 +4887,7 @@ function calculateFromWizardGrams() {
         mainCheckbox.checked = true;
         mainInput.value = grams;
         hasSelection = true;
+        formula[fert.id] = grams;
       }
     }
   });
@@ -4745,16 +4909,39 @@ function calculateFromWizardGrams() {
     resultsContainer.innerHTML = selectedFertSection.outerHTML + resultsSection.outerHTML;
   }
 
-  // Hide wizard step, show wizard results
-  document.getElementById('grams-input-step').classList.remove('active');
-  document.getElementById('wizard-results').classList.add('active');
-
-  // Update the mode indicator in wizard results
+  // Build mode indicator text
   const indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
-  document.getElementById('wizard-results-mode').innerHTML = indicatorText;
 
-  // Scroll to top smoothly
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Check for incompatible fertilizers
+  if (hasIncompatibleFertilizers(formula)) {
+    // Store pending calculation for later
+    pendingWizardCalculation = {
+      type: 'grams-to-ppm',
+      formula: formula,
+      volume: wizardVolume,
+      indicatorText: indicatorText,
+      previousStep: 'grams-input-step'
+    };
+
+    // Hide current step, show two-tank question step
+    document.getElementById('grams-input-step').classList.remove('active');
+    document.getElementById('two-tank-question-step').classList.add('active');
+
+    // Update step indicator (base steps + 1 for two-tank question)
+    const totalSteps = getStepCount(selectedMode) + 1;
+    document.getElementById('two-tank-question-step-indicator').textContent = 'Step ' + totalSteps + ' of ' + totalSteps;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    // No incompatibilities - show results directly
+    document.getElementById('grams-input-step').classList.remove('active');
+    document.getElementById('wizard-results').classList.add('active');
+
+    // Update the mode indicator in wizard results
+    document.getElementById('wizard-results-mode').innerHTML = indicatorText;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 // --- PPM → Grams Wizard Functions ---
@@ -4947,6 +5134,8 @@ async function calculateFromWizardFertilizerSelect() {
   let indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
   indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? 'Oxide' : 'Elemental');
 
+  let calculatedFormula = null;
+
   if (selectedMode === 'formula-builder') {
     // PPM → Grams calculation
     // Update volume
@@ -5001,6 +5190,11 @@ async function calculateFromWizardFertilizerSelect() {
     const formulaResults = document.getElementById('formula-results');
     if (resultsContainer && formulaResults) {
       resultsContainer.innerHTML = formulaResults.outerHTML;
+    }
+
+    // Get the calculated formula for incompatibility check
+    if (lastFormulaCalculation && lastFormulaCalculation.result) {
+      calculatedFormula = lastFormulaCalculation.result.formula;
     }
 
   } else if (selectedMode === 'reverse-calc') {
@@ -5068,16 +5262,141 @@ async function calculateFromWizardFertilizerSelect() {
     if (resultsContainer && reverseResults) {
       resultsContainer.innerHTML = reverseResults.outerHTML;
     }
+
+    // Get the calculated formula for incompatibility check
+    if (lastReverseCalculation && lastReverseCalculation.result) {
+      calculatedFormula = lastReverseCalculation.result.formula;
+    }
   }
 
-  // Hide wizard step, show wizard results
-  document.getElementById('fertilizer-select-step').classList.remove('active');
+  // Check for incompatible fertilizers
+  if (calculatedFormula && hasIncompatibleFertilizers(calculatedFormula)) {
+    // Store pending calculation for later
+    pendingWizardCalculation = {
+      type: selectedMode === 'formula-builder' ? 'ppm-to-grams' : 'npk-ratio-to-grams',
+      formula: calculatedFormula,
+      volume: wizardVolume,
+      indicatorText: indicatorText,
+      previousStep: 'fertilizer-select-step'
+    };
+
+    // Hide current step, show two-tank question step
+    document.getElementById('fertilizer-select-step').classList.remove('active');
+    document.getElementById('two-tank-question-step').classList.add('active');
+
+    // Update step indicator
+    const totalSteps = getStepCount(selectedMode) + 1; // +1 for two-tank step
+    document.getElementById('two-tank-question-step-indicator').textContent = 'Step ' + totalSteps + ' of ' + totalSteps;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    // No incompatibilities - show results directly
+    document.getElementById('fertilizer-select-step').classList.remove('active');
+    document.getElementById('wizard-results').classList.add('active');
+
+    // Update the mode indicator in wizard results
+    document.getElementById('wizard-results-mode').innerHTML = indicatorText;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+// --- Two-Tank Question Step Functions ---
+
+// Skip two-tank view and show regular results
+function skipTwoTankView() {
+  if (!pendingWizardCalculation) {
+    // Fallback: just go back to results
+    document.getElementById('two-tank-question-step').classList.remove('active');
+    document.getElementById('wizard-results').classList.add('active');
+    return;
+  }
+
+  // Hide two-tank question step, show wizard results
+  document.getElementById('two-tank-question-step').classList.remove('active');
   document.getElementById('wizard-results').classList.add('active');
 
   // Update the mode indicator in wizard results
-  document.getElementById('wizard-results-mode').innerHTML = indicatorText;
+  document.getElementById('wizard-results-mode').innerHTML = pendingWizardCalculation.indicatorText;
 
-  // Scroll to top smoothly
+  // Clear pending calculation
+  pendingWizardCalculation = null;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Show two-tank view
+function showTwoTankView() {
+  if (!pendingWizardCalculation) {
+    alert('No calculation data available.');
+    return;
+  }
+
+  const { type, formula, volume, indicatorText } = pendingWizardCalculation;
+
+  // Call the appropriate two-tank display function based on calculation type
+  if (type === 'grams-to-ppm') {
+    // For Grams to PPM, use the existing function
+    displayTwoTankGramsToPPMResults();
+  } else if (type === 'ppm-to-grams') {
+    // For PPM to Grams (formula builder)
+    displayTwoTankFormulaResults();
+  } else if (type === 'npk-ratio-to-grams') {
+    // For NPK Ratio to Grams (reverse calculator)
+    displayTwoTankReverseResults();
+  }
+
+  // Copy two-tank results to wizard results container
+  const resultsContainer = document.getElementById('wizard-results-container');
+  let sourceResults;
+
+  if (type === 'grams-to-ppm') {
+    const selectedFertSection = document.getElementById('selected-fertilizers-section');
+    sourceResults = selectedFertSection;
+  } else if (type === 'ppm-to-grams') {
+    sourceResults = document.getElementById('formula-results');
+  } else {
+    sourceResults = document.getElementById('reverse-results');
+  }
+
+  if (resultsContainer && sourceResults) {
+    resultsContainer.innerHTML = sourceResults.outerHTML;
+  }
+
+  // Hide two-tank question step, show wizard results
+  document.getElementById('two-tank-question-step').classList.remove('active');
+  document.getElementById('wizard-results').classList.add('active');
+
+  // Update the mode indicator in wizard results
+  document.getElementById('wizard-results-mode').innerHTML = indicatorText + ' · <span style="color: #17a2b8;">Two-Tank View</span>';
+
+  // Clear pending calculation
+  pendingWizardCalculation = null;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Back button handler for two-tank question step
+function backFromTwoTankQuestion() {
+  if (!pendingWizardCalculation) {
+    // Fallback
+    document.getElementById('two-tank-question-step').classList.remove('active');
+    return;
+  }
+
+  const previousStep = pendingWizardCalculation.previousStep;
+
+  // Hide two-tank question step
+  document.getElementById('two-tank-question-step').classList.remove('active');
+
+  // Show previous step
+  if (previousStep) {
+    document.getElementById(previousStep).classList.add('active');
+  }
+
+  // Clear pending calculation
+  pendingWizardCalculation = null;
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
