@@ -1916,8 +1916,17 @@ permalink: /fertilizer-calculator/
 
   <!-- Mode Selector (Wizard Step 1) -->
   <div id="mode-selector" class="mode-selector">
-    <h2>What would you like to do?</h2>
-    <p>Choose a calculator mode based on what information you have.</p>
+    <!-- Language Selector -->
+    <div class="language-selector" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+      <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
+      <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
+        <option value="en" selected>English</option>
+        <!-- Additional language options will be added here as translations become available -->
+      </select>
+    </div>
+
+    <h2 data-i18n="whatWouldYouLikeToDo">What would you like to do?</h2>
+    <p data-i18n="chooseModeDescription">Choose a calculator mode based on what information you have.</p>
 
     <div class="mode-cards">
       <!-- Grams to PPM -->
@@ -1929,14 +1938,14 @@ permalink: /fertilizer-calculator/
             <path d="M6 8C6 8 6 22 12 22C18 22 18 8 18 8"></path>
             <path d="M6 8H18"></path>
           </svg>
-          Grams → PPM
+          <span data-i18n="gramsToPpm">Grams → PPM</span>
         </h3>
-        <p class="description">
+        <p class="description" data-i18n="gramsToPpmDescription">
           Calculate what nutrient concentrations (PPM) you'll get from specific amounts of fertilizers.
         </p>
         <div class="use-case">
-          <strong>Best for:</strong>
-          <span>You have fertilizers weighed out and want to know the resulting nutrient levels in your solution.</span>
+          <strong data-i18n="bestFor">Best for:</strong>
+          <span data-i18n="gramsToPpmUseCase">You have fertilizers weighed out and want to know the resulting nutrient levels in your solution.</span>
         </div>
       </div>
 
@@ -1947,14 +1956,14 @@ permalink: /fertilizer-calculator/
             <circle cx="12" cy="12" r="10"></circle>
             <path d="M12 6v6l4 2"></path>
           </svg>
-          PPM → Grams
+          <span data-i18n="ppmToGrams">PPM → Grams</span>
         </h3>
-        <p class="description">
+        <p class="description" data-i18n="ppmToGramsDescription">
           Enter your target PPM values and get the exact fertilizer amounts needed to achieve them.
         </p>
         <div class="use-case">
-          <strong>Best for:</strong>
-          <span>You have specific PPM targets (e.g., from a recipe or plant requirements) and need to know how much of each fertilizer to use.</span>
+          <strong data-i18n="bestFor">Best for:</strong>
+          <span data-i18n="ppmToGramsUseCase">You have specific PPM targets (e.g., from a recipe or plant requirements) and need to know how much of each fertilizer to use.</span>
         </div>
       </div>
 
@@ -1967,14 +1976,14 @@ permalink: /fertilizer-calculator/
             <path d="M13 17V5"></path>
             <path d="M8 17v-3"></path>
           </svg>
-          NPK Ratio → Grams
+          <span data-i18n="npkRatioToGrams">NPK Ratio → Grams</span>
         </h3>
-        <p class="description">
+        <p class="description" data-i18n="npkRatioToGramsDescription">
           Enter nutrient ratios (like 3-1-2) and a target EC to get fertilizer amounts that match your desired balance.
         </p>
         <div class="use-case">
-          <strong>Best for:</strong>
-          <span>You know the nutrient ratio you want (e.g., for a specific growth stage) and want to scale it to your desired EC/strength.</span>
+          <strong data-i18n="bestFor">Best for:</strong>
+          <span data-i18n="npkRatioUseCase">You know the nutrient ratio you want (e.g., for a specific growth stage) and want to scale it to your desired EC/strength.</span>
         </div>
       </div>
     </div>
@@ -1982,20 +1991,20 @@ permalink: /fertilizer-calculator/
 
   <!-- Step 2: Volume Selection -->
   <div id="volume-step" class="volume-step">
-    <div class="step-indicator" id="volume-step-indicator">Step 2 of 2</div>
-    <h3>How much solution are you making?</h3>
-    <p>Enter the total volume of water you'll be mixing your fertilizers into.</p>
+    <div class="step-indicator" id="volume-step-indicator" data-i18n-key="stepOf">Step 2 of 2</div>
+    <h3 data-i18n="howMuchSolution">How much solution are you making?</h3>
+    <p data-i18n="volumeDescription">Enter the total volume of water you'll be mixing your fertilizers into.</p>
 
     <div class="volume-step-input">
       <input type="number" id="wizard-volume" value="10" min="0.1" step="0.1" onkeypress="if(event.key === 'Enter') proceedFromVolumeStep()">
-      <span>liters</span>
+      <span data-i18n="liters">liters</span>
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-back" onclick="backToModeSelector()">
+      <button class="btn-back" onclick="backToModeSelector()" data-i18n="back">
         ← Back
       </button>
-      <button class="btn-continue" onclick="proceedFromVolumeStep()">
+      <button class="btn-continue" onclick="proceedFromVolumeStep()" data-i18n="continue">
         Continue →
       </button>
     </div>
@@ -2003,32 +2012,32 @@ permalink: /fertilizer-calculator/
 
   <!-- Step 3: Calculation Mode (only for PPM→Grams and NPK Ratio→Grams) -->
   <div id="calc-mode-step" class="calc-mode-step">
-    <div class="step-indicator">Step 3 of 3</div>
-    <h3>How do you want to enter values?</h3>
-    <p>Choose between commercial fertilizer notation or pure elemental values.</p>
+    <div class="step-indicator" id="calc-mode-step-indicator" data-i18n-key="stepOf">Step 3 of 3</div>
+    <h3 data-i18n="howToEnterValues">How do you want to enter values?</h3>
+    <p data-i18n="calcModeDescription">Choose between commercial fertilizer notation or pure elemental values.</p>
 
     <div class="calc-mode-options">
       <label class="calc-mode-option selected" onclick="selectCalcMode('oxide')">
         <input type="radio" name="wizard-calc-mode" value="oxide" checked>
         <div class="calc-mode-option-content">
-          <strong>Oxide Forms (P₂O₅, K₂O)</strong>
-          <span>Commercial standard - matches fertilizer bag labels</span>
+          <strong data-i18n="oxideForms">Oxide Forms (P₂O₅, K₂O)</strong>
+          <span data-i18n="oxideFormsDescription">Commercial standard - matches fertilizer bag labels</span>
         </div>
       </label>
       <label class="calc-mode-option" onclick="selectCalcMode('elemental')">
         <input type="radio" name="wizard-calc-mode" value="elemental">
         <div class="calc-mode-option-content">
-          <strong>Elemental Forms (P, K)</strong>
-          <span>Pure elements - for scientific calculations</span>
+          <strong data-i18n="elementalForms">Elemental Forms (P, K)</strong>
+          <span data-i18n="elementalFormsDescription">Pure elements - for scientific calculations</span>
         </div>
       </label>
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-back" onclick="backToVolumeStep()">
+      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">
         ← Back
       </button>
-      <button class="btn-continue" onclick="proceedFromCalcModeStep()">
+      <button class="btn-continue" onclick="proceedFromCalcModeStep()" data-i18n="continue">
         Continue →
       </button>
     </div>
@@ -2036,32 +2045,32 @@ permalink: /fertilizer-calculator/
 
   <!-- Step 4: Target EC (only for NPK Ratio→Grams) -->
   <div id="ec-step" class="ec-step">
-    <div class="step-indicator">Step 4 of 4</div>
-    <h3>What strength solution do you want?</h3>
-    <p>Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we'll scale the fertilizer amounts to hit that strength for your batch.</p>
+    <div class="step-indicator" id="ec-step-indicator" data-i18n-key="stepOf">Step 4 of 4</div>
+    <h3 data-i18n="whatStrengthSolution">What strength solution do you want?</h3>
+    <p data-i18n="ecDescription">Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we'll scale the fertilizer amounts to hit that strength for your batch.</p>
 
     <div class="ec-step-select">
       <select id="wizard-ec" onchange="updateECDescription()">
-        <option value="ec:0.2">0.2 mS/cm - Plain Water Supplement</option>
-        <option value="ec:0.4">0.4 mS/cm - Recovery/Flush</option>
-        <option value="ec:0.6">0.6 mS/cm - Fresh Clones/Cuttings</option>
-        <option value="ec:0.8">0.8 mS/cm - Rooted Cuttings</option>
-        <option value="ec:1.0">1.0 mS/cm - Seedlings/Young Plants</option>
-        <option value="ec:1.2" selected>1.2 mS/cm - General Purpose</option>
-        <option value="ec:1.5">1.5 mS/cm - Vegetative Growth</option>
-        <option value="ec:1.8">1.8 mS/cm - Active Growth</option>
-        <option value="ec:2.0">2.0 mS/cm - Heavy Feeders</option>
-        <option value="ec:2.5">2.5 mS/cm - Flowering/Fruiting</option>
-        <option value="ec:3.0">3.0 mS/cm - Maximum (experienced growers)</option>
+        <option value="ec:0.2" data-i18n-label="ecPlainWater">0.2 mS/cm - Plain Water Supplement</option>
+        <option value="ec:0.4" data-i18n-label="ecRecoveryFlush">0.4 mS/cm - Recovery/Flush</option>
+        <option value="ec:0.6" data-i18n-label="ecFreshClones">0.6 mS/cm - Fresh Clones/Cuttings</option>
+        <option value="ec:0.8" data-i18n-label="ecRootedCuttings">0.8 mS/cm - Rooted Cuttings</option>
+        <option value="ec:1.0" data-i18n-label="ecSeedlings">1.0 mS/cm - Seedlings/Young Plants</option>
+        <option value="ec:1.2" selected data-i18n-label="ecGeneralPurpose">1.2 mS/cm - General Purpose</option>
+        <option value="ec:1.5" data-i18n-label="ecVegetativeGrowth">1.5 mS/cm - Vegetative Growth</option>
+        <option value="ec:1.8" data-i18n-label="ecActiveGrowth">1.8 mS/cm - Active Growth</option>
+        <option value="ec:2.0" data-i18n-label="ecHeavyFeeders">2.0 mS/cm - Heavy Feeders</option>
+        <option value="ec:2.5" data-i18n-label="ecFloweringFruiting">2.5 mS/cm - Flowering/Fruiting</option>
+        <option value="ec:3.0" data-i18n-label="ecMaximum">3.0 mS/cm - Maximum (experienced growers)</option>
       </select>
-      <p class="ec-description" id="ec-description">Good starting point for most plants in active growth.</p>
+      <p class="ec-description" id="ec-description" data-i18n="ecGeneralDescription">Good starting point for most plants in active growth.</p>
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-back" onclick="backToCalcModeStep()">
+      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">
         ← Back
       </button>
-      <button class="btn-continue" onclick="proceedFromECStep()">
+      <button class="btn-continue" onclick="proceedFromECStep()" data-i18n="continue">
         Continue →
       </button>
     </div>
@@ -2069,16 +2078,16 @@ permalink: /fertilizer-calculator/
 
   <!-- Step: Fertilizer Selection + Quantities (for Grams→PPM) -->
   <div id="grams-input-step" class="wizard-input-step">
-    <div class="step-indicator" id="grams-input-step-indicator">Step 3 of 3</div>
-    <h3>Select Fertilizers & Enter Amounts</h3>
-    <p>Check the fertilizers you're using and enter how many grams of each you'll add to your solution.</p>
+    <div class="step-indicator" id="grams-input-step-indicator" data-i18n-key="stepOf">Step 3 of 3</div>
+    <h3 data-i18n="selectFertilizersAndEnterAmounts">Select Fertilizers & Enter Amounts</h3>
+    <p data-i18n="selectFertilizersDescription">Check the fertilizers you're using and enter how many grams of each you'll add to your solution.</p>
 
     <div class="wizard-fertilizer-section">
       <div class="wizard-fertilizer-search">
-        <input type="text" id="wizard-grams-search" placeholder="Search fertilizers..." oninput="filterWizardGramsFertilizers(this.value)">
+        <input type="text" id="wizard-grams-search" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers..." oninput="filterWizardGramsFertilizers(this.value)">
       </div>
       <div class="wizard-selection-controls">
-        <button onclick="clearWizardGramsSelections()">Clear All</button>
+        <button onclick="clearWizardGramsSelections()" data-i18n="clearAll">Clear All</button>
       </div>
       <div class="wizard-fertilizer-list" id="wizard-grams-fertilizer-list">
         <!-- Populated by JavaScript -->
@@ -2086,111 +2095,111 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" onclick="backToVolumeStep()">← Back</button>
-      <button class="btn-calculate" onclick="calculateFromWizardGrams()">Calculate PPM</button>
+      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">← Back</button>
+      <button class="btn-calculate" onclick="calculateFromWizardGrams()" data-i18n="calculatePpm">Calculate PPM</button>
     </div>
   </div>
 
   <!-- Step: Target PPM Values (for PPM→Grams) -->
   <div id="ppm-targets-step" class="wizard-input-step">
-    <div class="step-indicator" id="ppm-targets-step-indicator">Step 4 of 5</div>
-    <h3>Enter Target PPM Values</h3>
-    <p>Enter the nutrient concentrations you want to achieve. At least one value is required.</p>
+    <div class="step-indicator" id="ppm-targets-step-indicator" data-i18n-key="stepOf">Step 4 of 5</div>
+    <h3 data-i18n="enterTargetPpmValues">Enter Target PPM Values</h3>
+    <p data-i18n="targetPpmDescription">Enter the nutrient concentrations you want to achieve. At least one value is required.</p>
 
     <div class="input-grid">
       <div class="input-field">
-        <label for="wizard-target-n">Nitrogen (N)</label>
+        <label for="wizard-target-n" data-i18n="nitrogen">Nitrogen (N)</label>
         <input type="number" id="wizard-target-n" min="0" step="1" placeholder="e.g., 150">
       </div>
       <div class="input-field">
-        <label for="wizard-target-p" id="wizard-target-p-label">Phosphorus (P₂O₅)</label>
+        <label for="wizard-target-p" id="wizard-target-p-label" data-i18n="phosphorusOxide">Phosphorus (P₂O₅)</label>
         <input type="number" id="wizard-target-p" min="0" step="1" placeholder="e.g., 50">
       </div>
       <div class="input-field">
-        <label for="wizard-target-k" id="wizard-target-k-label">Potassium (K₂O)</label>
+        <label for="wizard-target-k" id="wizard-target-k-label" data-i18n="potassiumOxide">Potassium (K₂O)</label>
         <input type="number" id="wizard-target-k" min="0" step="1" placeholder="e.g., 200">
       </div>
       <div class="input-field">
-        <label for="wizard-target-ca">Calcium (Ca)</label>
+        <label for="wizard-target-ca" data-i18n="calcium">Calcium (Ca)</label>
         <input type="number" id="wizard-target-ca" min="0" step="1" placeholder="e.g., 150">
       </div>
       <div class="input-field">
-        <label for="wizard-target-mg">Magnesium (Mg)</label>
+        <label for="wizard-target-mg" data-i18n="magnesium">Magnesium (Mg)</label>
         <input type="number" id="wizard-target-mg" min="0" step="1" placeholder="e.g., 50">
       </div>
       <div class="input-field">
-        <label for="wizard-target-s">Sulfur (S)</label>
-        <input type="number" id="wizard-target-s" min="0" step="1" placeholder="Optional">
+        <label for="wizard-target-s" data-i18n="sulfur">Sulfur (S)</label>
+        <input type="number" id="wizard-target-s" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
-        <label for="wizard-target-si">Silicon (Si)</label>
-        <input type="number" id="wizard-target-si" min="0" step="1" value="0" placeholder="Optional">
+        <label for="wizard-target-si" data-i18n="silicon">Silicon (Si)</label>
+        <input type="number" id="wizard-target-si" min="0" step="1" value="0" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" onclick="backToCalcModeStep()">← Back</button>
-      <button class="btn-continue" onclick="proceedToFormulaFertilizerStep()">Continue →</button>
+      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">← Back</button>
+      <button class="btn-continue" onclick="proceedToFormulaFertilizerStep()" data-i18n="continue">Continue →</button>
     </div>
   </div>
 
   <!-- Step: NPK Ratios (for NPK Ratio→Grams) -->
   <div id="npk-ratios-step" class="wizard-input-step">
-    <div class="step-indicator" id="npk-ratios-step-indicator">Step 5 of 6</div>
-    <h3>Enter Nutrient Ratios</h3>
-    <p>Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one must be greater than zero.</p>
+    <div class="step-indicator" id="npk-ratios-step-indicator" data-i18n-key="stepOf">Step 5 of 6</div>
+    <h3 data-i18n="enterNutrientRatios">Enter Nutrient Ratios</h3>
+    <p data-i18n="nutrientRatiosDescription">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one must be greater than zero.</p>
 
     <div class="input-grid">
       <div class="input-field">
-        <label for="wizard-ratio-n">Nitrogen (N)</label>
+        <label for="wizard-ratio-n" data-i18n="nitrogen">Nitrogen (N)</label>
         <input type="number" id="wizard-ratio-n" min="0" step="1" placeholder="e.g., 3">
       </div>
       <div class="input-field">
-        <label for="wizard-ratio-p">Phosphorus (P)</label>
+        <label for="wizard-ratio-p" data-i18n="phosphorusElemental">Phosphorus (P)</label>
         <input type="number" id="wizard-ratio-p" min="0" step="1" placeholder="e.g., 1">
       </div>
       <div class="input-field">
-        <label for="wizard-ratio-k">Potassium (K)</label>
+        <label for="wizard-ratio-k" data-i18n="potassiumElemental">Potassium (K)</label>
         <input type="number" id="wizard-ratio-k" min="0" step="1" placeholder="e.g., 2">
       </div>
       <div class="input-field">
-        <label for="wizard-ratio-ca">Calcium (Ca)</label>
-        <input type="number" id="wizard-ratio-ca" min="0" step="1" placeholder="Optional">
+        <label for="wizard-ratio-ca" data-i18n="calcium">Calcium (Ca)</label>
+        <input type="number" id="wizard-ratio-ca" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
-        <label for="wizard-ratio-mg">Magnesium (Mg)</label>
-        <input type="number" id="wizard-ratio-mg" min="0" step="1" placeholder="Optional">
+        <label for="wizard-ratio-mg" data-i18n="magnesium">Magnesium (Mg)</label>
+        <input type="number" id="wizard-ratio-mg" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
-        <label for="wizard-ratio-s">Sulfur (S)</label>
-        <input type="number" id="wizard-ratio-s" min="0" step="1" placeholder="Optional">
+        <label for="wizard-ratio-s" data-i18n="sulfur">Sulfur (S)</label>
+        <input type="number" id="wizard-ratio-s" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
-        <label for="wizard-ratio-si">Silicon (Si) PPM</label>
-        <input type="number" id="wizard-ratio-si" min="0" step="1" value="0" placeholder="Target PPM">
+        <label for="wizard-ratio-si" data-i18n="siliconPpm">Silicon (Si) PPM</label>
+        <input type="number" id="wizard-ratio-si" min="0" step="1" value="0" data-i18n-placeholder="targetPpm" placeholder="Target PPM">
       </div>
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" onclick="backToECStep()">← Back</button>
-      <button class="btn-continue" onclick="proceedToReverseFertilizerStep()">Continue →</button>
+      <button class="btn-back" onclick="backToECStep()" data-i18n="back">← Back</button>
+      <button class="btn-continue" onclick="proceedToReverseFertilizerStep()" data-i18n="continue">Continue →</button>
     </div>
   </div>
 
   <!-- Step: Select Available Fertilizers (for PPM→Grams and NPK Ratio→Grams) -->
   <div id="fertilizer-select-step" class="wizard-input-step">
-    <div class="step-indicator" id="fertilizer-select-step-indicator">Step 5 of 5</div>
-    <h3>Select Available Fertilizers</h3>
-    <p>Choose the fertilizers you have on hand. The calculator will use only these to build your formula.</p>
+    <div class="step-indicator" id="fertilizer-select-step-indicator" data-i18n-key="stepOf">Step 5 of 5</div>
+    <h3 data-i18n="selectAvailableFertilizers">Select Available Fertilizers</h3>
+    <p data-i18n="selectAvailableFertilizersDescription">Choose the fertilizers you have on hand. The calculator will use only these to build your formula.</p>
 
     <div class="wizard-fertilizer-section">
       <div class="wizard-fertilizer-search">
-        <input type="text" id="wizard-available-search" placeholder="Search fertilizers..." oninput="filterWizardAvailableFertilizers(this.value)">
+        <input type="text" id="wizard-available-search" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers..." oninput="filterWizardAvailableFertilizers(this.value)">
       </div>
       <div class="wizard-selection-controls">
-        <button onclick="selectAllWizardFertilizers()">Select All</button>
-        <button onclick="deselectAllWizardFertilizers()">Deselect All</button>
-        <button onclick="selectCommonWizardFertilizers()">Common Only</button>
+        <button onclick="selectAllWizardFertilizers()" data-i18n="selectAll">Select All</button>
+        <button onclick="deselectAllWizardFertilizers()" data-i18n="deselectAll">Deselect All</button>
+        <button onclick="selectCommonWizardFertilizers()" data-i18n="commonOnly">Common Only</button>
       </div>
       <div class="wizard-fertilizer-list" id="wizard-available-fertilizer-list">
         <!-- Populated by JavaScript -->
@@ -2198,8 +2207,8 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-back" id="fertilizer-select-back-btn" onclick="backFromFertilizerSelectStep()">← Back</button>
-      <button class="btn-calculate" id="fertilizer-select-calc-btn" onclick="calculateFromWizardFertilizerSelect()">Calculate</button>
+      <button class="btn-back" id="fertilizer-select-back-btn" onclick="backFromFertilizerSelectStep()" data-i18n="back">← Back</button>
+      <button class="btn-calculate" id="fertilizer-select-calc-btn" onclick="calculateFromWizardFertilizerSelect()" data-i18n="calculate">Calculate</button>
     </div>
   </div>
 
@@ -2211,7 +2220,7 @@ permalink: /fertilizer-calculator/
           <path d="M19 12H5"></path>
           <path d="M12 19l-7-7 7-7"></path>
         </svg>
-        Change Settings
+        <span data-i18n="changeSettings">Change Settings</span>
       </button>
       <span class="wizard-current-mode" id="wizard-results-mode"></span>
     </div>
@@ -2228,15 +2237,15 @@ permalink: /fertilizer-calculator/
           <path d="M19 12H5"></path>
           <path d="M12 19l-7-7 7-7"></path>
         </svg>
-        Change Settings
+        <span data-i18n="changeSettings">Change Settings</span>
       </button>
       <span class="wizard-current-mode" id="wizard-current-mode"></span>
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-tab-target="ppm-calc" onclick="switchTab('ppm-calc', this)">Grams to PPM</button>
-      <button class="tab" data-tab-target="formula-builder" onclick="switchTab('formula-builder', this)">PPM to Grams</button>
-      <button class="tab" data-tab-target="reverse-calc" onclick="switchTab('reverse-calc', this)">NPK Ratio to Grams</button>
+      <button class="tab active" data-tab-target="ppm-calc" onclick="switchTab('ppm-calc', this)" data-i18n="tabGramsToPpm">Grams to PPM</button>
+      <button class="tab" data-tab-target="formula-builder" onclick="switchTab('formula-builder', this)" data-i18n="tabPpmToGrams">PPM to Grams</button>
+      <button class="tab" data-tab-target="reverse-calc" onclick="switchTab('reverse-calc', this)" data-i18n="tabNpkRatioToGrams">NPK Ratio to Grams</button>
     </div>
 
     <!-- PPM Calculator Tab -->
@@ -2754,6 +2763,277 @@ permalink: /fertilizer-calculator/
 <script src="/assets/vendor/highs/highs.js"></script>
 
 <script>
+// =============================================================================
+// INTERNATIONALIZATION (i18n) SUPPORT
+// =============================================================================
+
+const i18n = {
+  currentLanguage: 'en',
+
+  translations: {
+    en: {
+      // Page title
+      pageTitle: 'Fertilizer Calculator',
+
+      // Mode selector (Step 1)
+      whatWouldYouLikeToDo: 'What would you like to do?',
+      chooseModeDescription: 'Choose a calculator mode based on what information you have.',
+
+      // Mode cards
+      gramsToPpm: 'Grams → PPM',
+      gramsToPpmDescription: 'Calculate what nutrient concentrations (PPM) you\'ll get from specific amounts of fertilizers.',
+      ppmToGrams: 'PPM → Grams',
+      ppmToGramsDescription: 'Enter your target PPM values and get the exact fertilizer amounts needed to achieve them.',
+      npkRatioToGrams: 'NPK Ratio → Grams',
+      npkRatioToGramsDescription: 'Enter nutrient ratios (like 3-1-2) and a target EC to get fertilizer amounts that match your desired balance.',
+      bestFor: 'Best for:',
+      gramsToPpmUseCase: 'You have fertilizers weighed out and want to know the resulting nutrient levels in your solution.',
+      ppmToGramsUseCase: 'You have specific PPM targets (e.g., from a recipe or plant requirements) and need to know how much of each fertilizer to use.',
+      npkRatioUseCase: 'You know the nutrient ratio you want (e.g., for a specific growth stage) and want to scale it to your desired EC/strength.',
+
+      // Volume step (Step 2)
+      howMuchSolution: 'How much solution are you making?',
+      volumeDescription: 'Enter the total volume of water you\'ll be mixing your fertilizers into.',
+      liters: 'liters',
+
+      // Calc mode step (Step 3)
+      howToEnterValues: 'How do you want to enter values?',
+      calcModeDescription: 'Choose between commercial fertilizer notation or pure elemental values.',
+      oxideForms: 'Oxide Forms (P₂O₅, K₂O)',
+      oxideFormsDescription: 'Commercial standard - matches fertilizer bag labels',
+      elementalForms: 'Elemental Forms (P, K)',
+      elementalFormsDescription: 'Pure elements - for scientific calculations',
+
+      // EC step (Step 4)
+      whatStrengthSolution: 'What strength solution do you want?',
+      ecDescription: 'Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we\'ll scale the fertilizer amounts to hit that strength for your batch.',
+
+      // EC options
+      ecPlainWater: 'Plain Water Supplement',
+      ecRecoveryFlush: 'Recovery/Flush',
+      ecFreshClones: 'Fresh Clones/Cuttings',
+      ecRootedCuttings: 'Rooted Cuttings',
+      ecSeedlings: 'Seedlings/Young Plants',
+      ecGeneralPurpose: 'General Purpose',
+      ecVegetativeGrowth: 'Vegetative Growth',
+      ecActiveGrowth: 'Active Growth',
+      ecHeavyFeeders: 'Heavy Feeders',
+      ecFloweringFruiting: 'Flowering/Fruiting',
+      ecMaximum: 'Maximum (experienced growers)',
+      ecGeneralDescription: 'Good starting point for most plants in active growth.',
+
+      // Input steps
+      selectFertilizersAndEnterAmounts: 'Select Fertilizers & Enter Amounts',
+      selectFertilizersDescription: 'Check the fertilizers you\'re using and enter how many grams of each you\'ll add to your solution.',
+      enterTargetPpmValues: 'Enter Target PPM Values',
+      targetPpmDescription: 'Enter the nutrient concentrations you want to achieve. At least one value is required.',
+      enterNutrientRatios: 'Enter Nutrient Ratios',
+      nutrientRatiosDescription: 'Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one must be greater than zero.',
+      selectAvailableFertilizers: 'Select Available Fertilizers',
+      selectAvailableFertilizersDescription: 'Choose the fertilizers you have on hand. The calculator will use only these to build your formula.',
+
+      // Buttons
+      back: '← Back',
+      continue: 'Continue →',
+      calculate: 'Calculate',
+      calculatePpm: 'Calculate PPM',
+      calculateFertilizers: 'Calculate Fertilizers',
+      buildFormula: 'Build Formula',
+      clear: 'Clear',
+      clearAll: 'Clear All',
+      selectAll: 'Select All',
+      deselectAll: 'Deselect All',
+      commonOnly: 'Common Only',
+      changeSettings: 'Change Settings',
+      copyResults: 'Copy Results',
+      twoTanks: 'Two Tanks',
+
+      // Nutrient labels
+      nitrogen: 'Nitrogen (N)',
+      phosphorusOxide: 'Phosphorus (P₂O₅)',
+      phosphorusElemental: 'Phosphorus (P)',
+      potassiumOxide: 'Potassium (K₂O)',
+      potassiumElemental: 'Potassium (K)',
+      calcium: 'Calcium (Ca)',
+      magnesium: 'Magnesium (Mg)',
+      sulfur: 'Sulfur (S)',
+      silicon: 'Silicon (Si)',
+      siliconPpm: 'Silicon (Si) PPM',
+
+      // Placeholders
+      searchFertilizers: 'Search fertilizers...',
+      egValue: 'e.g.,',
+      optional: 'Optional',
+      targetPpm: 'Target PPM',
+
+      // Results sections
+      selectedFertilizers: 'Selected Fertilizers',
+      resultsPpm: 'Results (PPM)',
+      ionBalance: 'Ion Balance',
+      nutrientRatioAnalysis: 'Nutrient Ratio Analysis',
+      ecPrediction: 'EC Prediction',
+      warningsRecommendations: 'Warnings & Recommendations',
+      recommendedFormula: 'Recommended Formula',
+      requiredFertilizers: 'Required Fertilizers',
+
+      // Tabs
+      tabGramsToPpm: 'Grams to PPM',
+      tabPpmToGrams: 'PPM to Grams',
+      tabNpkRatioToGrams: 'NPK Ratio to Grams',
+
+      // Input mode
+      inputMode: 'Input Mode',
+      oxideFormsCommercial: 'Oxide Forms (P₂O₅, K₂O) - Commercial Standard',
+      elementalFormsPure: 'Elemental Forms (P, K) - Pure Elements',
+      oxideModeTip: 'Enter P₂O₅ and K₂O values (matches fertilizer labels and NPK Ratio to Grams output)',
+      elementalModeTip: 'Enter pure P and K values (scientific calculations)',
+
+      // Reverse calculator specific
+      targetNutrientRatios: 'Target Nutrient Ratios',
+      targetNutrientRatiosDescription: 'Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one nutrient must be greater than zero. The calculator will find fertilizer amounts that match these ratios.',
+      calculationMode: 'Calculation Mode',
+      targetEc: 'Target EC (mS/cm)',
+      targetEcDescription: 'Select your target EC. Fertilizer amounts will be scaled to achieve this conductivity.',
+      ratiosPreserved: 'Ratios are preserved while adjusting overall concentration.',
+      selectFertilizersToUse: 'Select Fertilizers to Use',
+      selectFertilizersToUseDescription: 'Choose which fertilizers you want to use. The calculator will find the best combination from your selection.',
+      priorityDescription: 'Lower values (1-10) = more preferred. The solver will try to use higher-priority fertilizers first.',
+
+      // Volume label
+      solutionVolume: 'Solution Volume:',
+
+      // Available fertilizers
+      availableFertilizers: 'Available Fertilizers',
+      availableFertilizersDescription: 'Select the fertilizers you have available. The calculator will use only these to build your formula.',
+
+      // Notes
+      oxideConversionNote: 'Oxide values (P₂O₅, K₂O, etc.) are automatically converted to elemental forms (P, K, etc.) using standard conversion factors.',
+      ionBalanceNote: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.',
+      nutrientRatioNote: 'These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.',
+
+      // Step indicators
+      stepOf: 'Step {current} of {total}',
+
+      // Progress bar
+      calculating: 'Calculating...',
+      initializing: 'Initializing...',
+      initializingSolver: 'Initializing solver...',
+
+      // Language selector
+      language: 'Language',
+
+      // Priority
+      priority: 'Priority'
+    }
+    // Additional languages can be added here in the future
+    // e.g., es: { ... }, fr: { ... }, de: { ... }
+  },
+
+  // Get translation for a key
+  t(key, replacements = {}) {
+    const lang = this.translations[this.currentLanguage] || this.translations.en;
+    let text = lang[key] || this.translations.en[key] || key;
+
+    // Handle replacements like {current} and {total}
+    Object.keys(replacements).forEach(placeholder => {
+      text = text.replace(new RegExp(`\\{${placeholder}\\}`, 'g'), replacements[placeholder]);
+    });
+
+    return text;
+  },
+
+  // Set the current language and update UI
+  setLanguage(langCode) {
+    if (this.translations[langCode]) {
+      this.currentLanguage = langCode;
+      localStorage.setItem('fertCalcLanguage', langCode);
+      this.updateUI();
+    }
+  },
+
+  // Update all elements with data-i18n attribute
+  updateUI() {
+    // Update elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (key) {
+        el.textContent = this.t(key);
+      }
+    });
+
+    // Update elements with data-i18n-placeholder attribute
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (key) {
+        el.placeholder = this.t(key);
+      }
+    });
+
+    // Update elements with data-i18n-title attribute
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.getAttribute('data-i18n-title');
+      if (key) {
+        el.title = this.t(key);
+      }
+    });
+
+    // Update elements with data-i18n-html attribute (for HTML content)
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      const key = el.getAttribute('data-i18n-html');
+      if (key) {
+        el.innerHTML = this.t(key);
+      }
+    });
+  },
+
+  // Initialize language from localStorage or browser preference
+  init() {
+    const savedLang = localStorage.getItem('fertCalcLanguage');
+    if (savedLang && this.translations[savedLang]) {
+      this.currentLanguage = savedLang;
+    } else {
+      // Try to detect browser language
+      const browserLang = navigator.language?.split('-')[0];
+      if (browserLang && this.translations[browserLang]) {
+        this.currentLanguage = browserLang;
+      }
+    }
+    // Initial UI update will happen after DOM is ready
+  },
+
+  // Get list of available languages
+  getAvailableLanguages() {
+    return Object.keys(this.translations).map(code => ({
+      code,
+      name: this.getLanguageName(code)
+    }));
+  },
+
+  // Get display name for a language code
+  getLanguageName(code) {
+    const names = {
+      en: 'English',
+      es: 'Español',
+      fr: 'Français',
+      de: 'Deutsch',
+      pt: 'Português',
+      it: 'Italiano',
+      zh: '中文',
+      ja: '日本語',
+      ko: '한국어',
+      hi: 'हिन्दी'
+    };
+    return names[code] || code.toUpperCase();
+  }
+};
+
+// Initialize i18n
+i18n.init();
+
+// =============================================================================
+// END INTERNATIONALIZATION
+// =============================================================================
+
 // Progress bar helper functions
 const progressBar = {
   overlay: null,
@@ -4216,9 +4496,11 @@ function backToECStep() {
 }
 
 function backToCalcModeStep() {
-  // Hide the calculator content and EC step
+  // Hide the calculator content, EC step, and input steps
   document.getElementById('calculator-content').classList.remove('active');
   document.getElementById('ec-step').classList.remove('active');
+  document.getElementById('ppm-targets-step').classList.remove('active');
+  document.getElementById('npk-ratios-step').classList.remove('active');
 
   // Show the calc mode step
   document.getElementById('calc-mode-step').classList.add('active');
@@ -4712,7 +4994,7 @@ async function calculateFromWizardFertilizerSelect() {
     });
 
     // Run the calculation and wait for it to complete
-    await calculateFormula();
+    await buildFormula();
 
     // Copy results to wizard results container
     const resultsContainer = document.getElementById('wizard-results-container');
@@ -4814,6 +5096,15 @@ function init() {
 
   // Add Enter key support for wizard steps
   setupWizardKeyboardNavigation();
+
+  // Initialize i18n (update UI with current language)
+  i18n.updateUI();
+
+  // Set language selector to current language
+  const langSelect = document.getElementById('language-select');
+  if (langSelect) {
+    langSelect.value = i18n.currentLanguage;
+  }
 }
 
 // Setup Enter key navigation for all wizard steps
