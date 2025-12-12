@@ -4704,7 +4704,7 @@ function calculateFromWizardGrams() {
 
   // Clear all existing fertilizer selections in main calculator
   FERTILIZERS.forEach(fert => {
-    const mainCheckbox = document.getElementById(`fert-${fert.id}`);
+    const mainCheckbox = document.getElementById(`check-${fert.id}`);
     const mainInput = document.getElementById(`grams-${fert.id}`);
     if (mainCheckbox) mainCheckbox.checked = false;
     if (mainInput) mainInput.value = '';
@@ -4715,7 +4715,7 @@ function calculateFromWizardGrams() {
   FERTILIZERS.forEach(fert => {
     const wizardCheckbox = document.getElementById(`wizard-grams-check-${fert.id}`);
     const wizardInput = document.getElementById(`wizard-grams-input-${fert.id}`);
-    const mainCheckbox = document.getElementById(`fert-${fert.id}`);
+    const mainCheckbox = document.getElementById(`check-${fert.id}`);
     const mainInput = document.getElementById(`grams-${fert.id}`);
 
     if (wizardCheckbox && wizardCheckbox.checked && wizardInput && mainCheckbox && mainInput) {
