@@ -326,6 +326,641 @@ permalink: /fertilizer-calculator/
     display: block;
   }
 
+  /* Wizard Mode Selector */
+  .mode-selector {
+    padding: 20px 0;
+  }
+
+  .mode-selector h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  .mode-selector > p {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+  }
+
+  .mode-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .mode-card {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+
+  .mode-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .mode-card h3 {
+    color: #007bff;
+    margin: 0 0 12px 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mode-card h3 svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .mode-card .description {
+    color: #555;
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin-bottom: 15px;
+  }
+
+  .mode-card .use-case {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.85em;
+  }
+
+  .mode-card .use-case strong {
+    color: #333;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .mode-card .use-case span {
+    color: #666;
+  }
+
+  .wizard-header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding: 15px 0;
+    margin: -15px 0 15px 0;
+    border-bottom: 1px solid #eee;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .wizard-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #555;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .wizard-back-btn:hover {
+    background: #e9ecef;
+    border-color: #ccc;
+    color: #333;
+  }
+
+  .wizard-back-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .wizard-current-mode {
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .wizard-current-mode strong {
+    color: #007bff;
+  }
+
+  /* Step 2: Volume Selection */
+  .volume-step {
+    display: none;
+    max-width: 450px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .volume-step.active {
+    display: block;
+  }
+
+  .volume-step h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.3em;
+  }
+
+  .volume-step .step-indicator {
+    color: #007bff;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+  }
+
+  .volume-step p {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+  }
+
+  .volume-step-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+  }
+
+  .volume-step-input input {
+    width: 120px;
+    padding: 12px 15px;
+    font-size: 1.2em;
+    text-align: center;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+  }
+
+  .volume-step-input input:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  .volume-step-input span {
+    font-size: 1.1em;
+    color: #555;
+  }
+
+  .volume-step-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .volume-step-buttons button {
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .volume-step-buttons .btn-back {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #555;
+  }
+
+  .volume-step-buttons .btn-back:hover {
+    background: #e9ecef;
+  }
+
+  .volume-step-buttons .btn-continue {
+    background: #007bff;
+    border: 1px solid #007bff;
+    color: #fff;
+  }
+
+  .volume-step-buttons .btn-continue:hover {
+    background: #0056b3;
+  }
+
+  /* Step 3: Calculation Mode Selection */
+  .calc-mode-step {
+    display: none;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .calc-mode-step.active {
+    display: block;
+  }
+
+  .calc-mode-step h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.3em;
+  }
+
+  .calc-mode-step .step-indicator {
+    color: #007bff;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+  }
+
+  .calc-mode-step > p {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+  }
+
+  .calc-mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+    text-align: left;
+  }
+
+  .calc-mode-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .calc-mode-option:hover {
+    border-color: #007bff;
+    background: #f8f9ff;
+  }
+
+  .calc-mode-option.selected {
+    border-color: #007bff;
+    background: #f0f7ff;
+  }
+
+  .calc-mode-option input[type="radio"] {
+    margin-top: 3px;
+    accent-color: #007bff;
+  }
+
+  .calc-mode-option-content {
+    flex: 1;
+  }
+
+  .calc-mode-option-content strong {
+    display: block;
+    color: #333;
+    margin-bottom: 4px;
+  }
+
+  .calc-mode-option-content span {
+    font-size: 0.85em;
+    color: #666;
+  }
+
+  /* Step 4: Target EC Selection */
+  .ec-step {
+    display: none;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .ec-step.active {
+    display: block;
+  }
+
+  .ec-step h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.3em;
+  }
+
+  .ec-step .step-indicator {
+    color: #007bff;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+  }
+
+  .ec-step > p {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+  }
+
+  .ec-step-select {
+    margin-bottom: 25px;
+  }
+
+  .ec-step-select select {
+    width: 100%;
+    max-width: 350px;
+    padding: 12px 15px;
+    font-size: 1em;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .ec-step-select select:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  .ec-step .ec-description {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 10px;
+  }
+
+  /* Wizard Input Steps (larger steps with form inputs) */
+  .wizard-input-step {
+    display: none;
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 25px 30px;
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+  }
+
+  .wizard-input-step.active {
+    display: block;
+  }
+
+  .wizard-input-step .step-indicator {
+    color: #007bff;
+    font-size: 0.85em;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .wizard-input-step h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.3em;
+    text-align: center;
+  }
+
+  .wizard-input-step > p {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+    text-align: center;
+  }
+
+  .wizard-input-step .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .wizard-input-step .input-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wizard-input-step .input-field label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 0.85em;
+    color: #444;
+  }
+
+  .wizard-input-step .input-field input {
+    padding: 10px 12px;
+    font-size: 1em;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+  }
+
+  .wizard-input-step .input-field input:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  .wizard-input-step .input-field input::placeholder {
+    color: #aaa;
+  }
+
+  /* Fertilizer selection in wizard */
+  .wizard-fertilizer-section {
+    margin-bottom: 20px;
+  }
+
+  .wizard-fertilizer-section h4 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    color: #333;
+  }
+
+  .wizard-fertilizer-search {
+    margin-bottom: 12px;
+  }
+
+  .wizard-fertilizer-search input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95em;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+
+  .wizard-fertilizer-search input:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  .wizard-fertilizer-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px;
+  }
+
+  .wizard-fertilizer-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .wizard-fertilizer-item:hover {
+    background: #f5f5f5;
+  }
+
+  .wizard-fertilizer-item.selected {
+    background: #e8f4ff;
+  }
+
+  .wizard-fertilizer-item input[type="checkbox"],
+  .wizard-fert-checkbox {
+    margin-right: 10px;
+    accent-color: #007bff;
+    flex-shrink: 0;
+  }
+
+  .wizard-fertilizer-item .fert-name,
+  .wizard-fert-label {
+    flex: 1;
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: pointer;
+  }
+
+  .wizard-fert-name {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .wizard-fert-aliases {
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  .wizard-fertilizer-item .fert-grams,
+  .wizard-grams-input {
+    width: 80px;
+    padding: 6px 8px;
+    font-size: 0.9em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .wizard-fertilizer-item .fert-grams:disabled,
+  .wizard-grams-input:disabled {
+    background: #f5f5f5;
+    color: #999;
+  }
+
+  .wizard-grams-input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  }
+
+  .wizard-selection-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .wizard-selection-controls button {
+    padding: 6px 12px;
+    font-size: 0.8em;
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .wizard-selection-controls button:hover {
+    background: #e9ecef;
+  }
+
+  .wizard-step-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .wizard-step-buttons button {
+    padding: 12px 28px;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .wizard-step-buttons .btn-back {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #555;
+  }
+
+  .wizard-step-buttons .btn-back:hover {
+    background: #e9ecef;
+  }
+
+  .wizard-step-buttons .btn-continue {
+    background: #007bff;
+    border: 1px solid #007bff;
+    color: #fff;
+  }
+
+  .wizard-step-buttons .btn-continue:hover {
+    background: #0056b3;
+  }
+
+  .wizard-step-buttons .btn-calculate {
+    background: #28a745;
+    border: 1px solid #28a745;
+    color: #fff;
+  }
+
+  .wizard-step-buttons .btn-calculate:hover {
+    background: #218838;
+  }
+
+  .calculator-content {
+    display: none;
+  }
+
+  .calculator-content.active {
+    display: block;
+  }
+
+  .wizard-results {
+    display: none;
+  }
+
+  .wizard-results.active {
+    display: block;
+  }
+
+  #wizard-results-container {
+    margin-top: 20px;
+  }
+
+  #wizard-results-container .results-section {
+    display: block !important;
+  }
+
   .target-input-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1277,16 +1912,334 @@ permalink: /fertilizer-calculator/
 </div>
 
 <div class="calculator-container">
-  <h1>Fertilizer PPM Calculator</h1>
-  <p>Calculate nutrient concentrations (PPM) from fertilizer additions to water.</p>
+  <h1>Fertilizer Calculator</h1>
 
-  <div class="tabs">
-    <button class="tab active" data-tab-target="ppm-calc" onclick="switchTab('ppm-calc', this)">Grams to PPM</button>
-    <button class="tab" data-tab-target="formula-builder" onclick="switchTab('formula-builder', this)">PPM to Grams</button>
-    <button class="tab" data-tab-target="reverse-calc" onclick="switchTab('reverse-calc', this)">NPK Ratio to Grams</button>
+  <!-- Mode Selector (Wizard Step 1) -->
+  <div id="mode-selector" class="mode-selector">
+    <h2>What would you like to do?</h2>
+    <p>Choose a calculator mode based on what information you have.</p>
+
+    <div class="mode-cards">
+      <!-- Grams to PPM -->
+      <div class="mode-card" onclick="selectMode('ppm-calc')">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L6 8"></path>
+            <path d="M18 2L18 8"></path>
+            <path d="M6 8C6 8 6 22 12 22C18 22 18 8 18 8"></path>
+            <path d="M6 8H18"></path>
+          </svg>
+          Grams → PPM
+        </h3>
+        <p class="description">
+          Calculate what nutrient concentrations (PPM) you'll get from specific amounts of fertilizers.
+        </p>
+        <div class="use-case">
+          <strong>Best for:</strong>
+          <span>You have fertilizers weighed out and want to know the resulting nutrient levels in your solution.</span>
+        </div>
+      </div>
+
+      <!-- PPM to Grams -->
+      <div class="mode-card" onclick="selectMode('formula-builder')">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+          PPM → Grams
+        </h3>
+        <p class="description">
+          Enter your target PPM values and get the exact fertilizer amounts needed to achieve them.
+        </p>
+        <div class="use-case">
+          <strong>Best for:</strong>
+          <span>You have specific PPM targets (e.g., from a recipe or plant requirements) and need to know how much of each fertilizer to use.</span>
+        </div>
+      </div>
+
+      <!-- NPK Ratio to Grams -->
+      <div class="mode-card" onclick="selectMode('reverse-calc')">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"></path>
+            <path d="M18 17V9"></path>
+            <path d="M13 17V5"></path>
+            <path d="M8 17v-3"></path>
+          </svg>
+          NPK Ratio → Grams
+        </h3>
+        <p class="description">
+          Enter nutrient ratios (like 3-1-2) and a target EC to get fertilizer amounts that match your desired balance.
+        </p>
+        <div class="use-case">
+          <strong>Best for:</strong>
+          <span>You know the nutrient ratio you want (e.g., for a specific growth stage) and want to scale it to your desired EC/strength.</span>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- PPM Calculator Tab -->
+  <!-- Step 2: Volume Selection -->
+  <div id="volume-step" class="volume-step">
+    <div class="step-indicator" id="volume-step-indicator">Step 2 of 2</div>
+    <h3>How much solution are you making?</h3>
+    <p>Enter the total volume of water you'll be mixing your fertilizers into.</p>
+
+    <div class="volume-step-input">
+      <input type="number" id="wizard-volume" value="10" min="0.1" step="0.1" onkeypress="if(event.key === 'Enter') proceedFromVolumeStep()">
+      <span>liters</span>
+    </div>
+
+    <div class="volume-step-buttons">
+      <button class="btn-back" onclick="backToModeSelector()">
+        ← Back
+      </button>
+      <button class="btn-continue" onclick="proceedFromVolumeStep()">
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Calculation Mode (only for PPM→Grams and NPK Ratio→Grams) -->
+  <div id="calc-mode-step" class="calc-mode-step">
+    <div class="step-indicator">Step 3 of 3</div>
+    <h3>How do you want to enter values?</h3>
+    <p>Choose between commercial fertilizer notation or pure elemental values.</p>
+
+    <div class="calc-mode-options">
+      <label class="calc-mode-option selected" onclick="selectCalcMode('oxide')">
+        <input type="radio" name="wizard-calc-mode" value="oxide" checked>
+        <div class="calc-mode-option-content">
+          <strong>Oxide Forms (P₂O₅, K₂O)</strong>
+          <span>Commercial standard - matches fertilizer bag labels</span>
+        </div>
+      </label>
+      <label class="calc-mode-option" onclick="selectCalcMode('elemental')">
+        <input type="radio" name="wizard-calc-mode" value="elemental">
+        <div class="calc-mode-option-content">
+          <strong>Elemental Forms (P, K)</strong>
+          <span>Pure elements - for scientific calculations</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="volume-step-buttons">
+      <button class="btn-back" onclick="backToVolumeStep()">
+        ← Back
+      </button>
+      <button class="btn-continue" onclick="proceedFromCalcModeStep()">
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 4: Target EC (only for NPK Ratio→Grams) -->
+  <div id="ec-step" class="ec-step">
+    <div class="step-indicator">Step 4 of 4</div>
+    <h3>What strength solution do you want?</h3>
+    <p>Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we'll scale the fertilizer amounts to hit that strength for your batch.</p>
+
+    <div class="ec-step-select">
+      <select id="wizard-ec" onchange="updateECDescription()">
+        <option value="ec:0.2">0.2 mS/cm - Plain Water Supplement</option>
+        <option value="ec:0.4">0.4 mS/cm - Recovery/Flush</option>
+        <option value="ec:0.6">0.6 mS/cm - Fresh Clones/Cuttings</option>
+        <option value="ec:0.8">0.8 mS/cm - Rooted Cuttings</option>
+        <option value="ec:1.0">1.0 mS/cm - Seedlings/Young Plants</option>
+        <option value="ec:1.2" selected>1.2 mS/cm - General Purpose</option>
+        <option value="ec:1.5">1.5 mS/cm - Vegetative Growth</option>
+        <option value="ec:1.8">1.8 mS/cm - Active Growth</option>
+        <option value="ec:2.0">2.0 mS/cm - Heavy Feeders</option>
+        <option value="ec:2.5">2.5 mS/cm - Flowering/Fruiting</option>
+        <option value="ec:3.0">3.0 mS/cm - Maximum (experienced growers)</option>
+      </select>
+      <p class="ec-description" id="ec-description">Good starting point for most plants in active growth.</p>
+    </div>
+
+    <div class="volume-step-buttons">
+      <button class="btn-back" onclick="backToCalcModeStep()">
+        ← Back
+      </button>
+      <button class="btn-continue" onclick="proceedFromECStep()">
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- Step: Fertilizer Selection + Quantities (for Grams→PPM) -->
+  <div id="grams-input-step" class="wizard-input-step">
+    <div class="step-indicator" id="grams-input-step-indicator">Step 3 of 3</div>
+    <h3>Select Fertilizers & Enter Amounts</h3>
+    <p>Check the fertilizers you're using and enter how many grams of each you'll add to your solution.</p>
+
+    <div class="wizard-fertilizer-section">
+      <div class="wizard-fertilizer-search">
+        <input type="text" id="wizard-grams-search" placeholder="Search fertilizers..." oninput="filterWizardGramsFertilizers(this.value)">
+      </div>
+      <div class="wizard-selection-controls">
+        <button onclick="clearWizardGramsSelections()">Clear All</button>
+      </div>
+      <div class="wizard-fertilizer-list" id="wizard-grams-fertilizer-list">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-back" onclick="backToVolumeStep()">← Back</button>
+      <button class="btn-calculate" onclick="calculateFromWizardGrams()">Calculate PPM</button>
+    </div>
+  </div>
+
+  <!-- Step: Target PPM Values (for PPM→Grams) -->
+  <div id="ppm-targets-step" class="wizard-input-step">
+    <div class="step-indicator" id="ppm-targets-step-indicator">Step 4 of 5</div>
+    <h3>Enter Target PPM Values</h3>
+    <p>Enter the nutrient concentrations you want to achieve. At least one value is required.</p>
+
+    <div class="input-grid">
+      <div class="input-field">
+        <label for="wizard-target-n">Nitrogen (N)</label>
+        <input type="number" id="wizard-target-n" min="0" step="1" placeholder="e.g., 150">
+      </div>
+      <div class="input-field">
+        <label for="wizard-target-p" id="wizard-target-p-label">Phosphorus (P₂O₅)</label>
+        <input type="number" id="wizard-target-p" min="0" step="1" placeholder="e.g., 50">
+      </div>
+      <div class="input-field">
+        <label for="wizard-target-k" id="wizard-target-k-label">Potassium (K₂O)</label>
+        <input type="number" id="wizard-target-k" min="0" step="1" placeholder="e.g., 200">
+      </div>
+      <div class="input-field">
+        <label for="wizard-target-ca">Calcium (Ca)</label>
+        <input type="number" id="wizard-target-ca" min="0" step="1" placeholder="e.g., 150">
+      </div>
+      <div class="input-field">
+        <label for="wizard-target-mg">Magnesium (Mg)</label>
+        <input type="number" id="wizard-target-mg" min="0" step="1" placeholder="e.g., 50">
+      </div>
+      <div class="input-field">
+        <label for="wizard-target-s">Sulfur (S)</label>
+        <input type="number" id="wizard-target-s" min="0" step="1" placeholder="Optional">
+      </div>
+      <div class="input-field">
+        <label for="wizard-target-si">Silicon (Si)</label>
+        <input type="number" id="wizard-target-si" min="0" step="1" value="0" placeholder="Optional">
+      </div>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-back" onclick="backToCalcModeStep()">← Back</button>
+      <button class="btn-continue" onclick="proceedToFormulaFertilizerStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Step: NPK Ratios (for NPK Ratio→Grams) -->
+  <div id="npk-ratios-step" class="wizard-input-step">
+    <div class="step-indicator" id="npk-ratios-step-indicator">Step 5 of 6</div>
+    <h3>Enter Nutrient Ratios</h3>
+    <p>Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one must be greater than zero.</p>
+
+    <div class="input-grid">
+      <div class="input-field">
+        <label for="wizard-ratio-n">Nitrogen (N)</label>
+        <input type="number" id="wizard-ratio-n" min="0" step="1" placeholder="e.g., 3">
+      </div>
+      <div class="input-field">
+        <label for="wizard-ratio-p">Phosphorus (P)</label>
+        <input type="number" id="wizard-ratio-p" min="0" step="1" placeholder="e.g., 1">
+      </div>
+      <div class="input-field">
+        <label for="wizard-ratio-k">Potassium (K)</label>
+        <input type="number" id="wizard-ratio-k" min="0" step="1" placeholder="e.g., 2">
+      </div>
+      <div class="input-field">
+        <label for="wizard-ratio-ca">Calcium (Ca)</label>
+        <input type="number" id="wizard-ratio-ca" min="0" step="1" placeholder="Optional">
+      </div>
+      <div class="input-field">
+        <label for="wizard-ratio-mg">Magnesium (Mg)</label>
+        <input type="number" id="wizard-ratio-mg" min="0" step="1" placeholder="Optional">
+      </div>
+      <div class="input-field">
+        <label for="wizard-ratio-s">Sulfur (S)</label>
+        <input type="number" id="wizard-ratio-s" min="0" step="1" placeholder="Optional">
+      </div>
+      <div class="input-field">
+        <label for="wizard-ratio-si">Silicon (Si) PPM</label>
+        <input type="number" id="wizard-ratio-si" min="0" step="1" value="0" placeholder="Target PPM">
+      </div>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-back" onclick="backToECStep()">← Back</button>
+      <button class="btn-continue" onclick="proceedToReverseFertilizerStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Step: Select Available Fertilizers (for PPM→Grams and NPK Ratio→Grams) -->
+  <div id="fertilizer-select-step" class="wizard-input-step">
+    <div class="step-indicator" id="fertilizer-select-step-indicator">Step 5 of 5</div>
+    <h3>Select Available Fertilizers</h3>
+    <p>Choose the fertilizers you have on hand. The calculator will use only these to build your formula.</p>
+
+    <div class="wizard-fertilizer-section">
+      <div class="wizard-fertilizer-search">
+        <input type="text" id="wizard-available-search" placeholder="Search fertilizers..." oninput="filterWizardAvailableFertilizers(this.value)">
+      </div>
+      <div class="wizard-selection-controls">
+        <button onclick="selectAllWizardFertilizers()">Select All</button>
+        <button onclick="deselectAllWizardFertilizers()">Deselect All</button>
+        <button onclick="selectCommonWizardFertilizers()">Common Only</button>
+      </div>
+      <div class="wizard-fertilizer-list" id="wizard-available-fertilizer-list">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-back" id="fertilizer-select-back-btn" onclick="backFromFertilizerSelectStep()">← Back</button>
+      <button class="btn-calculate" id="fertilizer-select-calc-btn" onclick="calculateFromWizardFertilizerSelect()">Calculate</button>
+    </div>
+  </div>
+
+  <!-- Wizard Results View (shown after calculation from wizard) -->
+  <div id="wizard-results" class="wizard-results">
+    <div class="wizard-header">
+      <button class="wizard-back-btn" onclick="backFromWizardResults()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"></path>
+          <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Change Settings
+      </button>
+      <span class="wizard-current-mode" id="wizard-results-mode"></span>
+    </div>
+    <div id="wizard-results-container">
+      <!-- Results will be rendered here -->
+    </div>
+  </div>
+
+  <!-- Calculator Content (hidden in wizard flow, used for direct access) -->
+  <div id="calculator-content" class="calculator-content">
+    <div class="wizard-header">
+      <button class="wizard-back-btn" onclick="backFromCalculator()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"></path>
+          <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        Change Settings
+      </button>
+      <span class="wizard-current-mode" id="wizard-current-mode"></span>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab-target="ppm-calc" onclick="switchTab('ppm-calc', this)">Grams to PPM</button>
+      <button class="tab" data-tab-target="formula-builder" onclick="switchTab('formula-builder', this)">PPM to Grams</button>
+      <button class="tab" data-tab-target="reverse-calc" onclick="switchTab('reverse-calc', this)">NPK Ratio to Grams</button>
+    </div>
+
+    <!-- PPM Calculator Tab -->
   <div id="ppm-calc" class="tab-content active">
     <div class="input-section">
     <div class="volume-control-row">
@@ -1589,6 +2542,8 @@ permalink: /fertilizer-calculator/
       <div id="reverse-output"></div>
     </div>
   </div>
+
+  </div><!-- End calculator-content -->
 
 </div>
 
@@ -3022,6 +3977,832 @@ function validateTargetInput(input, allowZero = false) {
   }
 }
 
+// Wizard Mode Selection
+const MODE_NAMES = {
+  'ppm-calc': 'Grams → PPM',
+  'formula-builder': 'PPM → Grams',
+  'reverse-calc': 'NPK Ratio → Grams'
+};
+
+// Modes that need the calculation mode step (step 3)
+const MODES_WITH_CALC_MODE = ['formula-builder', 'reverse-calc'];
+
+// Modes that need the EC step (step 4)
+const MODES_WITH_EC = ['reverse-calc'];
+
+// EC descriptions for the dropdown
+const EC_DESCRIPTIONS = {
+  'ec:0.2': 'Very light feeding - for supplementing plain water.',
+  'ec:0.4': 'Recovery feeding - gentle nutrition after stress.',
+  'ec:0.6': 'For fresh cuttings and newly rooted clones.',
+  'ec:0.8': 'For established clones ready for growth.',
+  'ec:1.0': 'For seedlings and young plants starting to grow.',
+  'ec:1.2': 'Good starting point for most plants in active growth.',
+  'ec:1.5': 'Standard vegetative growth feeding.',
+  'ec:1.8': 'For plants in active, vigorous growth.',
+  'ec:2.0': 'For heavy-feeding plants with high nutrient demands.',
+  'ec:2.5': 'Strong feeding for flowering/fruiting stages.',
+  'ec:3.0': 'Maximum strength - only for experienced growers.'
+};
+
+let selectedMode = null;
+let selectedCalcMode = 'oxide';
+let selectedEC = 'ec:1.2';
+
+function getStepCount(mode) {
+  // Grams → PPM: mode, volume, grams input = 3 steps
+  // PPM → Grams: mode, volume, calc-mode, ppm-targets, fertilizer-select = 5 steps
+  // NPK Ratio → Grams: mode, volume, calc-mode, ec, npk-ratios, fertilizer-select = 6 steps
+  if (mode === 'reverse-calc') return 6;
+  if (mode === 'formula-builder') return 5;
+  return 3; // ppm-calc
+}
+
+function selectMode(tabId) {
+  // Store the selected mode
+  selectedMode = tabId;
+
+  // Update volume step indicator based on total steps
+  const totalSteps = getStepCount(tabId);
+  document.getElementById('volume-step-indicator').textContent = 'Step 2 of ' + totalSteps;
+
+  // Hide the mode selector
+  document.getElementById('mode-selector').style.display = 'none';
+
+  // Show the volume step
+  document.getElementById('volume-step').classList.add('active');
+
+  // Focus on the volume input
+  document.getElementById('wizard-volume').focus();
+  document.getElementById('wizard-volume').select();
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function proceedFromVolumeStep() {
+  // Check if this mode needs the calculation mode step
+  if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
+    // Update calc-mode step indicator
+    const totalSteps = getStepCount(selectedMode);
+    document.querySelector('#calc-mode-step .step-indicator').textContent = 'Step 3 of ' + totalSteps;
+
+    // Hide volume step, show calc mode step
+    document.getElementById('volume-step').classList.remove('active');
+    document.getElementById('calc-mode-step').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (selectedMode === 'ppm-calc') {
+    // Go to grams input step
+    document.getElementById('volume-step').classList.remove('active');
+    document.getElementById('grams-input-step').classList.add('active');
+    renderWizardGramsFertilizerList();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    // Skip directly to calculator (fallback)
+    proceedToCalculator();
+  }
+}
+
+function selectCalcMode(mode) {
+  selectedCalcMode = mode;
+
+  // Update visual selection
+  document.querySelectorAll('.calc-mode-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  const selectedOption = document.querySelector(`input[name="wizard-calc-mode"][value="${mode}"]`);
+  if (selectedOption) {
+    selectedOption.checked = true;
+    selectedOption.closest('.calc-mode-option').classList.add('selected');
+  }
+}
+
+function proceedFromCalcModeStep() {
+  // Check if this mode needs the EC step (NPK Ratio → Grams)
+  if (MODES_WITH_EC.includes(selectedMode)) {
+    // Hide calc mode step, show EC step
+    document.getElementById('calc-mode-step').classList.remove('active');
+    document.getElementById('ec-step').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (selectedMode === 'formula-builder') {
+    // PPM → Grams: go to target PPM step
+    const totalSteps = getStepCount(selectedMode);
+    document.getElementById('ppm-targets-step-indicator').textContent = 'Step 4 of ' + totalSteps;
+
+    // Update P and K labels based on calc mode
+    updateWizardPPMLabels();
+
+    document.getElementById('calc-mode-step').classList.remove('active');
+    document.getElementById('ppm-targets-step').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    // Skip to calculator (fallback)
+    proceedToCalculator();
+  }
+}
+
+function updateWizardPPMLabels() {
+  const pLabel = document.getElementById('wizard-target-p-label');
+  const kLabel = document.getElementById('wizard-target-k-label');
+  if (selectedCalcMode === 'elemental') {
+    pLabel.textContent = 'Phosphorus (P)';
+    kLabel.textContent = 'Potassium (K)';
+  } else {
+    pLabel.textContent = 'Phosphorus (P₂O₅)';
+    kLabel.textContent = 'Potassium (K₂O)';
+  }
+}
+
+function updateECDescription() {
+  const ecSelect = document.getElementById('wizard-ec');
+  const descEl = document.getElementById('ec-description');
+  if (ecSelect && descEl) {
+    selectedEC = ecSelect.value;
+    descEl.textContent = EC_DESCRIPTIONS[selectedEC] || '';
+  }
+}
+
+function proceedFromECStep() {
+  // EC step is only for NPK Ratio → Grams, go to npk-ratios-step
+  const totalSteps = getStepCount(selectedMode);
+  document.getElementById('npk-ratios-step-indicator').textContent = 'Step 5 of ' + totalSteps;
+
+  document.getElementById('ec-step').classList.remove('active');
+  document.getElementById('npk-ratios-step').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function proceedToCalculator() {
+  // Get the volume from wizard input
+  const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
+
+  // Update volume inputs in all calculator tabs
+  const volumeInput = document.getElementById('volume');
+  if (volumeInput) volumeInput.value = wizardVolume;
+
+  const formulaVolumeInput = document.getElementById('formula-volume');
+  if (formulaVolumeInput) formulaVolumeInput.value = wizardVolume;
+
+  const reverseVolumeInput = document.getElementById('reverse-volume');
+  if (reverseVolumeInput) reverseVolumeInput.value = wizardVolume;
+
+  // Apply calculation mode if applicable
+  if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
+    if (selectedMode === 'formula-builder') {
+      const formulaModeSelect = document.getElementById('formula-calculation-mode');
+      if (formulaModeSelect) {
+        formulaModeSelect.value = selectedCalcMode;
+        updateFormulaCalculationMode();
+      }
+    } else if (selectedMode === 'reverse-calc') {
+      const reverseModeSelect = document.getElementById('reverse-calculation-mode');
+      if (reverseModeSelect) {
+        reverseModeSelect.value = selectedCalcMode;
+        updateReverseCalculationMode();
+      }
+    }
+  }
+
+  // Apply EC setting if applicable
+  if (MODES_WITH_EC.includes(selectedMode)) {
+    const reverseConcentration = document.getElementById('reverse-concentration');
+    if (reverseConcentration) {
+      reverseConcentration.value = selectedEC;
+    }
+  }
+
+  // Hide all wizard steps
+  document.getElementById('volume-step').classList.remove('active');
+  document.getElementById('calc-mode-step').classList.remove('active');
+  document.getElementById('ec-step').classList.remove('active');
+  document.getElementById('grams-input-step').classList.remove('active');
+  document.getElementById('ppm-targets-step').classList.remove('active');
+  document.getElementById('npk-ratios-step').classList.remove('active');
+  document.getElementById('fertilizer-select-step').classList.remove('active');
+
+  // Show the calculator content
+  document.getElementById('calculator-content').classList.add('active');
+
+  // Build mode indicator text
+  let indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
+  if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
+    indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? 'Oxide' : 'Elemental');
+  }
+  if (MODES_WITH_EC.includes(selectedMode)) {
+    const ecValue = selectedEC.replace('ec:', '');
+    indicatorText += ' · ' + ecValue + ' mS/cm';
+  }
+
+  // Update the current mode indicator
+  const modeIndicator = document.getElementById('wizard-current-mode');
+  modeIndicator.innerHTML = indicatorText;
+
+  // Switch to the selected tab
+  switchTab(selectedMode, document.querySelector(`[data-tab-target="${selectedMode}"]`));
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToECStep() {
+  // Hide the calculator content
+  document.getElementById('calculator-content').classList.remove('active');
+
+  // Show the EC step
+  document.getElementById('ec-step').classList.add('active');
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToCalcModeStep() {
+  // Hide the calculator content and EC step
+  document.getElementById('calculator-content').classList.remove('active');
+  document.getElementById('ec-step').classList.remove('active');
+
+  // Show the calc mode step
+  document.getElementById('calc-mode-step').classList.add('active');
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToVolumeStep() {
+  // Hide all steps after volume
+  document.getElementById('calculator-content').classList.remove('active');
+  document.getElementById('wizard-results').classList.remove('active');
+  document.getElementById('ec-step').classList.remove('active');
+  document.getElementById('calc-mode-step').classList.remove('active');
+  document.getElementById('grams-input-step').classList.remove('active');
+  document.getElementById('ppm-targets-step').classList.remove('active');
+  document.getElementById('npk-ratios-step').classList.remove('active');
+  document.getElementById('fertilizer-select-step').classList.remove('active');
+
+  // Show the volume step
+  document.getElementById('volume-step').classList.add('active');
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backFromCalculator() {
+  // Hide calculator content
+  document.getElementById('calculator-content').classList.remove('active');
+
+  // Go back to the appropriate step based on mode
+  if (selectedMode === 'ppm-calc') {
+    // Grams → PPM: go back to grams input step
+    document.getElementById('grams-input-step').classList.add('active');
+  } else if (selectedMode === 'formula-builder' || selectedMode === 'reverse-calc') {
+    // PPM → Grams or NPK Ratio → Grams: go back to fertilizer select step
+    document.getElementById('fertilizer-select-step').classList.add('active');
+  } else {
+    // Fallback: go back to volume step
+    document.getElementById('volume-step').classList.add('active');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backFromWizardResults() {
+  // Hide wizard results
+  document.getElementById('wizard-results').classList.remove('active');
+
+  // Go back to the appropriate step based on mode
+  if (selectedMode === 'ppm-calc') {
+    // Grams → PPM: go back to grams input step
+    document.getElementById('grams-input-step').classList.add('active');
+  } else if (selectedMode === 'formula-builder' || selectedMode === 'reverse-calc') {
+    // PPM → Grams or NPK Ratio → Grams: go back to fertilizer select step
+    document.getElementById('fertilizer-select-step').classList.add('active');
+  } else {
+    // Fallback: go back to volume step
+    document.getElementById('volume-step').classList.add('active');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToModeSelector() {
+  // Hide everything
+  document.getElementById('calculator-content').classList.remove('active');
+  document.getElementById('wizard-results').classList.remove('active');
+  document.getElementById('ec-step').classList.remove('active');
+  document.getElementById('calc-mode-step').classList.remove('active');
+  document.getElementById('volume-step').classList.remove('active');
+  document.getElementById('grams-input-step').classList.remove('active');
+  document.getElementById('ppm-targets-step').classList.remove('active');
+  document.getElementById('npk-ratios-step').classList.remove('active');
+  document.getElementById('fertilizer-select-step').classList.remove('active');
+
+  // Show the mode selector
+  document.getElementById('mode-selector').style.display = 'block';
+
+  // Reset state
+  selectedMode = null;
+  selectedCalcMode = 'oxide';
+  selectedEC = 'ec:1.2';
+
+  // Reset calc mode selection UI
+  document.querySelectorAll('.calc-mode-option').forEach(opt => opt.classList.remove('selected'));
+  const oxideOption = document.querySelector('input[name="wizard-calc-mode"][value="oxide"]');
+  if (oxideOption) {
+    oxideOption.checked = true;
+    oxideOption.closest('.calc-mode-option').classList.add('selected');
+  }
+
+  // Reset EC selection
+  const ecSelect = document.getElementById('wizard-ec');
+  if (ecSelect) {
+    ecSelect.value = 'ec:1.2';
+    updateECDescription();
+  }
+
+  // Reset wizard inputs
+  clearWizardGramsSelections();
+  clearWizardPPMTargets();
+  clearWizardNPKRatios();
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ==========================================
+// WIZARD STEP FUNCTIONS
+// ==========================================
+
+// --- Grams → PPM Wizard Functions ---
+
+function renderWizardGramsFertilizerList() {
+  const container = document.getElementById('wizard-grams-fertilizer-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  FERTILIZERS.forEach(fert => {
+    const item = document.createElement('div');
+    item.className = 'wizard-fertilizer-item';
+    item.id = `wizard-grams-item-${fert.id}`;
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `wizard-grams-check-${fert.id}`;
+    checkbox.className = 'wizard-fert-checkbox';
+
+    const label = document.createElement('label');
+    label.htmlFor = `wizard-grams-check-${fert.id}`;
+    label.className = 'wizard-fert-label';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'wizard-fert-name';
+    nameSpan.textContent = fert.name;
+    label.appendChild(nameSpan);
+
+    if (fert.aliases && fert.aliases.length > 0) {
+      const aliasSpan = document.createElement('span');
+      aliasSpan.className = 'wizard-fert-aliases';
+      aliasSpan.textContent = fert.aliases.join(', ');
+      label.appendChild(aliasSpan);
+    }
+
+    const gramsInput = document.createElement('input');
+    gramsInput.type = 'number';
+    gramsInput.id = `wizard-grams-input-${fert.id}`;
+    gramsInput.className = 'wizard-grams-input';
+    gramsInput.placeholder = 'grams';
+    gramsInput.min = '0';
+    gramsInput.step = '0.1';
+    gramsInput.oninput = function() {
+      // Auto-check checkbox when user enters a value
+      if (parseFloat(this.value) > 0) {
+        checkbox.checked = true;
+      }
+    };
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    item.appendChild(gramsInput);
+    container.appendChild(item);
+  });
+}
+
+function filterWizardGramsFertilizers(searchTerm) {
+  const term = searchTerm.toLowerCase();
+  FERTILIZERS.forEach(fert => {
+    const item = document.getElementById(`wizard-grams-item-${fert.id}`);
+    if (!item) return;
+
+    const nameMatch = fert.name.toLowerCase().includes(term);
+    const aliasMatch = fert.aliases && fert.aliases.some(a => a.toLowerCase().includes(term));
+
+    item.style.display = (nameMatch || aliasMatch || term === '') ? '' : 'none';
+  });
+}
+
+function clearWizardGramsSelections() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`wizard-grams-check-${fert.id}`);
+    const input = document.getElementById(`wizard-grams-input-${fert.id}`);
+    if (checkbox) checkbox.checked = false;
+    if (input) input.value = '';
+  });
+  const searchInput = document.getElementById('wizard-grams-search');
+  if (searchInput) {
+    searchInput.value = '';
+    filterWizardGramsFertilizers('');
+  }
+}
+
+function calculateFromWizardGrams() {
+  // Get the volume from wizard input
+  const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
+
+  // Update volume in the main calculator
+  const volumeInput = document.getElementById('volume');
+  if (volumeInput) volumeInput.value = wizardVolume;
+
+  // Clear all existing fertilizer selections in main calculator
+  FERTILIZERS.forEach(fert => {
+    const mainCheckbox = document.getElementById(`fert-${fert.id}`);
+    const mainInput = document.getElementById(`grams-${fert.id}`);
+    if (mainCheckbox) mainCheckbox.checked = false;
+    if (mainInput) mainInput.value = '';
+  });
+
+  // Transfer wizard selections to main calculator
+  let hasSelection = false;
+  FERTILIZERS.forEach(fert => {
+    const wizardCheckbox = document.getElementById(`wizard-grams-check-${fert.id}`);
+    const wizardInput = document.getElementById(`wizard-grams-input-${fert.id}`);
+    const mainCheckbox = document.getElementById(`fert-${fert.id}`);
+    const mainInput = document.getElementById(`grams-${fert.id}`);
+
+    if (wizardCheckbox && wizardCheckbox.checked && wizardInput && mainCheckbox && mainInput) {
+      const grams = parseFloat(wizardInput.value) || 0;
+      if (grams > 0) {
+        mainCheckbox.checked = true;
+        mainInput.value = grams;
+        hasSelection = true;
+      }
+    }
+  });
+
+  if (!hasSelection) {
+    alert('Please select at least one fertilizer and enter an amount.');
+    return;
+  }
+
+  // Run the calculation (this renders results in the main calculator)
+  calculate();
+
+  // Copy results to wizard results container
+  const resultsContainer = document.getElementById('wizard-results-container');
+  const selectedFertSection = document.getElementById('selected-fertilizers-section');
+  const resultsSection = document.getElementById('results');
+
+  if (resultsContainer && selectedFertSection && resultsSection) {
+    resultsContainer.innerHTML = selectedFertSection.outerHTML + resultsSection.outerHTML;
+  }
+
+  // Hide wizard step, show wizard results
+  document.getElementById('grams-input-step').classList.remove('active');
+  document.getElementById('wizard-results').classList.add('active');
+
+  // Update the mode indicator in wizard results
+  const indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
+  document.getElementById('wizard-results-mode').innerHTML = indicatorText;
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- PPM → Grams Wizard Functions ---
+
+function clearWizardPPMTargets() {
+  const fields = ['n', 'p', 'k', 'ca', 'mg', 's', 'si'];
+  fields.forEach(field => {
+    const input = document.getElementById(`wizard-target-${field}`);
+    if (input) input.value = '';
+  });
+}
+
+function proceedToFormulaFertilizerStep() {
+  // Validate that at least one target is entered
+  const fields = ['n', 'p', 'k', 'ca', 'mg', 's'];
+  let hasTarget = false;
+  fields.forEach(field => {
+    const input = document.getElementById(`wizard-target-${field}`);
+    if (input && parseFloat(input.value) > 0) {
+      hasTarget = true;
+    }
+  });
+
+  if (!hasTarget) {
+    alert('Please enter at least one target PPM value.');
+    return;
+  }
+
+  // Update step indicator
+  const totalSteps = getStepCount(selectedMode);
+  document.getElementById('fertilizer-select-step-indicator').textContent = 'Step 5 of ' + totalSteps;
+
+  // Render the fertilizer selection list
+  renderWizardAvailableFertilizerList();
+
+  // Hide PPM targets step, show fertilizer select step
+  document.getElementById('ppm-targets-step').classList.remove('active');
+  document.getElementById('fertilizer-select-step').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- NPK Ratio → Grams Wizard Functions ---
+
+function clearWizardNPKRatios() {
+  const fields = ['n', 'p', 'k', 'ca', 'mg', 's', 'si'];
+  fields.forEach(field => {
+    const input = document.getElementById(`wizard-ratio-${field}`);
+    if (input) input.value = '';
+  });
+}
+
+function proceedToReverseFertilizerStep() {
+  // Validate that at least one ratio is entered
+  const fields = ['n', 'p', 'k', 'ca', 'mg', 's'];
+  let hasRatio = false;
+  fields.forEach(field => {
+    const input = document.getElementById(`wizard-ratio-${field}`);
+    if (input && parseFloat(input.value) > 0) {
+      hasRatio = true;
+    }
+  });
+
+  if (!hasRatio) {
+    alert('Please enter at least one ratio value greater than zero.');
+    return;
+  }
+
+  // Update step indicator
+  const totalSteps = getStepCount(selectedMode);
+  document.getElementById('fertilizer-select-step-indicator').textContent = 'Step 6 of ' + totalSteps;
+
+  // Render the fertilizer selection list
+  renderWizardAvailableFertilizerList();
+
+  // Hide NPK ratios step, show fertilizer select step
+  document.getElementById('npk-ratios-step').classList.remove('active');
+  document.getElementById('fertilizer-select-step').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- Shared Fertilizer Selection Functions ---
+
+function renderWizardAvailableFertilizerList() {
+  const container = document.getElementById('wizard-available-fertilizer-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  FERTILIZERS.forEach(fert => {
+    const item = document.createElement('div');
+    item.className = 'wizard-fertilizer-item';
+    item.id = `wizard-avail-item-${fert.id}`;
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `wizard-avail-check-${fert.id}`;
+    checkbox.className = 'wizard-fert-checkbox';
+    checkbox.checked = COMMON_FERTILIZERS.includes(fert.id);
+
+    const label = document.createElement('label');
+    label.htmlFor = `wizard-avail-check-${fert.id}`;
+    label.className = 'wizard-fert-label';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'wizard-fert-name';
+    nameSpan.textContent = fert.name;
+    label.appendChild(nameSpan);
+
+    if (fert.aliases && fert.aliases.length > 0) {
+      const aliasSpan = document.createElement('span');
+      aliasSpan.className = 'wizard-fert-aliases';
+      aliasSpan.textContent = fert.aliases.join(', ');
+      label.appendChild(aliasSpan);
+    }
+
+    item.appendChild(checkbox);
+    item.appendChild(label);
+    container.appendChild(item);
+  });
+}
+
+function filterWizardAvailableFertilizers(searchTerm) {
+  const term = searchTerm.toLowerCase();
+  FERTILIZERS.forEach(fert => {
+    const item = document.getElementById(`wizard-avail-item-${fert.id}`);
+    if (!item) return;
+
+    const nameMatch = fert.name.toLowerCase().includes(term);
+    const aliasMatch = fert.aliases && fert.aliases.some(a => a.toLowerCase().includes(term));
+
+    item.style.display = (nameMatch || aliasMatch || term === '') ? '' : 'none';
+  });
+}
+
+function selectAllWizardFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
+    if (checkbox) checkbox.checked = true;
+  });
+}
+
+function deselectAllWizardFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
+    if (checkbox) checkbox.checked = false;
+  });
+}
+
+function selectCommonWizardFertilizers() {
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
+    if (checkbox) {
+      checkbox.checked = COMMON_FERTILIZERS.includes(fert.id);
+    }
+  });
+}
+
+function backFromFertilizerSelectStep() {
+  document.getElementById('fertilizer-select-step').classList.remove('active');
+
+  if (selectedMode === 'formula-builder') {
+    // Go back to PPM targets step
+    document.getElementById('ppm-targets-step').classList.add('active');
+  } else if (selectedMode === 'reverse-calc') {
+    // Go back to NPK ratios step
+    document.getElementById('npk-ratios-step').classList.add('active');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function calculateFromWizardFertilizerSelect() {
+  // Get the volume from wizard input
+  const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
+
+  // Get selected fertilizers
+  const selectedFerts = [];
+  FERTILIZERS.forEach(fert => {
+    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
+    if (checkbox && checkbox.checked) {
+      selectedFerts.push(fert.id);
+    }
+  });
+
+  if (selectedFerts.length === 0) {
+    alert('Please select at least one fertilizer.');
+    return;
+  }
+
+  // Build mode indicator text
+  let indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
+  indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? 'Oxide' : 'Elemental');
+
+  if (selectedMode === 'formula-builder') {
+    // PPM → Grams calculation
+    // Update volume
+    const formulaVolumeInput = document.getElementById('formula-volume');
+    if (formulaVolumeInput) formulaVolumeInput.value = wizardVolume;
+
+    // Apply calculation mode
+    const formulaModeSelect = document.getElementById('formula-calculation-mode');
+    if (formulaModeSelect) {
+      formulaModeSelect.value = selectedCalcMode;
+      updateFormulaCalculationMode();
+    }
+
+    // Transfer target PPM values to the main calculator inputs
+    const ppmMapping = {
+      'n': 'target-n',
+      'p': 'target-p',
+      'k': 'target-k',
+      'ca': 'target-ca',
+      'mg': 'target-mg',
+      's': 'target-s'
+    };
+
+    Object.entries(ppmMapping).forEach(([wizardField, formulaField]) => {
+      const wizardInput = document.getElementById(`wizard-target-${wizardField}`);
+      const formulaInput = document.getElementById(formulaField);
+      if (wizardInput && formulaInput) {
+        formulaInput.value = wizardInput.value || '';
+      }
+    });
+
+    // Handle Silicon
+    const siInput = document.getElementById('wizard-target-si');
+    const formulaSiInput = document.getElementById('target-si');
+    if (siInput && formulaSiInput) {
+      formulaSiInput.value = siInput.value || '0';
+    }
+
+    // Transfer fertilizer selections to main calculator
+    FERTILIZERS.forEach(fert => {
+      const mainCheckbox = document.getElementById(`available-${fert.id}`);
+      if (mainCheckbox) {
+        mainCheckbox.checked = selectedFerts.includes(fert.id);
+      }
+    });
+
+    // Run the calculation and wait for it to complete
+    await calculateFormula();
+
+    // Copy results to wizard results container
+    const resultsContainer = document.getElementById('wizard-results-container');
+    const formulaResults = document.getElementById('formula-results');
+    if (resultsContainer && formulaResults) {
+      resultsContainer.innerHTML = formulaResults.outerHTML;
+    }
+
+  } else if (selectedMode === 'reverse-calc') {
+    // NPK Ratio → Grams calculation
+    // Update volume
+    const reverseVolumeInput = document.getElementById('reverse-volume');
+    if (reverseVolumeInput) reverseVolumeInput.value = wizardVolume;
+
+    // Apply calculation mode
+    const reverseModeSelect = document.getElementById('reverse-calculation-mode');
+    if (reverseModeSelect) {
+      reverseModeSelect.value = selectedCalcMode;
+      updateReverseCalculationMode();
+    }
+
+    // Apply EC setting
+    const reverseConcentration = document.getElementById('reverse-concentration');
+    if (reverseConcentration) {
+      reverseConcentration.value = selectedEC;
+    }
+
+    // Transfer ratio values to the main calculator inputs
+    const ratioMapping = {
+      'n': 'reverse-n',
+      'p': 'reverse-p',
+      'k': 'reverse-k',
+      'ca': 'reverse-ca',
+      'mg': 'reverse-mg',
+      's': 'reverse-s'
+    };
+
+    Object.entries(ratioMapping).forEach(([wizardField, reverseField]) => {
+      const wizardInput = document.getElementById(`wizard-ratio-${wizardField}`);
+      const reverseInput = document.getElementById(reverseField);
+      if (wizardInput && reverseInput) {
+        reverseInput.value = wizardInput.value || '';
+      }
+    });
+
+    // Handle Silicon
+    const siInput = document.getElementById('wizard-ratio-si');
+    const reverseSiInput = document.getElementById('reverse-si');
+    if (siInput && reverseSiInput) {
+      reverseSiInput.value = siInput.value || '0';
+    }
+
+    // Transfer fertilizer selections to main calculator
+    FERTILIZERS.forEach(fert => {
+      const mainCheckbox = document.getElementById(`reverse-${fert.id}`);
+      if (mainCheckbox) {
+        mainCheckbox.checked = selectedFerts.includes(fert.id);
+      }
+    });
+
+    // Add EC to indicator
+    const ecValue = selectedEC.replace('ec:', '');
+    indicatorText += ' · ' + ecValue + ' mS/cm';
+
+    // Run the calculation and wait for it to complete
+    await calculateReverse();
+
+    // Copy results to wizard results container
+    const resultsContainer = document.getElementById('wizard-results-container');
+    const reverseResults = document.getElementById('reverse-results');
+    if (resultsContainer && reverseResults) {
+      resultsContainer.innerHTML = reverseResults.outerHTML;
+    }
+  }
+
+  // Hide wizard step, show wizard results
+  document.getElementById('fertilizer-select-step').classList.remove('active');
+  document.getElementById('wizard-results').classList.add('active');
+
+  // Update the mode indicator in wizard results
+  document.getElementById('wizard-results-mode').innerHTML = indicatorText;
+
+  // Scroll to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ==========================================
+// END WIZARD STEP FUNCTIONS
+// ==========================================
+
 // Initialize the page
 function init() {
   renderFertilizerList();
@@ -3030,6 +4811,95 @@ function init() {
 
   // Add event listeners
   document.getElementById('search').addEventListener('input', filterFertilizers);
+
+  // Add Enter key support for wizard steps
+  setupWizardKeyboardNavigation();
+}
+
+// Setup Enter key navigation for all wizard steps
+function setupWizardKeyboardNavigation() {
+  // Volume step - Enter proceeds
+  const volumeStep = document.getElementById('volume-step');
+  if (volumeStep) {
+    volumeStep.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && volumeStep.classList.contains('active')) {
+        e.preventDefault();
+        proceedFromVolumeStep();
+      }
+    });
+  }
+
+  // Calc mode step - Enter proceeds
+  const calcModeStep = document.getElementById('calc-mode-step');
+  if (calcModeStep) {
+    calcModeStep.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && calcModeStep.classList.contains('active')) {
+        e.preventDefault();
+        proceedFromCalcModeStep();
+      }
+    });
+  }
+
+  // EC step - Enter proceeds
+  const ecStep = document.getElementById('ec-step');
+  if (ecStep) {
+    ecStep.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && ecStep.classList.contains('active')) {
+        e.preventDefault();
+        proceedFromECStep();
+      }
+    });
+  }
+
+  // Grams input step - Enter calculates
+  const gramsInputStep = document.getElementById('grams-input-step');
+  if (gramsInputStep) {
+    gramsInputStep.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && gramsInputStep.classList.contains('active')) {
+        // Don't trigger if focus is on search input
+        if (e.target.id !== 'wizard-grams-search') {
+          e.preventDefault();
+          calculateFromWizardGrams();
+        }
+      }
+    });
+  }
+
+  // PPM targets step - Enter proceeds
+  const ppmTargetsStep = document.getElementById('ppm-targets-step');
+  if (ppmTargetsStep) {
+    ppmTargetsStep.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && ppmTargetsStep.classList.contains('active')) {
+        e.preventDefault();
+        proceedToFormulaFertilizerStep();
+      }
+    });
+  }
+
+  // NPK ratios step - Enter proceeds
+  const npkRatiosStep = document.getElementById('npk-ratios-step');
+  if (npkRatiosStep) {
+    npkRatiosStep.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && npkRatiosStep.classList.contains('active')) {
+        e.preventDefault();
+        proceedToReverseFertilizerStep();
+      }
+    });
+  }
+
+  // Fertilizer select step - Enter calculates
+  const fertilizerSelectStep = document.getElementById('fertilizer-select-step');
+  if (fertilizerSelectStep) {
+    fertilizerSelectStep.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && fertilizerSelectStep.classList.contains('active')) {
+        // Don't trigger if focus is on search input
+        if (e.target.id !== 'wizard-available-search') {
+          e.preventDefault();
+          calculateFromWizardFertilizerSelect();
+        }
+      }
+    });
+  }
 }
 
 // Render available fertilizers list for formula builder
@@ -4169,6 +6039,14 @@ function switchTab(tabId, tabButton) {
     if (fallbackButton) {
       fallbackButton.classList.add('active');
     }
+  }
+
+  // Update the mode indicator in wizard header
+  const modeIndicator = document.getElementById('wizard-current-mode');
+  if (modeIndicator && MODE_NAMES[tabId]) {
+    const wizardVolume = document.getElementById('wizard-volume');
+    const volumeStr = wizardVolume ? wizardVolume.value + 'L' : '';
+    modeIndicator.innerHTML = 'Current: <strong>' + MODE_NAMES[tabId] + '</strong>' + (volumeStr ? ' · ' + volumeStr : '');
   }
 }
 
