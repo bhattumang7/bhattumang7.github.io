@@ -1139,6 +1139,19 @@ permalink: /fertilizer-calculator/
     margin-top: 20px;
   }
 
+  .tank-nutrient-badge {
+    padding: 4px 8px;
+    background: white;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .tank-status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
   .ion-list-item {
     display: flex;
     justify-content: space-between;
@@ -1368,6 +1381,26 @@ permalink: /fertilizer-calculator/
     font-weight: bold;
     font-size: 1.1em;
     white-space: nowrap;
+  }
+
+  .selected-fertilizer-total {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    margin-top: 10px;
+  }
+
+  .selected-fertilizer-total .selected-fertilizer-name {
+    color: #2e7d32;
+  }
+
+  .selected-fertilizer-total .selected-fertilizer-amount {
+    color: #2e7d32;
+    font-size: 1.2em;
+  }
+
+  .fertilizer-number {
+    color: #007bff;
+    margin-right: 5px;
   }
 
   /* Mobile Responsive Styles */
@@ -1987,28 +2020,28 @@ permalink: /fertilizer-calculator/
 <!-- Progress Bar Overlay -->
 <div id="progress-overlay" class="progress-overlay">
   <div class="progress-container">
-    <h3 id="progress-title">Calculating...</h3>
+    <h3 id="progress-title" data-i18n="calculating">Calculating...</h3>
     <div class="progress-bar-wrapper">
       <div id="progress-bar" class="progress-bar"></div>
     </div>
-    <p id="progress-text" class="progress-text">Initializing solver...</p>
+    <p id="progress-text" class="progress-text" data-i18n="initializingSolver">Initializing solver...</p>
   </div>
 </div>
 
 <div class="calculator-container">
   <h1>Fertilizer Calculator</h1>
 
+  <!-- Global Language Selector (visible on all wizard steps) -->
+  <div class="language-selector" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+    <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
+    <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
+      <option value="en">English</option>
+      <option value="gu">ગુજરાતી</option>
+    </select>
+  </div>
+
   <!-- Mode Selector (Wizard Step 1) -->
   <div id="mode-selector" class="mode-selector">
-    <!-- Language Selector -->
-    <div class="language-selector" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-      <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
-      <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
-        <option value="en">English</option>
-        <option value="gu">ગુજરાતી</option>
-      </select>
-    </div>
-
     <h2 data-i18n="whatWouldYouLikeToDo">What would you like to do?</h2>
     <p data-i18n="chooseModeDescription">Choose a calculator mode based on what information you have.</p>
 
@@ -2080,7 +2113,7 @@ permalink: /fertilizer-calculator/
     <p data-i18n="volumeDescription">Enter the total volume of water you'll be mixing your fertilizers into.</p>
 
     <div class="volume-step-input">
-      <input type="number" id="wizard-volume" value="10" min="0.1" step="0.1" onkeypress="if(event.key === 'Enter') proceedFromVolumeStep()">
+      <input type="number" id="wizard-volume" value="10" min="0.1" step="0.1" required onkeypress="if(event.key === 'Enter') proceedFromVolumeStep()">
       <span data-i18n="liters">liters</span>
     </div>
 
@@ -2135,19 +2168,19 @@ permalink: /fertilizer-calculator/
 
     <div class="ec-step-select">
       <select id="wizard-ec" onchange="updateECDescription()">
-        <option value="ec:0.2" data-i18n-label="ecPlainWater">0.2 mS/cm - Plain Water Supplement</option>
-        <option value="ec:0.4" data-i18n-label="ecRecoveryFlush">0.4 mS/cm - Recovery/Flush</option>
-        <option value="ec:0.6" data-i18n-label="ecFreshClones">0.6 mS/cm - Fresh Clones/Cuttings</option>
-        <option value="ec:0.8" data-i18n-label="ecRootedCuttings">0.8 mS/cm - Rooted Cuttings</option>
-        <option value="ec:1.0" data-i18n-label="ecSeedlings">1.0 mS/cm - Seedlings/Young Plants</option>
-        <option value="ec:1.2" selected data-i18n-label="ecGeneralPurpose">1.2 mS/cm - General Purpose</option>
-        <option value="ec:1.5" data-i18n-label="ecVegetativeGrowth">1.5 mS/cm - Vegetative Growth</option>
-        <option value="ec:1.8" data-i18n-label="ecActiveGrowth">1.8 mS/cm - Active Growth</option>
-        <option value="ec:2.0" data-i18n-label="ecHeavyFeeders">2.0 mS/cm - Heavy Feeders</option>
-        <option value="ec:2.5" data-i18n-label="ecFloweringFruiting">2.5 mS/cm - Flowering/Fruiting</option>
-        <option value="ec:3.0" data-i18n-label="ecMaximum">3.0 mS/cm - Maximum (experienced growers)</option>
+        <option value="ec:0.2" data-i18n="ecOption02">0.2 mS/cm - Plain Water Supplement</option>
+        <option value="ec:0.4" data-i18n="ecOption04">0.4 mS/cm - Recovery/Flush</option>
+        <option value="ec:0.6" data-i18n="ecOption06">0.6 mS/cm - Fresh Clones/Cuttings</option>
+        <option value="ec:0.8" data-i18n="ecOption08">0.8 mS/cm - Rooted Cuttings</option>
+        <option value="ec:1.0" data-i18n="ecOption10">1.0 mS/cm - Seedlings/Young Plants</option>
+        <option value="ec:1.2" selected data-i18n="ecOption12">1.2 mS/cm - General Purpose</option>
+        <option value="ec:1.5" data-i18n="ecOption15">1.5 mS/cm - Vegetative Growth</option>
+        <option value="ec:1.8" data-i18n="ecOption18">1.8 mS/cm - Active Growth</option>
+        <option value="ec:2.0" data-i18n="ecOption20">2.0 mS/cm - Heavy Feeders</option>
+        <option value="ec:2.5" data-i18n="ecOption25">2.5 mS/cm - Flowering/Fruiting</option>
+        <option value="ec:3.0" data-i18n="ecOption30">3.0 mS/cm - Maximum (experienced growers)</option>
       </select>
-      <p class="ec-description" id="ec-description" data-i18n="ecGeneralDescription">Good starting point for most plants in active growth.</p>
+      <p class="ec-description" id="ec-description" data-i18n="ecDesc12">Good starting point for most plants in active growth.</p>
     </div>
 
     <div class="volume-step-buttons">
@@ -2193,23 +2226,23 @@ permalink: /fertilizer-calculator/
     <div class="input-grid">
       <div class="input-field">
         <label for="wizard-target-n" data-i18n="nitrogen">Nitrogen (N)</label>
-        <input type="number" id="wizard-target-n" min="0" step="1" placeholder="e.g., 150">
+        <input type="number" id="wizard-target-n" min="0" step="1" data-i18n-placeholder="exampleN" placeholder="e.g., 150">
       </div>
       <div class="input-field">
         <label for="wizard-target-p" id="wizard-target-p-label" data-i18n="phosphorusOxide">Phosphorus (P₂O₅)</label>
-        <input type="number" id="wizard-target-p" min="0" step="1" placeholder="e.g., 50">
+        <input type="number" id="wizard-target-p" min="0" step="1" data-i18n-placeholder="exampleP" placeholder="e.g., 50">
       </div>
       <div class="input-field">
         <label for="wizard-target-k" id="wizard-target-k-label" data-i18n="potassiumOxide">Potassium (K₂O)</label>
-        <input type="number" id="wizard-target-k" min="0" step="1" placeholder="e.g., 200">
+        <input type="number" id="wizard-target-k" min="0" step="1" data-i18n-placeholder="exampleK" placeholder="e.g., 200">
       </div>
       <div class="input-field">
         <label for="wizard-target-ca" data-i18n="calcium">Calcium (Ca)</label>
-        <input type="number" id="wizard-target-ca" min="0" step="1" placeholder="e.g., 150">
+        <input type="number" id="wizard-target-ca" min="0" step="1" data-i18n-placeholder="exampleCa" placeholder="e.g., 150">
       </div>
       <div class="input-field">
         <label for="wizard-target-mg" data-i18n="magnesium">Magnesium (Mg)</label>
-        <input type="number" id="wizard-target-mg" min="0" step="1" placeholder="e.g., 50">
+        <input type="number" id="wizard-target-mg" min="0" step="1" data-i18n-placeholder="exampleMg" placeholder="e.g., 50">
       </div>
       <div class="input-field">
         <label for="wizard-target-s" data-i18n="sulfur">Sulfur (S)</label>
@@ -2236,15 +2269,15 @@ permalink: /fertilizer-calculator/
     <div class="input-grid">
       <div class="input-field">
         <label for="wizard-ratio-n" data-i18n="nitrogen">Nitrogen (N)</label>
-        <input type="number" id="wizard-ratio-n" min="0" step="1" placeholder="e.g., 3">
+        <input type="number" id="wizard-ratio-n" min="0" step="1" data-i18n-placeholder="exampleRatioN" placeholder="e.g., 3">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-p" data-i18n="phosphorusElemental">Phosphorus (P)</label>
-        <input type="number" id="wizard-ratio-p" min="0" step="1" placeholder="e.g., 1">
+        <input type="number" id="wizard-ratio-p" min="0" step="1" data-i18n-placeholder="exampleRatioP" placeholder="e.g., 1">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-k" data-i18n="potassiumElemental">Potassium (K)</label>
-        <input type="number" id="wizard-ratio-k" min="0" step="1" placeholder="e.g., 2">
+        <input type="number" id="wizard-ratio-k" min="0" step="1" data-i18n-placeholder="exampleRatioK" placeholder="e.g., 2">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-ca" data-i18n="calcium">Calcium (Ca)</label>
@@ -2386,7 +2419,7 @@ permalink: /fertilizer-calculator/
     <div class="fertilizer-selector">
       <h3>Select Fertilizers and Enter Amounts</h3>
       <div class="search-box">
-        <input type="text" id="search" placeholder="Search fertilizers...">
+        <input type="text" id="search" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
       </div>
       <div id="fertilizer-list"></div>
     </div>
@@ -2394,15 +2427,11 @@ permalink: /fertilizer-calculator/
 
   <div class="results-section" id="selected-fertilizers-section" style="display: none;">
     <div class="results-header">
-      <h2>Selected Fertilizers</h2>
+      <h2 data-i18n="selectedFertilizers">Selected Fertilizers</h2>
       <div id="grams-to-ppm-header-buttons" style="display: flex; gap: 10px;">
-        <button class="copy-btn" onclick="displayTwoTankGramsToPPMResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
-          Two Tanks
-        </button>
-        <button class="copy-btn" onclick="copyGramsToPPMResults()" title="Copy results to clipboard">
+        <button class="copy-btn" onclick="copyGramsToPPMResults()" data-i18n-title="copyResultsToClipboard" title="Copy results to clipboard">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          Copy Results
+          <span data-i18n="copyResults">Copy Results</span>
         </button>
       </div>
     </div>
@@ -2411,41 +2440,41 @@ permalink: /fertilizer-calculator/
 
   <div class="results-section" id="results" style="display: none; margin-top: 20px;">
     <h2>
-      Results (PPM)
-      <span class="info-icon" onclick="openPPMExplanation()" title="Click to learn how we calculate PPM">?</span>
+      <span data-i18n="resultsPpm">Results (PPM)</span>
+      <span class="info-icon" onclick="openPPMExplanation()" data-i18n-title="clickToLearnPpm" title="Click to learn how we calculate PPM">?</span>
     </h2>
     <div class="results-grid" id="results-grid"></div>
     <div class="conversion-note">
-      <strong>Note:</strong> Oxide values (P₂O₅, K₂O, etc.) are automatically converted to elemental forms (P, K, etc.) using standard conversion factors.
+      <strong data-i18n="noteLabel">Note:</strong> <span data-i18n="oxideConversionNote">Oxide values (P₂O₅, K₂O, etc.) are automatically converted to elemental forms (P, K, etc.) using standard conversion factors.</span>
     </div>
   </div>
 
   <div class="results-section" id="ion-balance-section" style="display: none; margin-top: 20px;">
     <h2>
-      Ion Balance
-      <span class="info-icon" onclick="openIonBalanceExplanation()" title="Click to learn how we calculate Ion Balance">?</span>
+      <span data-i18n="ionBalance">Ion Balance</span>
+      <span class="info-icon" onclick="openIonBalanceExplanation()" data-i18n-title="clickToLearnIonBalance" title="Click to learn how we calculate Ion Balance">?</span>
     </h2>
     <div id="ion-balance-result"></div>
     <div class="conversion-note" style="margin-top: 15px;">
-      <strong>What is ion balance?</strong> Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.
+      <strong data-i18n="whatIsIonBalanceQuestion">What is ion balance?</strong> <span data-i18n="ionBalanceExplanationFull">Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.</span>
     </div>
   </div>
 
   <div class="results-section" id="ratio-analysis-section" style="display: none; margin-top: 20px;">
-    <h2>Nutrient Ratio Analysis</h2>
+    <h2 data-i18n="nutrientRatioAnalysis">Nutrient Ratio Analysis</h2>
     <div id="ratio-analysis-result"></div>
     <div class="conversion-note" style="margin-top: 15px;">
-      <strong>What are nutrient ratios?</strong> These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.
+      <strong data-i18n="whatAreNutrientRatios">What are nutrient ratios?</strong> <span data-i18n="nutrientRatioExplanationFull">These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.</span>
     </div>
   </div>
 
   <div class="results-section" id="ec-tds-section" style="display: none; margin-top: 20px;">
-    <h2>EC Prediction</h2>
+    <h2 data-i18n="ecPrediction">EC Prediction</h2>
     <div id="ec-tds-result"></div>
   </div>
 
   <div class="results-section" id="warnings-section" style="display: none; margin-top: 20px;">
-    <h2>Warnings & Recommendations</h2>
+    <h2 data-i18n="warningsAndRecommendations">Warnings & Recommendations</h2>
     <div id="warnings-result"></div>
   </div>
   </div>
@@ -2471,31 +2500,31 @@ permalink: /fertilizer-calculator/
       <div class="target-input-grid">
         <div class="target-input-field">
           <label for="target-n">Nitrogen (N)</label>
-          <input type="number" id="target-n" min="0" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this, true)">
+          <input type="number" id="target-n" min="0" step="1" data-i18n-placeholder="exampleN" placeholder="e.g., 150" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-p" id="target-p-label">Phosphorus (P₂O₅)</label>
-          <input type="number" id="target-p" min="0" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this, true)">
+          <input type="number" id="target-p" min="0" step="1" data-i18n-placeholder="exampleP" placeholder="e.g., 50" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-k" id="target-k-label">Potassium (K₂O)</label>
-          <input type="number" id="target-k" min="0" step="1" placeholder="e.g., 200" oninput="validateTargetInput(this, true)">
+          <input type="number" id="target-k" min="0" step="1" data-i18n-placeholder="exampleK" placeholder="e.g., 200" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-ca">Calcium (Ca)</label>
-          <input type="number" id="target-ca" min="0" step="1" placeholder="e.g., 150" oninput="validateTargetInput(this, true)">
+          <input type="number" id="target-ca" min="0" step="1" data-i18n-placeholder="exampleCa" placeholder="e.g., 150" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-mg">Magnesium (Mg)</label>
-          <input type="number" id="target-mg" min="0" step="1" placeholder="e.g., 50" oninput="validateTargetInput(this, true)">
+          <input type="number" id="target-mg" min="0" step="1" data-i18n-placeholder="exampleMg" placeholder="e.g., 50" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-s">Sulfur (S)</label>
-          <input type="number" id="target-s" min="0" step="1" placeholder="Optional" oninput="validateTargetInput(this, true)">
+          <input type="number" id="target-s" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="target-si">Silicon (Si) <small style="color:#666">PPM</small></label>
-          <input type="number" id="target-si" min="0" step="1" value="0" placeholder="Target PPM" oninput="validateTargetInput(this, true)">
+          <input type="number" id="target-si" min="0" step="1" value="0" data-i18n-placeholder="targetPpm" placeholder="Target PPM" oninput="validateTargetInput(this, true)">
         </div>
       </div>
 
@@ -2503,7 +2532,7 @@ permalink: /fertilizer-calculator/
         <h4>Available Fertilizers</h4>
         <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Select the fertilizers you have available. The calculator will use only these to build your formula.</p>
         <div class="fertilizer-search">
-          <input type="text" id="available-fertilizer-search" placeholder="Search fertilizers..." oninput="filterAvailableFertilizers(this.value)">
+          <input type="text" id="available-fertilizer-search" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers..." oninput="filterAvailableFertilizers(this.value)">
         </div>
         <div class="selection-controls">
           <button onclick="selectAllAvailableFertilizers()">Select All</button>
@@ -2531,15 +2560,11 @@ permalink: /fertilizer-calculator/
 
     <div class="results-section" id="formula-results" style="display: none;">
       <div class="results-header" id="formula-results-header">
-        <h2>Recommended Formula</h2>
+        <h2 data-i18n="recommendedFormula">Recommended Formula</h2>
         <div id="formula-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" onclick="displayTwoTankFormulaResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
-            Two Tanks
-          </button>
           <button class="copy-btn" onclick="copyPPMToGramsResults()" title="Copy results to clipboard">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy Results
+            <span data-i18n="copyResults">Copy Results</span>
           </button>
         </div>
       </div>
@@ -2556,31 +2581,31 @@ permalink: /fertilizer-calculator/
       <div class="target-input-grid">
         <div class="target-input-field">
           <label for="reverse-n">Nitrogen (N)</label>
-          <input type="number" id="reverse-n" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
+          <input type="number" id="reverse-n" min="0" step="1" data-i18n-placeholder="optionalZeroOrMore" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
           <label for="reverse-p">Phosphorus (P)</label>
-          <input type="number" id="reverse-p" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
+          <input type="number" id="reverse-p" min="0" step="1" data-i18n-placeholder="optionalZeroOrMore" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
           <label for="reverse-k">Potassium (K)</label>
-          <input type="number" id="reverse-k" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
+          <input type="number" id="reverse-k" min="0" step="1" data-i18n-placeholder="optionalZeroOrMore" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
           <label for="reverse-ca">Calcium (Ca)</label>
-          <input type="number" id="reverse-ca" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
+          <input type="number" id="reverse-ca" min="0" step="1" data-i18n-placeholder="optionalZeroOrMore" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
           <label for="reverse-mg">Magnesium (Mg)</label>
-          <input type="number" id="reverse-mg" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
+          <input type="number" id="reverse-mg" min="0" step="1" data-i18n-placeholder="optionalZeroOrMore" placeholder="Optional (0 or more)" oninput="validateTargetInput(this)">
         </div>
         <div class="target-input-field">
           <label for="reverse-s">Sulfur (S)</label>
-          <input type="number" id="reverse-s" min="0" step="1" placeholder="Optional (0 or more)" oninput="validateTargetInput(this, true)">
+          <input type="number" id="reverse-s" min="0" step="1" data-i18n-placeholder="optionalZeroOrMore" placeholder="Optional (0 or more)" oninput="validateTargetInput(this, true)">
         </div>
         <div class="target-input-field">
           <label for="reverse-si">Silicon (Si) <small style="color:#666">PPM</small></label>
-          <input type="number" id="reverse-si" min="0" step="1" value="0" placeholder="Target PPM (not ratio)" oninput="validateTargetInput(this, true)">
+          <input type="number" id="reverse-si" min="0" step="1" value="0" data-i18n-placeholder="targetPpmNotRatio" placeholder="Target PPM (not ratio)" oninput="validateTargetInput(this, true)">
         </div>
       </div>
 
@@ -2622,7 +2647,7 @@ permalink: /fertilizer-calculator/
         <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Choose which fertilizers you want to use. The calculator will find the best combination from your selection.<br>
         <strong>Priority:</strong> Lower values (1-10) = more preferred. The solver will try to use higher-priority fertilizers first.</p>
         <div class="fertilizer-search">
-          <input type="text" id="reverse-fertilizer-search" placeholder="Search fertilizers..." oninput="filterReverseFertilizers(this.value)">
+          <input type="text" id="reverse-fertilizer-search" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers..." oninput="filterReverseFertilizers(this.value)">
         </div>
         <div class="selection-controls">
           <button onclick="selectAllReverseFertilizers()">Select All</button>
@@ -2650,15 +2675,11 @@ permalink: /fertilizer-calculator/
 
     <div class="results-section" id="reverse-results" style="display: none;">
       <div class="results-header" id="reverse-results-header">
-        <h2>Required Fertilizers</h2>
+        <h2 data-i18n="requiredFertilizers">Required Fertilizers</h2>
         <div id="reverse-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" onclick="displayTwoTankReverseResults()" title="Split into two tanks for stock solutions" style="background: #17a2b8;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><rect x="2" y="7" width="8" height="14" rx="1"></rect><rect x="14" y="7" width="8" height="14" rx="1"></rect><path d="M6 3v4M18 3v4"></path></svg>
-            Two Tanks
-          </button>
           <button class="copy-btn" onclick="copyNPKRatioResults()" title="Copy results to clipboard">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            Copy Results
+            <span data-i18n="copyResults">Copy Results</span>
           </button>
         </div>
       </div>
@@ -2909,6 +2930,7 @@ const i18n = {
       howMuchSolution: 'How much solution are you making?',
       volumeDescription: 'Enter the total volume of water you\'ll be mixing your fertilizers into.',
       liters: 'liters',
+      grams: 'grams',
 
       // Calc mode step (Step 3)
       howToEnterValues: 'How do you want to enter values?',
@@ -2934,7 +2956,82 @@ const i18n = {
       ecHeavyFeeders: 'Heavy Feeders',
       ecFloweringFruiting: 'Flowering/Fruiting',
       ecMaximum: 'Maximum (experienced growers)',
-      ecGeneralDescription: 'Good starting point for most plants in active growth.',
+
+      // EC descriptions
+      ecDesc02: 'Very light feeding - for supplementing plain water.',
+      ecDesc04: 'Recovery feeding - gentle nutrition after stress.',
+      ecDesc06: 'For fresh cuttings and newly rooted clones.',
+      ecDesc08: 'For established clones ready for growth.',
+      ecDesc10: 'For seedlings and young plants starting to grow.',
+      ecDesc12: 'Good starting point for most plants in active growth.',
+      ecDesc15: 'Standard vegetative growth feeding.',
+      ecDesc18: 'For plants in active, vigorous growth.',
+      ecDesc20: 'For heavy-feeding plants with high nutrient demands.',
+      ecDesc25: 'Strong feeding for flowering/fruiting stages.',
+      ecDesc30: 'Maximum strength - only for experienced growers.',
+
+      // EC option full text (for dropdown)
+      ecOption02: '0.2 mS/cm - Plain Water Supplement',
+      ecOption04: '0.4 mS/cm - Recovery/Flush',
+      ecOption06: '0.6 mS/cm - Fresh Clones/Cuttings',
+      ecOption08: '0.8 mS/cm - Rooted Cuttings',
+      ecOption10: '1.0 mS/cm - Seedlings/Young Plants',
+      ecOption12: '1.2 mS/cm - General Purpose',
+      ecOption15: '1.5 mS/cm - Vegetative Growth',
+      ecOption18: '1.8 mS/cm - Active Growth',
+      ecOption20: '2.0 mS/cm - Heavy Feeders',
+      ecOption25: '2.5 mS/cm - Flowering/Fruiting',
+      ecOption30: '3.0 mS/cm - Maximum (experienced growers)',
+
+      // Results indicator text
+      currentLabel: 'Current:',
+      litersShort: 'L',
+      oxideShort: 'Oxide',
+      elementalShort: 'Elemental',
+      twoTankView: 'Two-Tank View',
+      twoTankStockSolutionSystem: 'Two-Tank Stock Solution System',
+      twoTankSeparationNote: 'Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.',
+      fertilizersToAddPer: 'Fertilizers to Add (per {volume}{unit})',
+      gramsShort: 'g',
+      gramsPerLiter: 'g/L',
+      totalFertilizers: 'TOTAL ({count} fertilizers)',
+      targetVsAchieved: 'Target vs Achieved',
+      nutrient: 'Nutrient',
+      targetPpmHeader: 'Target (ppm)',
+      achievedPpmHeader: 'Achieved (ppm)',
+      difference: 'Difference',
+      targetVsAchievedRatios: 'Target vs Achieved Ratios',
+      yourInput: 'Your Input',
+      achievedRatio: 'Achieved Ratio',
+      ppmAchieved: 'PPM Achieved',
+      elementalModeLabel: 'Elemental Mode:',
+      elementalModeNote: 'Values shown are pure elemental forms (P, K).',
+      elementalToOxideConversion: 'To convert to oxide forms: P₂O₅ = P × 2.29, K₂O = K × 1.20',
+      oxideModeLabel: 'Oxide Mode:',
+      oxideModeNote: 'Values shown are commercial oxide forms (P₂O₅, K₂O).',
+      oxideToElementalConversion: 'To convert to elements: P = P₂O₅ × 0.436, K = K₂O × 0.830',
+      nitrogenFormLabel: 'Nitrogen Form:',
+      ofTotalN: 'of total N',
+      clickToLearnIonBalance: 'Click to learn how we calculate Ion Balance',
+      meqPerLiter: 'meq/L',
+      cations: 'Cations',
+      anions: 'Anions',
+      imbalance: 'Imbalance',
+      balanced: 'Balanced',
+      balancedCheck: 'Balanced ✓',
+      caution: 'Caution',
+      cautionWarning: 'Caution ⚠',
+      imbalanced: 'Imbalanced',
+      imbalancedX: 'Imbalanced ✗',
+      ratioOffTarget: '{nutrient} ratio is {percent}% off target',
+      ratioOffTargetAcceptable: '{nutrient} ratio is {percent}% off target (acceptable range)',
+      ppmUnit: 'ppm',
+      ppmLabel: '(PPM)',
+      ionBalanceDetails: 'Ion Balance Details',
+      totalCations: 'Total Cations',
+      totalAnions: 'Total Anions',
+      whatIsIonBalance: 'What is ion balance?',
+      ionBalanceExplanation: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). Imbalance ≤10% is good; higher values may cause pH swings.',
 
       // Input steps
       selectFertilizersAndEnterAmounts: 'Select Fertilizers & Enter Amounts',
@@ -2960,7 +3057,9 @@ const i18n = {
       commonOnly: 'Common Only',
       changeSettings: 'Change Settings',
       copyResults: 'Copy Results',
+      copyResultsToClipboard: 'Copy results to clipboard',
       twoTanks: 'Two Tanks',
+      twoTanksForStockSolutions: 'Split into two tanks for stock solutions',
 
       // Two-Tank Question Step
       twoTankQuestionTitle: 'Would you like to see a two-tank view?',
@@ -2969,8 +3068,8 @@ const i18n = {
       whatIsTwoTankTitle: 'What is a Two-Tank System?',
       whatIsTwoTankDescription: 'A two-tank system separates incompatible fertilizers into two concentrated stock solutions:',
       tankALabel: 'Tank A (Calcium)',
-      tankADescription: 'Contains calcium-based fertilizers like Calcium Nitrate',
-      tankBLabel: 'Tank B (Sulfates/Phosphates)',
+      tankADescription: 'Contains calcium sources - keep separate from sulfates and silicates',
+      tankBLabel: 'Tank B (Sulfates/Phosphates/Silicates)',
       tankBDescription: 'Contains sulfate, phosphate, and silicate sources',
       twoTankMixingNote: 'Each tank is diluted separately, then combined in the final reservoir at working strength where the diluted concentrations are safe.',
       noShowRegularResults: 'No, show regular results',
@@ -2993,13 +3092,67 @@ const i18n = {
       egValue: 'e.g.,',
       optional: 'Optional',
       targetPpm: 'Target PPM',
+      exampleN: 'e.g., 150',
+      exampleP: 'e.g., 50',
+      exampleK: 'e.g., 200',
+      exampleCa: 'e.g., 150',
+      exampleMg: 'e.g., 50',
+      exampleRatioN: 'e.g., 3',
+      exampleRatioP: 'e.g., 1',
+      exampleRatioK: 'e.g., 2',
+      optionalZeroOrMore: 'Optional (0 or more)',
+      targetPpmNotRatio: 'Target PPM (not ratio)',
+
+      // Alert messages
+      alertSelectFertilizerAndAmount: 'Please select at least one fertilizer and enter an amount.',
+      alertEnterTargetPpm: 'Please enter at least one target PPM value.',
+      alertEnterRatioValue: 'Please enter at least one ratio value greater than zero.',
+      alertSelectFertilizer: 'Please select at least one fertilizer.',
+      alertNoCalculationData: 'No calculation data available.',
+      alertEnterValidVolume: 'Please enter a valid volume greater than 0',
+      alertFixInvalidInputs: 'Please fix the invalid input values (highlighted in red)',
+      alertSelectFertilizerWithAmount: 'Please select at least one fertilizer with an amount greater than 0',
+      alertEnterValidSolutionVolume: 'Please enter a valid solution volume greater than 0',
+      alertEnterPositiveNutrientTarget: 'Please enter a positive value for at least one nutrient target',
+      alertSelectAvailableFertilizer: 'Please select at least one available fertilizer',
+      alertCalculationError: 'An error occurred during calculation. Please try again.',
+      alertNoFormulaResults: 'No formula results to split. Please build a formula first.',
+      alertNoCalculationResults: 'No calculation results to split. Please calculate fertilizers first.',
+      alertNoCalculationResultsPpm: 'No calculation results to split. Please calculate PPM values first.',
+      alertNoTwoTankData: 'No two-tank data to copy.',
+      alertCopyFailed: 'Failed to copy to clipboard',
+      alertEnterNutrientValue: 'Please enter at least one nutrient value greater than zero.',
+      alertFillAllNutrientFields: 'Please fill in all nutrient fields with valid values (0 or greater). At least one nutrient must be greater than zero.',
+      alertSelectFertilizerToUse: 'Please select at least one fertilizer to use.',
+      alertCopyFailedTryAgain: 'Failed to copy to clipboard. Please try again.',
+      alertRunCalculationFirst: 'Please run a calculation first.',
+      nutrientOffTarget: '{nutrient} is {percent}% off target',
+      nutrientOffTargetAcceptable: '{nutrient} is {percent}% off target (acceptable range)',
 
       // Results sections
+      combinedSolutionWhenMixed: 'Combined Solution (when mixed)',
+      combinedSolutionDescription: 'When both tanks are diluted and combined in the final reservoir, you will achieve:',
       selectedFertilizers: 'Selected Fertilizers',
       resultsPpm: 'Results (PPM)',
       ionBalance: 'Ion Balance',
       nutrientRatioAnalysis: 'Nutrient Ratio Analysis',
       ecPrediction: 'EC Prediction',
+      predictedEc: 'Predicted EC',
+      electricalConductivity25C: 'Electrical Conductivity (25°C)',
+      ecLabel: 'EC:',
+      combinedEcLabel: 'Combined EC:',
+      mScmUnit: 'mS/cm',
+      targetEcAchieved: 'Target EC Achieved',
+      targetEcLabel: 'Target EC',
+      achievedEc: 'Achieved EC (25°C)',
+      ionicStrength: 'Ionic Strength',
+      mMUnit: 'mM',
+      ecVeryLight: 'Very Light',
+      ecLight: 'Light',
+      ecModerate: 'Moderate',
+      ecStrong: 'Strong',
+      ecVeryStrong: 'Very Strong',
+      ecVeryHigh: 'Very High!',
       warningsRecommendations: 'Warnings & Recommendations',
       recommendedFormula: 'Recommended Formula',
       requiredFertilizers: 'Required Fertilizers',
@@ -3035,9 +3188,17 @@ const i18n = {
       availableFertilizersDescription: 'Select the fertilizers you have available. The calculator will use only these to build your formula.',
 
       // Notes
+      noteLabel: 'Note:',
       oxideConversionNote: 'Oxide values (P₂O₅, K₂O, etc.) are automatically converted to elemental forms (P, K, etc.) using standard conversion factors.',
-      ionBalanceNote: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.',
-      nutrientRatioNote: 'These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.',
+      whatIsIonBalanceQuestion: 'What is ion balance?',
+      ionBalanceExplanationFull: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.',
+      clickToLearnPpm: 'Click to learn how we calculate PPM',
+      clickToLearnIonBalance: 'Click to learn how we calculate Ion Balance',
+      nutrientRatioAnalysis: 'Nutrient Ratio Analysis',
+      whatAreNutrientRatios: 'What are nutrient ratios?',
+      nutrientRatioExplanationFull: 'These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.',
+      ecPrediction: 'EC Prediction',
+      warningsAndRecommendations: 'Warnings & Recommendations',
 
       // Step indicators
       stepOf: 'Step {current} of {total}',
@@ -3046,6 +3207,15 @@ const i18n = {
       calculating: 'Calculating...',
       initializing: 'Initializing...',
       initializingSolver: 'Initializing solver...',
+      buildingFormula: 'Building Formula',
+      calculatingFertilizers: 'Calculating Fertilizers',
+      validatingInputs: 'Validating inputs...',
+      preparingModel: 'Preparing optimization model...',
+      runningSolver: 'Running MILP solver...',
+      optimizingCombination: 'Optimizing fertilizer combination...',
+      scalingToTargetEc: 'Scaling to target EC...',
+      preparingResults: 'Preparing results...',
+      complete: 'Complete!',
 
       // Language selector
       language: 'Language',
@@ -3074,6 +3244,7 @@ const i18n = {
       howMuchSolution: 'તમે કેટલું દ્રાવણ બનાવી રહ્યા છો?',
       volumeDescription: 'પાણીની કુલ માત્રા દાખલ કરો જેમાં તમે ખાતર ઉમેરી રહ્યા છો.',
       liters: 'લિટર',
+      grams: 'ગ્રામ',
 
       howToEnterValues: 'મૂલ્યો કેવી રીતે દાખલ કરશો?',
       calcModeDescription: 'વેપારી ખાતર નિર્દેશન અથવા શુદ્ધ તત્વ મૂલ્યો વચ્ચે પસંદ કરો.',
@@ -3096,7 +3267,82 @@ const i18n = {
       ecHeavyFeeders: 'હેવી ફીડર્સ',
       ecFloweringFruiting: 'ફૂલ/ફળ ધોરણ',
       ecMaximum: 'મહત્તમ (અનુભવી ઉત્પાદકો માટે)',
-      ecGeneralDescription: 'સક્રિય વૃદ્ધિમાં મોટાભાગના છોડ માટે સારો આરંભ બિંદુ.',
+
+      // EC descriptions
+      ecDesc02: 'ખૂબ હળવું ખોરાક - સાદા પાણીની પૂર્તિ માટે.',
+      ecDesc04: 'રિકવરી ખોરાક - તણાવ પછી હળવું પોષણ.',
+      ecDesc06: 'નવી કટિંગ્સ અને નવા રૂટ થયેલ ક્લોન્સ માટે.',
+      ecDesc08: 'વૃદ્ધિ માટે તૈયાર ક્લોન્સ માટે.',
+      ecDesc10: 'નિકર અને વૃદ્ધિ શરૂ કરતા યંગ છોડ માટે.',
+      ecDesc12: 'સક્રિય વૃદ્ધિમાં મોટાભાગના છોડ માટે સારો આરંભ બિંદુ.',
+      ecDesc15: 'પ્રમાણભૂત વેજિટેટિવ વૃદ્ધિ ખોરાક.',
+      ecDesc18: 'સક્રિય, જોરદાર વૃદ્ધિમાં છોડ માટે.',
+      ecDesc20: 'ઉંચી પોષક જરૂરિયાતો ધરાવતા હેવી ફીડર છોડ માટે.',
+      ecDesc25: 'ફૂલ/ફળ તબક્કા માટે મજબૂત ખોરાક.',
+      ecDesc30: 'મહત્તમ શક્તિ - માત્ર અનુભવી ઉત્પાદકો માટે.',
+
+      // EC option full text (for dropdown)
+      ecOption02: '૦.૨ mS/cm - સાદું પાણી પૂરક',
+      ecOption04: '૦.૪ mS/cm - રિકવરી/ફ્લશ',
+      ecOption06: '૦.૬ mS/cm - નવી ક્લોન્સ/કટિંગ્સ',
+      ecOption08: '૦.૮ mS/cm - રૂટ થયેલ કટિંગ્સ',
+      ecOption10: '૧.૦ mS/cm - નિકર/યંગ છોડ',
+      ecOption12: '૧.૨ mS/cm - સામાન્ય ઉપયોગ',
+      ecOption15: '૧.૫ mS/cm - વેજિટેટિવ વૃદ્ધિ',
+      ecOption18: '૧.૮ mS/cm - સક્રિય વૃદ્ધિ',
+      ecOption20: '૨.૦ mS/cm - હેવી ફીડર્સ',
+      ecOption25: '૨.૫ mS/cm - ફૂલ/ફળ ધોરણ',
+      ecOption30: '૩.૦ mS/cm - મહત્તમ (અનુભવી ઉત્પાદકો માટે)',
+
+      // Results indicator text
+      currentLabel: 'વર્તમાન:',
+      litersShort: 'લિ',
+      oxideShort: 'ઓક્સાઇડ',
+      elementalShort: 'તત્ત્વીય',
+      twoTankView: 'બે-ટેન્ક દેખાવ',
+      twoTankStockSolutionSystem: 'બે-ટેન્ક સ્ટોક સોલ્યુશન સિસ્ટમ',
+      twoTankSeparationNote: 'કેલ્શિયમ સલ્ફેટ અવક્ષેપ રોકવા માટે ખાતર અલગ કરેલ છે. દરેક ટેન્કને પાણી સાથે અલગથી મિક્સ કરો, પછી અંતિમ દ્રાવણમાં ભેળવો.',
+      fertilizersToAddPer: 'ઉમેરવાના ખાતર (દર {volume}{unit})',
+      gramsShort: 'ગ્રા',
+      gramsPerLiter: 'ગ્રા/લિ',
+      totalFertilizers: 'કુલ ({count} ખાતર)',
+      targetVsAchieved: 'લક્ષ્ય vs પ્રાપ્ત',
+      nutrient: 'પોષક',
+      targetPpmHeader: 'લક્ષ્ય (ppm)',
+      achievedPpmHeader: 'પ્રાપ્ત (ppm)',
+      difference: 'તફાવત',
+      targetVsAchievedRatios: 'લક્ષ્ય vs પ્રાપ્ત અનુપાત',
+      yourInput: 'તમારું ઇનપુટ',
+      achievedRatio: 'પ્રાપ્ત અનુપાત',
+      ppmAchieved: 'PPM પ્રાપ્ત',
+      elementalModeLabel: 'તત્ત્વીય મોડ:',
+      elementalModeNote: 'બતાવેલ મૂલ્યો શુદ્ધ તત્ત્વીય રૂપ છે (P, K).',
+      elementalToOxideConversion: 'ઓક્સાઇડમાં રૂપાંતર: P₂O₅ = P × 2.29, K₂O = K × 1.20',
+      oxideModeLabel: 'ઓક્સાઇડ મોડ:',
+      oxideModeNote: 'બતાવેલ મૂલ્યો વેપારી ઓક્સાઇડ રૂપ છે (P₂O₅, K₂O).',
+      oxideToElementalConversion: 'તત્ત્વમાં રૂપાંતર: P = P₂O₅ × 0.436, K = K₂O × 0.830',
+      nitrogenFormLabel: 'નાઇટ્રોજન રૂપ:',
+      ofTotalN: 'કુલ N નો',
+      clickToLearnIonBalance: 'આયન સંતુલન ગણતરી કેવી રીતે થાય છે તે જાણવા ક્લિક કરો',
+      meqPerLiter: 'meq/L',
+      cations: 'ધનાયન',
+      anions: 'ઋણાયન',
+      imbalance: 'અસંતુલન',
+      balanced: 'સંતુલિત',
+      balancedCheck: 'સંતુલિત ✓',
+      caution: 'સાવધાન',
+      cautionWarning: 'સાવધાન ⚠',
+      imbalanced: 'અસંતુલિત',
+      imbalancedX: 'અસંતુલિત ✗',
+      ratioOffTarget: '{nutrient} અનુપાત લક્ષ્યથી {percent}% દૂર છે',
+      ratioOffTargetAcceptable: '{nutrient} અનુપાત લક્ષ્યથી {percent}% દૂર છે (સ્વીકાર્ય શ્રેણી)',
+      ppmUnit: 'ppm',
+      ppmLabel: '(PPM)',
+      ionBalanceDetails: 'આયન સંતુલન વિગતો',
+      totalCations: 'કુલ ધનાયન',
+      totalAnions: 'કુલ ઋણાયન',
+      whatIsIonBalance: 'આયન સંતુલન શું છે?',
+      ionBalanceExplanation: 'ખાતર ચાર્જ થયેલા આયનોમાં ઓગળે છે (ધનાયન જેમ કે K⁺, Ca²⁺, NH₄⁺ અને ઋણાયન જેમ કે NO₃⁻, SO₄²⁻, H₂PO₄⁻). અસંતુલન ≤10% સારું છે; વધારે મૂલ્યો pH માં ફેરફાર કરી શકે છે.',
 
       selectFertilizersAndEnterAmounts: 'ખાતર પસંદ કરો અને માત્રા દાખલ કરો',
       selectFertilizersDescription: 'તમે કયાં ખાતર વાપરી રહ્યા છો તે પસંદ કરો અને દ્રાવણમાં ઉમેરવાની ગ્રામ માત્રા દાખલ કરો.',
@@ -3120,16 +3366,18 @@ const i18n = {
       commonOnly: 'માત્ર સામાન્ય',
       changeSettings: 'સેટિંગ બદલો',
       copyResults: 'પરિણામ નકલ કરો',
+      copyResultsToClipboard: 'પરિણામ ક્લિપબોર્ડ પર નકલ કરો',
       twoTanks: 'બે ટેન્ક',
+      twoTanksForStockSolutions: 'સ્ટોક સોલ્યુશન માટે બે ટાંકીમાં વિભાજિત કરો',
 
       twoTankQuestionTitle: 'શું તમે બે-ટેન્ક દેખાવ જોવાનું ઇચ્છો છો?',
       incompatibleFertilizersDetected: 'અસંગત ખાતર પસંદ થયાં છે',
       twoTankExplanation: 'તમારી ફોર્મ્યુલામાં એવા ખાતર છે જે ઉંચી સાંદ્રતા પર સાથે મિશ્રિત થાય ત્યારે પ્રતિક્રિયા કરી શકે છે. ખાસ કરીને, કેલ્શિયમ સ્ત્રોત સલ્ફેટ, ફોસ્ફેટ અથવા સિલિકેટ સાથે ખોટા pH પર ઝરમર થઈ શકે છે.',
       whatIsTwoTankTitle: 'બે-ટેન્ક સિસ્ટમ શું છે?',
       whatIsTwoTankDescription: 'બે-ટેન્ક સિસ્ટમ અસંગત ખાતરોને બે સાંદ્રિત સ્ટોક દ્રાવણોમાં અલગ કરે છે:',
-      tankALabel: 'ટેન્ક A (કેલ્શિયમ)',
-      tankADescription: 'કેલ્શિયમ આધારિત ખાતર જેમ કે કેલ્શિયમ નાઇટ્રેટ ધરાવે છે',
-      tankBLabel: 'ટેન્ક B (સલ્ફેટ/ફોસ્ફેટ)',
+      tankALabel: 'ટાંકી A (કેલ્શિયમ)',
+      tankADescription: 'કેલ્શિયમ ધરાવતાં ઘટકો ધરાવે છે — સલ્ફેટ્સ અને સિલિકેટ્સથી અલગ રાખો (એક સાથે ન ભેળવો).',
+      tankBLabel: 'ટાંકી B (સલ્ફેટ્સ/ફોસ્ફેટ્સ/સિલિકેટ્સ)',
       tankBDescription: 'સલ્ફેટ, ફોસ્ફેટ અને સિલિકેટ સ્ત્રોત ધરાવે છે',
       twoTankMixingNote: 'દરેક ટેન્ક અલગથી પાતળી થાય છે, પછી અંતિમ રિઝર્વોયરમાં કામકાજ સાંદ્રતા પર જોડાય છે જ્યાં સાંદ્રતા સલામત હોય છે.',
       noShowRegularResults: 'ના, સામાન્ય પરિણામ બતાવો',
@@ -3150,12 +3398,66 @@ const i18n = {
       egValue: 'ઉદાહરણ:',
       optional: 'વૈકલ્પિક',
       targetPpm: 'લક્ષ્ય PPM',
+      exampleN: 'ઉદા., 150',
+      exampleP: 'ઉદા., 50',
+      exampleK: 'ઉદા., 200',
+      exampleCa: 'ઉદા., 150',
+      exampleMg: 'ઉદા., 50',
+      exampleRatioN: 'ઉદા., 3',
+      exampleRatioP: 'ઉદા., 1',
+      exampleRatioK: 'ઉદા., 2',
+      optionalZeroOrMore: 'વૈકલ્પિક (0 અથવા વધુ)',
+      targetPpmNotRatio: 'લક્ષ્ય PPM (ગુણોત્તર નહીં)',
 
+      // Alert messages
+      alertSelectFertilizerAndAmount: 'કૃપા કરીને ઓછામાં ઓછું એક ખાતર પસંદ કરો અને જથ્થો દાખલ કરો.',
+      alertEnterTargetPpm: 'કૃપા કરીને ઓછામાં ઓછું એક લક્ષ્ય PPM મૂલ્ય દાખલ કરો.',
+      alertEnterRatioValue: 'કૃપા કરીને શૂન્ય કરતાં વધુ ઓછામાં ઓછું એક ગુણોત્તર મૂલ્ય દાખલ કરો.',
+      alertSelectFertilizer: 'કૃપા કરીને ઓછામાં ઓછું એક ખાતર પસંદ કરો.',
+      alertNoCalculationData: 'ગણતરી ડેટા ઉપલબ્ધ નથી.',
+      alertEnterValidVolume: 'કૃપા કરીને 0 કરતાં વધુ માન્ય વોલ્યુમ દાખલ કરો',
+      alertFixInvalidInputs: 'કૃપા કરીને અમાન્ય ઇનપુટ મૂલ્યો સુધારો (લાલમાં હાઇલાઇટ કરેલ)',
+      alertSelectFertilizerWithAmount: 'કૃપા કરીને 0 કરતાં વધુ જથ્થા સાથે ઓછામાં ઓછું એક ખાતર પસંદ કરો',
+      alertEnterValidSolutionVolume: 'કૃપા કરીને 0 કરતાં વધુ માન્ય દ્રાવણ વોલ્યુમ દાખલ કરો',
+      alertEnterPositiveNutrientTarget: 'કૃપા કરીને ઓછામાં ઓછા એક પોષક લક્ષ્ય માટે હકારાત્મક મૂલ્ય દાખલ કરો',
+      alertSelectAvailableFertilizer: 'કૃપા કરીને ઓછામાં ઓછું એક ઉપલબ્ધ ખાતર પસંદ કરો',
+      alertCalculationError: 'ગણતરી દરમિયાન ભૂલ આવી. કૃપા કરીને ફરી પ્રયાસ કરો.',
+      alertNoFormulaResults: 'વિભાજન માટે કોઈ ફોર્મ્યુલા પરિણામો નથી. કૃપા કરીને પહેલા ફોર્મ્યુલા બનાવો.',
+      alertNoCalculationResults: 'વિભાજન માટે કોઈ ગણતરી પરિણામો નથી. કૃપા કરીને પહેલા ખાતરની ગણતરી કરો.',
+      alertNoCalculationResultsPpm: 'વિભાજન માટે કોઈ ગણતરી પરિણામો નથી. કૃપા કરીને પહેલા PPM મૂલ્યોની ગણતરી કરો.',
+      alertNoTwoTankData: 'કૉપિ કરવા માટે કોઈ બે-ટાંકી ડેટા નથી.',
+      alertCopyFailed: 'ક્લિપબોર્ડમાં કૉપિ કરવામાં નિષ્ફળ',
+      alertEnterNutrientValue: 'કૃપા કરીને શૂન્ય કરતાં વધુ ઓછામાં ઓછું એક પોષક મૂલ્ય દાખલ કરો.',
+      alertFillAllNutrientFields: 'કૃપા કરીને તમામ પોષક ફીલ્ડ્સ માન્ય મૂલ્યો (0 અથવા વધુ) સાથે ભરો. ઓછામાં ઓછું એક પોષક શૂન્ય કરતાં વધુ હોવું જોઈએ.',
+      alertSelectFertilizerToUse: 'કૃપા કરીને ઉપયોગ કરવા માટે ઓછામાં ઓછું એક ખાતર પસંદ કરો.',
+      alertCopyFailedTryAgain: 'ક્લિપબોર્ડમાં કૉપિ કરવામાં નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.',
+      alertRunCalculationFirst: 'કૃપા કરીને પહેલા ગણતરી ચલાવો.',
+      nutrientOffTarget: '{nutrient} લક્ષ્ય કરતાં {percent}% દૂર છે',
+      nutrientOffTargetAcceptable: '{nutrient} લક્ષ્ય કરતાં {percent}% દૂર છે (સ્વીકાર્ય શ્રેણી)',
+
+      combinedSolutionWhenMixed: 'સંયુક્ત દ્રાવણ (મિશ્રણ કર્યા પછી)',
+      combinedSolutionDescription: 'બંને ટાંકીઓને પાતળા કરીને અંતિમ રિઝર્વોયરમાં ભેળવવાથી, તમે નીચે મુજબ પ્રાપ્ત કરશો:',
       selectedFertilizers: 'પસંદ કરેલ ખાતર',
       resultsPpm: 'પરિણામો (PPM)',
       ionBalance: 'આયન સંતુલન',
       nutrientRatioAnalysis: 'પોષક અનુપાત વિશ્લેષણ',
       ecPrediction: 'EC અનુમાન',
+      predictedEc: 'અનુમાનિત EC',
+      electricalConductivity25C: 'વિદ્યુત વાહકતા (25°C)',
+      ecLabel: 'EC:',
+      combinedEcLabel: 'સંયુક્ત EC:',
+      mScmUnit: 'mS/cm',
+      targetEcAchieved: 'લક્ષ્ય EC પ્રાપ્ત થયું',
+      targetEcLabel: 'લક્ષ્ય EC',
+      achievedEc: 'પ્રાપ્ત EC (25°C પર)',
+      ionicStrength: 'આયનિક તીવ્રતા',
+      mMUnit: 'mM',
+      ecVeryLight: 'ખૂબ હળવું',
+      ecLight: 'હળવું',
+      ecModerate: 'મધ્યમ',
+      ecStrong: 'તીવ્ર',
+      ecVeryStrong: 'ખૂબ તીવ્ર',
+      ecVeryHigh: 'ખૂબ ઊંચું!',
       warningsRecommendations: 'ચેતવણીઓ અને ભલામણો',
       recommendedFormula: 'ભલામણ કરેલ સૂત્ર',
       requiredFertilizers: 'જરૂરી ખાતર',
@@ -3185,20 +3487,55 @@ const i18n = {
       availableFertilizers: 'ઉપલબ્ધ ખાતર',
       availableFertilizersDescription: 'તમારી પાસે કયા ખાતર ઉપલબ્ધ છે તે પસંદ કરો. ગણક માત્ર આનો ઉપયોગ કરશે.',
 
+      noteLabel: 'નોંધ:',
+      clickToLearnPpm: 'PPM કેવી રીતે ગણીએ છીએ તે જાણવા ક્લિક કરો',
+      clickToLearnIonBalance: 'આયન બેલેન્સ કેવી રીતે ગણીએ છીએ તે જાણવા ક્લિક કરો',
       oxideConversionNote: 'ઓક્સાઇડ મૂલ્યો (P₂O₅, K₂O વગેરે)ને પ્રમાણભૂત રૂપાંતર કારકો વડે આપોઆપ તત્ત્વીય રૂપ (P, K વગેરે)માં બદલવામાં આવે છે.',
-      ionBalanceNote: 'ખાતર વિઘટીત થઈને ચાર્જ ધરાવતા આયન બને છે (cation જેમ K⁺, Ca²⁺, NH₄⁺ અને anion જેમ NO₃⁻, SO₄²⁻, H₂PO₄⁻). સંતુલિત ફીડમાં આશરે સમાન સકારાત્મક અને નકારાત્મક ચાર્જ હોય છે. ≤10% અસંતુલન સ્વીકાર્ય છે; વધુ મૂલ્યો pH ફેરફાર અને પોષક લોકઆઉટ કરી શકે છે.',
-      nutrientRatioNote: 'આ અનુપાત મુખ્ય પોષકના સંબંધિત પ્રમાણ બતાવે છે. ઉદાહરણ તરીકે "1 : 0.5 : 2" N:P:K માટે અર્થ છે 1 ભાગ નાઇટ્રોજન, 0.5 ભાગ ફોસ્ફરસ અને 2 ભાગ પોટેશિયમ. આ અનુપાત અલગ સૂત્રો તુલના કરવા અને ચોક્કસ પાકની જરૂરિયાતને મેળ કરવા મદદ કરે છે.',
+      whatIsIonBalanceQuestion: 'આયન બેલેન્સ શું છે?',
+      ionBalanceExplanationFull: 'ખાતર પાણીમાં ઓગળીને વિદ્યુત આવેશિત આયનો બને છે (ધનાયન જેમ કે K⁺, Ca²⁺, NH₄⁺ અને ઋણાયન જેમ કે NO₃⁻, SO₄²⁻, H₂PO₄⁻). બેલેન્સ્ડ ફીડમાં ધન અને ઋણ આવેશ લગભગ સમાન હોય છે. ≤10% અસંતુલન સ્વીકાર્ય છે; વધુ અસંતુલનથી pHમાં ઉતાર-ચઢાવ અને પોષક તત્ત્વો "લૉકઆઉટ" થઈ શકે છે.',
+      nutrientRatioAnalysis: 'પોષક તત્ત્વોના અનુપાતનું વિશ્લેષણ',
+      whatAreNutrientRatios: 'પોષક તત્ત્વોના અનુપાત શું છે?',
+      nutrientRatioExplanationFull: 'આ અનુપાતો મહત્વના પોષક તત્ત્વો એકબીજા સામે કેટલા પ્રમાણમાં છે તે દર્શાવે છે. ઉદાહરણ તરીકે, N:P:K માટે "1 : 0.5 : 2" નો અર્થ એ છે કે દરેક 1 ભાગ નાઇટ્રોજન સામે 0.5 ભાગ ફોસ્ફરસ અને 2 ભાગ પોટેશિયમ છે. આ અનુપાતો વિવિધ ખાતર મિશ્રણોની સરખામણી કરવા અને ચોક્કસ પાકની જરૂરિયાત મુજબ ફીડ મેળ બેસાડવામાં મદદ કરે છે.',
+      ecPrediction: 'EC અનુમાન',
+      warningsAndRecommendations: 'ચેતવણીઓ અને ભલામણો',
 
       stepOf: 'પગલું {current} / {total}',
 
       calculating: 'ગણતરી કરી રહ્યા છીએ...',
       initializing: 'પ્રારંભ કરી રહ્યા છીએ...',
       initializingSolver: 'સોલ્વર શરૂ કરી રહ્યા છીએ...',
+      buildingFormula: 'ફોર્મ્યુલા બનાવી રહ્યા છીએ',
+      calculatingFertilizers: 'ખાતરની ગણતરી કરી રહ્યા છીએ',
+      validatingInputs: 'ઇનપુટ ચકાસી રહ્યા છીએ...',
+      preparingModel: 'ઓપ્ટિમાઇઝેશન મોડેલ તૈયાર કરી રહ્યા છીએ...',
+      runningSolver: 'MILP સોલ્વર ચલાવી રહ્યા છીએ...',
+      optimizingCombination: 'ખાતરનું શ્રેષ્ઠ સંયોજન શોધી રહ્યા છીએ...',
+      scalingToTargetEc: 'લક્ષ્ય EC મુજબ સ્કેલ કરી રહ્યા છીએ...',
+      preparingResults: 'પરિણામો તૈયાર કરી રહ્યા છીએ...',
+      complete: 'પૂર્ણ!',
 
       language: 'ભાષા',
 
       priority: 'પ્રાધાન્ય'
     }
+  },
+
+  // Format a number according to the current language
+  formatNumber(num) {
+    const numStr = String(num);
+
+    // Native numeral mappings for each language
+    const numeralMaps = {
+      'gu': ['૦', '૧', '૨', '૩', '૪', '૫', '૬', '૭', '૮', '૯']
+    };
+
+    const numerals = numeralMaps[this.currentLanguage];
+    if (!numerals) {
+      return numStr; // Return as-is for languages without custom numerals
+    }
+
+    // Replace each digit with its localized equivalent
+    return numStr.replace(/[0-9]/g, digit => numerals[parseInt(digit)]);
   },
 
   // Get translation for a key
@@ -3207,8 +3544,14 @@ const i18n = {
     let text = lang[key] || this.translations.en[key] || key;
 
     // Handle replacements like {current} and {total}
+    // Numbers are automatically formatted to localized numerals
     Object.keys(replacements).forEach(placeholder => {
-      text = text.replace(new RegExp(`\\{${placeholder}\\}`, 'g'), replacements[placeholder]);
+      let value = replacements[placeholder];
+      // Format numbers using localized numerals
+      if (typeof value === 'number') {
+        value = this.formatNumber(value);
+      }
+      text = text.replace(new RegExp(`\\{${placeholder}\\}`, 'g'), value);
     });
 
     return text;
@@ -3220,6 +3563,7 @@ const i18n = {
       this.currentLanguage = langCode;
       localStorage.setItem('fertCalcLanguage', langCode);
       this.updateUI();
+      this.refreshDynamicContent();
     }
   },
 
@@ -3256,6 +3600,36 @@ const i18n = {
         el.innerHTML = this.t(key);
       }
     });
+  },
+
+  // Refresh dynamically generated content (results, tables) after language change
+  refreshDynamicContent() {
+    // Re-render Grams → PPM results
+    if (typeof lastGramsToPPMCalculation !== 'undefined' && lastGramsToPPMCalculation) {
+      const { activeFertilizers, volume, results, ecData, ionBalance, ratios } = lastGramsToPPMCalculation;
+      displaySelectedFertilizers(activeFertilizers);
+      displayResults(results);
+      displayECTDS(ecData);
+      displayNutrientRatios(ratios);
+    }
+
+    // Re-render PPM → Grams results
+    if (typeof lastFormulaCalculation !== 'undefined' && lastFormulaCalculation) {
+      const { result, targets, volume, mode } = lastFormulaCalculation;
+      displayFormulaResults(result, targets, volume, mode);
+    }
+
+    // Re-render NPK Ratio → Grams results
+    if (typeof lastReverseCalculation !== 'undefined' && lastReverseCalculation) {
+      const { result, targets, volume, mode, targetEC } = lastReverseCalculation;
+      displayReverseResults(result, targets, volume, targetEC);
+    }
+
+    // Re-render Two-Tank results
+    if (typeof currentTwoTankData !== 'undefined' && currentTwoTankData) {
+      const { tankA, tankB, volume, mode, achieved, targets } = currentTwoTankData;
+      displayTwoTankResults(tankA, tankB, volume, mode, achieved, targets);
+    }
   },
 
   // Initialize language from localStorage or browser preference
@@ -4556,11 +4930,15 @@ function validateTargetInput(input, allowZero = false) {
 }
 
 // Wizard Mode Selection
-const MODE_NAMES = {
-  'ppm-calc': 'Grams → PPM',
-  'formula-builder': 'PPM → Grams',
-  'reverse-calc': 'NPK Ratio → Grams'
-};
+// Returns localized mode names
+function getModeName(mode) {
+  const modeKeys = {
+    'ppm-calc': 'gramsToPpm',
+    'formula-builder': 'ppmToGrams',
+    'reverse-calc': 'npkRatioToGrams'
+  };
+  return i18n.t(modeKeys[mode]) || mode;
+}
 
 // Modes that need the calculation mode step (step 3)
 const MODES_WITH_CALC_MODE = ['formula-builder', 'reverse-calc'];
@@ -4568,19 +4946,19 @@ const MODES_WITH_CALC_MODE = ['formula-builder', 'reverse-calc'];
 // Modes that need the EC step (step 4)
 const MODES_WITH_EC = ['reverse-calc'];
 
-// EC descriptions for the dropdown
+// EC descriptions for the dropdown (maps to i18n translation keys)
 const EC_DESCRIPTIONS = {
-  'ec:0.2': 'Very light feeding - for supplementing plain water.',
-  'ec:0.4': 'Recovery feeding - gentle nutrition after stress.',
-  'ec:0.6': 'For fresh cuttings and newly rooted clones.',
-  'ec:0.8': 'For established clones ready for growth.',
-  'ec:1.0': 'For seedlings and young plants starting to grow.',
-  'ec:1.2': 'Good starting point for most plants in active growth.',
-  'ec:1.5': 'Standard vegetative growth feeding.',
-  'ec:1.8': 'For plants in active, vigorous growth.',
-  'ec:2.0': 'For heavy-feeding plants with high nutrient demands.',
-  'ec:2.5': 'Strong feeding for flowering/fruiting stages.',
-  'ec:3.0': 'Maximum strength - only for experienced growers.'
+  'ec:0.2': 'ecDesc02',
+  'ec:0.4': 'ecDesc04',
+  'ec:0.6': 'ecDesc06',
+  'ec:0.8': 'ecDesc08',
+  'ec:1.0': 'ecDesc10',
+  'ec:1.2': 'ecDesc12',
+  'ec:1.5': 'ecDesc15',
+  'ec:1.8': 'ecDesc18',
+  'ec:2.0': 'ecDesc20',
+  'ec:2.5': 'ecDesc25',
+  'ec:3.0': 'ecDesc30'
 };
 
 let selectedMode = null;
@@ -4596,45 +4974,149 @@ function getStepCount(mode) {
   return 3; // ppm-calc
 }
 
+// =============================================================================
+// CENTRALIZED WIZARD STEP MANAGEMENT
+// =============================================================================
+
+// All wizard step IDs in order
+const WIZARD_STEPS = [
+  'mode-selector',
+  'volume-step',
+  'calc-mode-step',
+  'ec-step',
+  'grams-input-step',
+  'ppm-targets-step',
+  'npk-ratios-step',
+  'fertilizer-select-step',
+  'two-tank-question-step',
+  'wizard-results',
+  'calculator-content'
+];
+
+// Step configuration: maps step ID to its indicator ID and step number per mode
+const STEP_CONFIG = {
+  'volume-step': {
+    indicatorId: 'volume-step-indicator',
+    stepNumber: { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 }
+  },
+  'calc-mode-step': {
+    indicatorId: 'calc-mode-step-indicator',
+    stepNumber: { 'formula-builder': 3, 'reverse-calc': 3 }
+  },
+  'ec-step': {
+    indicatorId: 'ec-step-indicator',
+    stepNumber: { 'reverse-calc': 4 }
+  },
+  'grams-input-step': {
+    indicatorId: 'grams-input-step-indicator',
+    stepNumber: { 'ppm-calc': 3 }
+  },
+  'ppm-targets-step': {
+    indicatorId: 'ppm-targets-step-indicator',
+    stepNumber: { 'formula-builder': 4 }
+  },
+  'npk-ratios-step': {
+    indicatorId: 'npk-ratios-step-indicator',
+    stepNumber: { 'reverse-calc': 5 }
+  },
+  'fertilizer-select-step': {
+    indicatorId: 'fertilizer-select-step-indicator',
+    stepNumber: { 'formula-builder': 5, 'reverse-calc': 6 }
+  },
+  'two-tank-question-step': {
+    indicatorId: 'two-tank-question-step-indicator',
+    // Step number is dynamic (total + 1), handled specially
+    stepNumber: null
+  }
+};
+
+/**
+ * Show a specific wizard step and hide all others
+ * @param {string} stepId - The ID of the step to show
+ * @param {Object} options - Optional configuration
+ * @param {boolean} options.updateIndicator - Whether to update the step indicator (default: true)
+ * @param {number} options.stepNumber - Override the step number (for dynamic steps like two-tank)
+ * @param {number} options.totalSteps - Override the total steps (for dynamic steps)
+ * @param {boolean} options.scroll - Whether to scroll to top (default: true)
+ */
+function showWizardStep(stepId, options = {}) {
+  const { updateIndicator = true, stepNumber = null, totalSteps = null, scroll = true } = options;
+
+  // Hide all wizard steps
+  WIZARD_STEPS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === 'mode-selector') {
+        el.style.display = 'none';
+      } else {
+        el.classList.remove('active');
+      }
+    }
+  });
+
+  // Show the target step
+  const targetStep = document.getElementById(stepId);
+  if (targetStep) {
+    if (stepId === 'mode-selector') {
+      targetStep.style.display = '';
+    } else {
+      targetStep.classList.add('active');
+    }
+  }
+
+  // Update step indicator if configured
+  if (updateIndicator && selectedMode) {
+    const config = STEP_CONFIG[stepId];
+    if (config && config.indicatorId) {
+      const indicator = document.getElementById(config.indicatorId);
+      if (indicator) {
+        const total = totalSteps || getStepCount(selectedMode);
+        const current = stepNumber || (config.stepNumber && config.stepNumber[selectedMode]);
+        if (current) {
+          indicator.textContent = i18n.t('stepOf', { current, total });
+        }
+      }
+    }
+  }
+
+  // Scroll to top
+  if (scroll) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+// =============================================================================
+// END CENTRALIZED WIZARD STEP MANAGEMENT
+// =============================================================================
+
 function selectMode(tabId) {
   // Store the selected mode
   selectedMode = tabId;
 
-  // Update volume step indicator based on total steps
-  const totalSteps = getStepCount(tabId);
-  document.getElementById('volume-step-indicator').textContent = 'Step 2 of ' + totalSteps;
-
-  // Hide the mode selector
-  document.getElementById('mode-selector').style.display = 'none';
-
-  // Show the volume step
-  document.getElementById('volume-step').classList.add('active');
+  // Show volume step (indicator will be updated automatically)
+  showWizardStep('volume-step');
 
   // Focus on the volume input
   document.getElementById('wizard-volume').focus();
   document.getElementById('wizard-volume').select();
-
-  // Scroll to top smoothly
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function proceedFromVolumeStep() {
+  // Validate volume is a positive number
+  const volumeInput = document.getElementById('wizard-volume');
+  const volume = parseFloat(volumeInput.value);
+  if (isNaN(volume) || volume <= 0) {
+    volumeInput.focus();
+    volumeInput.reportValidity();
+    return;
+  }
+
   // Check if this mode needs the calculation mode step
   if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
-    // Update calc-mode step indicator
-    const totalSteps = getStepCount(selectedMode);
-    document.querySelector('#calc-mode-step .step-indicator').textContent = 'Step 3 of ' + totalSteps;
-
-    // Hide volume step, show calc mode step
-    document.getElementById('volume-step').classList.remove('active');
-    document.getElementById('calc-mode-step').classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showWizardStep('calc-mode-step');
   } else if (selectedMode === 'ppm-calc') {
-    // Go to grams input step
-    document.getElementById('volume-step').classList.remove('active');
-    document.getElementById('grams-input-step').classList.add('active');
+    showWizardStep('grams-input-step');
     renderWizardGramsFertilizerList();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
     // Skip directly to calculator (fallback)
     proceedToCalculator();
@@ -4658,21 +5140,11 @@ function selectCalcMode(mode) {
 function proceedFromCalcModeStep() {
   // Check if this mode needs the EC step (NPK Ratio → Grams)
   if (MODES_WITH_EC.includes(selectedMode)) {
-    // Hide calc mode step, show EC step
-    document.getElementById('calc-mode-step').classList.remove('active');
-    document.getElementById('ec-step').classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showWizardStep('ec-step');
   } else if (selectedMode === 'formula-builder') {
-    // PPM → Grams: go to target PPM step
-    const totalSteps = getStepCount(selectedMode);
-    document.getElementById('ppm-targets-step-indicator').textContent = 'Step 4 of ' + totalSteps;
-
     // Update P and K labels based on calc mode
     updateWizardPPMLabels();
-
-    document.getElementById('calc-mode-step').classList.remove('active');
-    document.getElementById('ppm-targets-step').classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showWizardStep('ppm-targets-step');
   } else {
     // Skip to calculator (fallback)
     proceedToCalculator();
@@ -4696,18 +5168,14 @@ function updateECDescription() {
   const descEl = document.getElementById('ec-description');
   if (ecSelect && descEl) {
     selectedEC = ecSelect.value;
-    descEl.textContent = EC_DESCRIPTIONS[selectedEC] || '';
+    const descKey = EC_DESCRIPTIONS[selectedEC];
+    descEl.textContent = descKey ? i18n.t(descKey) : '';
   }
 }
 
 function proceedFromECStep() {
   // EC step is only for NPK Ratio → Grams, go to npk-ratios-step
-  const totalSteps = getStepCount(selectedMode);
-  document.getElementById('npk-ratios-step-indicator').textContent = 'Step 5 of ' + totalSteps;
-
-  document.getElementById('ec-step').classList.remove('active');
-  document.getElementById('npk-ratios-step').classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showWizardStep('npk-ratios-step');
 }
 
 function proceedToCalculator() {
@@ -4749,23 +5217,13 @@ function proceedToCalculator() {
     }
   }
 
-  // Hide all wizard steps
-  document.getElementById('volume-step').classList.remove('active');
-  document.getElementById('calc-mode-step').classList.remove('active');
-  document.getElementById('ec-step').classList.remove('active');
-  document.getElementById('grams-input-step').classList.remove('active');
-  document.getElementById('ppm-targets-step').classList.remove('active');
-  document.getElementById('npk-ratios-step').classList.remove('active');
-  document.getElementById('fertilizer-select-step').classList.remove('active');
-  document.getElementById('two-tank-question-step').classList.remove('active');
-
-  // Show the calculator content
-  document.getElementById('calculator-content').classList.add('active');
+  // Show the calculator content (hides all wizard steps)
+  showWizardStep('calculator-content', { updateIndicator: false });
 
   // Build mode indicator text
-  let indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
+  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
   if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
-    indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? 'Oxide' : 'Elemental');
+    indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
   }
   if (MODES_WITH_EC.includes(selectedMode)) {
     const ecValue = selectedEC.replace('ec:', '');
@@ -4784,104 +5242,45 @@ function proceedToCalculator() {
 }
 
 function backToECStep() {
-  // Hide the calculator content
-  document.getElementById('calculator-content').classList.remove('active');
-
-  // Show the EC step
-  document.getElementById('ec-step').classList.add('active');
-
-  // Scroll to top smoothly
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showWizardStep('ec-step');
 }
 
 function backToCalcModeStep() {
-  // Hide the calculator content, EC step, and input steps
-  document.getElementById('calculator-content').classList.remove('active');
-  document.getElementById('ec-step').classList.remove('active');
-  document.getElementById('ppm-targets-step').classList.remove('active');
-  document.getElementById('npk-ratios-step').classList.remove('active');
-
-  // Show the calc mode step
-  document.getElementById('calc-mode-step').classList.add('active');
-
-  // Scroll to top smoothly
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showWizardStep('calc-mode-step');
 }
 
 function backToVolumeStep() {
-  // Hide all steps after volume
-  document.getElementById('calculator-content').classList.remove('active');
-  document.getElementById('wizard-results').classList.remove('active');
-  document.getElementById('ec-step').classList.remove('active');
-  document.getElementById('calc-mode-step').classList.remove('active');
-  document.getElementById('grams-input-step').classList.remove('active');
-  document.getElementById('ppm-targets-step').classList.remove('active');
-  document.getElementById('npk-ratios-step').classList.remove('active');
-  document.getElementById('fertilizer-select-step').classList.remove('active');
-
-  // Show the volume step
-  document.getElementById('volume-step').classList.add('active');
-
-  // Scroll to top smoothly
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showWizardStep('volume-step');
 }
 
 function backFromCalculator() {
-  // Hide calculator content
-  document.getElementById('calculator-content').classList.remove('active');
-
   // Go back to the appropriate step based on mode
   if (selectedMode === 'ppm-calc') {
-    // Grams → PPM: go back to grams input step
-    document.getElementById('grams-input-step').classList.add('active');
+    showWizardStep('grams-input-step');
   } else if (selectedMode === 'formula-builder' || selectedMode === 'reverse-calc') {
-    // PPM → Grams or NPK Ratio → Grams: go back to fertilizer select step
-    document.getElementById('fertilizer-select-step').classList.add('active');
+    showWizardStep('fertilizer-select-step');
   } else {
-    // Fallback: go back to volume step
-    document.getElementById('volume-step').classList.add('active');
+    showWizardStep('volume-step');
   }
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function backFromWizardResults() {
-  // Hide wizard results
-  document.getElementById('wizard-results').classList.remove('active');
-
   // Go back to the appropriate step based on mode
   if (selectedMode === 'ppm-calc') {
-    // Grams → PPM: go back to grams input step
-    document.getElementById('grams-input-step').classList.add('active');
+    showWizardStep('grams-input-step');
   } else if (selectedMode === 'formula-builder' || selectedMode === 'reverse-calc') {
-    // PPM → Grams or NPK Ratio → Grams: go back to fertilizer select step
-    document.getElementById('fertilizer-select-step').classList.add('active');
+    showWizardStep('fertilizer-select-step');
   } else {
-    // Fallback: go back to volume step
-    document.getElementById('volume-step').classList.add('active');
+    showWizardStep('volume-step');
   }
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function backToModeSelector() {
-  // Hide everything
-  document.getElementById('calculator-content').classList.remove('active');
-  document.getElementById('wizard-results').classList.remove('active');
-  document.getElementById('ec-step').classList.remove('active');
-  document.getElementById('calc-mode-step').classList.remove('active');
-  document.getElementById('volume-step').classList.remove('active');
-  document.getElementById('grams-input-step').classList.remove('active');
-  document.getElementById('ppm-targets-step').classList.remove('active');
-  document.getElementById('npk-ratios-step').classList.remove('active');
-  document.getElementById('fertilizer-select-step').classList.remove('active');
-  document.getElementById('two-tank-question-step').classList.remove('active');
-
   // Clear pending two-tank calculation
   pendingWizardCalculation = null;
 
   // Show the mode selector
-  document.getElementById('mode-selector').style.display = 'block';
+  showWizardStep('mode-selector');
 
   // Reset state
   selectedMode = null;
@@ -4953,7 +5352,7 @@ function renderWizardGramsFertilizerList() {
     gramsInput.type = 'number';
     gramsInput.id = `wizard-grams-input-${fert.id}`;
     gramsInput.className = 'wizard-grams-input';
-    gramsInput.placeholder = 'grams';
+    gramsInput.placeholder = i18n.t('grams');
     gramsInput.min = '0';
     gramsInput.step = '0.1';
     gramsInput.oninput = function() {
@@ -5037,7 +5436,7 @@ function calculateFromWizardGrams() {
   });
 
   if (!hasSelection) {
-    alert('Please select at least one fertilizer and enter an amount.');
+    alert(i18n.t('alertSelectFertilizerAndAmount'));
     return;
   }
 
@@ -5048,13 +5447,22 @@ function calculateFromWizardGrams() {
   const resultsContainer = document.getElementById('wizard-results-container');
   const selectedFertSection = document.getElementById('selected-fertilizers-section');
   const resultsSection = document.getElementById('results');
+  const ionBalanceSection = document.getElementById('ion-balance-section');
+  const ratioSection = document.getElementById('ratio-analysis-section');
+  const ecSection = document.getElementById('ec-tds-section');
+  const warningsSection = document.getElementById('warnings-section');
 
   if (resultsContainer && selectedFertSection && resultsSection) {
-    resultsContainer.innerHTML = selectedFertSection.outerHTML + resultsSection.outerHTML;
+    let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
+    if (ionBalanceSection) html += ionBalanceSection.outerHTML;
+    if (ratioSection) html += ratioSection.outerHTML;
+    if (ecSection) html += ecSection.outerHTML;
+    if (warningsSection) html += warningsSection.outerHTML;
+    resultsContainer.innerHTML = html;
   }
 
   // Build mode indicator text
-  const indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
+  const indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
 
   // Check for incompatible fertilizers
   if (hasIncompatibleFertilizers(formula)) {
@@ -5067,24 +5475,13 @@ function calculateFromWizardGrams() {
       previousStep: 'grams-input-step'
     };
 
-    // Hide current step, show two-tank question step
-    document.getElementById('grams-input-step').classList.remove('active');
-    document.getElementById('two-tank-question-step').classList.add('active');
-
-    // Update step indicator (base steps + 1 for two-tank question)
+    // Show two-tank question step with dynamic step number
     const totalSteps = getStepCount(selectedMode) + 1;
-    document.getElementById('two-tank-question-step-indicator').textContent = 'Step ' + totalSteps + ' of ' + totalSteps;
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
   } else {
     // No incompatibilities - show results directly
-    document.getElementById('grams-input-step').classList.remove('active');
-    document.getElementById('wizard-results').classList.add('active');
-
-    // Update the mode indicator in wizard results
     document.getElementById('wizard-results-mode').innerHTML = indicatorText;
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showWizardStep('wizard-results', { updateIndicator: false });
   }
 }
 
@@ -5110,21 +5507,15 @@ function proceedToFormulaFertilizerStep() {
   });
 
   if (!hasTarget) {
-    alert('Please enter at least one target PPM value.');
+    alert(i18n.t('alertEnterTargetPpm'));
     return;
   }
-
-  // Update step indicator
-  const totalSteps = getStepCount(selectedMode);
-  document.getElementById('fertilizer-select-step-indicator').textContent = 'Step 5 of ' + totalSteps;
 
   // Render the fertilizer selection list
   renderWizardAvailableFertilizerList();
 
-  // Hide PPM targets step, show fertilizer select step
-  document.getElementById('ppm-targets-step').classList.remove('active');
-  document.getElementById('fertilizer-select-step').classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Show fertilizer select step
+  showWizardStep('fertilizer-select-step');
 }
 
 // --- NPK Ratio → Grams Wizard Functions ---
@@ -5149,21 +5540,15 @@ function proceedToReverseFertilizerStep() {
   });
 
   if (!hasRatio) {
-    alert('Please enter at least one ratio value greater than zero.');
+    alert(i18n.t('alertEnterRatioValue'));
     return;
   }
-
-  // Update step indicator
-  const totalSteps = getStepCount(selectedMode);
-  document.getElementById('fertilizer-select-step-indicator').textContent = 'Step 6 of ' + totalSteps;
 
   // Render the fertilizer selection list
   renderWizardAvailableFertilizerList();
 
-  // Hide NPK ratios step, show fertilizer select step
-  document.getElementById('npk-ratios-step').classList.remove('active');
-  document.getElementById('fertilizer-select-step').classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Show fertilizer select step
+  showWizardStep('fertilizer-select-step');
 }
 
 // --- Shared Fertilizer Selection Functions ---
@@ -5243,17 +5628,13 @@ function selectCommonWizardFertilizers() {
 }
 
 function backFromFertilizerSelectStep() {
-  document.getElementById('fertilizer-select-step').classList.remove('active');
-
   if (selectedMode === 'formula-builder') {
     // Go back to PPM targets step
-    document.getElementById('ppm-targets-step').classList.add('active');
+    showWizardStep('ppm-targets-step');
   } else if (selectedMode === 'reverse-calc') {
     // Go back to NPK ratios step
-    document.getElementById('npk-ratios-step').classList.add('active');
+    showWizardStep('npk-ratios-step');
   }
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function calculateFromWizardFertilizerSelect() {
@@ -5270,13 +5651,13 @@ async function calculateFromWizardFertilizerSelect() {
   });
 
   if (selectedFerts.length === 0) {
-    alert('Please select at least one fertilizer.');
+    alert(i18n.t('alertSelectFertilizer'));
     return;
   }
 
   // Build mode indicator text
-  let indicatorText = 'Current: <strong>' + MODE_NAMES[selectedMode] + '</strong> · ' + wizardVolume + 'L';
-  indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? 'Oxide' : 'Elemental');
+  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
+  indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
 
   let calculatedFormula = null;
 
@@ -5424,24 +5805,13 @@ async function calculateFromWizardFertilizerSelect() {
       previousStep: 'fertilizer-select-step'
     };
 
-    // Hide current step, show two-tank question step
-    document.getElementById('fertilizer-select-step').classList.remove('active');
-    document.getElementById('two-tank-question-step').classList.add('active');
-
-    // Update step indicator
-    const totalSteps = getStepCount(selectedMode) + 1; // +1 for two-tank step
-    document.getElementById('two-tank-question-step-indicator').textContent = 'Step ' + totalSteps + ' of ' + totalSteps;
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Show two-tank question step with dynamic step number
+    const totalSteps = getStepCount(selectedMode) + 1;
+    showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
   } else {
     // No incompatibilities - show results directly
-    document.getElementById('fertilizer-select-step').classList.remove('active');
-    document.getElementById('wizard-results').classList.add('active');
-
-    // Update the mode indicator in wizard results
     document.getElementById('wizard-results-mode').innerHTML = indicatorText;
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showWizardStep('wizard-results', { updateIndicator: false });
   }
 }
 
@@ -5449,30 +5819,42 @@ async function calculateFromWizardFertilizerSelect() {
 
 // Skip two-tank view and show regular results
 function skipTwoTankView() {
-  if (!pendingWizardCalculation) {
-    // Fallback: just go back to results
-    document.getElementById('two-tank-question-step').classList.remove('active');
-    document.getElementById('wizard-results').classList.add('active');
-    return;
-  }
-
-  // Hide two-tank question step, show wizard results
-  document.getElementById('two-tank-question-step').classList.remove('active');
-  document.getElementById('wizard-results').classList.add('active');
-
   // Update the mode indicator in wizard results
-  document.getElementById('wizard-results-mode').innerHTML = pendingWizardCalculation.indicatorText;
+  if (pendingWizardCalculation) {
+    document.getElementById('wizard-results-mode').innerHTML = pendingWizardCalculation.indicatorText;
+
+    // Re-copy all results to wizard container (in case they were modified)
+    if (pendingWizardCalculation.type === 'grams-to-ppm') {
+      const resultsContainer = document.getElementById('wizard-results-container');
+      const selectedFertSection = document.getElementById('selected-fertilizers-section');
+      const resultsSection = document.getElementById('results');
+      const ionBalanceSection = document.getElementById('ion-balance-section');
+      const ratioSection = document.getElementById('ratio-analysis-section');
+      const ecSection = document.getElementById('ec-tds-section');
+      const warningsSection = document.getElementById('warnings-section');
+
+      if (resultsContainer && selectedFertSection && resultsSection) {
+        let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
+        if (ionBalanceSection) html += ionBalanceSection.outerHTML;
+        if (ratioSection) html += ratioSection.outerHTML;
+        if (ecSection) html += ecSection.outerHTML;
+        if (warningsSection) html += warningsSection.outerHTML;
+        resultsContainer.innerHTML = html;
+      }
+    }
+  }
 
   // Clear pending calculation
   pendingWizardCalculation = null;
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Show wizard results
+  showWizardStep('wizard-results', { updateIndicator: false });
 }
 
 // Show two-tank view
 function showTwoTankView() {
   if (!pendingWizardCalculation) {
-    alert('No calculation data available.');
+    alert(i18n.t('alertNoCalculationData'));
     return;
   }
 
@@ -5480,13 +5862,10 @@ function showTwoTankView() {
 
   // Call the appropriate two-tank display function based on calculation type
   if (type === 'grams-to-ppm') {
-    // For Grams to PPM, use the existing function
     displayTwoTankGramsToPPMResults();
   } else if (type === 'ppm-to-grams') {
-    // For PPM to Grams (formula builder)
     displayTwoTankFormulaResults();
   } else if (type === 'npk-ratio-to-grams') {
-    // For NPK Ratio to Grams (reverse calculator)
     displayTwoTankReverseResults();
   }
 
@@ -5507,41 +5886,25 @@ function showTwoTankView() {
     resultsContainer.innerHTML = sourceResults.outerHTML;
   }
 
-  // Hide two-tank question step, show wizard results
-  document.getElementById('two-tank-question-step').classList.remove('active');
-  document.getElementById('wizard-results').classList.add('active');
-
   // Update the mode indicator in wizard results
-  document.getElementById('wizard-results-mode').innerHTML = indicatorText + ' · <span style="color: #17a2b8;">Two-Tank View</span>';
+  document.getElementById('wizard-results-mode').innerHTML = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
 
   // Clear pending calculation
   pendingWizardCalculation = null;
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Show wizard results
+  showWizardStep('wizard-results', { updateIndicator: false });
 }
 
 // Back button handler for two-tank question step
 function backFromTwoTankQuestion() {
-  if (!pendingWizardCalculation) {
-    // Fallback
-    document.getElementById('two-tank-question-step').classList.remove('active');
-    return;
-  }
-
-  const previousStep = pendingWizardCalculation.previousStep;
-
-  // Hide two-tank question step
-  document.getElementById('two-tank-question-step').classList.remove('active');
-
-  // Show previous step
-  if (previousStep) {
-    document.getElementById(previousStep).classList.add('active');
-  }
+  const previousStep = pendingWizardCalculation?.previousStep;
 
   // Clear pending calculation
   pendingWizardCalculation = null;
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Show previous step or fallback to fertilizer select
+  showWizardStep(previousStep || 'fertilizer-select-step');
 }
 
 // ==========================================
@@ -6245,7 +6608,7 @@ function calculate() {
 
   // Validate volume
   if (!volume || volume <= 0 || isNaN(volume)) {
-    alert('Please enter a valid volume greater than 0');
+    alert(i18n.t('alertEnterValidVolume'));
     volumeInput.classList.add('input-error');
     volumeInput.focus();
     return;
@@ -6276,12 +6639,12 @@ function calculate() {
   });
 
   if (hasInvalidGrams) {
-    alert('Please fix the invalid input values (highlighted in red)');
+    alert(i18n.t('alertFixInvalidInputs'));
     return;
   }
 
   if (activeFertilizers.length === 0) {
-    alert('Please select at least one fertilizer with an amount greater than 0');
+    alert(i18n.t('alertSelectFertilizerWithAmount'));
     return;
   }
 
@@ -6397,7 +6760,11 @@ function displaySelectedFertilizers(activeFertilizers) {
     return;
   }
 
-  activeFertilizers.forEach(fert => {
+  // Calculate total grams
+  let totalGrams = 0;
+
+  activeFertilizers.forEach((fert, index) => {
+    totalGrams += fert.grams;
     const item = document.createElement('div');
     item.className = 'selected-fertilizer-item';
 
@@ -6407,14 +6774,27 @@ function displaySelectedFertilizers(activeFertilizers) {
 
     item.innerHTML = `
       <div class="selected-fertilizer-info">
-        <div class="selected-fertilizer-name">${fert.name}</div>
+        <div class="selected-fertilizer-name"><span class="fertilizer-number">${index + 1}.</span> ${fert.name}</div>
         <div class="selected-fertilizer-composition">${composition}</div>
       </div>
-      <div class="selected-fertilizer-amount">${fert.grams.toFixed(2)} g</div>
+      <div class="selected-fertilizer-amount">${i18n.formatNumber(fert.grams.toFixed(2))} ${i18n.t('gramsShort')}</div>
     `;
 
     list.appendChild(item);
   });
+
+  // Add total row if more than one fertilizer
+  if (activeFertilizers.length > 0) {
+    const totalItem = document.createElement('div');
+    totalItem.className = 'selected-fertilizer-item selected-fertilizer-total';
+    totalItem.innerHTML = `
+      <div class="selected-fertilizer-info">
+        <div class="selected-fertilizer-name">${i18n.t('totalFertilizers', { count: i18n.formatNumber(activeFertilizers.length) })}</div>
+      </div>
+      <div class="selected-fertilizer-amount">${i18n.formatNumber(totalGrams.toFixed(2))} ${i18n.t('gramsShort')}</div>
+    `;
+    list.appendChild(totalItem);
+  }
 }
 
 // Display the results
@@ -6657,13 +7037,13 @@ function calculateIonBalance(activeFertilizers, volume) {
   let statusColor, statusText;
   if (imbalance <= 10) {
     statusColor = '#28a745';
-    statusText = 'Balanced ✓';
+    statusText = i18n.t('balancedCheck');
   } else if (imbalance <= 20) {
     statusColor = '#ffc107';
-    statusText = 'Caution ⚠';
+    statusText = i18n.t('cautionWarning');
   } else {
     statusColor = '#dc3545';
-    statusText = 'Imbalanced ✗';
+    statusText = i18n.t('imbalancedX');
   }
 
   let html = `
@@ -6837,7 +7217,7 @@ async function buildFormula() {
   const volume = parseFloat(volumeInput.value);
 
   if (!volume || volume <= 0 || isNaN(volume)) {
-    alert('Please enter a valid solution volume greater than 0');
+    alert(i18n.t('alertEnterValidSolutionVolume'));
     volumeInput.classList.add('input-error');
     volumeInput.focus();
     return;
@@ -6880,12 +7260,12 @@ async function buildFormula() {
 
   // Validate at least one nutrient target is specified
   if (!hasAtLeastOneTarget) {
-    alert('Please enter a positive value for at least one nutrient target');
+    alert(i18n.t('alertEnterPositiveNutrientTarget'));
     return;
   }
 
   if (hasInvalidInput) {
-    alert('Please fix the invalid input values (highlighted in red)');
+    alert(i18n.t('alertFixInvalidInputs'));
     return;
   }
 
@@ -6899,7 +7279,7 @@ async function buildFormula() {
   });
 
   if (availableFertilizers.length === 0) {
-    alert('Please select at least one available fertilizer');
+    alert(i18n.t('alertSelectAvailableFertilizer'));
     return;
   }
 
@@ -6907,26 +7287,26 @@ async function buildFormula() {
   const mode = document.getElementById('formula-calculation-mode').value;
 
   // Show progress bar
-  progressBar.show('Building Formula');
-  progressBar.update(10, 'Validating inputs...');
+  progressBar.show(i18n.t('buildingFormula'));
+  progressBar.update(10, i18n.t('validatingInputs'));
 
   try {
     // Allow UI to update
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    progressBar.update(30, 'Preparing optimization model...');
+    progressBar.update(30, i18n.t('preparingModel'));
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    progressBar.update(50, 'Running MILP solver...');
-    progressBar.setIndeterminate('Optimizing fertilizer combination...');
+    progressBar.update(50, i18n.t('runningSolver'));
+    progressBar.setIndeterminate(i18n.t('optimizingCombination'));
 
     // Run optimization algorithm using absolute PPM targets
     const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true });
 
-    progressBar.update(90, 'Preparing results...');
+    progressBar.update(90, i18n.t('preparingResults'));
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    progressBar.update(100, 'Complete!');
+    progressBar.update(100, i18n.t('complete'));
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Hide progress bar
@@ -6937,7 +7317,7 @@ async function buildFormula() {
   } catch (error) {
     progressBar.hide();
     console.error('Formula optimization error:', error);
-    alert('An error occurred during calculation. Please try again.');
+    alert(i18n.t('alertCalculationError'));
   }
 }
 
@@ -7468,7 +7848,7 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
 
   resultsSection.style.display = 'block';
 
-  let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
+  let html = '<div class="formula-result"><h3>' + i18n.t('fertilizersToAddPer', { volume: i18n.formatNumber(volume), unit: i18n.t('litersShort') }) + '</h3>';
 
   // Display formula and calculate total grams
   let totalGrams = 0;
@@ -7487,7 +7867,7 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
             <div class="formula-fertilizer-name">${fert.name}</div>
             <div class="formula-fertilizer-composition">${composition}</div>
           </div>
-          <div class="formula-fertilizer-amount">${grams.toFixed(2)} g</div>
+          <div class="formula-fertilizer-amount">${i18n.formatNumber(grams.toFixed(2))} ${i18n.t('gramsShort')}</div>
         </div>
       `;
     }
@@ -7498,9 +7878,9 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
     html += `
       <div class="formula-fertilizer" style="background: #e8f5e9; border-left: 4px solid #4caf50; margin-top: 10px;">
         <div class="formula-fertilizer-info">
-          <div class="formula-fertilizer-name" style="color: #2e7d32; font-weight: bold;">TOTAL (${fertEntries.length} fertilizers)</div>
+          <div class="formula-fertilizer-name" style="color: #2e7d32; font-weight: bold;">${i18n.t('totalFertilizers', { count: i18n.formatNumber(fertEntries.length) })}</div>
         </div>
-        <div class="formula-fertilizer-amount" style="color: #2e7d32; font-size: 1.2em;">${totalGrams.toFixed(2)} g</div>
+        <div class="formula-fertilizer-amount" style="color: #2e7d32; font-size: 1.2em;">${i18n.formatNumber(totalGrams.toFixed(2))} ${i18n.t('gramsShort')}</div>
       </div>
     `;
   }
@@ -7508,10 +7888,10 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
   html += '</div>';
 
   // Comparison table - show values in the same mode as input
-  html += '<h3>Target vs Achieved</h3>';
+  html += '<h3>' + i18n.t('targetVsAchieved') + '</h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
-  html += '<tr><th>Nutrient</th><th>Target (ppm)</th><th>Achieved (ppm)</th><th>Difference</th></tr>';
+  html += '<tr><th>' + i18n.t('nutrient') + '</th><th>' + i18n.t('targetPpmHeader') + '</th><th>' + i18n.t('achievedPpmHeader') + '</th><th>' + i18n.t('difference') + '</th></tr>';
 
   // Choose nutrients and labels based on mode
   const nutrients = mode === 'elemental'
@@ -7520,22 +7900,22 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
 
   const labels = mode === 'elemental'
     ? {
-        N_total: 'Nitrogen (N)',
-        P: 'Phosphorus (P)',
-        K: 'Potassium (K)',
-        Ca: 'Calcium (Ca)',
-        Mg: 'Magnesium (Mg)',
-        S: 'Sulfur (S)',
-        Si: 'Silicon (Si)'
+        N_total: i18n.t('nitrogen'),
+        P: i18n.t('phosphorusElemental'),
+        K: i18n.t('potassiumElemental'),
+        Ca: i18n.t('calcium'),
+        Mg: i18n.t('magnesium'),
+        S: i18n.t('sulfur'),
+        Si: i18n.t('silicon')
       }
     : {
-        N_total: 'Nitrogen (N)',
-        P2O5: 'Phosphorus (P₂O₅)',
-        K2O: 'Potassium (K₂O)',
-        Ca: 'Calcium (Ca)',
-        Mg: 'Magnesium (Mg)',
-        S: 'Sulfur (S)',
-        Si: 'Silicon (Si)'
+        N_total: i18n.t('nitrogen'),
+        P2O5: i18n.t('phosphorusOxide'),
+        K2O: i18n.t('potassiumOxide'),
+        Ca: i18n.t('calcium'),
+        Mg: i18n.t('magnesium'),
+        S: i18n.t('sulfur'),
+        Si: i18n.t('silicon')
       };
 
   let allGood = true;
@@ -7564,19 +7944,19 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
       className = 'miss';
       status = '✗';
       allGood = false;
-      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target`);
+      warnings.push(i18n.t('nutrientOffTarget', { nutrient: labels[nutrient], percent: i18n.formatNumber(percentDiff.toFixed(1)) }));
     } else if (percentDiff > 10) {
       className = 'close';
       status = '⚠';
-      warnings.push(`${labels[nutrient]} is ${percentDiff.toFixed(1)}% off target (acceptable range)`);
+      warnings.push(i18n.t('nutrientOffTargetAcceptable', { nutrient: labels[nutrient], percent: i18n.formatNumber(percentDiff.toFixed(1)) }));
     }
 
     html += `
       <tr>
         <td>${labels[nutrient]}</td>
-        <td>${target.toFixed(1)}</td>
-        <td class="${className}">${achieved.toFixed(1)} ${status}</td>
-        <td class="${className}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)} (${percentDiff.toFixed(1)}%)</td>
+        <td>${i18n.formatNumber(target.toFixed(1))}</td>
+        <td class="${className}">${i18n.formatNumber(achieved.toFixed(1))} ${status}</td>
+        <td class="${className}">${diff >= 0 ? '+' : ''}${i18n.formatNumber(diff.toFixed(1))} (${i18n.formatNumber(percentDiff.toFixed(1))}%)</td>
       </tr>
     `;
   });
@@ -7587,23 +7967,23 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
   // Mode note
   if (mode === 'elemental') {
     html += `<div class="conversion-note" style="margin-top: 15px;">
-      <strong>Elemental Mode:</strong> Values shown are pure elemental forms (P, K).
+      <strong>${i18n.t('elementalModeLabel')}</strong> ${i18n.t('elementalModeNote')}
       <br>
-      To convert to oxide forms: P₂O₅ = P × 2.29, K₂O = K × 1.20
+      ${i18n.t('elementalToOxideConversion')}
     </div>`;
   } else {
     html += `<div class="conversion-note" style="margin-top: 15px;">
-      <strong>Oxide Mode:</strong> Values shown are commercial oxide forms (P₂O₅, K₂O).
+      <strong>${i18n.t('oxideModeLabel')}</strong> ${i18n.t('oxideModeNote')}
       <br>
-      To convert to elements: P = P₂O₅ × 0.436, K = K₂O × 0.830
+      ${i18n.t('oxideToElementalConversion')}
     </div>`;
   }
 
   // NH4-N percentage
   const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
   html += `<div class="conversion-note" style="margin-top: 15px;">
-    <strong>Nitrogen Form:</strong> ${result.achieved.N_NH4.toFixed(1)} ppm NH₄-N (${nh4Percent.toFixed(1)}% of total N),
-    ${result.achieved.N_NO3.toFixed(1)} ppm NO₃-N (${(100 - nh4Percent).toFixed(1)}% of total N)
+    <strong>${i18n.t('nitrogenFormLabel')}</strong> ${i18n.formatNumber(result.achieved.N_NH4.toFixed(1))} ppm NH₄-N (${i18n.formatNumber(nh4Percent.toFixed(1))}% ${i18n.t('ofTotalN')}),
+    ${i18n.formatNumber(result.achieved.N_NO3.toFixed(1))} ppm NO₃-N (${i18n.formatNumber((100 - nh4Percent).toFixed(1))}% ${i18n.t('ofTotalN')})
   </div>`;
 
   // Calculate ion balance for this formula
@@ -7614,41 +7994,102 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
 
   const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
 
-  html += '<h3 style="margin-top: 20px;">Ion Balance <span class="info-icon" onclick="openFormulaIonBalanceExplanation()" title="Click to learn how we calculate Ion Balance">?</span></h3>';
+  html += '<h3 style="margin-top: 20px;">' + i18n.t('ionBalance') + ' <span class="info-icon" onclick="openFormulaIonBalanceExplanation()" title="' + i18n.t('clickToLearnIonBalance') + '">?</span></h3>';
   html += `<div class="ion-balance-summary" style="margin-top: 10px;">
     <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">Cations</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalCations.toFixed(2)} meq/L</div>
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('cations')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalCations.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
     </div>
     <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">Anions</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalAnions.toFixed(2)} meq/L</div>
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('anions')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalAnions.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
     </div>
     <div class="ion-balance-card status" style="background: ${ionBalance.statusColor}20; border-color: ${ionBalance.statusColor};">
-      <div style="font-size: 0.9em; color: #666;">Imbalance</div>
-      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${ionBalance.imbalance.toFixed(1)}%</div>
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('imbalance')}</div>
+      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${i18n.formatNumber(ionBalance.imbalance.toFixed(1))}%</div>
       <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
     </div>
   </div>`;
 
-  // Add EC prediction
-  const ecData = calculateECTDS(result.achieved);
-  const ecColor = ecData.ec > 3.5 ? '#dc3545' : ecData.ec < 0.5 ? '#ffc107' : '#28a745';
-  const ecStatus = ecData.ec > 3.5 ? 'High' : ecData.ec < 0.5 ? 'Low' : 'Good';
+  // Calculate and display EC prediction using ionic molar conductivity model
+  const ecPrediction = estimateECFromPPM(result.achieved);
+  const ecValue = ecPrediction.ec_mS_cm;
 
-  html += '<h3 style="margin-top: 20px;">EC Prediction</h3>';
+  // Determine EC status color and text
+  let ecStatusColor, ecStatusText;
+  if (ecValue < 0.8) {
+    ecStatusColor = '#17a2b8';  // Info blue - very light
+    ecStatusText = i18n.t('ecVeryLight');
+  } else if (ecValue < 1.2) {
+    ecStatusColor = '#28a745';  // Green - light/seedlings
+    ecStatusText = i18n.t('ecLight');
+  } else if (ecValue < 1.8) {
+    ecStatusColor = '#28a745';  // Green - moderate
+    ecStatusText = i18n.t('ecModerate');
+  } else if (ecValue < 2.5) {
+    ecStatusColor = '#ffc107';  // Yellow - strong
+    ecStatusText = i18n.t('ecStrong');
+  } else if (ecValue < 3.5) {
+    ecStatusColor = '#fd7e14';  // Orange - very strong
+    ecStatusText = i18n.t('ecVeryStrong');
+  } else {
+    ecStatusColor = '#dc3545';  // Red - too high
+    ecStatusText = i18n.t('ecVeryHigh');
+  }
+
+  html += '<h3 style="margin-top: 20px;">' + i18n.t('predictedEc') + '</h3>';
   html += `<div class="ion-balance-summary" style="margin-top: 10px;">
-    <div class="ion-balance-card" style="background: ${ecColor}15; border-color: ${ecColor};">
-      <div style="font-size: 0.9em; color: #666;">Predicted EC</div>
-      <div style="font-size: 1.5em; font-weight: bold; color: ${ecColor};">${ecData.ec.toFixed(2)} mS/cm</div>
-      <div style="font-size: 0.9em; color: ${ecColor};">${ecStatus}</div>
+    <div class="ion-balance-card" style="flex: 2;">
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('electricalConductivity25C')}</div>
+      <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
+      <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
     </div>
     <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${ecData.ionicStrength.toFixed(4)} mol/L</div>
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('ionicStrength')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber((ecPrediction.ionicStrength * 1000).toFixed(1))} <span style="font-size: 0.7em;">${i18n.t('mMUnit')}</span></div>
     </div>
   </div>`;
-  html += '<div class="conversion-note" style="margin-top: 10px;"><strong>Note:</strong> EC prediction uses the LMCv2 ion conductivity model. Optimal EC for most crops is 1.5-2.5 mS/cm.</div>';
+
+  // EC breakdown by ion (collapsible)
+  const ionContributions = Object.entries(ecPrediction.contributions)
+    .sort((a, b) => b[1].contribution_mS_cm - a[1].contribution_mS_cm);
+
+  if (ionContributions.length > 0) {
+    html += `<details style="margin-top: 10px;">
+      <summary style="cursor: pointer; color: #007bff; font-size: 0.9em;">Show EC breakdown by ion</summary>
+      <div style="margin-top: 10px; background: #f8f9fa; padding: 15px; border-radius: 4px;">
+        <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 2px solid #dee2e6;">
+              <th style="text-align: left; padding: 8px;">Ion</th>
+              <th style="text-align: right; padding: 8px;">Conc. (mmol/L)</th>
+              <th style="text-align: right; padding: 8px;">λ (S·cm²/mol)</th>
+              <th style="text-align: right; padding: 8px;">EC Contrib.</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    ionContributions.forEach(([ion, data]) => {
+      const percentage = (data.contribution_mS_cm / ecPrediction.rawEC * 100).toFixed(1);
+      html += `
+            <tr style="border-bottom: 1px solid #dee2e6;">
+              <td style="padding: 8px;">${ion}</td>
+              <td style="text-align: right; padding: 8px;">${data.concentration_mmolL.toFixed(2)}</td>
+              <td style="text-align: right; padding: 8px;">${data.lambda}</td>
+              <td style="text-align: right; padding: 8px;">${data.contribution_mS_cm.toFixed(3)} mS/cm (${percentage}%)</td>
+            </tr>`;
+    });
+
+    html += `
+          </tbody>
+        </table>
+        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+          <strong>Note:</strong> Raw EC = ${ecPrediction.rawEC.toFixed(3)} mS/cm.
+          Ionic strength correction applied (factor: ${(ecPrediction.rawEC / ecPrediction.ec_mS_cm).toFixed(3)}).
+        </div>
+      </div>
+    </details>`;
+  }
 
   // Add nutrient ratio analysis
   const ratios = calculateNutrientRatios(result.achieved);
@@ -7738,13 +8179,13 @@ function calculateIonBalanceForFormula(activeFertilizers, volume) {
   let statusColor, statusText;
   if (imbalance <= 10) {
     statusColor = '#28a745';
-    statusText = 'Balanced ✓';
+    statusText = i18n.t('balancedCheck');
   } else if (imbalance <= 20) {
     statusColor = '#ffc107';
-    statusText = 'Caution ⚠';
+    statusText = i18n.t('cautionWarning');
   } else {
     statusColor = '#dc3545';
-    statusText = 'Imbalanced ✗';
+    statusText = i18n.t('imbalancedX');
   }
 
   return { totalCations, totalAnions, imbalance, statusColor, statusText };
@@ -7759,8 +8200,8 @@ function calculateIonBalanceForFormula(activeFertilizers, volume) {
 // Tank B: Sulfate/Phosphate-containing fertilizers + compatible neutrals
 // Neutral fertilizers can be split between tanks to help balance ions
 function splitIntoTwoTanks(formula, volume) {
-  const tankA = { fertilizers: {}, name: 'Tank A (Calcium)', description: 'Contains calcium sources - keep separate from sulfates and silicates' };
-  const tankB = { fertilizers: {}, name: 'Tank B (Sulfates/Phosphates/Silicates)', description: 'Contains sulfate, phosphate, and silicate sources' };
+  const tankA = { fertilizers: {}, name: i18n.t('tankALabel'), description: i18n.t('tankADescription') };
+  const tankB = { fertilizers: {}, name: i18n.t('tankBLabel'), description: i18n.t('tankBDescription') };
 
   const neutralFertilizers = [];
 
@@ -7912,13 +8353,13 @@ function calculateTankIonBalance(fertilizers, volume) {
   let statusColor, statusText;
   if (imbalance <= 10) {
     statusColor = '#28a745';
-    statusText = 'Balanced';
+    statusText = i18n.t('balanced');
   } else if (imbalance <= 20) {
     statusColor = '#ffc107';
-    statusText = 'Caution';
+    statusText = i18n.t('caution');
   } else {
     statusColor = '#dc3545';
-    statusText = 'Imbalanced';
+    statusText = i18n.t('imbalanced');
   }
 
   return { totalCations, totalAnions, imbalance, statusColor, statusText };
@@ -7960,7 +8401,7 @@ function calculateTankNutrients(fertilizers, volume) {
 // Display two-tank results for formula builder
 function displayTwoTankFormulaResults() {
   if (!lastFormulaCalculation) {
-    alert('No formula results to split. Please build a formula first.');
+    alert(i18n.t('alertNoFormulaResults'));
     return;
   }
 
@@ -7973,7 +8414,7 @@ function displayTwoTankFormulaResults() {
 // Display two-tank results for reverse calculator
 function displayTwoTankReverseResults() {
   if (!lastReverseCalculation) {
-    alert('No calculation results to split. Please calculate fertilizers first.');
+    alert(i18n.t('alertNoCalculationResults'));
     return;
   }
 
@@ -7986,7 +8427,7 @@ function displayTwoTankReverseResults() {
 // Display two-tank results for Grams to PPM calculator (Tab 1)
 function displayTwoTankGramsToPPMResults() {
   if (!lastGramsToPPMCalculation) {
-    alert('No calculation results to split. Please calculate PPM values first.');
+    alert(i18n.t('alertNoCalculationResultsPpm'));
     return;
   }
 
@@ -8032,14 +8473,14 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
 
   // Header with copy button
   html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">';
-  html += '<h3 style="margin: 0; color: #007bff;">Two-Tank Stock Solution System</h3>';
+  html += '<h3 style="margin: 0; color: #007bff;">' + i18n.t('twoTankStockSolutionSystem') + '</h3>';
   html += `<button class="copy-btn" onclick="copyTwoTankResults()" title="Copy two-tank results to clipboard">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-    Copy Results
+    ${i18n.t('copyResults')}
   </button>`;
   html += '</div>';
 
-  html += '<p style="margin-bottom: 20px; color: #666;">Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.</p>';
+  html += '<p style="margin-bottom: 20px; color: #666;">' + i18n.t('twoTankSeparationNote') + '</p>';
 
   // Calculate combined nutrients first (needed for ratio calculations)
   const combinedNutrients = {
@@ -8071,39 +8512,32 @@ function displayTwoTankResults(tankA, tankB, volume, mode, outputDivId, achieved
 
   // Combined totals note
   html += '<div class="combined-note" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #007bff;">';
-  html += '<h4 style="margin-bottom: 10px;">Combined Solution (when mixed)</h4>';
-  html += '<p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">When both tanks are diluted and combined in the final reservoir, you will achieve:</p>';
+  html += '<h4 style="margin-bottom: 10px;">' + i18n.t('combinedSolutionWhenMixed') + '</h4>';
+  html += '<p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">' + i18n.t('combinedSolutionDescription') + '</p>';
 
   const nutrientLabels = mode === 'elemental'
     ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
     : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
 
   html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">';
-  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.N}:</strong> ${combinedNutrients.N_total.toFixed(1)} ppm</span>`;
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.N}:</strong> ${i18n.formatNumber(combinedNutrients.N_total.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
   if (mode === 'elemental') {
-    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.P}:</strong> ${combinedNutrients.P.toFixed(1)} ppm</span>`;
-    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.K}:</strong> ${combinedNutrients.K.toFixed(1)} ppm</span>`;
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.P}:</strong> ${i18n.formatNumber(combinedNutrients.P.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.K}:</strong> ${i18n.formatNumber(combinedNutrients.K.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
   } else {
-    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.P}:</strong> ${combinedNutrients.P2O5.toFixed(1)} ppm</span>`;
-    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.K}:</strong> ${combinedNutrients.K2O.toFixed(1)} ppm</span>`;
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.P}:</strong> ${i18n.formatNumber(combinedNutrients.P2O5.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
+    html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>${nutrientLabels.K}:</strong> ${i18n.formatNumber(combinedNutrients.K2O.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
   }
-  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Ca:</strong> ${combinedNutrients.Ca.toFixed(1)} ppm</span>`;
-  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Mg:</strong> ${combinedNutrients.Mg.toFixed(1)} ppm</span>`;
-  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>S:</strong> ${combinedNutrients.S.toFixed(1)} ppm</span>`;
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Ca:</strong> ${i18n.formatNumber(combinedNutrients.Ca.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Mg:</strong> ${i18n.formatNumber(combinedNutrients.Mg.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
+  html += `<span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>S:</strong> ${i18n.formatNumber(combinedNutrients.S.toFixed(1))} ${i18n.t('ppmUnit')}</span>`;
   html += '</div>';
 
   // EC and Totals row
   html += '<div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 10px; border-top: 1px dashed #007bff;">';
-  html += `<span style="padding: 5px 10px; background: ${combinedECColor}15; border: 1px solid ${combinedECColor}; border-radius: 4px;"><strong style="color: ${combinedECColor};">Combined EC: ${combinedEC.ec.toFixed(2)} mS/cm (${combinedECStatus})</strong></span>`;
-  html += `<span style="padding: 5px 10px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px;"><strong style="color: #2e7d32;">Total: ${grandTotalGrams.toFixed(2)} g</strong> <span style="color: #666; font-size: 0.85em;">(Tank A: ${totalGramsA.toFixed(2)}g + Tank B: ${totalGramsB.toFixed(2)}g)</span></span>`;
+  html += `<span style="padding: 5px 10px; background: ${combinedECColor}15; border: 1px solid ${combinedECColor}; border-radius: 4px;"><strong style="color: ${combinedECColor};">${i18n.t('combinedEcLabel')} ${i18n.formatNumber(combinedEC.ec.toFixed(2))} ${i18n.t('mScmUnit')} (${combinedECStatus})</strong></span>`;
+  html += `<span style="padding: 5px 10px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px;"><strong style="color: #2e7d32;">Total: ${i18n.formatNumber(grandTotalGrams.toFixed(2))} ${i18n.t('gramsShort')}</strong> <span style="color: #666; font-size: 0.85em;">(Tank A: ${i18n.formatNumber(totalGramsA.toFixed(2))}${i18n.t('gramsShort')} + Tank B: ${i18n.formatNumber(totalGramsB.toFixed(2))}${i18n.t('gramsShort')})</span></span>`;
   html += '</div>';
-  html += '</div>';
-
-  // Back button
-  html += '<div style="margin-top: 20px;">';
-  html += '<button onclick="restoreSingleTankView(\'' + outputDivId + '\')" style="padding: 10px 20px; font-size: 14px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">';
-  html += 'Back to Single View';
-  html += '</button>';
   html += '</div>';
 
   html += '</div>';
@@ -8143,15 +8577,15 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
         tankTotal += grams;
         html += `<div style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">`;
         html += `<span>${fert.name}</span>`;
-        html += `<strong>${grams.toFixed(2)} g</strong>`;
+        html += `<strong>${i18n.formatNumber(grams.toFixed(2))} ${i18n.t('gramsShort')}</strong>`;
         html += `</div>`;
       }
     });
     // Show total for this tank
     if (fertEntries.length > 1) {
       html += `<div style="display: flex; justify-content: space-between; padding: 8px 12px; background: ${borderColor}20; border-radius: 4px; border-top: 2px solid ${borderColor}; margin-top: 5px;">`;
-      html += `<span style="color: ${borderColor};"><strong>TOTAL (${fertEntries.length} fertilizers)</strong></span>`;
-      html += `<strong style="color: ${borderColor}; font-size: 1.1em;">${tankTotal.toFixed(2)} g</strong>`;
+      html += `<span style="color: ${borderColor};"><strong>${i18n.t('totalFertilizers', { count: i18n.formatNumber(fertEntries.length) })}</strong></span>`;
+      html += `<strong style="color: ${borderColor}; font-size: 1.1em;">${i18n.formatNumber(tankTotal.toFixed(2))} ${i18n.t('gramsShort')}</strong>`;
       html += `</div>`;
     }
     html += '</div>';
@@ -8160,6 +8594,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     const nutrients = tank.nutrients;
     const pVal = mode === 'elemental' ? nutrients.P : nutrients.P2O5;
     const kVal = mode === 'elemental' ? nutrients.K : nutrients.K2O;
+    const nLabel = 'N';
     const pLabel = mode === 'elemental' ? 'P' : 'P₂O₅';
     const kLabel = mode === 'elemental' ? 'K' : 'K₂O';
 
@@ -8168,14 +8603,14 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     const tankECColor = tankEC.ec > 3.5 ? '#dc3545' : tankEC.ec < 0.5 ? '#6c757d' : '#28a745';
 
     html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">';
-    if (nutrients.N_total > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>N:</strong> ${nutrients.N_total.toFixed(1)}</span>`;
-    if (pVal > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>${pLabel}:</strong> ${pVal.toFixed(1)}</span>`;
-    if (kVal > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>${kLabel}:</strong> ${kVal.toFixed(1)}</span>`;
-    if (nutrients.Ca > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>Ca:</strong> ${nutrients.Ca.toFixed(1)}</span>`;
-    if (nutrients.Mg > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>Mg:</strong> ${nutrients.Mg.toFixed(1)}</span>`;
-    if (nutrients.S > 0.1) html += `<span style="padding: 4px 8px; background: white; border-radius: 4px; font-size: 0.85em;"><strong>S:</strong> ${nutrients.S.toFixed(1)}</span>`;
-    html += `<span style="padding: 4px 8px; background: ${tank.ionBalance.statusColor}20; border: 1px solid ${tank.ionBalance.statusColor}; border-radius: 4px; font-size: 0.85em;"><strong style="color: ${tank.ionBalance.statusColor};">${tank.ionBalance.imbalance.toFixed(1)}% ${tank.ionBalance.statusText}</strong></span>`;
-    html += `<span style="padding: 4px 8px; background: ${tankECColor}15; border: 1px solid ${tankECColor}; border-radius: 4px; font-size: 0.85em;"><strong style="color: ${tankECColor};">EC: ${tankEC.ec.toFixed(2)}</strong></span>`;
+    if (nutrients.N_total > 0.1) html += `<span class="tank-nutrient-badge"><strong>${nLabel}:</strong> ${i18n.formatNumber(nutrients.N_total.toFixed(1))}</span>`;
+    if (pVal > 0.1) html += `<span class="tank-nutrient-badge"><strong>${pLabel}:</strong> ${i18n.formatNumber(pVal.toFixed(1))}</span>`;
+    if (kVal > 0.1) html += `<span class="tank-nutrient-badge"><strong>${kLabel}:</strong> ${i18n.formatNumber(kVal.toFixed(1))}</span>`;
+    if (nutrients.Ca > 0.1) html += `<span class="tank-nutrient-badge"><strong>Ca:</strong> ${i18n.formatNumber(nutrients.Ca.toFixed(1))}</span>`;
+    if (nutrients.Mg > 0.1) html += `<span class="tank-nutrient-badge"><strong>Mg:</strong> ${i18n.formatNumber(nutrients.Mg.toFixed(1))}</span>`;
+    if (nutrients.S > 0.1) html += `<span class="tank-nutrient-badge"><strong>S:</strong> ${i18n.formatNumber(nutrients.S.toFixed(1))}</span>`;
+    html += `<span class="tank-status-badge" style="background: ${tank.ionBalance.statusColor}20; border: 1px solid ${tank.ionBalance.statusColor};"><strong style="color: ${tank.ionBalance.statusColor};">${i18n.formatNumber(tank.ionBalance.imbalance.toFixed(1))}% ${tank.ionBalance.statusText}</strong></span>`;
+    html += `<span class="tank-status-badge" style="background: ${tankECColor}15; border: 1px solid ${tankECColor};"><strong style="color: ${tankECColor};">${i18n.t('ecLabel')} ${i18n.formatNumber(tankEC.ec.toFixed(2))}</strong></span>`;
     html += '</div>';
 
     // Collapsible details section
@@ -8309,23 +8744,23 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     html += '</div>';
 
     // Ion balance details
-    html += '<h5 style="margin-bottom: 10px; color: #333;">Ion Balance Details <span class="info-icon" onclick="openTwoTankIonBalanceExplanation()" title="Click to learn how we calculate Ion Balance" style="font-size: 0.7em; width: 18px; height: 18px; line-height: 18px;">?</span></h5>';
+    html += '<h5 style="margin-bottom: 10px; color: #333;">' + i18n.t('ionBalanceDetails') + ' <span class="info-icon" onclick="openTwoTankIonBalanceExplanation()" title="' + i18n.t('clickToLearnIonBalance') + '" style="font-size: 0.7em; width: 18px; height: 18px; line-height: 18px;">?</span></h5>';
     html += '<div style="display: flex; gap: 15px; flex-wrap: wrap;">';
     html += `<div style="padding: 10px 15px; background: white; border-radius: 4px;">`;
-    html += `<div style="font-size: 0.8em; color: #666;">Total Cations</div>`;
-    html += `<div style="font-size: 1.1em; font-weight: bold;">${tank.ionBalance.totalCations.toFixed(2)} meq/L</div>`;
+    html += `<div style="font-size: 0.8em; color: #666;">${i18n.t('totalCations')}</div>`;
+    html += `<div style="font-size: 1.1em; font-weight: bold;">${i18n.formatNumber(tank.ionBalance.totalCations.toFixed(2))} ${i18n.t('meqPerLiter')}</div>`;
     html += `</div>`;
     html += `<div style="padding: 10px 15px; background: white; border-radius: 4px;">`;
-    html += `<div style="font-size: 0.8em; color: #666;">Total Anions</div>`;
-    html += `<div style="font-size: 1.1em; font-weight: bold;">${tank.ionBalance.totalAnions.toFixed(2)} meq/L</div>`;
+    html += `<div style="font-size: 0.8em; color: #666;">${i18n.t('totalAnions')}</div>`;
+    html += `<div style="font-size: 1.1em; font-weight: bold;">${i18n.formatNumber(tank.ionBalance.totalAnions.toFixed(2))} ${i18n.t('meqPerLiter')}</div>`;
     html += `</div>`;
     html += `<div style="padding: 10px 15px; background: ${tank.ionBalance.statusColor}20; border: 1px solid ${tank.ionBalance.statusColor}; border-radius: 4px;">`;
-    html += `<div style="font-size: 0.8em; color: #666;">Imbalance</div>`;
-    html += `<div style="font-size: 1.1em; font-weight: bold; color: ${tank.ionBalance.statusColor};">${tank.ionBalance.imbalance.toFixed(1)}%</div>`;
+    html += `<div style="font-size: 0.8em; color: #666;">${i18n.t('imbalance')}</div>`;
+    html += `<div style="font-size: 1.1em; font-weight: bold; color: ${tank.ionBalance.statusColor};">${i18n.formatNumber(tank.ionBalance.imbalance.toFixed(1))}%</div>`;
     html += `<div style="font-size: 0.8em; color: ${tank.ionBalance.statusColor};">${tank.ionBalance.statusText}</div>`;
     html += `</div>`;
     html += '</div>';
-    html += '<div style="font-size: 0.8em; color: #666; margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>What is ion balance?</strong> Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). Imbalance ≤10% is good; higher values may cause pH swings.</div>';
+    html += '<div style="font-size: 0.8em; color: #666; margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>' + i18n.t('whatIsIonBalance') + '</strong> ' + i18n.t('ionBalanceExplanation') + '</div>';
 
     html += '</div>'; // End details section
   }
@@ -8351,7 +8786,7 @@ function toggleTankDetails(detailsId) {
 // Copy two-tank results to clipboard
 function copyTwoTankResults() {
   if (!currentTwoTankData) {
-    alert('No two-tank data to copy.');
+    alert(i18n.t('alertNoTwoTankData'));
     return;
   }
 
@@ -8437,7 +8872,7 @@ function copyTwoTankResults() {
     }, 2000);
   }).catch(err => {
     console.error('Failed to copy:', err);
-    alert('Failed to copy to clipboard');
+    alert(i18n.t('alertCopyFailed'));
   });
 }
 
@@ -8459,7 +8894,7 @@ function generateTankCopyText(tank, letter, mode, pLabel, kLabel) {
   fertEntries.forEach(([fertId, grams]) => {
     const fert = FERTILIZERS.find(f => f.id === fertId);
     if (fert) {
-      text += `  • ${fert.name}: ${grams.toFixed(2)} g\n`;
+      text += `  • ${fert.name}: ${i18n.formatNumber(grams.toFixed(2))} ${i18n.t('gramsShort')}\n`;
     }
   });
   text += '\n';
@@ -8775,7 +9210,7 @@ async function calculateReverse() {
   // Check that at least one nutrient has a value > 0
   const hasAtLeastOneNutrient = Object.values(targets).some(val => val > 0);
   if (!hasAtLeastOneNutrient) {
-    alert('Please enter at least one nutrient value greater than zero.');
+    alert(i18n.t('alertEnterNutrientValue'));
     return;
   }
 
@@ -8789,7 +9224,7 @@ async function calculateReverse() {
   }
 
   if (hasError) {
-    alert('Please fill in all nutrient fields with valid values (0 or greater). At least one nutrient must be greater than zero.');
+    alert(i18n.t('alertFillAllNutrientFields'));
     return;
   }
 
@@ -8804,7 +9239,7 @@ async function calculateReverse() {
   });
 
   if (selectedFertilizers.length === 0) {
-    alert('Please select at least one fertilizer to use.');
+    alert(i18n.t('alertSelectFertilizerToUse'));
     return;
   }
 
@@ -8812,25 +9247,25 @@ async function calculateReverse() {
   const calculationMode = document.getElementById('reverse-calculation-mode').value;
 
   // Show progress bar
-  progressBar.show('Calculating Fertilizers');
-  progressBar.update(10, 'Validating inputs...');
+  progressBar.show(i18n.t('calculatingFertilizers'));
+  progressBar.update(10, i18n.t('validatingInputs'));
 
   try {
     // Allow UI to update
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    progressBar.update(30, 'Preparing optimization model...');
+    progressBar.update(30, i18n.t('preparingModel'));
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    progressBar.update(50, 'Running MILP solver...');
-    progressBar.setIndeterminate('Optimizing fertilizer combination...');
+    progressBar.update(50, i18n.t('runningSolver'));
+    progressBar.setIndeterminate(i18n.t('optimizingCombination'));
 
     // Run optimization
     let result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
 
     // If targeting EC, scale fertilizer amounts to achieve target EC
     if (targetEC !== null && Object.keys(result.formula).length > 0) {
-      progressBar.update(70, 'Scaling to target EC...');
+      progressBar.update(70, i18n.t('scalingToTargetEc'));
       await new Promise(resolve => setTimeout(resolve, 50));
 
       // Calculate predicted EC from initial result
@@ -8876,10 +9311,10 @@ async function calculateReverse() {
       }
     }
 
-    progressBar.update(90, 'Preparing results...');
+    progressBar.update(90, i18n.t('preparingResults'));
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    progressBar.update(100, 'Complete!');
+    progressBar.update(100, i18n.t('complete'));
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Hide progress bar
@@ -8890,7 +9325,7 @@ async function calculateReverse() {
   } catch (error) {
     progressBar.hide();
     console.error('Reverse calculation error:', error);
-    alert('An error occurred during calculation. Please try again.');
+    alert(i18n.t('alertCalculationError'));
   }
 }
 
@@ -8909,7 +9344,7 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
 
   resultsSection.style.display = 'block';
 
-  let html = '<div class="formula-result"><h3>Fertilizers to Add (per ' + volume + 'L)</h3>';
+  let html = '<div class="formula-result"><h3>' + i18n.t('fertilizersToAddPer', { volume: i18n.formatNumber(volume), unit: i18n.t('litersShort') }) + '</h3>';
 
   // Display formula
   if (Object.keys(result.formula).length === 0) {
@@ -8932,7 +9367,7 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
               <div class="formula-fertilizer-name">${fert.name}</div>
               <div class="formula-fertilizer-composition">${composition}</div>
             </div>
-            <div class="formula-fertilizer-amount">${grams.toFixed(2)} g</div>
+            <div class="formula-fertilizer-amount">${i18n.formatNumber(grams.toFixed(2))} ${i18n.t('gramsShort')}</div>
           </div>
         `;
       }
@@ -8943,10 +9378,10 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
       html += `
         <div class="formula-fertilizer" style="border-top: 2px solid #007bff; margin-top: 10px; padding-top: 10px; background: #e3f2fd;">
           <div class="formula-fertilizer-info">
-            <div class="formula-fertilizer-name" style="color: #007bff;"><strong>TOTAL (${fertCount} fertilizers)</strong></div>
-            <div class="formula-fertilizer-composition">${(totalGrams / volume).toFixed(2)} g/L</div>
+            <div class="formula-fertilizer-name" style="color: #007bff;"><strong>${i18n.t('totalFertilizers', { count: i18n.formatNumber(fertCount) })}</strong></div>
+            <div class="formula-fertilizer-composition">${i18n.formatNumber((totalGrams / volume).toFixed(2))} ${i18n.t('gramsPerLiter')}</div>
           </div>
-          <div class="formula-fertilizer-amount" style="color: #007bff; font-size: 1.2em;"><strong>${totalGrams.toFixed(2)} g</strong></div>
+          <div class="formula-fertilizer-amount" style="color: #007bff; font-size: 1.2em;"><strong>${i18n.formatNumber(totalGrams.toFixed(2))} ${i18n.t('gramsShort')}</strong></div>
         </div>
       `;
     }
@@ -9002,10 +9437,10 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   const calculationMode = document.getElementById('reverse-calculation-mode').value; // 'oxide' or 'elemental'
 
   // Comparison table - showing nutrients based on selected mode
-  html += '<h3>Target vs Achieved Ratios <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>';
+  html += '<h3>' + i18n.t('targetVsAchievedRatios') + ' <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>';
   html += '<div class="comparison-table-wrapper">';
   html += '<table class="comparison-table">';
-  html += '<tr><th>Nutrient</th><th>Your Input</th><th>Achieved Ratio</th><th>PPM Achieved</th></tr>';
+  html += '<tr><th>' + i18n.t('nutrient') + '</th><th>' + i18n.t('yourInput') + '</th><th>' + i18n.t('achievedRatio') + '</th><th>' + i18n.t('ppmAchieved') + '</th></tr>';
 
   // Display nutrients based on calculation mode
   let displayNutrients;
@@ -9108,10 +9543,10 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
 
       html += `
         <tr>
-          <td>${nutrient.label} <small style="color:#666">(PPM)</small></td>
-          <td>${Number(targetSiPPM || 0).toFixed(1)} ppm</td>
-          <td class="${className}">${Number(achievedSiPPM || 0).toFixed(1)} ppm ${status}</td>
-          <td>${Number(achievedSiPPM || 0).toFixed(1)} ppm</td>
+          <td>${nutrient.label} <small style="color:#666">${i18n.t('ppmLabel')}</small></td>
+          <td>${i18n.formatNumber(Number(targetSiPPM || 0).toFixed(1))} ${i18n.t('ppmUnit')}</td>
+          <td class="${className}">${i18n.formatNumber(Number(achievedSiPPM || 0).toFixed(1))} ${i18n.t('ppmUnit')} ${status}</td>
+          <td>${i18n.formatNumber(Number(achievedSiPPM || 0).toFixed(1))} ${i18n.t('ppmUnit')}</td>
         </tr>
       `;
       return;
@@ -9131,13 +9566,13 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
       status = '✗';
       allGood = false;
       if (!nutrient.isCommercial) {  // Only warn once for elemental form
-        warnings.push(`${nutrient.label} ratio is ${ratioDiff.toFixed(1)}% off target`);
+        warnings.push(i18n.t('ratioOffTarget', { nutrient: nutrient.label, percent: i18n.formatNumber(ratioDiff.toFixed(1)) }));
       }
     } else if (ratioDiff > 5) {
       className = 'close';
       status = '⚠';
       if (!nutrient.isCommercial) {  // Only warn once for elemental form
-        warnings.push(`${nutrient.label} ratio is ${ratioDiff.toFixed(1)}% off target (acceptable range)`);
+        warnings.push(i18n.t('ratioOffTargetAcceptable', { nutrient: nutrient.label, percent: i18n.formatNumber(ratioDiff.toFixed(1)) }));
       }
     }
 
@@ -9172,8 +9607,8 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   // NH4-N percentage
   const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
   html += `<div class="conversion-note" style="margin-top: 15px;">
-    <strong>Nitrogen Form:</strong> ${result.achieved.N_NH4.toFixed(1)} ppm NH₄-N (${nh4Percent.toFixed(1)}% of total N),
-    ${result.achieved.N_NO3.toFixed(1)} ppm NO₃-N (${(100 - nh4Percent).toFixed(1)}% of total N)
+    <strong>${i18n.t('nitrogenFormLabel')}</strong> ${i18n.formatNumber(result.achieved.N_NH4.toFixed(1))} ppm NH₄-N (${i18n.formatNumber(nh4Percent.toFixed(1))}% ${i18n.t('ofTotalN')}),
+    ${i18n.formatNumber(result.achieved.N_NO3.toFixed(1))} ppm NO₃-N (${i18n.formatNumber((100 - nh4Percent).toFixed(1))}% ${i18n.t('ofTotalN')})
   </div>`;
 
   // Calculate ion balance for this formula
@@ -9184,19 +9619,19 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
 
   const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
 
-  html += '<h3 style="margin-top: 20px;">Ion Balance <span class="info-icon" onclick="openReverseIonBalanceExplanation()" title="Click to learn how we calculate Ion Balance">?</span></h3>';
+  html += '<h3 style="margin-top: 20px;">' + i18n.t('ionBalance') + ' <span class="info-icon" onclick="openReverseIonBalanceExplanation()" title="' + i18n.t('clickToLearnIonBalance') + '">?</span></h3>';
   html += `<div class="ion-balance-summary" style="margin-top: 10px;">
     <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">Cations</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalCations.toFixed(2)} meq/L</div>
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('cations')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalCations.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
     </div>
     <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">Anions</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${ionBalance.totalAnions.toFixed(2)} meq/L</div>
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('anions')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalAnions.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
     </div>
     <div class="ion-balance-card status" style="background: ${ionBalance.statusColor}20; border-color: ${ionBalance.statusColor};">
-      <div style="font-size: 0.9em; color: #666;">Imbalance</div>
-      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${ionBalance.imbalance.toFixed(1)}%</div>
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('imbalance')}</div>
+      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${i18n.formatNumber(ionBalance.imbalance.toFixed(1))}%</div>
       <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
     </div>
   </div>`;
@@ -9209,40 +9644,40 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   let ecStatusColor, ecStatusText;
   if (ecValue < 0.8) {
     ecStatusColor = '#17a2b8';  // Info blue - very light
-    ecStatusText = 'Very Light';
+    ecStatusText = i18n.t('ecVeryLight');
   } else if (ecValue < 1.2) {
     ecStatusColor = '#28a745';  // Green - light/seedlings
-    ecStatusText = 'Light';
+    ecStatusText = i18n.t('ecLight');
   } else if (ecValue < 1.8) {
     ecStatusColor = '#28a745';  // Green - moderate
-    ecStatusText = 'Moderate';
+    ecStatusText = i18n.t('ecModerate');
   } else if (ecValue < 2.5) {
     ecStatusColor = '#ffc107';  // Yellow - strong
-    ecStatusText = 'Strong';
+    ecStatusText = i18n.t('ecStrong');
   } else if (ecValue < 3.5) {
     ecStatusColor = '#fd7e14';  // Orange - very strong
-    ecStatusText = 'Very Strong';
+    ecStatusText = i18n.t('ecVeryStrong');
   } else {
     ecStatusColor = '#dc3545';  // Red - too high
-    ecStatusText = 'Very High!';
+    ecStatusText = i18n.t('ecVeryHigh');
   }
 
   // Show different header based on whether EC was targeted
   if (targetEC !== null) {
-    html += '<h3 style="margin-top: 20px;">Target EC Achieved</h3>';
+    html += '<h3 style="margin-top: 20px;">' + i18n.t('targetEcAchieved') + '</h3>';
     html += `<div class="ion-balance-summary" style="margin-top: 10px;">
       <div class="ion-balance-card">
-        <div style="font-size: 0.9em; color: #666;">Target EC</div>
-        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${targetEC.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
+        <div style="font-size: 0.9em; color: #666;">${i18n.t('targetEcLabel')}</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${i18n.formatNumber(targetEC.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
       </div>
       <div class="ion-balance-card" style="flex: 2;">
-        <div style="font-size: 0.9em; color: #666;">Achieved EC (25°C)</div>
-        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${ecValue.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
+        <div style="font-size: 0.9em; color: #666;">${i18n.t('achievedEc')}</div>
+        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
         <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
       </div>
       <div class="ion-balance-card">
-        <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
-        <div style="font-size: 1.3em; font-weight: bold;">${(ecPrediction.ionicStrength * 1000).toFixed(1)} <span style="font-size: 0.7em;">mM</span></div>
+        <div style="font-size: 0.9em; color: #666;">${i18n.t('ionicStrength')}</div>
+        <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber((ecPrediction.ionicStrength * 1000).toFixed(1))} <span style="font-size: 0.7em;">${i18n.t('mMUnit')}</span></div>
       </div>
     </div>`;
 
@@ -9255,16 +9690,16 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
       </div>`;
     }
   } else {
-    html += '<h3 style="margin-top: 20px;">Predicted EC</h3>';
+    html += '<h3 style="margin-top: 20px;">' + i18n.t('predictedEc') + '</h3>';
     html += `<div class="ion-balance-summary" style="margin-top: 10px;">
       <div class="ion-balance-card" style="flex: 2;">
-        <div style="font-size: 0.9em; color: #666;">Electrical Conductivity (25°C)</div>
-        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${ecValue.toFixed(2)} <span style="font-size: 0.6em;">mS/cm</span></div>
+        <div style="font-size: 0.9em; color: #666;">${i18n.t('electricalConductivity25C')}</div>
+        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
         <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
       </div>
       <div class="ion-balance-card">
-        <div style="font-size: 0.9em; color: #666;">Ionic Strength</div>
-        <div style="font-size: 1.3em; font-weight: bold;">${(ecPrediction.ionicStrength * 1000).toFixed(1)} <span style="font-size: 0.7em;">mM</span></div>
+        <div style="font-size: 0.9em; color: #666;">${i18n.t('ionicStrength')}</div>
+        <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber((ecPrediction.ionicStrength * 1000).toFixed(1))} <span style="font-size: 0.7em;">${i18n.t('mMUnit')}</span></div>
       </div>
     </div>`;
   }
@@ -9942,13 +10377,13 @@ function generateIonBalanceExplanation() {
     let statusColor, statusText;
     if (imbalance <= 10) {
       statusColor = '#28a745';
-      statusText = 'Balanced ✓';
+      statusText = i18n.t('balancedCheck');
     } else if (imbalance <= 20) {
       statusColor = '#ffc107';
-      statusText = 'Caution ⚠';
+      statusText = i18n.t('cautionWarning');
     } else {
       statusColor = '#dc3545';
-      statusText = 'Imbalanced ✗';
+      statusText = i18n.t('imbalancedX');
     }
 
     content += `
@@ -10497,13 +10932,13 @@ function generateReverseIonBalanceExplanation() {
 
     // Results summary
     let statusColor = '#28a745';
-    let statusText = 'Balanced';
+    let statusText = i18n.t('balanced');
     if (imbalance > 20) {
       statusColor = '#dc3545';
-      statusText = 'Imbalanced';
+      statusText = i18n.t('imbalanced');
     } else if (imbalance > 10) {
       statusColor = '#ffc107';
-      statusText = 'Caution';
+      statusText = i18n.t('caution');
     }
 
     const cations = Object.entries(ionDetails).filter(([ion, data]) => data.type === 'cation').sort((a, b) => b[1].meq - a[1].meq);
@@ -10995,13 +11430,13 @@ function generateTwoTankIonBalanceExplanation() {
       const imbalance = average > 0 ? Math.abs(tank.cations - tank.anions) / average * 100 : 0;
 
       let statusColor = '#28a745';
-      let statusText = 'Balanced';
+      let statusText = i18n.t('balanced');
       if (imbalance > 20) {
         statusColor = '#dc3545';
-        statusText = 'Imbalanced';
+        statusText = i18n.t('imbalanced');
       } else if (imbalance > 10) {
         statusColor = '#ffc107';
-        statusText = 'Caution';
+        statusText = i18n.t('caution');
       }
 
       content += `
@@ -11092,13 +11527,13 @@ function generateTwoTankIonBalanceExplanation() {
     const combinedImbalance = combinedAverage > 0 ? Math.abs(combinedCations - combinedAnions) / combinedAverage * 100 : 0;
 
     let combinedStatusColor = '#28a745';
-    let combinedStatusText = 'Balanced';
+    let combinedStatusText = i18n.t('balanced');
     if (combinedImbalance > 20) {
       combinedStatusColor = '#dc3545';
-      combinedStatusText = 'Imbalanced';
+      combinedStatusText = i18n.t('imbalanced');
     } else if (combinedImbalance > 10) {
       combinedStatusColor = '#ffc107';
-      combinedStatusText = 'Caution';
+      combinedStatusText = i18n.t('caution');
     }
 
     content += `
@@ -11336,13 +11771,13 @@ function generateFormulaIonBalanceExplanation() {
 
     // Results summary
     let statusColor = '#28a745';
-    let statusText = 'Balanced';
+    let statusText = i18n.t('balanced');
     if (imbalance > 20) {
       statusColor = '#dc3545';
-      statusText = 'Imbalanced';
+      statusText = i18n.t('imbalanced');
     } else if (imbalance > 10) {
       statusColor = '#ffc107';
-      statusText = 'Caution';
+      statusText = i18n.t('caution');
     }
 
     content += `
@@ -11406,14 +11841,14 @@ async function copyToClipboard(text, button) {
     }, 2000);
   } catch (err) {
     console.error('Failed to copy:', err);
-    alert('Failed to copy to clipboard. Please try again.');
+    alert(i18n.t('alertCopyFailedTryAgain'));
   }
 }
 
 // Copy Grams to PPM results (Tab 1)
 function copyGramsToPPMResults() {
   if (!lastGramsToPPMCalculation) {
-    alert('Please run a calculation first.');
+    alert(i18n.t('alertRunCalculationFirst'));
     return;
   }
 
@@ -11458,17 +11893,17 @@ function copyGramsToPPMResults() {
 
   // Ion Balance
   if (ionBalance) {
-    text += `*⚖️ Ion Balance*\n`;
-    text += `• Cations: *${ionBalance.totalCations.toFixed(2)} meq/L*\n`;
-    text += `• Anions: *${ionBalance.totalAnions.toFixed(2)} meq/L*\n`;
-    text += `• Imbalance: *${ionBalance.imbalance.toFixed(1)}%* (${ionBalance.statusText})\n`;
+    text += `*⚖️ ${i18n.t('ionBalance')}*\n`;
+    text += `• ${i18n.t('cations')}: *${i18n.formatNumber(ionBalance.totalCations.toFixed(2))} ${i18n.t('meqPerLiter')}*\n`;
+    text += `• ${i18n.t('anions')}: *${i18n.formatNumber(ionBalance.totalAnions.toFixed(2))} ${i18n.t('meqPerLiter')}*\n`;
+    text += `• ${i18n.t('imbalance')}: *${i18n.formatNumber(ionBalance.imbalance.toFixed(1))}%* (${ionBalance.statusText})\n`;
     text += `\n`;
   }
 
   // EC Prediction
   if (ecData && ecData.ec) {
-    text += `*⚡ EC Prediction*\n`;
-    text += `• EC: *${ecData.ec.toFixed(2)} mS/cm*\n`;
+    text += `*⚡ ${i18n.t('ecPrediction')}*\n`;
+    text += `• ${i18n.t('ecLabel')} *${i18n.formatNumber(ecData.ec.toFixed(2))} ${i18n.t('mScmUnit')}*\n`;
     text += `\n`;
   }
 
@@ -11491,7 +11926,7 @@ function copyGramsToPPMResults() {
 // Copy PPM to Grams results (Tab 2 - Formula Builder)
 function copyPPMToGramsResults() {
   if (!lastFormulaCalculation) {
-    alert('Please run a calculation first.');
+    alert(i18n.t('alertRunCalculationFirst'));
     return;
   }
 
@@ -11587,7 +12022,7 @@ function copyPPMToGramsResults() {
 // Copy NPK Ratio to Grams results (Tab 3 - Reverse Calculator)
 function copyNPKRatioResults() {
   if (!lastReverseCalculation) {
-    alert('Please run a calculation first.');
+    alert(i18n.t('alertRunCalculationFirst'));
     return;
   }
 
