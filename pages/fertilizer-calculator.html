@@ -9291,11 +9291,11 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
       const mgContrib = combinedNutrients.Mg > 0 ? (nutrients.Mg / combinedNutrients.Mg) * mgTarget : 0;
 
       // Build tank ratio values - only include nutrients that the user targeted
-      let tankRatioValues = nContrib.toFixed(1);
-      if (pTarget > 0) tankRatioValues += ` : ${pContrib.toFixed(1)}`;
-      if (kTarget > 0) tankRatioValues += ` : ${kContrib.toFixed(1)}`;
-      if (caTarget > 0) tankRatioValues += ` : ${caContrib.toFixed(1)}`;
-      if (mgTarget > 0) tankRatioValues += ` : ${mgContrib.toFixed(1)}`;
+      let tankRatioValues = i18n.formatNumber(nContrib.toFixed(1));
+      if (pTarget > 0) tankRatioValues += ` : ${i18n.formatNumber(pContrib.toFixed(1))}`;
+      if (kTarget > 0) tankRatioValues += ` : ${i18n.formatNumber(kContrib.toFixed(1))}`;
+      if (caTarget > 0) tankRatioValues += ` : ${i18n.formatNumber(caContrib.toFixed(1))}`;
+      if (mgTarget > 0) tankRatioValues += ` : ${i18n.formatNumber(mgContrib.toFixed(1))}`;
 
       html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
       html += `<div style="font-size: 0.8em; color: #666;">${i18n.t('thisTankRatioLabel', { ratio: ratioLabel })}</div>`;
@@ -9308,7 +9308,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
       const caMgRatio = (nutrients.Ca / nutrients.Mg).toFixed(2);
       html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
       html += `<div style="font-size: 0.8em; color: #666;">Ca:Mg</div>`;
-      html += `<div style="font-size: 1.1em; font-weight: bold;">${caMgRatio} : 1</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${i18n.formatNumber(caMgRatio)} : ${i18n.formatNumber(1)}</div>`;
       html += `</div>`;
     }
 
@@ -9317,7 +9317,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
       const nCaRatio = (nutrients.N_total / nutrients.Ca).toFixed(2);
       html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
       html += `<div style="font-size: 0.8em; color: #666;">N:Ca</div>`;
-      html += `<div style="font-size: 1.1em; font-weight: bold;">${nCaRatio} : 1</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${i18n.formatNumber(nCaRatio)} : ${i18n.formatNumber(1)}</div>`;
       html += `</div>`;
     }
 
@@ -9326,7 +9326,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
       const kCaRatio = (kVal / nutrients.Ca).toFixed(2);
       html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
       html += `<div style="font-size: 0.8em; color: #666;">${kLabel}:Ca</div>`;
-      html += `<div style="font-size: 1.1em; font-weight: bold;">${kCaRatio} : 1</div>`;
+      html += `<div style="font-size: 1.1em; font-weight: bold;">${i18n.formatNumber(kCaRatio)} : ${i18n.formatNumber(1)}</div>`;
       html += `</div>`;
     }
 
