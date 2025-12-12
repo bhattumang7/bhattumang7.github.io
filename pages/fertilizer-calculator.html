@@ -3077,6 +3077,9 @@ const i18n = {
 
       // Nutrient labels
       nitrogen: 'Nitrogen (N)',
+      totalNitrogenN: 'Total Nitrogen (N)',
+      nitrateN: 'Nitrate-N (NO₃-N)',
+      ammoniumN: 'Ammonium-N (NH₄-N)',
       phosphorusOxide: 'Phosphorus (P₂O₅)',
       phosphorusElemental: 'Phosphorus (P)',
       potassiumOxide: 'Potassium (K₂O)',
@@ -3609,6 +3612,9 @@ const i18n = {
       yesShowTwoTanks: 'હા, બે-ટેન્ક દેખાવ બતાવો',
 
       nitrogen: 'નાઇટ્રોજન (N)',
+      totalNitrogenN: 'કુલ નાઇટ્રોજન (N)',
+      nitrateN: 'નાઇટ્રેટ-N (NO₃-N)',
+      ammoniumN: 'એમોનિયમ-N (NH₄-N)',
       phosphorusOxide: 'ફોસ્ફરસ (P₂O₅)',
       phosphorusElemental: 'ફોસ્ફરસ (P)',
       potassiumOxide: 'પોટેશિયમ (K₂O)',
@@ -3986,6 +3992,35 @@ const i18n = {
 
     // Replace each digit with its localized equivalent
     return numStr.replace(/[0-9]/g, digit => numerals[parseInt(digit)]);
+  },
+
+  // Format nutrient key into display-friendly label with proper subscripts
+  formatNutrientLabel(nutrientKey) {
+    const labelMap = {
+      'N_total': 'N',
+      'N_NO3': 'NO₃-N',
+      'N_NH4': 'NH₄-N',
+      'N_Urea': 'Urea-N',
+      'P': 'P',
+      'P2O5': 'P₂O₅',
+      'K': 'K',
+      'K2O': 'K₂O',
+      'Ca': 'Ca',
+      'Mg': 'Mg',
+      'S': 'S',
+      'Si': 'Si',
+      'Fe': 'Fe',
+      'Mn': 'Mn',
+      'Zn': 'Zn',
+      'Cu': 'Cu',
+      'B': 'B',
+      'Mo': 'Mo',
+      'Cl': 'Cl',
+      'Na': 'Na',
+      'Co': 'Co',
+      'Ni': 'Ni'
+    };
+    return labelMap[nutrientKey] || nutrientKey;
   },
 
   // Get translation for a key
@@ -5605,11 +5640,11 @@ function updateWizardPPMLabels() {
   const pLabel = document.getElementById('wizard-target-p-label');
   const kLabel = document.getElementById('wizard-target-k-label');
   if (selectedCalcMode === 'elemental') {
-    pLabel.textContent = 'Phosphorus (P)';
-    kLabel.textContent = 'Potassium (K)';
+    pLabel.textContent = i18n.t('phosphorusElemental');
+    kLabel.textContent = i18n.t('potassiumElemental');
   } else {
-    pLabel.textContent = 'Phosphorus (P₂O₅)';
-    kLabel.textContent = 'Potassium (K₂O)';
+    pLabel.textContent = i18n.t('phosphorusOxide');
+    kLabel.textContent = i18n.t('potassiumOxide');
   }
 }
 
@@ -7257,17 +7292,17 @@ function displayResults(results) {
 
   // Define display order and labels
   const displayOrder = [
-    { key: 'N_total', label: 'Total Nitrogen (N)' },
-    { key: 'N_NO3', label: 'Nitrate-N (NO₃-N)' },
-    { key: 'N_NH4', label: 'Ammonium-N (NH₄-N)' },
+    { key: 'N_total', label: i18n.t('totalNitrogenN') },
+    { key: 'N_NO3', label: i18n.t('nitrateN') },
+    { key: 'N_NH4', label: i18n.t('ammoniumN') },
     { key: 'N_Urea', label: 'Urea-N' },
-    { key: 'P', label: 'Phosphorus (P)' },
-    { key: 'P2O5', label: 'P₂O₅ (oxide form)' },
-    { key: 'K', label: 'Potassium (K)' },
-    { key: 'K2O', label: 'K₂O (oxide form)' },
-    { key: 'Ca', label: 'Calcium (Ca)' },
-    { key: 'Mg', label: 'Magnesium (Mg)' },
-    { key: 'S', label: 'Sulfur (S)' },
+    { key: 'P', label: i18n.t('phosphorusElemental') },
+    { key: 'P2O5', label: i18n.t('phosphorusOxide') },
+    { key: 'K', label: i18n.t('potassiumElemental') },
+    { key: 'K2O', label: i18n.t('potassiumOxide') },
+    { key: 'Ca', label: i18n.t('calcium') },
+    { key: 'Mg', label: i18n.t('magnesium') },
+    { key: 'S', label: i18n.t('sulfur') },
     { key: 'Fe', label: 'Iron (Fe)' },
     { key: 'B', label: 'Boron (B)' },
     { key: 'Zn', label: 'Zinc (Zn)' },
@@ -7275,7 +7310,7 @@ function displayResults(results) {
     { key: 'Cu', label: 'Copper (Cu)' },
     { key: 'Mo', label: 'Molybdenum (Mo)' },
     { key: 'Cl', label: 'Chlorine (Cl)' },
-    { key: 'Si', label: 'Silicon (Si)' }
+    { key: 'Si', label: i18n.t('silicon') }
   ];
 
   displayOrder.forEach(item => {
@@ -7499,16 +7534,16 @@ function calculateIonBalance(activeFertilizers, volume) {
   let html = `
     <div class="ion-balance-summary">
       <div class="ion-balance-card">
-        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Cations</div>
-        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${totalCations.toFixed(2)} <span style="font-size: 0.7em;">meq/L</span></div>
+        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalCations')}</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))} <span style="font-size: 0.7em;">${i18n.t('meqLHeader')}</span></div>
       </div>
       <div class="ion-balance-card">
-        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Anions</div>
-        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${totalAnions.toFixed(2)} <span style="font-size: 0.7em;">meq/L</span></div>
+        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalAnions')}</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))} <span style="font-size: 0.7em;">${i18n.t('meqLHeader')}</span></div>
       </div>
       <div class="ion-balance-card status" style="background: ${statusColor}20; border-color: ${statusColor};">
-        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Imbalance</div>
-        <div style="font-size: 1.5em; font-weight: bold; color: ${statusColor};">${imbalance.toFixed(1)}%</div>
+        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('imbalance')}</div>
+        <div style="font-size: 1.5em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
         <div style="font-size: 0.9em; color: ${statusColor}; margin-top: 5px;">${statusText}</div>
       </div>
     </div>
@@ -9072,12 +9107,12 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
     html += '<tr style="background: white;"><th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Nutrient</th><th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">PPM</th></tr>';
 
     const ppmData = [
-      { label: 'Nitrogen (N)', value: nutrients.N_total },
-      { label: mode === 'elemental' ? 'Phosphorus (P)' : 'Phosphorus (P₂O₅)', value: pVal },
-      { label: mode === 'elemental' ? 'Potassium (K)' : 'Potassium (K₂O)', value: kVal },
-      { label: 'Calcium (Ca)', value: nutrients.Ca },
-      { label: 'Magnesium (Mg)', value: nutrients.Mg },
-      { label: 'Sulfur (S)', value: nutrients.S }
+      { label: i18n.t('nitrogen'), value: nutrients.N_total },
+      { label: mode === 'elemental' ? i18n.t('phosphorusElemental') : i18n.t('phosphorusOxide'), value: pVal },
+      { label: mode === 'elemental' ? i18n.t('potassiumElemental') : i18n.t('potassiumOxide'), value: kVal },
+      { label: i18n.t('calcium'), value: nutrients.Ca },
+      { label: i18n.t('magnesium'), value: nutrients.Mg },
+      { label: i18n.t('sulfur'), value: nutrients.S }
     ];
 
     ppmData.forEach(item => {
@@ -9275,14 +9310,14 @@ function copyTwoTankResults() {
 
   text += 'PPM Values:\n';
   text += '───────────────────────────────────────────\n';
-  text += `  Nitrogen (N):      ${combinedNutrients.N_total.toFixed(2)} ppm\n`;
+  text += `  ${i18n.t('nitrogen').padEnd(16)} ${i18n.formatNumber(combinedNutrients.N_total.toFixed(2))} ppm\n`;
   const pVal = mode === 'elemental' ? combinedNutrients.P : combinedNutrients.P2O5;
   const kVal = mode === 'elemental' ? combinedNutrients.K : combinedNutrients.K2O;
-  text += `  ${pLabel.padEnd(16)} ${pVal.toFixed(2)} ppm\n`;
-  text += `  ${kLabel.padEnd(16)} ${kVal.toFixed(2)} ppm\n`;
-  text += `  Calcium (Ca):      ${combinedNutrients.Ca.toFixed(2)} ppm\n`;
-  text += `  Magnesium (Mg):    ${combinedNutrients.Mg.toFixed(2)} ppm\n`;
-  text += `  Sulfur (S):        ${combinedNutrients.S.toFixed(2)} ppm\n\n`;
+  text += `  ${pLabel.padEnd(16)} ${i18n.formatNumber(pVal.toFixed(2))} ppm\n`;
+  text += `  ${kLabel.padEnd(16)} ${i18n.formatNumber(kVal.toFixed(2))} ppm\n`;
+  text += `  ${i18n.t('calcium').padEnd(16)} ${i18n.formatNumber(combinedNutrients.Ca.toFixed(2))} ppm\n`;
+  text += `  ${i18n.t('magnesium').padEnd(16)} ${i18n.formatNumber(combinedNutrients.Mg.toFixed(2))} ppm\n`;
+  text += `  ${i18n.t('sulfur').padEnd(16)} ${i18n.formatNumber(combinedNutrients.S.toFixed(2))} ppm\n\n`;
 
   // Nitrogen forms
   if (combinedNutrients.N_total > 0.1) {
@@ -9355,12 +9390,12 @@ function generateTankCopyText(tank, letter, mode, pLabel, kLabel) {
   const kVal = mode === 'elemental' ? nutrients.K : nutrients.K2O;
 
   text += 'PPM Values:\n';
-  if (nutrients.N_total > 0.01) text += `  Nitrogen (N):      ${nutrients.N_total.toFixed(2)} ppm\n`;
-  if (pVal > 0.01) text += `  ${pLabel.padEnd(16)} ${pVal.toFixed(2)} ppm\n`;
-  if (kVal > 0.01) text += `  ${kLabel.padEnd(16)} ${kVal.toFixed(2)} ppm\n`;
-  if (nutrients.Ca > 0.01) text += `  Calcium (Ca):      ${nutrients.Ca.toFixed(2)} ppm\n`;
-  if (nutrients.Mg > 0.01) text += `  Magnesium (Mg):    ${nutrients.Mg.toFixed(2)} ppm\n`;
-  if (nutrients.S > 0.01) text += `  Sulfur (S):        ${nutrients.S.toFixed(2)} ppm\n`;
+  if (nutrients.N_total > 0.01) text += `  ${i18n.t('nitrogen').padEnd(16)} ${i18n.formatNumber(nutrients.N_total.toFixed(2))} ppm\n`;
+  if (pVal > 0.01) text += `  ${pLabel.padEnd(16)} ${i18n.formatNumber(pVal.toFixed(2))} ppm\n`;
+  if (kVal > 0.01) text += `  ${kLabel.padEnd(16)} ${i18n.formatNumber(kVal.toFixed(2))} ppm\n`;
+  if (nutrients.Ca > 0.01) text += `  ${i18n.t('calcium').padEnd(16)} ${i18n.formatNumber(nutrients.Ca.toFixed(2))} ppm\n`;
+  if (nutrients.Mg > 0.01) text += `  ${i18n.t('magnesium').padEnd(16)} ${i18n.formatNumber(nutrients.Mg.toFixed(2))} ppm\n`;
+  if (nutrients.S > 0.01) text += `  ${i18n.t('sulfur').padEnd(16)} ${i18n.formatNumber(nutrients.S.toFixed(2))} ppm\n`;
   text += '\n';
 
   // Nitrogen forms
@@ -9554,11 +9589,11 @@ function updateReverseCalculationMode() {
   const kLabel = document.querySelector('label[for="reverse-k"]');
 
   if (mode === 'elemental') {
-    pLabel.textContent = 'Phosphorus (P)';
-    kLabel.textContent = 'Potassium (K)';
+    pLabel.textContent = i18n.t('phosphorusElemental');
+    kLabel.textContent = i18n.t('potassiumElemental');
   } else {
-    pLabel.textContent = 'Phosphorus (P₂O₅)';
-    kLabel.textContent = 'Potassium (K₂O)';
+    pLabel.textContent = i18n.t('phosphorusOxide');
+    kLabel.textContent = i18n.t('potassiumOxide');
   }
 }
 
@@ -9569,11 +9604,11 @@ function updateFormulaCalculationMode() {
   const kLabel = document.getElementById('target-k-label');
 
   if (mode === 'elemental') {
-    pLabel.textContent = 'Phosphorus (P) *';
-    kLabel.textContent = 'Potassium (K) *';
+    pLabel.textContent = i18n.t('phosphorusElemental') + ' *';
+    kLabel.textContent = i18n.t('potassiumElemental') + ' *';
   } else {
-    pLabel.textContent = 'Phosphorus (P₂O₅) *';
-    kLabel.textContent = 'Potassium (K₂O) *';
+    pLabel.textContent = i18n.t('phosphorusOxide') + ' *';
+    kLabel.textContent = i18n.t('potassiumOxide') + ' *';
   }
 }
 
@@ -9897,24 +9932,24 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   if (calculationMode === 'elemental') {
     // Elemental mode: Show P and K (pure elements)
     displayNutrients = [
-      { key: 'N', label: 'Nitrogen (N)', isCommercial: false },
-      { key: 'P', label: 'Phosphorus (P)', isCommercial: false },
-      { key: 'K', label: 'Potassium (K)', isCommercial: false },
-      { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
-      { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
-      { key: 'S', label: 'Sulfur (S)', isCommercial: false },
-      { key: 'Si', label: 'Silicon (Si)', isCommercial: false }
+      { key: 'N', label: i18n.t('nitrogen'), isCommercial: false },
+      { key: 'P', label: i18n.t('phosphorusElemental'), isCommercial: false },
+      { key: 'K', label: i18n.t('potassiumElemental'), isCommercial: false },
+      { key: 'Ca', label: i18n.t('calcium'), isCommercial: false },
+      { key: 'Mg', label: i18n.t('magnesium'), isCommercial: false },
+      { key: 'S', label: i18n.t('sulfur'), isCommercial: false },
+      { key: 'Si', label: i18n.t('silicon'), isCommercial: false }
     ];
   } else {
     // Oxide mode: Show P₂O₅ and K₂O (commercial standard)
     displayNutrients = [
-      { key: 'N', label: 'Nitrogen (N)', isCommercial: false },
-      { key: 'P2O5', label: 'Phosphorus (P₂O₅)', isCommercial: true },
-      { key: 'K2O', label: 'Potassium (K₂O)', isCommercial: true },
-      { key: 'Ca', label: 'Calcium (Ca)', isCommercial: false },
-      { key: 'Mg', label: 'Magnesium (Mg)', isCommercial: false },
-      { key: 'S', label: 'Sulfur (S)', isCommercial: false },
-      { key: 'Si', label: 'Silicon (Si)', isCommercial: false }
+      { key: 'N', label: i18n.t('nitrogen'), isCommercial: false },
+      { key: 'P2O5', label: i18n.t('phosphorusOxide'), isCommercial: true },
+      { key: 'K2O', label: i18n.t('potassiumOxide'), isCommercial: true },
+      { key: 'Ca', label: i18n.t('calcium'), isCommercial: false },
+      { key: 'Mg', label: i18n.t('magnesium'), isCommercial: false },
+      { key: 'S', label: i18n.t('sulfur'), isCommercial: false },
+      { key: 'Si', label: i18n.t('silicon'), isCommercial: false }
     ];
   }
 
@@ -10394,7 +10429,7 @@ function generateExplanationContent() {
 
         content += `
           <tr>
-            <td data-label="${i18n.t('nutrientHeader')}"><strong>${nutrient}</strong></td>
+            <td data-label="${i18n.t('nutrientHeader')}"><strong>${i18n.formatNutrientLabel(nutrient)}</strong></td>
             <td data-label="${i18n.t('percentInFertilizerHeader')}">${i18n.formatNumber(percentage)}%</td>
             <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
             <td data-label="${i18n.t('ppmHeader')}"><strong>${i18n.formatNumber(ppm.toFixed(2))} PPM</strong></td>
@@ -11071,7 +11106,7 @@ function generateReversePPMExplanation() {
 
         content += `
           <tr>
-            <td data-label="${i18n.t('nutrientHeader')}"><strong>${nutrient}</strong></td>
+            <td data-label="${i18n.t('nutrientHeader')}"><strong>${i18n.formatNutrientLabel(nutrient)}</strong></td>
             <td data-label="${i18n.t('percentInFertilizerHeader')}">${i18n.formatNumber(percentage)}%</td>
             <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
             <td data-label="${i18n.t('ppmHeader')}"><strong>${i18n.formatNumber(ppm.toFixed(2))} PPM</strong></td>
@@ -11111,7 +11146,7 @@ function generateReversePPMExplanation() {
 
       content += `
         <tr>
-          <td data-label="Nutrient"><strong>${nutrient}</strong></td>
+          <td data-label="${i18n.t('nutrientHeader')}"><strong>${i18n.formatNutrientLabel(nutrient)}</strong></td>
           <td data-label="Sources" style="font-size: 0.85em;">${sourceList}</td>
           <td data-label="Total PPM"><strong>${total.toFixed(2)} PPM</strong></td>
         </tr>
@@ -11642,7 +11677,7 @@ function generateTwoTankPPMExplanation() {
 
         content += `
           <tr>
-            <td data-label="${i18n.t('nutrientHeader')}"><strong>${nutrient}</strong></td>
+            <td data-label="${i18n.t('nutrientHeader')}"><strong>${i18n.formatNutrientLabel(nutrient)}</strong></td>
             <td data-label="${i18n.t('percentInFertilizerHeader')}">${i18n.formatNumber(percentage)}%</td>
             <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
             <td data-label="${i18n.t('ppmHeader')}"><strong>${i18n.formatNumber(ppm.toFixed(2))} PPM</strong></td>
@@ -11684,7 +11719,7 @@ function generateTwoTankPPMExplanation() {
 
       content += `
         <tr>
-          <td data-label="Nutrient"><strong>${nutrient}</strong></td>
+          <td data-label="${i18n.t('nutrientHeader')}"><strong>${i18n.formatNutrientLabel(nutrient)}</strong></td>
           <td data-label="Tank A PPM" style="color: #2e7d32;">${tankATotal.toFixed(2)}</td>
           <td data-label="Tank B PPM" style="color: #1565c0;">${tankBTotal.toFixed(2)}</td>
           <td data-label="Combined PPM"><strong>${combined.toFixed(2)} PPM</strong></td>
@@ -12300,20 +12335,20 @@ function copyGramsToPPMResults() {
   text += `*${i18n.t('shareNutrientConcentrations')}*\n`;
 
   const displayOrder = [
-    { key: 'N_total', label: 'Total N' },
-    { key: 'N_NO3', label: 'NO₃-N' },
-    { key: 'N_NH4', label: 'NH₄-N' },
-    { key: 'P', label: 'P' },
-    { key: 'K', label: 'K' },
-    { key: 'Ca', label: 'Ca' },
-    { key: 'Mg', label: 'Mg' },
-    { key: 'S', label: 'S' },
-    { key: 'Fe', label: 'Fe' },
-    { key: 'Mn', label: 'Mn' },
-    { key: 'Zn', label: 'Zn' },
-    { key: 'B', label: 'B' },
-    { key: 'Cu', label: 'Cu' },
-    { key: 'Mo', label: 'Mo' }
+    { key: 'N_total', label: i18n.formatNutrientLabel('N_total') },
+    { key: 'N_NO3', label: i18n.formatNutrientLabel('N_NO3') },
+    { key: 'N_NH4', label: i18n.formatNutrientLabel('N_NH4') },
+    { key: 'P', label: i18n.formatNutrientLabel('P') },
+    { key: 'K', label: i18n.formatNutrientLabel('K') },
+    { key: 'Ca', label: i18n.formatNutrientLabel('Ca') },
+    { key: 'Mg', label: i18n.formatNutrientLabel('Mg') },
+    { key: 'S', label: i18n.formatNutrientLabel('S') },
+    { key: 'Fe', label: i18n.formatNutrientLabel('Fe') },
+    { key: 'Mn', label: i18n.formatNutrientLabel('Mn') },
+    { key: 'Zn', label: i18n.formatNutrientLabel('Zn') },
+    { key: 'B', label: i18n.formatNutrientLabel('B') },
+    { key: 'Cu', label: i18n.formatNutrientLabel('Cu') },
+    { key: 'Mo', label: i18n.formatNutrientLabel('Mo') }
   ];
 
   displayOrder.forEach(item => {
