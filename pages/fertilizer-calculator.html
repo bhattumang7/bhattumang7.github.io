@@ -2687,8 +2687,8 @@ permalink: /fertilizer-calculator/
   <!-- Reverse Calculator Tab -->
   <div id="reverse-calc" class="tab-content">
     <div class="input-section">
-      <h3>Target Nutrient Ratios</h3>
-      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one nutrient must be greater than zero. The calculator will find fertilizer amounts that match these ratios.</p>
+      <h3 data-i18n="targetNutrientRatios">Target Nutrient Ratios</h3>
+      <p style="margin-bottom: 15px; color: #666;" data-i18n="targetNutrientRatiosDescription">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one nutrient must be greater than zero. The calculator will find fertilizer amounts that match these ratios.</p>
 
       <div class="target-input-grid">
         <div class="target-input-field">
@@ -3328,6 +3328,7 @@ const i18n = {
       resultsPpm: 'Results (PPM)',
       ionBalance: 'Ion Balance',
       nutrientRatioAnalysis: 'Nutrient Ratio Analysis',
+      ratioKCaMgMeq: 'K : Ca : Mg (meq/L basis)',
       ecPrediction: 'EC Prediction',
       predictedEc: 'Predicted EC',
       electricalConductivity25C: 'Electrical Conductivity (25°C)',
@@ -3964,6 +3965,7 @@ const i18n = {
       resultsPpm: 'પરિણામો (PPM)',
       ionBalance: 'આયન સંતુલન',
       nutrientRatioAnalysis: 'પોષક અનુપાત વિશ્લેષણ',
+      ratioKCaMgMeq: 'K : Ca : Mg (meq/L આધારિત)',
       ecPrediction: 'EC અનુમાન',
       predictedEc: 'અનુમાનિત EC',
       electricalConductivity25C: 'વિદ્યુત વાહકતા (25°C)',
@@ -7820,16 +7822,22 @@ function displayNutrientRatios(ratios) {
 
   ratios.forEach(ratio => {
     const unit = ratio.unit || 'ppm';
+    // Localize ratio name (special case for meq/L basis)
+    const localizedName = ratio.name === 'K : Ca : Mg (meq/L basis)'
+      ? i18n.t('ratioKCaMgMeq')
+      : ratio.name;
+    // Localize ratio values (e.g., "1 : 2.5 : 3" -> "૧ : ૨.૫ : ૩")
+    const localizedRatio = ratio.ratio.split(' : ').map(v => i18n.formatNumber(v)).join(' : ');
     html += `
       <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
         <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
-          ${ratio.name}
+          ${localizedName}
         </div>
         <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
-          ${ratio.ratio}
+          ${localizedRatio}
         </div>
         <div style="font-size: 0.85em; color: #666;">
-          ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
+          ${ratio.labels.map((label, i) => `${label}: ${i18n.formatNumber(ratio.values[i].toFixed(1))} ${unit}`).join(' | ')}
         </div>
       </div>
     `;
@@ -8951,21 +8959,27 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
   // Add nutrient ratio analysis
   const ratios = calculateNutrientRatios(result.achieved);
   if (ratios.length > 0) {
-    html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
+    html += '<h3 style="margin-top: 20px;">' + i18n.t('nutrientRatioAnalysis') + '</h3>';
     html += '<div class="nutrient-ratio-grid">';
 
     ratios.forEach(ratio => {
       const unit = ratio.unit || 'ppm';
+      // Localize ratio name (special case for meq/L basis)
+      const localizedName = ratio.name === 'K : Ca : Mg (meq/L basis)'
+        ? i18n.t('ratioKCaMgMeq')
+        : ratio.name;
+      // Localize ratio values (e.g., "1 : 2.5 : 3" -> "૧ : ૨.૫ : ૩")
+      const localizedRatio = ratio.ratio.split(' : ').map(v => i18n.formatNumber(v)).join(' : ');
       html += `
         <div class="nutrient-ratio-card">
           <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
-            ${ratio.name}
+            ${localizedName}
           </div>
           <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
-            ${ratio.ratio}
+            ${localizedRatio}
           </div>
           <div style="font-size: 0.85em; color: #666;">
-            ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
+            ${ratio.labels.map((label, i) => `${label}: ${i18n.formatNumber(ratio.values[i].toFixed(1))} ${unit}`).join(' | ')}
           </div>
         </div>
       `;
@@ -10605,21 +10619,27 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   // Add nutrient ratio analysis
   const ratios = calculateNutrientRatios(result.achieved);
   if (ratios.length > 0) {
-    html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
+    html += '<h3 style="margin-top: 20px;">' + i18n.t('nutrientRatioAnalysis') + '</h3>';
     html += '<div class="nutrient-ratio-grid">';
 
     ratios.forEach(ratio => {
       const unit = ratio.unit || 'ppm';
+      // Localize ratio name (special case for meq/L basis)
+      const localizedName = ratio.name === 'K : Ca : Mg (meq/L basis)'
+        ? i18n.t('ratioKCaMgMeq')
+        : ratio.name;
+      // Localize ratio values (e.g., "1 : 2.5 : 3" -> "૧ : ૨.૫ : ૩")
+      const localizedRatio = ratio.ratio.split(' : ').map(v => i18n.formatNumber(v)).join(' : ');
       html += `
         <div class="nutrient-ratio-card">
           <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
-            ${ratio.name}
+            ${localizedName}
           </div>
           <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
-            ${ratio.ratio}
+            ${localizedRatio}
           </div>
           <div style="font-size: 0.85em; color: #666;">
-            ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
+            ${ratio.labels.map((label, i) => `${label}: ${i18n.formatNumber(ratio.values[i].toFixed(1))} ${unit}`).join(' | ')}
           </div>
         </div>
       `;
