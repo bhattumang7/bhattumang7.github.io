@@ -4222,6 +4222,13 @@ const i18n = {
     return fert.name;
   },
 
+  // Get localized fertilizer aliases (with localized numbers)
+  getFertilizerAliases(fert) {
+    if (!fert || !fert.aliases || fert.aliases.length === 0) return '';
+    // Localize numbers in each alias
+    return fert.aliases.map(alias => this.formatNumber(alias)).join(', ');
+  },
+
   // Format nutrient key into display-friendly label with proper subscripts
   formatNutrientLabel(nutrientKey) {
     const labelMap = {
@@ -6057,7 +6064,7 @@ function renderWizardGramsFertilizerList() {
     if (fert.aliases && fert.aliases.length > 0) {
       const aliasSpan = document.createElement('span');
       aliasSpan.className = 'wizard-fert-aliases';
-      aliasSpan.textContent = fert.aliases.join(', ');
+      aliasSpan.textContent = i18n.getFertilizerAliases(fert);
       label.appendChild(aliasSpan);
     }
 
@@ -6295,7 +6302,7 @@ function renderWizardAvailableFertilizerList() {
     if (fert.aliases && fert.aliases.length > 0) {
       const aliasSpan = document.createElement('span');
       aliasSpan.className = 'wizard-fert-aliases';
-      aliasSpan.textContent = fert.aliases.join(', ');
+      aliasSpan.textContent = i18n.getFertilizerAliases(fert);
       label.appendChild(aliasSpan);
     }
 
@@ -6759,7 +6766,7 @@ function renderAvailableFertilizersList() {
     if (fert.aliases && fert.aliases.length > 0) {
       const aliasSpan = document.createElement('span');
       aliasSpan.className = 'fertilizer-label-aliases';
-      aliasSpan.textContent = fert.aliases.join(', ');
+      aliasSpan.textContent = i18n.getFertilizerAliases(fert);
       label.appendChild(aliasSpan);
     }
 
@@ -9729,7 +9736,7 @@ function renderReverseFertilizersList() {
     if (fert.aliases && fert.aliases.length > 0) {
       const aliasSpan = document.createElement('span');
       aliasSpan.className = 'fertilizer-label-aliases';
-      aliasSpan.textContent = fert.aliases.join(', ');
+      aliasSpan.textContent = i18n.getFertilizerAliases(fert);
       label.appendChild(aliasSpan);
     }
 
