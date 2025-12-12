@@ -2702,12 +2702,12 @@ permalink: /fertilizer-calculator/
 
       <!-- What is PPM? -->
       <div class="explanation-section">
-        <h3>What is PPM?</h3>
-        <p>
+        <h3 data-i18n="whatIsPpm">What is PPM?</h3>
+        <p data-i18n-html="ppmModalDescription1">
           <strong>PPM stands for "Parts Per Million"</strong> - it's a way to measure very small concentrations, similar to how we use percentages.
           Think of it like this: if you have 1 million drops of water, PPM tells you how many drops of nutrients are mixed in.
         </p>
-        <p>
+        <p data-i18n-html="ppmModalDescription2">
           For example, <span class="highlight">100 PPM of Nitrogen</span> means there are 100 grams of nitrogen in every 1 million grams (1000 liters) of water.
           In simpler terms: <strong>1 PPM = 1 milligram per liter (mg/L)</strong>.
         </p>
@@ -2715,20 +2715,20 @@ permalink: /fertilizer-calculator/
 
       <!-- The Basic Formula -->
       <div class="explanation-section">
-        <h3>The Basic Formula</h3>
-        <p>Here's the formula we use to calculate PPM:</p>
+        <h3 data-i18n="theBasicFormula">The Basic Formula</h3>
+        <p data-i18n="hereIsTheFormula">Here's the formula we use to calculate PPM:</p>
 
         <div class="formula-box">
-          <div class="formula">PPM = (grams × 1000 × percentage) ÷ liters</div>
-          <div class="description">This tells us the concentration of nutrients in your solution</div>
+          <div class="formula" data-i18n="ppmFormulaEquation">PPM = (grams × 1000 × percentage) ÷ liters</div>
+          <div class="description" data-i18n="ppmFormulaDescription">This tells us the concentration of nutrients in your solution</div>
         </div>
 
-        <p>Let's break down each part:</p>
+        <p data-i18n="breakDownEachPart">Let's break down each part:</p>
         <ul style="line-height: 1.8;">
-          <li><strong>grams</strong> = Amount of fertilizer you're adding</li>
-          <li><strong>1000</strong> = Converts grams to milligrams (mg)</li>
-          <li><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
-          <li><strong>liters</strong> = Volume of water in your solution</li>
+          <li data-i18n-html="formulaPartGrams"><strong>grams</strong> = Amount of fertilizer you're adding</li>
+          <li data-i18n-html="formulaPart1000"><strong>1000</strong> = Converts grams to milligrams (mg)</li>
+          <li data-i18n-html="formulaPartPercentage"><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
+          <li data-i18n-html="formulaPartLiters"><strong>liters</strong> = Volume of water in your solution</li>
         </ul>
       </div>
 
@@ -2816,24 +2816,24 @@ permalink: /fertilizer-calculator/
           </thead>
           <tbody>
             <tr>
-              <td data-label="Oxide Form">P₂O₅ (Phosphate)</td>
-              <td data-label="Elemental Form">P (Phosphorus)</td>
-              <td data-label="Conversion Factor">Multiply by 0.436</td>
+              <td data-label-i18n="oxideFormHeader" data-i18n="phosphateOxide">P₂O₅ (Phosphate)</td>
+              <td data-label-i18n="elementalFormHeader" data-i18n="phosphorusElemental">P (Phosphorus)</td>
+              <td data-label-i18n="conversionFactorHeader" data-i18n="multiplyBy0436">Multiply by 0.436</td>
             </tr>
             <tr>
-              <td data-label="Oxide Form">K₂O (Potash)</td>
-              <td data-label="Elemental Form">K (Potassium)</td>
-              <td data-label="Conversion Factor">Multiply by 0.830</td>
+              <td data-label-i18n="oxideFormHeader" data-i18n="potassiumOxide">K₂O (Potash)</td>
+              <td data-label-i18n="elementalFormHeader" data-i18n="potassiumElemental">K (Potassium)</td>
+              <td data-label-i18n="conversionFactorHeader" data-i18n="multiplyBy0830">Multiply by 0.830</td>
             </tr>
             <tr>
-              <td data-label="Oxide Form">MgO (Magnesium Oxide)</td>
-              <td data-label="Elemental Form">Mg (Magnesium)</td>
-              <td data-label="Conversion Factor">Multiply by 0.603</td>
+              <td data-label-i18n="oxideFormHeader" data-i18n="magnesiumOxide">MgO (Magnesium Oxide)</td>
+              <td data-label-i18n="elementalFormHeader" data-i18n="magnesiumElemental">Mg (Magnesium)</td>
+              <td data-label-i18n="conversionFactorHeader" data-i18n="multiplyBy0603">Multiply by 0.603</td>
             </tr>
             <tr>
-              <td data-label="Oxide Form">CaO (Calcium Oxide)</td>
-              <td data-label="Elemental Form">Ca (Calcium)</td>
-              <td data-label="Conversion Factor">Multiply by 0.715</td>
+              <td data-label-i18n="oxideFormHeader" data-i18n="calciumOxide">CaO (Calcium Oxide)</td>
+              <td data-label-i18n="elementalFormHeader" data-i18n="calciumElemental">Ca (Calcium)</td>
+              <td data-label-i18n="conversionFactorHeader" data-i18n="multiplyBy0715">Multiply by 0.715</td>
             </tr>
           </tbody>
         </table>
@@ -3129,6 +3129,56 @@ const i18n = {
       nutrientOffTarget: '{nutrient} is {percent}% off target',
       nutrientOffTargetAcceptable: '{nutrient} is {percent}% off target (acceptable range)',
 
+      // Warnings section
+      warningsAndRecommendations: 'Warnings & Recommendations',
+      cannotAchieveExactTargets: 'Cannot achieve exact targets',
+      cannotAchieveExactTargetsDescription: 'This is the closest formula achievable with available fertilizers. Consider adjusting your targets or accepting the shown deviations.',
+      cannotAchieveExactTargetsConsider: 'This is the closest formula achievable with selected fertilizers. Consider:',
+      considerSelectingAdditionalFertilizers: 'Selecting additional fertilizers',
+      considerAdjustingTargetValues: 'Adjusting your target values',
+      considerAcceptingDeviations: 'Accepting the shown deviations',
+      targetsSuccessfullyAchieved: 'Targets Successfully Achieved!',
+      allNutrientValuesWithinRange: 'All nutrient values are within acceptable ranges.',
+      targetRatioLabel: 'Target ({ratio})',
+      thisTankRatioLabel: 'This Tank ({ratio})',
+      note: 'Note:',
+
+      // Warning categories
+      warningCategoryCaSulfate: 'Stock Solution: Ca + Sulfate',
+      warningCategoryCaPhosphate: 'Stock Solution: Ca + Phosphate',
+      warningCategoryCaSilicate: 'Stock Solution: Ca + Silicate',
+      warningCategoryHighAmmonium: 'High Ammonium',
+      warningCategoryZeroAmmonium: 'Zero Ammonium',
+      warningCategoryVeryLowAmmonium: 'Very Low Ammonium',
+      warningCategoryLowCalcium: 'Low Calcium',
+      warningCategoryLowMagnesium: 'Low Magnesium',
+      warningCategoryMissingMicronutrients: 'Missing Micronutrients',
+      warningCategoryCaMgRatio: 'Ca:Mg Ratio',
+      warningCategoryKCaRatio: 'K:Ca Ratio',
+      warningCategoryHighChloride: 'High Chloride',
+      warningCategoryHighSodium: 'High Sodium',
+      warningCategoryIonImbalance: 'Ion Imbalance',
+
+      // Warning messages
+      warningMsgCaSulfate: 'Calcium and sulfate are both present. When making STOCK SOLUTIONS, keep calcium sources ({caFertilizers}) separate from sulfate sources ({sFertilizers}) to prevent calcium sulfate precipitation (gypsum). This warning doesn\'t apply to the final diluted nutrient solution.',
+      warningMsgCaPhosphate: 'Calcium ({ca} ppm) and phosphate ({p} ppm P) are both present. When making STOCK SOLUTIONS, keep calcium sources ({caFertilizers}) in Tank A and phosphate sources ({pFertilizers}) in Tank B to prevent calcium phosphate precipitation.',
+      warningMsgCaSilicate: 'Calcium ({ca} ppm) and silicate ({si} ppm Si) are both present. When making STOCK SOLUTIONS, keep calcium and potassium silicate in separate concentrates to prevent calcium silicate gel/scale formation. Often silicate needs its own tank or sequential dosing.',
+      warningMsgHighAmmonium: 'High ammonium ratio ({ratio}% NH₄⁺). Recommended: Keep NH₄⁺ below 20-30% of total N to avoid toxicity and root zone acidification. Consider using more nitrate-based fertilizers.',
+      warningMsgZeroAmmonium: 'No ammonium nitrogen in formula. A small NH₄⁺ share (5-15% of total N) can help with nutrient uptake and provide mild acidifying effect. This is optional—0% NH₄⁺ works fine if pH and media are managed.',
+      warningMsgVeryLowAmmonium: 'Very low ammonium ratio ({ratio}% NH₄⁺). Consider increasing to 5-15% of total N for better uptake behavior and mild acidifying effect. This is optional guidance.',
+      warningMsgLowCalcium: 'Calcium is low ({ca} ppm). RO/soft water often needs intentional Ca supply. Typical hydroponic feeds target 40-120 ppm Ca depending on crop and system.',
+      warningMsgLowMagnesium: 'Magnesium is low ({mg} ppm). RO/soft water often needs Mg added. Common targets are 15-50 ppm Mg depending on crop and system.',
+      warningMsgMissingMicronutrients: 'Missing micronutrients: {micros}. If formulating a complete feed, ensure all essential micros are included. Ignore if using a separate micro mix.',
+      warningMsgCaMgRatioLow: 'Ca:Mg ratio is {ratio}:1 ({ca} ppm Ca : {mg} ppm Mg). Optimal range is 3:1 to 5:1. Consider reducing magnesium or increasing calcium.',
+      warningMsgCaMgRatioHigh: 'Ca:Mg ratio is {ratio}:1 ({ca} ppm Ca : {mg} ppm Mg). Optimal range is 3:1 to 5:1. Consider increasing magnesium or reducing calcium.',
+      warningMsgKCaRatioHigh: 'K:Ca ratio is {ratio}:1. When K exceeds Ca significantly, it may induce calcium deficiency. Consider increasing Ca or reducing K.',
+      warningMsgHighChloride: 'Chloride level is {cl} ppm. While some crops tolerate moderate Cl⁻, sensitive crops may suffer above 50-100 ppm. Check your crop\'s Cl tolerance.',
+      warningMsgHighSodium: 'Sodium level is {na} ppm. Sodium can compete with K and Ca uptake, and can accumulate in recirculating systems or soil. Keep minimal unless required.',
+      warningMsgIonImbalance: 'Ion balance shows {imbalance}% cation/anion imbalance ({status}). Large imbalances may indicate measurement or formula errors. Check your inputs.',
+      calciumFertilizers: 'calcium fertilizers',
+      sulfateFertilizers: 'sulfate fertilizers',
+      phosphateFertilizers: 'phosphate fertilizers',
+
       // Results sections
       combinedSolutionWhenMixed: 'Combined Solution (when mixed)',
       combinedSolutionDescription: 'When both tanks are diluted and combined in the final reservoir, you will achieve:',
@@ -3139,6 +3189,97 @@ const i18n = {
       ecPrediction: 'EC Prediction',
       predictedEc: 'Predicted EC',
       electricalConductivity25C: 'Electrical Conductivity (25°C)',
+      whatIsPpm: 'What is PPM?',
+      ppmStandsFor: '<strong>PPM stands for "Parts Per Million"</strong> - it\'s a way to measure very small concentrations.',
+      thinkOfItLikeThis: 'Think of it like this: <span class="highlight">1 PPM = 1 milligram per liter (mg/L)</span>.',
+      ppmExample: 'For example, 100 PPM of Nitrogen means there are 100 milligrams of nitrogen in every liter of water.',
+      theBasicFormula: 'The Basic Formula',
+      ppmFormulaEquation: 'PPM = (grams × 1000 × percentage) ÷ liters',
+      ppmFormulaDescription: 'This tells us the concentration of nutrients in your solution',
+      ppmModalDescription1: '<strong>PPM stands for "Parts Per Million"</strong> - it\'s a way to measure very small concentrations, similar to how we use percentages. Think of it like this: if you have 1 million drops of water, PPM tells you how many drops of nutrients are mixed in.',
+      ppmModalDescription2: 'For example, <span class="highlight">100 PPM of Nitrogen</span> means there are 100 grams of nitrogen in every 1 million grams (1000 liters) of water. In simpler terms: <strong>1 PPM = 1 milligram per liter (mg/L)</strong>.',
+      hereIsTheFormula: 'Here\'s the formula we use to calculate PPM:',
+      breakDownEachPart: 'Let\'s break down each part:',
+      formulaPartGrams: '<strong>grams</strong> = Amount of fertilizer you\'re adding',
+      formulaPart1000: '<strong>1000</strong> = Converts grams to milligrams (mg)',
+      formulaPartPercentage: '<strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)',
+      formulaPartLiters: '<strong>liters</strong> = Volume of water in your solution',
+      whereLabel: 'Where:',
+      yourCurrentCalculation: 'Your Current Calculation',
+      solutionVolumeLabel: 'Solution Volume:',
+      litersUnit: 'liters',
+      fertilizersUsedLabel: 'Fertilizers Used:',
+      stepByStepBreakdown: 'Step-by-Step Breakdown',
+      howWeCalculatedEachNutrient: 'Here\'s exactly how we calculated each nutrient from your selected fertilizers:',
+      howEachFertilizerContributesToAchieved: 'Here\'s exactly how each fertilizer contributes to the achieved PPM values:',
+      howEachFertilizerContributesToPpm: 'Here\'s exactly how each fertilizer contributes to the PPM values:',
+      addFertilizersToSeeBreakdown: 'Add some fertilizers and click "Calculate" to see your personalized calculation breakdown here!',
+      calculatorShowsStepByStep: 'The calculator will show you step-by-step how we arrived at each PPM value based on your specific fertilizer selections and amounts.',
+      noCalculationYet: 'No Calculation Yet',
+      nutrientHeader: 'Nutrient',
+      percentInFertilizerHeader: '% in Fertilizer',
+      calculationHeader: 'Calculation',
+      ppmHeader: 'PPM',
+      sourcesHeader: 'Sources',
+      totalPpmHeader: 'Total PPM',
+      tankAPpmHeader: 'Tank A PPM',
+      tankBPpmHeader: 'Tank B PPM',
+      combinedPpmHeader: 'Combined PPM',
+      finalResultsTotalPpm: 'Final Results - Total PPM',
+      whenUsingMultipleFertilizers: 'When using multiple fertilizers, we add up the PPM from each source:',
+      elementalForm: '(elemental form)',
+      totalLabel: 'Total:',
+      aboutOxideConversions: 'About Oxide Conversions',
+      oxideConversionExplanation: 'Some fertilizers list nutrients in <strong>oxide form</strong> (like P₂O₅, K₂O), but plants use the <strong>elemental form</strong> (P, K). The calculator automatically converts these:',
+      oxideFormHeader: 'Oxide Form',
+      elementalFormHeader: 'Elemental Form',
+      conversionFactorHeader: 'Conversion Factor',
+      phosphateOxide: 'P₂O₅ (Phosphate)',
+      phosphorusElemental: 'P (Phosphorus)',
+      potassiumOxide: 'K₂O (Potash)',
+      potassiumElemental: 'K (Potassium)',
+      magnesiumOxide: 'MgO (Magnesium Oxide)',
+      magnesiumElemental: 'Mg (Magnesium)',
+      calciumOxide: 'CaO (Calcium Oxide)',
+      calciumElemental: 'Ca (Calcium)',
+      multiplyBy0436: 'Multiply by 0.436',
+      multiplyBy0830: 'Multiply by 0.830',
+      multiplyBy0603: 'Multiply by 0.603',
+      multiplyBy0715: 'Multiply by 0.715',
+      tip1PpmEquals: '1 PPM = 1 mg/L (milligram per liter)',
+      tip2StartLower: 'Start with lower PPM values and increase gradually',
+      tip3DifferentPlants: 'Different plants need different nutrient levels',
+      tip4BalanceIsKey: 'More fertilizer ≠ better growth; balance is key',
+      tip5CheckWater: 'Check your water\'s existing nutrient content if possible',
+      quickTips: 'Quick Tips',
+      whatIsIonBalance: 'What is Ion Balance?',
+      ionBalanceExplanation: 'When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:',
+      cationsDescription: '<strong>Cations (+)</strong> - Positively charged ions like K⁺, Ca²⁺, Mg²⁺, NH₄⁺',
+      anionsDescription: '<strong>Anions (-)</strong> - Negatively charged ions like NO₃⁻, SO₄²⁻, H₂PO₄⁻',
+      ionBalanceImportance: 'For a <span class="highlight">healthy nutrient solution</span>, the total positive charges should roughly equal the total negative charges. This keeps the pH stable and prevents nutrient lockout.',
+      understandingMeqL: 'Understanding meq/L (Milliequivalents per Liter)',
+      meqLDescription: '<strong>meq/L</strong> is a unit that measures the <strong>electrical charge</strong> of ions in solution, not their weight.',
+      meqLAnalogy: 'Think of it like this: A calcium ion (Ca²⁺) has twice the charge of a potassium ion (K⁺), even if they weigh the same. meq/L accounts for this difference in charge.',
+      meqLFormula: 'meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters',
+      meqLFormulaDesc: 'This tells us the electrical charge contribution of each ion',
+      importantNotes: '📌 Important Notes:',
+      hydrationWaterNote: '<strong>Hydration water</strong> (e.g., ·7H₂O, ·4H₂O) adds to molar mass but NOT to charge - it\'s just water in the crystal structure',
+      ureaNote: '<strong>Urea</strong> doesn\'t form charged ions, so it\'s excluded from ion balance (but its nitrogen still counts for nutrients)',
+      addFertilizersForIonBalance: 'Add some fertilizers and click "Calculate" to see your personalized ion balance breakdown here!',
+      ionBalanceStepByStep: 'The calculator will show you step-by-step how each fertilizer contributes cations and anions to your solution.',
+      yourCurrentSolution: 'Your Current Solution',
+      stepByStepIonCalculation: 'Step-by-Step Ion Calculation',
+      howEachFertilizerContributesIons: 'Here\'s how each fertilizer contributes ions to your solution:',
+      nutrientTotalsSummary: 'Nutrient Totals Summary',
+      whenNutrientsFromMultiple: 'When nutrients come from multiple fertilizers, we add them together:',
+      noteLabel: 'Note:',
+      ppmCalculationNote: 'PPM (parts per million) = mg/L. Calculated as: (grams × nutrient%) ÷ volume(L) × 1000',
+      amountLabel: 'Amount:',
+      amountUsedLabel: 'Amount used:',
+      molarMassLabel: 'Molar Mass:',
+      molesLabel: 'Moles:',
+      gramsUnit: 'grams',
+      molUnit: 'mol',
       ecLabel: 'EC:',
       combinedEcLabel: 'Combined EC:',
       mScmUnit: 'mS/cm',
@@ -3221,7 +3362,91 @@ const i18n = {
       language: 'Language',
 
       // Priority
-      priority: 'Priority'
+      priority: 'Priority',
+
+      // Hydration water info
+      hydrationWaterTitle: '💧 About Hydration Water:',
+      hydrationWaterExplanation: 'The water molecules (like ·7H₂O) in this formula add to the molar mass but do NOT contribute to the ion balance. They\'re just water trapped in the crystal structure.',
+
+      // Urea info
+      ureaInfoTitle: 'ℹ️ About Urea:',
+      ureaInfoExplanation: 'Urea does NOT form charged ions like nitrate (NO₃⁻) or ammonium (NH₄⁺). Therefore, it is NOT counted in ion balance calculations. However, its nitrogen content IS still counted when calculating nutrient PPM values.',
+
+      // Ion table
+      cationType: 'Cation (+)',
+      anionType: 'Anion (-)',
+      ionBreakdownByType: 'Ion Breakdown by Type',
+      percentOfTotalCations: '{percentage}% of total cations',
+      percentOfTotalAnions: '{percentage}% of total anions',
+
+      // Interpretation guide
+      interpretingResults: 'Interpreting Your Results',
+      imbalanceLessThan10: '≤10% Imbalance:',
+      imbalanceLessThan10Desc: 'Balanced ✓ - Excellent! Your solution has good charge balance',
+      imbalance10To20: '10-20% Imbalance:',
+      imbalance10To20Desc: 'Caution ⚠ - Acceptable, but monitor pH closely',
+      imbalanceOver20: '>20% Imbalance:',
+      imbalanceOver20Desc: 'Imbalanced ✗ - May cause pH swings and nutrient lockouts',
+      whyDoesThisMatter: 'Why does this matter?',
+      whyDoesThisMatterExplanation: 'Charge imbalance can cause pH to drift up or down, which may lock out certain nutrients even if they\'re present in your solution.',
+      noCalculationYet: 'No Calculation Yet',
+      pleaseRunCalculation: 'Please run a calculation first to see the explanation.',
+
+      // Oxide conversions
+      understandingOxideConversions: 'Understanding Oxide Conversions',
+      oxideConversionsExplanation: 'Many fertilizers list nutrients in their <strong>oxide form</strong> (like P₂O₅ for phosphorus or K₂O for potassium), but plants actually use the <strong>elemental form</strong>. The calculator handles this automatically!',
+
+      // No fertilizers in formula
+      noFertilizersInFormula: 'No Fertilizers in Formula',
+      noValidFormulaLong: 'The calculation did not produce a valid formula. Try adjusting your target values or selecting different fertilizers.',
+      noValidFormulaShort: 'The calculation did not produce a valid formula.',
+
+      // Ion table headers
+      ionHeader: 'Ion',
+      typeHeader: 'Type',
+      countTimesChargeHeader: 'Count × Charge',
+      meqLHeader: 'meq/L',
+
+      // Final results section
+      finalResults: 'Final Results',
+      finalIonBalanceResults: 'Final Ion Balance Results',
+      totalCationsPlus: 'Total Cations (+)',
+      cationsPlus: 'Cations (+)',
+      totalAnionsMinus: 'Total Anions (-)',
+      anionsMinus: 'Anions (-)',
+      imbalancePercentage: 'Imbalance Percentage',
+      howWeCalculatedImbalance: 'How we calculated imbalance:',
+
+      // Share/export text
+      shareTitle: '🌱 Fertilizer Calculator Results',
+      shareFertilizersUsed: '📦 Fertilizers Used',
+      shareSolutionVolume: '({volume}L solution)',
+      shareNutrientConcentrations: '📊 Nutrient Concentrations (PPM)',
+      shareKeyRatios: '📐 Key Ratios',
+      shareGeneratedBy: 'Generated by https://umangbhatt.in/fertilizer-calculator/',
+
+      // Formula Builder share text
+      shareFormulaBuilderTitle: '🌱 Formula Builder Results',
+      shareTargetPpmValues: '🎯 Target PPM Values',
+      shareLabelValuePpm: '• {label}: *{value} ppm*',
+      shareFertilizersToAdd: '📦 Fertilizers to Add',
+      shareFertilizersToAddVolume: '📦 Fertilizers to Add ({volume}L)',
+      shareNoSuitableFormula: 'No suitable formula found',
+      shareFertilizerGrams: '• {name}: *{grams}g*',
+      shareAchievedPpm: '✅ Achieved PPM',
+      shareIonBalance: '⚖️ Ion Balance',
+      shareCationsValue: '• Cations: *{value} meq/L*',
+      shareAnionsValue: '• Anions: *{value} meq/L*',
+      shareImbalanceValue: '• Imbalance: *{value}%* ({status})',
+
+      // NPK Ratio Calculator share text
+      shareNpkRatioTitle: '🌱 NPK Ratio Calculator Results',
+      shareTargetRatios: '🎯 Target Ratios',
+      shareRatioValue: '• Ratio: *{ratio}*',
+      shareNitrogenForms: '🧪 Nitrogen Forms',
+      shareNo3N: '• NO₃-N: *{value} ppm*',
+      shareNh4N: '• NH₄-N: *{value} ppm*',
+      shareNh4Ratio: '• NH₄ ratio: *{value}%*'
     },
 
     // Gujarati translations
@@ -3435,6 +3660,56 @@ const i18n = {
       nutrientOffTarget: '{nutrient} લક્ષ્ય કરતાં {percent}% દૂર છે',
       nutrientOffTargetAcceptable: '{nutrient} લક્ષ્ય કરતાં {percent}% દૂર છે (સ્વીકાર્ય શ્રેણી)',
 
+      // Warnings section
+      warningsAndRecommendations: 'ચેતવણીઓ અને ભલામણો',
+      cannotAchieveExactTargets: 'ચોક્કસ લક્ષ્યો પ્રાપ્ત કરી શકાતા નથી',
+      cannotAchieveExactTargetsDescription: 'ઉપલબ્ધ ખાતર સાથે આ સૌથી નજીકનું ફોર્મ્યુલા છે. તમારા લક્ષ્યો સમાયોજિત કરવાનું અથવા બતાવેલ વિચલનો સ્વીકારવાનું વિચારો.',
+      cannotAchieveExactTargetsConsider: 'પસંદ કરેલ ખાતર સાથે આ સૌથી નજીકનું ફોર્મ્યુલા છે. વિચારો:',
+      considerSelectingAdditionalFertilizers: 'વધારાના ખાતર પસંદ કરવા',
+      considerAdjustingTargetValues: 'તમારા લક્ષ્ય મૂલ્યો સમાયોજિત કરવા',
+      considerAcceptingDeviations: 'બતાવેલ વિચલનો સ્વીકારવા',
+      targetsSuccessfullyAchieved: 'લક્ષ્યો સફળતાપૂર્વક પ્રાપ્ત થયા!',
+      allNutrientValuesWithinRange: 'તમામ પોષક મૂલ્યો સ્વીકાર્ય શ્રેણીમાં છે.',
+      targetRatioLabel: 'લક્ષ્ય ({ratio})',
+      thisTankRatioLabel: 'આ ટાંકી ({ratio})',
+      note: 'નોંધ:',
+
+      // Warning categories
+      warningCategoryCaSulfate: 'સ્ટોક સોલ્યુશન: Ca + સલ્ફેટ',
+      warningCategoryCaPhosphate: 'સ્ટોક સોલ્યુશન: Ca + ફોસ્ફેટ',
+      warningCategoryCaSilicate: 'સ્ટોક સોલ્યુશન: Ca + સિલિકેટ',
+      warningCategoryHighAmmonium: 'ઉચ્ચ એમોનિયમ',
+      warningCategoryZeroAmmonium: 'શૂન્ય એમોનિયમ',
+      warningCategoryVeryLowAmmonium: 'ખૂબ ઓછું એમોનિયમ',
+      warningCategoryLowCalcium: 'ઓછું કેલ્શિયમ',
+      warningCategoryLowMagnesium: 'ઓછું મેગ્નેશિયમ',
+      warningCategoryMissingMicronutrients: 'ખૂટતા સૂક્ષ્મ પોષક તત્વો',
+      warningCategoryCaMgRatio: 'Ca:Mg ગુણોત્તર',
+      warningCategoryKCaRatio: 'K:Ca ગુણોત્તર',
+      warningCategoryHighChloride: 'ઉચ્ચ ક્લોરાઇડ',
+      warningCategoryHighSodium: 'ઉચ્ચ સોડિયમ',
+      warningCategoryIonImbalance: 'આયન અસંતુલન',
+
+      // Warning messages
+      warningMsgCaSulfate: 'કેલ્શિયમ અને સલ્ફેટ બંને હાજર છે. સ્ટોક સોલ્યુશન બનાવતી વખતે, કેલ્શિયમ સલ્ફેટ અવક્ષેપ (જિપ્સમ) ટાળવા માટે કેલ્શિયમ સ્ત્રોતો ({caFertilizers}) ને સલ્ફેટ સ્ત્રોતો ({sFertilizers}) થી અલગ રાખો.',
+      warningMsgCaPhosphate: 'કેલ્શિયમ ({ca} ppm) અને ફોસ્ફેટ ({p} ppm P) બંને હાજર છે. સ્ટોક સોલ્યુશન બનાવતી વખતે, કેલ્શિયમ ફોસ્ફેટ અવક્ષેપ ટાળવા માટે કેલ્શિયમ સ્ત્રોતો ({caFertilizers}) ટાંકી A માં અને ફોસ્ફેટ સ્ત્રોતો ({pFertilizers}) ટાંકી B માં રાખો.',
+      warningMsgCaSilicate: 'કેલ્શિયમ ({ca} ppm) અને સિલિકેટ ({si} ppm Si) બંને હાજર છે. સ્ટોક સોલ્યુશન બનાવતી વખતે, કેલ્શિયમ સિલિકેટ જેલ/સ્કેલ રચના ટાળવા માટે કેલ્શિયમ અને પોટેશિયમ સિલિકેટને અલગ સાંદ્રતામાં રાખો.',
+      warningMsgHighAmmonium: 'ઉચ્ચ એમોનિયમ ગુણોત્તર ({ratio}% NH₄⁺). ભલામણ: ઝેરીતા અને મૂળ ઝોન એસિડીફિકેશન ટાળવા માટે NH₄⁺ ને કુલ N ના 20-30% થી નીચે રાખો.',
+      warningMsgZeroAmmonium: 'ફોર્મ્યુલામાં એમોનિયમ નાઇટ્રોજન નથી. નાનો NH₄⁺ ભાગ (કુલ N નો 5-15%) પોષક શોષણમાં મદદ કરી શકે છે. આ વૈકલ્પિક છે.',
+      warningMsgVeryLowAmmonium: 'ખૂબ ઓછો એમોનિયમ ગુણોત્તર ({ratio}% NH₄⁺). વધુ સારા શોષણ વર્તન માટે કુલ N ના 5-15% સુધી વધારવાનું વિચારો. આ વૈકલ્પિક માર્ગદર્શન છે.',
+      warningMsgLowCalcium: 'કેલ્શિયમ ઓછું છે ({ca} ppm). RO/નરમ પાણીને ઘણીવાર ઇરાદાપૂર્વક Ca પુરવઠાની જરૂર હોય છે. સામાન્ય હાઇડ્રોપોનિક ફીડ્સ 40-120 ppm Ca લક્ષ્ય રાખે છે.',
+      warningMsgLowMagnesium: 'મેગ્નેશિયમ ઓછું છે ({mg} ppm). RO/નરમ પાણીને ઘણીવાર Mg ઉમેરવાની જરૂર હોય છે. સામાન્ય લક્ષ્યો 15-50 ppm Mg છે.',
+      warningMsgMissingMicronutrients: 'ખૂટતા સૂક્ષ્મ પોષક તત્વો: {micros}. સંપૂર્ણ ફીડ ફોર્મ્યુલેટ કરતી વખતે, તમામ આવશ્યક સૂક્ષ્મ પોષક તત્વો શામેલ છે તેની ખાતરી કરો.',
+      warningMsgCaMgRatioLow: 'Ca:Mg ગુણોત્તર {ratio}:1 છે ({ca} ppm Ca : {mg} ppm Mg). શ્રેષ્ઠ શ્રેણી 3:1 થી 5:1 છે. મેગ્નેશિયમ ઘટાડવાનું અથવા કેલ્શિયમ વધારવાનું વિચારો.',
+      warningMsgCaMgRatioHigh: 'Ca:Mg ગુણોત્તર {ratio}:1 છે ({ca} ppm Ca : {mg} ppm Mg). શ્રેષ્ઠ શ્રેણી 3:1 થી 5:1 છે. મેગ્નેશિયમ વધારવાનું અથવા કેલ્શિયમ ઘટાડવાનું વિચારો.',
+      warningMsgKCaRatioHigh: 'K:Ca ગુણોત્તર {ratio}:1 છે. જ્યારે K Ca કરતાં નોંધપાત્ર રીતે વધી જાય, ત્યારે તે કેલ્શિયમની ઉણપ પ્રેરિત કરી શકે છે.',
+      warningMsgHighChloride: 'ક્લોરાઇડ સ્તર {cl} ppm છે. કેટલાક પાક મધ્યમ Cl⁻ સહન કરે છે, પરંતુ સંવેદનશીલ પાક 50-100 ppm થી ઉપર પીડાઈ શકે છે.',
+      warningMsgHighSodium: 'સોડિયમ સ્તર {na} ppm છે. સોડિયમ K અને Ca શોષણ સાથે સ્પર્ધા કરી શકે છે. જરૂરી ન હોય તો ન્યૂનતમ રાખો.',
+      warningMsgIonImbalance: 'આયન સંતુલન {imbalance}% કેશન/એનિયન અસંતુલન ({status}) દર્શાવે છે. મોટા અસંતુલન માપન અથવા ફોર્મ્યુલા ભૂલો સૂચવી શકે છે.',
+      calciumFertilizers: 'કેલ્શિયમ ખાતર',
+      sulfateFertilizers: 'સલ્ફેટ ખાતર',
+      phosphateFertilizers: 'ફોસ્ફેટ ખાતર',
+
       combinedSolutionWhenMixed: 'સંયુક્ત દ્રાવણ (મિશ્રણ કર્યા પછી)',
       combinedSolutionDescription: 'બંને ટાંકીઓને પાતળા કરીને અંતિમ રિઝર્વોયરમાં ભેળવવાથી, તમે નીચે મુજબ પ્રાપ્ત કરશો:',
       selectedFertilizers: 'પસંદ કરેલ ખાતર',
@@ -3444,6 +3719,97 @@ const i18n = {
       ecPrediction: 'EC અનુમાન',
       predictedEc: 'અનુમાનિત EC',
       electricalConductivity25C: 'વિદ્યુત વાહકતા (25°C)',
+      whatIsPpm: 'PPM શું છે?',
+      ppmStandsFor: '<strong>PPM નો અર્થ "Parts Per Million" (દસ લાખમાં ભાગ)</strong> — તે ખૂબ નાની સાંદ્રતાઓ માપવાનો એક રીત છે.',
+      thinkOfItLikeThis: 'આ રીતે સમજો: <span class="highlight">1 PPM = 1 મિલિગ્રામ પ્રતિ લિટર (mg/L)</span>.',
+      ppmExample: 'ઉદાહરણ તરીકે, નાઇટ્રોજન 100 PPM એટલે દરેક લિટર પાણીમાં 100 મિલિગ્રામ નાઇટ્રોજન હોય છે.',
+      theBasicFormula: 'મૂળભૂત સૂત્ર',
+      ppmFormulaEquation: 'PPM = (ગ્રામ × 1000 × ટકા) ÷ લિટર',
+      ppmFormulaDescription: 'આ તમારા દ્રાવણમાં પોષક તત્વોની સાંદ્રતા દર્શાવે છે',
+      ppmModalDescription1: '<strong>PPM નો અર્થ "Parts Per Million" (દસ લાખમાં ભાગ)</strong> — તે ખૂબ નાની સાંદ્રતાઓ માપવાનો એક રીત છે, ટકાવારીની જેમ. આ રીતે સમજો: જો તમારી પાસે 10 લાખ પાણીના ટીપાં હોય, તો PPM કહે છે કે તેમાં કેટલા પોષક તત્વોના ટીપાં મિશ્રિત છે.',
+      ppmModalDescription2: 'ઉદાહરણ તરીકે, <span class="highlight">નાઇટ્રોજન 100 PPM</span> એટલે દર 10 લાખ ગ્રામ (1000 લિટર) પાણીમાં 100 ગ્રામ નાઇટ્રોજન. સરળ શબ્દોમાં: <strong>1 PPM = 1 મિલિગ્રામ પ્રતિ લિટર (mg/L)</strong>.',
+      hereIsTheFormula: 'PPM ગણતરી માટે આ સૂત્ર વપરાય છે:',
+      breakDownEachPart: 'દરેક ભાગ સમજો:',
+      formulaPartGrams: '<strong>ગ્રામ</strong> = તમે ઉમેરેલ ખાતરની માત્રા',
+      formulaPart1000: '<strong>1000</strong> = ગ્રામને મિલિગ્રામ (mg) માં બદલે છે',
+      formulaPartPercentage: '<strong>ટકા</strong> = ખાતરમાં પોષક તત્વોનું પ્રમાણ (÷ 100)',
+      formulaPartLiters: '<strong>લિટર</strong> = તમારા દ્રાવણમાં પાણીનું પ્રમાણ',
+      whereLabel: 'જ્યાં:',
+      yourCurrentCalculation: 'તમારી વર્તમાન ગણતરી',
+      solutionVolumeLabel: 'દ્રાવણનું પ્રમાણ:',
+      litersUnit: 'લિટર',
+      fertilizersUsedLabel: 'વપરાયેલ ખાતરો:',
+      stepByStepBreakdown: 'તબક્કાવાર વિશ્લેષણ',
+      howWeCalculatedEachNutrient: 'તમારા પસંદ કરેલા ખાતરોમાંથી દરેક પોષક તત્વની ગણતરી આ રીતે થઈ:',
+      howEachFertilizerContributesToAchieved: 'દરેક ખાતર પ્રાપ્ત PPM મૂલ્યોમાં કેવી રીતે યોગદાન આપે છે તે અહીં છે:',
+      howEachFertilizerContributesToPpm: 'દરેક ખાતર PPM મૂલ્યોમાં કેવી રીતે યોગદાન આપે છે તે અહીં છે:',
+      addFertilizersToSeeBreakdown: 'થોડાં ખાતર ઉમેરો અને અહીં તમારું વ્યક્તિગત ગણતરી વિગતવાર જોવા માટે "Calculate" પર ક્લિક કરો!',
+      calculatorShowsStepByStep: 'તમારા પસંદ કરેલા ખાતરો અને તેમની માત્રાના આધારે, દરેક PPM મૂલ્ય સુધી આપણે કેવી રીતે પહોંચ્યાં તે કેલ્ક્યુલેટર તમને પગલાંવાર બતાવશે.',
+      noCalculationYet: 'હજી કોઈ ગણતરી નથી',
+      nutrientHeader: 'પોષક તત્ત્વ',
+      percentInFertilizerHeader: 'ખાતરમાં %',
+      calculationHeader: 'ગણતરી',
+      ppmHeader: 'PPM',
+      sourcesHeader: 'સ્ત્રોતો',
+      totalPpmHeader: 'કુલ PPM',
+      tankAPpmHeader: 'ટાંકી A PPM',
+      tankBPpmHeader: 'ટાંકી B PPM',
+      combinedPpmHeader: 'સંયુક્ત PPM',
+      finalResultsTotalPpm: 'અંતિમ પરિણામો - કુલ PPM',
+      whenUsingMultipleFertilizers: 'જ્યારે બહુવિધ ખાતરો વાપરો છો, ત્યારે અમે દરેક સ્ત્રોતમાંથી PPM ઉમેરીએ છીએ:',
+      elementalForm: '(મૂળ તત્વ સ્વરૂપ)',
+      totalLabel: 'કુલ:',
+      aboutOxideConversions: 'ઓક્સાઇડ રૂપાંતરણ વિશે',
+      oxideConversionExplanation: 'કેટલાક ખાતરોમાં પોષક તત્ત્વો <strong>ઓક્સાઇડ સ્વરૂપમાં</strong> (જેમ કે P₂O₅, K₂O) દર્શાવાય છે, પરંતુ છોડ <strong>એલિમેન્ટલ સ્વરૂપ</strong> (P, K) વાપરે છે. કેલ્ક્યુલેટર આને આપમેળે રૂપાંતરિત કરે છે:',
+      oxideFormHeader: 'ઓક્સાઇડ સ્વરૂપ',
+      elementalFormHeader: 'એલિમેન્ટલ સ્વરૂપ',
+      conversionFactorHeader: 'રૂપાંતરણ ગુણાંક',
+      phosphateOxide: 'P₂O₅ (ફોસ્ફેટ)',
+      phosphorusElemental: 'P (ફોસ્ફરસ)',
+      potassiumOxide: 'K₂O (પોટાશ)',
+      potassiumElemental: 'K (પોટેશિયમ)',
+      magnesiumOxide: 'MgO (મેગ્નેશિયમ ઓક્સાઇડ)',
+      magnesiumElemental: 'Mg (મેગ્નેશિયમ)',
+      calciumOxide: 'CaO (કેલ્શિયમ ઓક્સાઇડ)',
+      calciumElemental: 'Ca (કેલ્શિયમ)',
+      multiplyBy0436: '0.436 વડે ગુણો',
+      multiplyBy0830: '0.830 વડે ગુણો',
+      multiplyBy0603: '0.603 વડે ગુણો',
+      multiplyBy0715: '0.715 વડે ગુણો',
+      tip1PpmEquals: '1 PPM = 1 mg/L (એક લિટર દીઠ 1 મિલિગ્રામ)',
+      tip2StartLower: 'નીચા PPM મૂલ્યોથી શરૂઆત કરો અને ધીમે ધીમે વધારો',
+      tip3DifferentPlants: 'વિવિધ છોડને પોષક તત્ત્વોની અલગ અલગ જરૂરિયાત હોય છે',
+      tip4BalanceIsKey: 'વધુ ખાતર ≠ વધુ સારો વિકાસ; બેલેન્સ સૌથી મહત્વનું છે',
+      tip5CheckWater: 'શક્ય હોય તો તમારા પાણીમાં પહેલેથી રહેલા પોષક તત્ત્વોનું પ્રમાણ ચકાસો',
+      quickTips: 'ઝડપી ટિપ્સ',
+      whatIsIonBalance: 'આયન બેલેન્સ શું છે?',
+      ionBalanceExplanation: 'જ્યારે ખાતર પાણીમાં ઓગળે છે, ત્યારે તે તૂટી ને <strong>આયન કહેવાતા વિદ્યુત આવેશિત કણોમાં</strong> વહેંચાય છે:',
+      cationsDescription: '<strong>ધનાયન (+)</strong> - ધન આવેશવાળા આયન જેમ કે K⁺, Ca²⁺, Mg²⁺, NH₄⁺',
+      anionsDescription: '<strong>ઋણાયન (-)</strong> - ઋણ આવેશવાળા આયન જેમ કે NO₃⁻, SO₄²⁻, H₂PO₄⁻',
+      ionBalanceImportance: '<span class="highlight">સ્વસ્થ પોષક દ્રાવણ</span> માટે, કુલ ધન આવેશ અને કુલ ઋણ આવેશ લગભગ સમાન હોવા જોઈએ. આથી pH સ્થિર રહે છે અને પોષક તત્ત્વો "લૉકઆઉટ" થવાથી બચી શકાય છે.',
+      understandingMeqL: 'meq/L (મિલિઇક્વિવેલન્ટ પ્રતિ લિટર) સમજવું',
+      meqLDescription: '<strong>meq/L</strong> એ એક એકમ છે, જે દ્રાવણમાં આયનના <strong>વિદ્યુત આવેશ</strong>ને માપે છે—વજનને નહીં.',
+      meqLAnalogy: 'આ રીતે સમજો: કૅલ્શિયમ આયન (Ca²⁺) પાસે પોટેશિયમ આયન (K⁺) કરતાં બમણો આવેશ હોય છે, ભલે તેમનું વજન સમાન લાગે. meq/L આ આવેશના તફાવતને ગણતરીમાં લે છે.',
+      meqLFormula: 'meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters',
+      meqLFormulaDesc: 'આ સૂત્ર દર્શાવે છે કે દરેક આયન કેટલો વિદ્યુત આવેશ "યોગદાન" આપે છે',
+      importantNotes: '📌 મહત્વની નોંધો:',
+      hydrationWaterNote: '<strong>હાઇડ્રેશનનું પાણી</strong> (જેમ કે ·7H₂O, ·4H₂O) મોલર માસમાં ઉમેરાય છે, પરંતુ આવેશમાં નથી ઉમેરાતું—એ તો ક્રિસ્ટલ સ્ટ્રક્ચરમાં રહેલું પાણી છે',
+      ureaNote: '<strong>યુરિયા</strong> ચાર્જવાળા આયન બનાવતું નથી, એટલે આયન બેલેન્સમાં તેને ગણવામાં આવતું નથી (પણ પોષણ માટે તેનો નાઇટ્રોજન ગણાય છે)',
+      addFertilizersForIonBalance: 'અહીં તમારું વ્યક્તિગત આયન બેલેન્સ બ્રેકડાઉન જોવા માટે થોડાં ખાતર ઉમેરો અને "Calculate" પર ક્લિક કરો!',
+      ionBalanceStepByStep: 'કેલ્ક્યુલેટર તમને પગલાંવાર બતાવશે કે દરેક ખાતર તમારા દ્રાવણમાં ધનાયન અને ઋણાયન કેટલું યોગદાન આપે છે.',
+      yourCurrentSolution: 'તમારું વર્તમાન દ્રાવણ',
+      stepByStepIonCalculation: 'પગલાંવાર આયન ગણતરી',
+      howEachFertilizerContributesIons: 'તમારા દ્રાવણમાં દરેક ખાતર કેવી રીતે આયનોનું યોગદાન આપે છે તે અહીં બતાવ્યું છે:',
+      nutrientTotalsSummary: 'પોષક તત્ત્વોનો કુલ સારાંશ',
+      whenNutrientsFromMultiple: 'જ્યારે પોષક તત્ત્વો અનેક ખાતરોમાંથી આવે છે, ત્યારે અમે તેમને સાથે ઉમેરીએ છીએ:',
+      noteLabel: 'નોંધ:',
+      ppmCalculationNote: 'PPM (parts per million) = mg/L. ગણતરી: (ગ્રામ × પોષક%) ÷ વોલ્યુમ(L) × ૧૦૦૦',
+      amountLabel: 'માત્રા:',
+      amountUsedLabel: 'વપરાયેલી માત્રા:',
+      molarMassLabel: 'મોલર માસ:',
+      molesLabel: 'મોલ્સ:',
+      gramsUnit: 'ગ્રામ',
+      molUnit: 'mol',
       ecLabel: 'EC:',
       combinedEcLabel: 'સંયુક્ત EC:',
       mScmUnit: 'mS/cm',
@@ -3516,7 +3882,91 @@ const i18n = {
 
       language: 'ભાષા',
 
-      priority: 'પ્રાધાન્ય'
+      priority: 'પ્રાધાન્ય',
+
+      // Hydration water info
+      hydrationWaterTitle: '💧 હાઇડ્રેશનના પાણી વિશે:',
+      hydrationWaterExplanation: 'આ સૂત્રમાં રહેલા પાણીના અણુઓ (જેમ કે ·7H₂O) મોલર માસમાં ઉમેરાય છે, પરંતુ આયન બેલેન્સમાં તેમનું કોઈ યોગદાન નથી. એ તો ક્રિસ્ટલ સ્ટ્રક્ચરમાં "ફસાયેલું" પાણી છે.',
+
+      // Urea info
+      ureaInfoTitle: 'ℹ️ યુરિયા વિશે:',
+      ureaInfoExplanation: 'યુરિયા નાઇટ્રેટ (NO₃⁻) અથવા એમોનિયમ (NH₄⁺) જેવી રીતે ચાર્જવાળા આયન બનાવતું નથી. તેથી આયન બેલેન્સની ગણતરીમાં તેને સામેલ કરવામાં આવતું નથી. પરંતુ પોષક તત્ત્વોના PPM ગણતાં વખતે તેનો નાઇટ્રોજન જરૂર ગણવામાં આવે છે.',
+
+      // Ion table
+      cationType: 'ધનાયન (+)',
+      anionType: 'ઋણાયન (-)',
+      ionBreakdownByType: 'આયનોનું પ્રકાર મુજબ વિભાજન',
+      percentOfTotalCations: 'કુલ ધનાયનોમાંથી {percentage}%',
+      percentOfTotalAnions: 'કુલ ઋણાયનોમાંથી {percentage}%',
+
+      // Interpretation guide
+      interpretingResults: 'પરિણામોનું અર્થઘટન',
+      imbalanceLessThan10: '≤10% અસંતુલન:',
+      imbalanceLessThan10Desc: 'સંતુલિત ✓ - ઉત્તમ! તમારા દ્રાવણમાં આવેશનું સારું સંતુલન છે',
+      imbalance10To20: '10-20% અસંતુલન:',
+      imbalance10To20Desc: 'ચેતવણી ⚠ - સ્વીકાર્ય છે, પણ pH પર નજીકથી નજર રાખો',
+      imbalanceOver20: '>20% અસંતુલન:',
+      imbalanceOver20Desc: 'અસંતુલિત ✗ - pHમાં મોટો ઉતાર-ચઢાવ અને પોષક તત્ત્વો "લૉકઆઉટ" થવાની શક્યતા રહે છે',
+      whyDoesThisMatter: 'આ કેમ મહત્વનું છે?',
+      whyDoesThisMatterExplanation: 'આવેશનું અસંતુલન થવાથી pH ઉપર કે નીચે ખસી શકે છે, જેના કારણે તમારા દ્રાવણમાં પોષક તત્ત્વો હાજર હોવા છતાં પણ કેટલાક પોષક તત્ત્વો "લૉકઆઉટ" થઈ શકે છે.',
+      noCalculationYet: 'હજી ગણતરી થઈ નથી',
+      pleaseRunCalculation: 'સમજાવટ જોવા માટે કૃપા કરીને પહેલા ગણતરી ચલાવો.',
+
+      // Oxide conversions
+      understandingOxideConversions: 'ઓક્સાઇડ રૂપાંતરણ સમજવું',
+      oxideConversionsExplanation: 'ઘણા ખાતરોમાં પોષક તત્ત્વો <strong>ઓક્સાઇડ સ્વરૂપમાં</strong> દર્શાવાય છે (જેમ કે ફોસ્ફરસ માટે P₂O₅ અથવા પોટેશિયમ માટે K₂O), પણ છોડ વાસ્તવમાં <strong>એલિમેન્ટલ સ્વરૂપ</strong> વાપરે છે. કેલ્ક્યુલેટર આ રૂપાંતરણ આપમેળે કરી આપે છે!',
+
+      // No fertilizers in formula
+      noFertilizersInFormula: 'ફોર્મ્યુલામાં કોઈ ખાતર નથી',
+      noValidFormulaLong: 'ગણતરીથી માન્ય ફોર્મ્યુલા બન્યો નથી. તમારા લક્ષ્ય મૂલ્યોમાં ફેરફાર કરો અથવા અલગ ખાતરો પસંદ કરીને ફરી પ્રયાસ કરો.',
+      noValidFormulaShort: 'ગણતરીથી માન્ય ફોર્મ્યુલા બન્યો નથી.',
+
+      // Ion table headers
+      ionHeader: 'આયન',
+      typeHeader: 'પ્રકાર',
+      countTimesChargeHeader: 'સંખ્યા × ચાર્જ',
+      meqLHeader: 'meq/L',
+
+      // Final results section
+      finalResults: 'અંતિમ પરિણામો',
+      finalIonBalanceResults: 'અંતિમ આયન સંતુલન પરિણામો',
+      totalCationsPlus: 'કુલ ધનાયન (+)',
+      cationsPlus: 'ધનાયન (+)',
+      totalAnionsMinus: 'કુલ ઋણાયન (-)',
+      anionsMinus: 'ઋણાયન (-)',
+      imbalancePercentage: 'અસંતુલન ટકાવારી',
+      howWeCalculatedImbalance: 'અમે અસંતુલન કેવી રીતે ગણ્યું:',
+
+      // Share/export text
+      shareTitle: '🌱 ખાતર ગણકના પરિણામો',
+      shareFertilizersUsed: '📦 વપરાયેલ ખાતરો',
+      shareSolutionVolume: '({volume}L દ્રાવણ)',
+      shareNutrientConcentrations: '📊 પોષક તત્ત્વોની સાંદ્રતા (PPM)',
+      shareKeyRatios: '📐 મુખ્ય અનુપાતો',
+      shareGeneratedBy: 'Generated by https://umangbhatt.in/fertilizer-calculator/',
+
+      // Formula Builder share text
+      shareFormulaBuilderTitle: '🌱 ફોર્મ્યુલા બિલ્ડર પરિણામો',
+      shareTargetPpmValues: '🎯 લક્ષ્ય PPM મૂલ્યો',
+      shareLabelValuePpm: '• {label}: *{value} ppm*',
+      shareFertilizersToAdd: '📦 ઉમેરવાના ખાતરો',
+      shareFertilizersToAddVolume: '📦 ઉમેરવાના ખાતરો ({volume}L)',
+      shareNoSuitableFormula: 'કોઈ યોગ્ય ફોર્મ્યુલા મળ્યો નથી',
+      shareFertilizerGrams: '• {name}: *{grams}g*',
+      shareAchievedPpm: '✅ પ્રાપ્ત PPM',
+      shareIonBalance: '⚖️ આયન સંતુલન',
+      shareCationsValue: '• કેટાયન્સ: *{value} meq/L*',
+      shareAnionsValue: '• એનાયન્સ: *{value} meq/L*',
+      shareImbalanceValue: '• અસંતુલન: *{value}%* ({status})',
+
+      // NPK Ratio Calculator share text
+      shareNpkRatioTitle: '🌱 NPK અનુપાત ગણક પરિણામો',
+      shareTargetRatios: '🎯 લક્ષ્ય અનુપાતો',
+      shareRatioValue: '• અનુપાત: *{ratio}*',
+      shareNitrogenForms: '🧪 નાઇટ્રોજન સ્વરૂપો',
+      shareNo3N: '• NO₃-N: *{value} ppm*',
+      shareNh4N: '• NH₄-N: *{value} ppm*',
+      shareNh4Ratio: '• NH₄ અનુપાત: *{value}%*'
     }
   },
 
@@ -6255,8 +6705,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     const sFertilizers = activeFertilizers.filter(f => f.pct && f.pct.S).map(f => f.name).join(', ');
     warnings.push({
       level: 'warning',
-      category: 'Stock Solution: Ca + Sulfate',
-      message: `Calcium and sulfate are both present. When making STOCK SOLUTIONS, keep calcium sources (${caFertilizers || 'calcium fertilizers'}) separate from sulfate sources (${sFertilizers || 'sulfate fertilizers'}) to prevent calcium sulfate precipitation (gypsum). This warning doesn't apply to the final diluted nutrient solution.`
+      category: i18n.t('warningCategoryCaSulfate'),
+      message: i18n.t('warningMsgCaSulfate', { caFertilizers: caFertilizers || i18n.t('calciumFertilizers'), sFertilizers: sFertilizers || i18n.t('sulfateFertilizers') })
     });
   }
 
@@ -6266,8 +6716,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     const pFertilizers = activeFertilizers.filter(f => f.pct && (f.pct.P || f.pct.P2O5)).map(f => f.name).join(', ');
     warnings.push({
       level: 'warning',
-      category: 'Stock Solution: Ca + Phosphate',
-      message: `Calcium (${ca.toFixed(1)} ppm) and phosphate (${p.toFixed(1)} ppm P) are both present. When making STOCK SOLUTIONS, keep calcium sources (${caFertilizers || 'calcium fertilizers'}) in Tank A and phosphate sources (${pFertilizers || 'phosphate fertilizers'}) in Tank B to prevent calcium phosphate precipitation.`
+      category: i18n.t('warningCategoryCaPhosphate'),
+      message: i18n.t('warningMsgCaPhosphate', { ca: i18n.formatNumber(ca.toFixed(1)), p: i18n.formatNumber(p.toFixed(1)), caFertilizers: caFertilizers || i18n.t('calciumFertilizers'), pFertilizers: pFertilizers || i18n.t('phosphateFertilizers') })
     });
   }
 
@@ -6275,8 +6725,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
   if (ca > 10 && si > 10) {
     warnings.push({
       level: 'warning',
-      category: 'Stock Solution: Ca + Silicate',
-      message: `Calcium (${ca.toFixed(1)} ppm) and silicate (${si.toFixed(1)} ppm Si) are both present. When making STOCK SOLUTIONS, keep calcium and potassium silicate in separate concentrates to prevent calcium silicate gel/scale formation. Often silicate needs its own tank or sequential dosing.`
+      category: i18n.t('warningCategoryCaSilicate'),
+      message: i18n.t('warningMsgCaSilicate', { ca: i18n.formatNumber(ca.toFixed(1)), si: i18n.formatNumber(si.toFixed(1)) })
     });
   }
 
@@ -6290,8 +6740,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (nh4Ratio > 30) {
       warnings.push({
         level: 'warning',
-        category: 'High Ammonium',
-        message: `High ammonium ratio (${nh4Ratio.toFixed(1)}% NH₄⁺). Recommended: Keep NH₄⁺ below 20-30% of total N to avoid toxicity and root zone acidification. Consider using more nitrate-based fertilizers.`
+        category: i18n.t('warningCategoryHighAmmonium'),
+        message: i18n.t('warningMsgHighAmmonium', { ratio: i18n.formatNumber(nh4Ratio.toFixed(1)) })
       });
     }
   }
@@ -6300,8 +6750,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
   if (totalN > 0 && nh4 === 0) {
     warnings.push({
       level: 'info',
-      category: 'Zero Ammonium',
-      message: `No ammonium nitrogen in formula. A small NH₄⁺ share (5-15% of total N) can help with nutrient uptake and provide mild acidifying effect. This is optional—0% NH₄⁺ works fine if pH and media are managed.`
+      category: i18n.t('warningCategoryZeroAmmonium'),
+      message: i18n.t('warningMsgZeroAmmonium')
     });
   }
 
@@ -6311,8 +6761,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (nh4Ratio < 3) {
       warnings.push({
         level: 'info',
-        category: 'Very Low Ammonium',
-        message: `Very low ammonium ratio (${nh4Ratio.toFixed(1)}% NH₄⁺). Consider increasing to 5-15% of total N for better uptake behavior and mild acidifying effect. This is optional guidance.`
+        category: i18n.t('warningCategoryVeryLowAmmonium'),
+        message: i18n.t('warningMsgVeryLowAmmonium', { ratio: i18n.formatNumber(nh4Ratio.toFixed(1)) })
       });
     }
   }
@@ -6325,8 +6775,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
   if (ca < 20 && totalN > 0) {
     warnings.push({
       level: 'info',
-      category: 'Low Calcium',
-      message: `Calcium is low (${ca.toFixed(1)} ppm). RO/soft water often needs intentional Ca supply. Typical hydroponic feeds target 40-120 ppm Ca depending on crop and system.`
+      category: i18n.t('warningCategoryLowCalcium'),
+      message: i18n.t('warningMsgLowCalcium', { ca: i18n.formatNumber(ca.toFixed(1)) })
     });
   }
 
@@ -6334,8 +6784,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
   if (mg < 10 && totalN > 0) {
     warnings.push({
       level: 'info',
-      category: 'Low Magnesium',
-      message: `Magnesium is low (${mg.toFixed(1)} ppm). RO/soft water often needs Mg added. Common targets are 15-50 ppm Mg depending on crop and system.`
+      category: i18n.t('warningCategoryLowMagnesium'),
+      message: i18n.t('warningMsgLowMagnesium', { mg: i18n.formatNumber(mg.toFixed(1)) })
     });
   }
 
@@ -6352,8 +6802,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (missingMicros.length > 0) {
       warnings.push({
         level: 'info',
-        category: 'Missing Micronutrients',
-        message: `Missing micronutrients: ${missingMicros.join(', ')}. If formulating a complete feed, ensure all essential micros are included. Ignore if using a separate micro mix.`
+        category: i18n.t('warningCategoryMissingMicronutrients'),
+        message: i18n.t('warningMsgMissingMicronutrients', { micros: missingMicros.join(', ') })
       });
     }
   }
@@ -6368,14 +6818,14 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (ratio < 2) {
       warnings.push({
         level: 'info',
-        category: 'Ca:Mg Ratio',
-        message: `Ca:Mg ratio is ${ratio.toFixed(2)}:1 (${ca.toFixed(1)} ppm Ca : ${mg.toFixed(1)} ppm Mg). Optimal range is 3:1 to 5:1. Consider reducing magnesium or increasing calcium.`
+        category: i18n.t('warningCategoryCaMgRatio'),
+        message: i18n.t('warningMsgCaMgRatioLow', { ratio: i18n.formatNumber(ratio.toFixed(2)), ca: i18n.formatNumber(ca.toFixed(1)), mg: i18n.formatNumber(mg.toFixed(1)) })
       });
     } else if (ratio > 7) {
       warnings.push({
         level: 'info',
-        category: 'Ca:Mg Ratio',
-        message: `Ca:Mg ratio is ${ratio.toFixed(2)}:1 (${ca.toFixed(1)} ppm Ca : ${mg.toFixed(1)} ppm Mg). Optimal range is 3:1 to 5:1. Consider reducing calcium or increasing magnesium.`
+        category: i18n.t('warningCategoryCaMgRatio'),
+        message: i18n.t('warningMsgCaMgRatioHigh', { ratio: i18n.formatNumber(ratio.toFixed(2)), ca: i18n.formatNumber(ca.toFixed(1)), mg: i18n.formatNumber(mg.toFixed(1)) })
       });
     }
   }
@@ -6386,8 +6836,8 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
     if (kCaRatio > 3) {
       warnings.push({
         level: 'info',
-        category: 'K:Ca Ratio',
-        message: `K:Ca ratio is ${kCaRatio.toFixed(2)}:1. Very high potassium relative to calcium may interfere with calcium uptake. Optimal K:Ca ratio is typically 0.5:1 to 2:1 depending on crop.`
+        category: i18n.t('warningCategoryKCaRatio'),
+        message: i18n.t('warningMsgKCaRatioHigh', { ratio: i18n.formatNumber(kCaRatio.toFixed(2)) })
       });
     }
   }
@@ -7072,7 +7522,7 @@ function calculateIonBalance(activeFertilizers, volume) {
     html += `<div class="ion-balance-breakdown">`;
 
     // Cations column
-    html += `<div><h4 style="margin-top: 0; color: #007bff;">Cations (+)</h4>`;
+    html += `<div><h4 style="margin-top: 0; color: #007bff;">${i18n.t('cationsPlus')}</h4>`;
     cations.forEach(([ion, data]) => {
       const percentage = totalCations > 0 ? (data.meq / totalCations * 100).toFixed(1) : 0;
       html += `
@@ -7085,7 +7535,7 @@ function calculateIonBalance(activeFertilizers, volume) {
     html += `</div>`;
 
     // Anions column
-    html += `<div><h4 style="margin-top: 0; color: #007bff;">Anions (-)</h4>`;
+    html += `<div><h4 style="margin-top: 0; color: #007bff;">${i18n.t('anionsMinus')}</h4>`;
     anions.forEach(([ion, data]) => {
       const percentage = totalAnions > 0 ? (data.meq / totalAnions * 100).toFixed(1) : 0;
       html += `
@@ -8120,7 +8570,7 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
   // Nutritional warnings (from checkWarnings function)
   const nutritionalWarnings = checkWarnings(result.achieved, activeFertilizers);
   if (nutritionalWarnings.length > 0) {
-    html += '<h3 style="margin-top: 20px;">Warnings & Recommendations</h3>';
+    html += '<h3 style="margin-top: 20px;">' + i18n.t('warningsAndRecommendations') + '</h3>';
     nutritionalWarnings.forEach(warning => {
       const boxClass = warning.level === 'warning' ? 'warning-box' :
                        warning.level === 'error' ? 'error-box' : 'conversion-note';
@@ -8137,11 +8587,11 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
 
   // Warnings or errors (target deviation warnings)
   if (!allGood) {
-    html += '<div class="error-box"><strong>⚠ Cannot achieve exact targets</strong><ul>';
+    html += '<div class="error-box"><strong>⚠ ' + i18n.t('cannotAchieveExactTargets') + '</strong><ul>';
     warnings.forEach(w => html += `<li>${w}</li>`);
-    html += '</ul><p>This is the closest formula achievable with available fertilizers. Consider adjusting your targets or accepting the shown deviations.</p></div>';
+    html += '</ul><p>' + i18n.t('cannotAchieveExactTargetsDescription') + '</p></div>';
   } else if (warnings.length > 0) {
-    html += '<div class="warning-box"><strong>Note:</strong><ul>';
+    html += '<div class="warning-box"><strong>' + i18n.t('note') + '</strong><ul>';
     warnings.forEach(w => html += `<li>${w}</li>`);
     html += '</ul></div>';
   }
@@ -8636,7 +9086,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
       }
     });
     html += '</table>';
-    html += '<div style="font-size: 0.8em; color: #666; margin-bottom: 15px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>Note:</strong> PPM (parts per million) = mg/L. Calculated as: (grams × nutrient%) ÷ volume(L) × 1000</div>';
+    html += `<div style="font-size: 0.8em; color: #666; margin-bottom: 15px; padding: 8px; background: #f8f9fa; border-radius: 4px;"><strong>${i18n.t('noteLabel')}</strong> ${i18n.t('ppmCalculationNote')}</div>`;
 
     // Nitrogen form breakdown
     if (nutrients.N_total > 0.1) {
@@ -8685,7 +9135,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
 
       // Show original target ratio (what user entered)
       html += `<div style="padding: 10px 15px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px; text-align: center;">`;
-      html += `<div style="font-size: 0.8em; color: #2e7d32;">Target (${ratioLabel})</div>`;
+      html += `<div style="font-size: 0.8em; color: #2e7d32;">${i18n.t('targetRatioLabel', { ratio: ratioLabel })}</div>`;
       html += `<div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">${targetRatioValues}</div>`;
       html += `</div>`;
 
@@ -8709,7 +9159,7 @@ function renderTankSection(tank, volume, mode, tankLetter, targets, combinedNutr
       if (mgTarget > 0) tankRatioValues += ` : ${mgContrib.toFixed(1)}`;
 
       html += `<div style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">`;
-      html += `<div style="font-size: 0.8em; color: #666;">This Tank (${ratioLabel})</div>`;
+      html += `<div style="font-size: 0.8em; color: #666;">${i18n.t('thisTankRatioLabel', { ratio: ratioLabel })}</div>`;
       html += `<div style="font-size: 1.1em; font-weight: bold;">${tankRatioValues}</div>`;
       html += `</div>`;
     }
@@ -9592,15 +10042,15 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   // Add mode-specific conversion note
   if (calculationMode === 'elemental') {
     html += `<div class="conversion-note" style="margin-top: 15px;">
-      <strong>Elemental Mode:</strong> Values shown are pure elements (P, K).
+      <strong>${i18n.t('elementalModeLabel')}</strong> ${i18n.t('elementalModeNote')}
       <br>
-      To convert to oxide forms: P₂O₅ = P × 2.29, K₂O = K × 1.20
+      ${i18n.t('elementalToOxideConversion')}
     </div>`;
   } else {
     html += `<div class="conversion-note" style="margin-top: 15px;">
-      <strong>Oxide Mode:</strong> Values shown are commercial oxide forms (P₂O₅, K₂O).
+      <strong>${i18n.t('oxideModeLabel')}</strong> ${i18n.t('oxideModeNote')}
       <br>
-      To convert to elements: P = P₂O₅ × 0.436, K = K₂O × 0.830
+      ${i18n.t('oxideToElementalConversion')}
     </div>`;
   }
 
@@ -9774,7 +10224,7 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   // Nutritional warnings (from checkWarnings function)
   const nutritionalWarnings = checkWarnings(result.achieved, activeFertilizers);
   if (nutritionalWarnings.length > 0) {
-    html += '<h3 style="margin-top: 20px;">Warnings & Recommendations</h3>';
+    html += '<h3 style="margin-top: 20px;">' + i18n.t('warningsAndRecommendations') + '</h3>';
     nutritionalWarnings.forEach(warning => {
       const boxClass = warning.level === 'warning' ? 'warning-box' :
                        warning.level === 'error' ? 'error-box' : 'conversion-note';
@@ -9791,15 +10241,15 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
 
   // Warnings or errors (target deviation warnings)
   if (!allGood) {
-    html += '<div class="error-box"><strong>⚠ Cannot achieve exact targets</strong><ul>';
+    html += '<div class="error-box"><strong>⚠ ' + i18n.t('cannotAchieveExactTargets') + '</strong><ul>';
     warnings.forEach(w => html += `<li>${w}</li>`);
-    html += '</ul><p>This is the closest formula achievable with selected fertilizers. Consider:</p><ul><li>Selecting additional fertilizers</li><li>Adjusting your target values</li><li>Accepting the shown deviations</li></ul></div>';
+    html += '</ul><p>' + i18n.t('cannotAchieveExactTargetsConsider') + '</p><ul><li>' + i18n.t('considerSelectingAdditionalFertilizers') + '</li><li>' + i18n.t('considerAdjustingTargetValues') + '</li><li>' + i18n.t('considerAcceptingDeviations') + '</li></ul></div>';
   } else if (warnings.length > 0) {
-    html += '<div class="warning-box"><strong>Note:</strong><ul>';
+    html += '<div class="warning-box"><strong>' + i18n.t('note') + '</strong><ul>';
     warnings.forEach(w => html += `<li>${w}</li>`);
     html += '</ul></div>';
   } else {
-    html += '<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin-top: 15px;"><strong style="color: #28a745;">✓ Targets Successfully Achieved!</strong><p style="margin: 5px 0 0 0;">All nutrient values are within acceptable ranges.</p></div>';
+    html += '<div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin-top: 15px;"><strong style="color: #28a745;">✓ ' + i18n.t('targetsSuccessfullyAchieved') + '</strong><p style="margin: 5px 0 0 0;">' + i18n.t('allNutrientValuesWithinRange') + '</p></div>';
   }
 
   outputDiv.innerHTML = html;
@@ -9849,29 +10299,29 @@ function generateExplanationContent() {
   let content = `
     <!-- What is PPM? -->
     <div class="explanation-section">
-      <h3>What is PPM?</h3>
+      <h3>${i18n.t('whatIsPpm')}</h3>
       <p>
-        <strong>PPM stands for "Parts Per Million"</strong> - it's a way to measure very small concentrations.
-        Think of it like this: <span class="highlight">1 PPM = 1 milligram per liter (mg/L)</span>.
+        ${i18n.t('ppmStandsFor')}
+        ${i18n.t('thinkOfItLikeThis')}
       </p>
       <p>
-        For example, 100 PPM of Nitrogen means there are 100 milligrams of nitrogen in every liter of water.
+        ${i18n.t('ppmExample')}
       </p>
     </div>
 
     <!-- The Basic Formula -->
     <div class="explanation-section">
-      <h3>The Basic Formula</h3>
+      <h3>${i18n.t('theBasicFormula')}</h3>
       <div class="formula-box">
-        <div class="formula">PPM = (grams × 1000 × percentage) ÷ liters</div>
-        <div class="description">This tells us the concentration of nutrients in your solution</div>
+        <div class="formula">${i18n.t('ppmFormulaEquation')}</div>
+        <div class="description">${i18n.t('ppmFormulaDescription')}</div>
       </div>
-      <p><strong>Where:</strong></p>
+      <p><strong>${i18n.t('whereLabel')}</strong></p>
       <ul style="line-height: 1.8;">
-        <li><strong>grams</strong> = Amount of fertilizer you're adding</li>
-        <li><strong>1000</strong> = Converts grams to milligrams (mg)</li>
-        <li><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
-        <li><strong>liters</strong> = Volume of water in your solution</li>
+        <li>${i18n.t('formulaPartGrams')}</li>
+        <li>${i18n.t('formulaPart1000')}</li>
+        <li>${i18n.t('formulaPartPercentage')}</li>
+        <li>${i18n.t('formulaPartLiters')}</li>
       </ul>
     </div>
   `;
@@ -9879,12 +10329,12 @@ function generateExplanationContent() {
   if (activeFertilizers.length === 0) {
     content += `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Calculation Yet</h3>
+        <h3 style="color: #856404;">${i18n.t('noCalculationYet')}</h3>
         <p>
-          Add some fertilizers and click "Calculate" to see your personalized calculation breakdown here!
+          ${i18n.t('addFertilizersToSeeBreakdown')}
         </p>
         <p>
-          The calculator will show you step-by-step how we arrived at each PPM value based on your specific fertilizer selections and amounts.
+          ${i18n.t('calculatorShowsStepByStep')}
         </p>
       </div>
     `;
@@ -9892,9 +10342,9 @@ function generateExplanationContent() {
     content += `
       <!-- Your Calculation -->
       <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
-        <h3 style="color: #17a2b8;">Your Current Calculation</h3>
-        <p><strong>Solution Volume:</strong> ${volume} liters</p>
-        <p><strong>Fertilizers Used:</strong> ${activeFertilizers.length}</p>
+        <h3 style="color: #17a2b8;">${i18n.t('yourCurrentCalculation')}</h3>
+        <p><strong>${i18n.t('solutionVolumeLabel')}</strong> ${i18n.formatNumber(volume)} ${i18n.t('litersUnit')}</p>
+        <p><strong>${i18n.t('fertilizersUsedLabel')}</strong> ${i18n.formatNumber(activeFertilizers.length)}</p>
       </div>
     `;
 
@@ -9903,8 +10353,8 @@ function generateExplanationContent() {
 
     content += `
       <div class="explanation-section">
-        <h3>Step-by-Step Breakdown</h3>
-        <p>Here's exactly how we calculated each nutrient from your selected fertilizers:</p>
+        <h3>${i18n.t('stepByStepBreakdown')}</h3>
+        <p>${i18n.t('howWeCalculatedEachNutrient')}</p>
     `;
 
     activeFertilizers.forEach((fert, index) => {
@@ -9914,15 +10364,15 @@ function generateExplanationContent() {
             <span class="step-number">${index + 1}</span>
             ${fert.name}
           </h4>
-          <p style="margin: 10px 0 10px 38px;"><strong>Amount used:</strong> ${fert.grams} grams</p>
+          <p style="margin: 10px 0 10px 38px;"><strong>${i18n.t('amountUsedLabel')}</strong> ${i18n.formatNumber(fert.grams)} ${i18n.t('gramsUnit')}</p>
           <div style="margin-left: 38px;">
             <table class="conversion-table" style="font-size: 0.9em;">
               <thead>
                 <tr>
-                  <th>Nutrient</th>
-                  <th>% in Fertilizer</th>
-                  <th>Calculation</th>
-                  <th>PPM</th>
+                  <th>${i18n.t('nutrientHeader')}</th>
+                  <th>${i18n.t('percentInFertilizerHeader')}</th>
+                  <th>${i18n.t('calculationHeader')}</th>
+                  <th>${i18n.t('ppmHeader')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -9930,7 +10380,7 @@ function generateExplanationContent() {
 
       Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
         const ppm = (fert.grams * 1000 * (percentage / 100)) / volume;
-        const calculation = `(${fert.grams} × 1000 × ${percentage / 100}) ÷ ${volume}`;
+        const calculation = `(${i18n.formatNumber(fert.grams)} × ${i18n.formatNumber(1000)} × ${i18n.formatNumber(percentage / 100)}) ÷ ${i18n.formatNumber(volume)}`;
 
         // Track contributions for summary
         if (!nutrientContributions[nutrient]) {
@@ -9944,10 +10394,10 @@ function generateExplanationContent() {
 
         content += `
           <tr>
-            <td data-label="Nutrient"><strong>${nutrient}</strong></td>
-            <td data-label="% in Fertilizer">${percentage}%</td>
-            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
-            <td data-label="PPM"><strong>${ppm.toFixed(2)} PPM</strong></td>
+            <td data-label="${i18n.t('nutrientHeader')}"><strong>${nutrient}</strong></td>
+            <td data-label="${i18n.t('percentInFertilizerHeader')}">${i18n.formatNumber(percentage)}%</td>
+            <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td data-label="${i18n.t('ppmHeader')}"><strong>${i18n.formatNumber(ppm.toFixed(2))} PPM</strong></td>
           </tr>
         `;
       });
@@ -9966,8 +10416,8 @@ function generateExplanationContent() {
     if (Object.keys(nutrientContributions).length > 0) {
       content += `
         <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-          <h3 style="color: #28a745;">Final Results - Total PPM</h3>
-          <p>When using multiple fertilizers, we add up the PPM from each source:</p>
+          <h3 style="color: #28a745;">${i18n.t('finalResultsTotalPpm')}</h3>
+          <p>${i18n.t('whenUsingMultipleFertilizers')}</p>
           <div style="margin-top: 15px;">
       `;
 
@@ -9984,21 +10434,21 @@ function generateExplanationContent() {
         if (nutrient === 'P2O5' && OXIDE_CONVERSIONS.P2O5_to_P) {
           const convertedPPM = totalPPM * OXIDE_CONVERSIONS.P2O5_to_P;
           finalResults['P'] = convertedPPM;
-          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM P</strong> (elemental form)`;
+          conversionNote = ` → <strong>${i18n.formatNumber(convertedPPM.toFixed(2))} PPM P</strong> ${i18n.t('elementalForm')}`;
           displayNutrient = 'P₂O₅';
         } else if (nutrient === 'K2O' && OXIDE_CONVERSIONS.K2O_to_K) {
           const convertedPPM = totalPPM * OXIDE_CONVERSIONS.K2O_to_K;
           finalResults['K'] = convertedPPM;
-          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM K</strong> (elemental form)`;
+          conversionNote = ` → <strong>${i18n.formatNumber(convertedPPM.toFixed(2))} PPM K</strong> ${i18n.t('elementalForm')}`;
           displayNutrient = 'K₂O';
         } else if (nutrient === 'MgO' && OXIDE_CONVERSIONS.MgO_to_Mg) {
           const convertedPPM = totalPPM * OXIDE_CONVERSIONS.MgO_to_Mg;
           finalResults['Mg'] = convertedPPM;
-          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM Mg</strong> (elemental form)`;
+          conversionNote = ` → <strong>${i18n.formatNumber(convertedPPM.toFixed(2))} PPM Mg</strong> ${i18n.t('elementalForm')}`;
         } else if (nutrient === 'CaO' && OXIDE_CONVERSIONS.CaO_to_Ca) {
           const convertedPPM = totalPPM * OXIDE_CONVERSIONS.CaO_to_Ca;
           finalResults['Ca'] = convertedPPM;
-          conversionNote = ` → <strong>${convertedPPM.toFixed(2)} PPM Ca</strong> (elemental form)`;
+          conversionNote = ` → <strong>${i18n.formatNumber(convertedPPM.toFixed(2))} PPM Ca</strong> ${i18n.t('elementalForm')}`;
         } else {
           finalResults[nutrient] = totalPPM;
         }
@@ -10011,14 +10461,14 @@ function generateExplanationContent() {
         if (contributions.length > 1) {
           content += `<div style="margin: 8px 0 8px 20px; line-height: 1.8;">`;
           contributions.forEach(c => {
-            content += `<div>• ${c.fertilizer}: ${c.ppm.toFixed(2)} PPM</div>`;
+            content += `<div>• ${c.fertilizer}: ${i18n.formatNumber(c.ppm.toFixed(2))} PPM</div>`;
           });
           content += `</div>`;
           content += `<div style="margin-top: 8px; padding-top: 8px; border-top: 2px solid #dee2e6;">`;
-          content += `<strong>Total: ${totalPPM.toFixed(2)} PPM${conversionNote}</strong>`;
+          content += `<strong>${i18n.t('totalLabel')} ${i18n.formatNumber(totalPPM.toFixed(2))} PPM${conversionNote}</strong>`;
           content += `</div>`;
         } else {
-          content += ` <strong>${totalPPM.toFixed(2)} PPM${conversionNote}</strong>`;
+          content += ` <strong>${i18n.formatNumber(totalPPM.toFixed(2))} PPM${conversionNote}</strong>`;
         }
 
         content += `</div>`;
@@ -10037,17 +10487,16 @@ function generateExplanationContent() {
       if (hasOxides) {
         content += `
           <div class="explanation-section">
-            <h3>About Oxide Conversions</h3>
+            <h3>${i18n.t('aboutOxideConversions')}</h3>
             <p>
-              Some fertilizers list nutrients in <strong>oxide form</strong> (like P₂O₅, K₂O),
-              but plants use the <strong>elemental form</strong> (P, K). The calculator automatically converts these:
+              ${i18n.t('oxideConversionExplanation')}
             </p>
             <table class="conversion-table" style="margin-top: 10px;">
               <thead>
                 <tr>
-                  <th>Oxide Form</th>
-                  <th>Elemental Form</th>
-                  <th>Conversion Factor</th>
+                  <th>${i18n.t('oxideFormHeader')}</th>
+                  <th>${i18n.t('elementalFormHeader')}</th>
+                  <th>${i18n.t('conversionFactorHeader')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -10056,36 +10505,36 @@ function generateExplanationContent() {
         if (nutrientContributions['P2O5']) {
           content += `
                 <tr>
-                  <td data-label="Oxide Form">P₂O₅ (Phosphate)</td>
-                  <td data-label="Elemental Form">P (Phosphorus)</td>
-                  <td data-label="Conversion Factor">×0.436</td>
+                  <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('phosphateOxide')}</td>
+                  <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('phosphorusElemental')}</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.436</td>
                 </tr>
           `;
         }
         if (nutrientContributions['K2O']) {
           content += `
                 <tr>
-                  <td data-label="Oxide Form">K₂O (Potash)</td>
-                  <td data-label="Elemental Form">K (Potassium)</td>
-                  <td data-label="Conversion Factor">×0.830</td>
+                  <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('potassiumOxide')}</td>
+                  <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('potassiumElemental')}</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.830</td>
                 </tr>
           `;
         }
         if (nutrientContributions['MgO']) {
           content += `
                 <tr>
-                  <td data-label="Oxide Form">MgO (Magnesium Oxide)</td>
-                  <td data-label="Elemental Form">Mg (Magnesium)</td>
-                  <td data-label="Conversion Factor">×0.603</td>
+                  <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('magnesiumOxide')}</td>
+                  <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('magnesiumElemental')}</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.603</td>
                 </tr>
           `;
         }
         if (nutrientContributions['CaO']) {
           content += `
                 <tr>
-                  <td data-label="Oxide Form">CaO (Calcium Oxide)</td>
-                  <td data-label="Elemental Form">Ca (Calcium)</td>
-                  <td data-label="Conversion Factor">×0.715</td>
+                  <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('calciumOxide')}</td>
+                  <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('calciumElemental')}</td>
+                  <td data-label="${i18n.t('conversionFactorHeader')}">×0.715</td>
                 </tr>
           `;
         }
@@ -10102,13 +10551,13 @@ function generateExplanationContent() {
   // Always include helpful tips
   content += `
     <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-      <h3 style="color: #28a745;">Quick Tips</h3>
+      <h3 style="color: #28a745;">${i18n.t('quickTips')}</h3>
       <ul style="line-height: 1.8;">
-        <li>1 PPM = 1 mg/L (milligram per liter)</li>
-        <li>Start with lower PPM values and increase gradually</li>
-        <li>Different plants need different nutrient levels</li>
-        <li>More fertilizer ≠ better growth; balance is key</li>
-        <li>Check your water's existing nutrient content if possible</li>
+        <li>${i18n.t('tip1PpmEquals')}</li>
+        <li>${i18n.t('tip2StartLower')}</li>
+        <li>${i18n.t('tip3DifferentPlants')}</li>
+        <li>${i18n.t('tip4BalanceIsKey')}</li>
+        <li>${i18n.t('tip5CheckWater')}</li>
       </ul>
     </div>
   `;
@@ -10157,41 +10606,39 @@ function generateIonBalanceExplanation() {
   let content = `
     <!-- What is Ion Balance? -->
     <div class="explanation-section">
-      <h3>What is Ion Balance?</h3>
+      <h3>${i18n.t('whatIsIonBalance')}</h3>
       <p>
-        When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:
+        ${i18n.t('ionBalanceExplanation')}
       </p>
       <ul style="line-height: 1.8;">
-        <li><strong>Cations (+)</strong> - Positively charged ions like K⁺, Ca²⁺, Mg²⁺, NH₄⁺</li>
-        <li><strong>Anions (-)</strong> - Negatively charged ions like NO₃⁻, SO₄²⁻, H₂PO₄⁻</li>
+        <li>${i18n.t('cationsDescription')}</li>
+        <li>${i18n.t('anionsDescription')}</li>
       </ul>
       <p>
-        For a <span class="highlight">healthy nutrient solution</span>, the total positive charges should roughly equal the total negative charges.
-        This keeps the pH stable and prevents nutrient lockout.
+        ${i18n.t('ionBalanceImportance')}
       </p>
     </div>
 
     <!-- What is meq/L? -->
     <div class="explanation-section">
-      <h3>Understanding meq/L (Milliequivalents per Liter)</h3>
+      <h3>${i18n.t('understandingMeqL')}</h3>
       <p>
-        <strong>meq/L</strong> is a unit that measures the <strong>electrical charge</strong> of ions in solution, not their weight.
+        ${i18n.t('meqLDescription')}
       </p>
       <p>
-        Think of it like this: A calcium ion (Ca²⁺) has twice the charge of a potassium ion (K⁺), even if they weigh the same.
-        meq/L accounts for this difference in charge.
+        ${i18n.t('meqLAnalogy')}
       </p>
       <div class="formula-box">
-        <div class="formula">meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters</div>
-        <div class="description">This tells us the electrical charge contribution of each ion</div>
+        <div class="formula">${i18n.t('meqLFormula')}</div>
+        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
       </div>
       <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
         <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>📌 Important Notes:</strong>
+          <strong>${i18n.t('importantNotes')}</strong>
         </p>
         <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li><strong>Hydration water</strong> (e.g., ·7H₂O, ·4H₂O) adds to molar mass but NOT to charge - it's just water in the crystal structure</li>
-          <li><strong>Urea</strong> doesn't form charged ions, so it's excluded from ion balance (but its nitrogen still counts for nutrients)</li>
+          <li>${i18n.t('hydrationWaterNote')}</li>
+          <li>${i18n.t('ureaNote')}</li>
         </ul>
       </div>
     </div>
@@ -10200,12 +10647,12 @@ function generateIonBalanceExplanation() {
   if (activeFertilizers.length === 0) {
     content += `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Calculation Yet</h3>
+        <h3 style="color: #856404;">${i18n.t('noCalculationYet')}</h3>
         <p>
-          Add some fertilizers and click "Calculate" to see your personalized ion balance breakdown here!
+          ${i18n.t('addFertilizersForIonBalance')}
         </p>
         <p>
-          The calculator will show you step-by-step how each fertilizer contributes cations and anions to your solution.
+          ${i18n.t('ionBalanceStepByStep')}
         </p>
       </div>
     `;
@@ -10271,15 +10718,15 @@ function generateIonBalanceExplanation() {
     content += `
       <!-- Your Calculation -->
       <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
-        <h3 style="color: #17a2b8;">Your Current Solution</h3>
-        <p><strong>Solution Volume:</strong> ${volume} liters</p>
-        <p><strong>Fertilizers Used:</strong> ${activeFertilizers.length}</p>
+        <h3 style="color: #17a2b8;">${i18n.t('yourCurrentSolution')}</h3>
+        <p><strong>${i18n.t('solutionVolumeLabel')}</strong> ${i18n.formatNumber(volume)} ${i18n.t('litersUnit')}</p>
+        <p><strong>${i18n.t('fertilizersUsedLabel')}</strong> ${i18n.formatNumber(activeFertilizers.length)}</p>
       </div>
 
       <!-- Step-by-Step Breakdown -->
       <div class="explanation-section">
-        <h3>Step-by-Step Ion Calculation</h3>
-        <p>Here's how each fertilizer contributes ions to your solution:</p>
+        <h3>${i18n.t('stepByStepIonCalculation')}</h3>
+        <p>${i18n.t('howEachFertilizerContributesIons')}</p>
     `;
 
     fertilizerBreakdown.forEach((item, index) => {
@@ -10303,9 +10750,9 @@ function generateIonBalanceExplanation() {
             ${formulaDisplay}
           </h4>
           <p style="margin: 10px 0 10px 38px;">
-            <strong>Amount:</strong> ${item.fert.grams} grams<br>
-            <strong>Molar Mass:</strong> ${item.ionData.molarMass} g/mol<br>
-            <strong>Moles:</strong> ${item.fert.grams} ÷ ${item.ionData.molarMass} = <strong>${item.moles.toFixed(4)} mol</strong>
+            <strong>${i18n.t('amountLabel')}</strong> ${i18n.formatNumber(item.fert.grams)} ${i18n.t('gramsUnit')}<br>
+            <strong>${i18n.t('molarMassLabel')}</strong> ${i18n.formatNumber(item.ionData.molarMass)} g/mol<br>
+            <strong>${i18n.t('molesLabel')}</strong> ${i18n.formatNumber(item.fert.grams)} ÷ ${i18n.formatNumber(item.ionData.molarMass)} = <strong>${i18n.formatNumber(item.moles.toFixed(4))} ${i18n.t('molUnit')}</strong>
           </p>
       `;
 
@@ -10313,8 +10760,7 @@ function generateIonBalanceExplanation() {
       if (hasHydrationWater) {
         content += `
           <div style="margin: 10px 0 10px 38px; padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 0.9em;">
-            <strong>💧 About Hydration Water:</strong> The water molecules (like ·7H₂O) in this formula add to the molar mass
-            but do NOT contribute to the ion balance. They're just water trapped in the crystal structure.
+            <strong>${i18n.t('hydrationWaterTitle')}</strong> ${i18n.t('hydrationWaterExplanation')}
           </div>
         `;
       }
@@ -10323,9 +10769,7 @@ function generateIonBalanceExplanation() {
       if (isUreaOnly) {
         content += `
           <div style="margin: 10px 0 10px 38px; padding: 10px; background: #d1ecf1; border-left: 3px solid #17a2b8; border-radius: 4px; font-size: 0.9em;">
-            <strong>ℹ️ About Urea:</strong> Urea does NOT form charged ions like nitrate (NO₃⁻) or ammonium (NH₄⁺).
-            Therefore, it is NOT counted in ion balance calculations. However, its nitrogen content IS still counted
-            when calculating nutrient PPM values.
+            <strong>${i18n.t('ureaInfoTitle')}</strong> ${i18n.t('ureaInfoExplanation')}
           </div>
         `;
       }
@@ -10335,11 +10779,11 @@ function generateIonBalanceExplanation() {
             <table class="conversion-table" style="font-size: 0.9em;">
               <thead>
                 <tr>
-                  <th>Ion</th>
-                  <th>Type</th>
-                  <th>Count × Charge</th>
-                  <th>Calculation</th>
-                  <th>meq/L</th>
+                  <th>${i18n.t('ionHeader')}</th>
+                  <th>${i18n.t('typeHeader')}</th>
+                  <th>${i18n.t('countTimesChargeHeader')}</th>
+                  <th>${i18n.t('calculationHeader')}</th>
+                  <th>${i18n.t('meqLHeader')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -10347,15 +10791,15 @@ function generateIonBalanceExplanation() {
 
       item.ions.forEach(ion => {
         const chargeSymbol = ion.type === 'cation' ? '+' : '-';
-        const calculation = `${item.moles.toFixed(4)} × ${ion.count} × ${ion.charge} × 1000 ÷ ${volume}`;
+        const calculation = `${i18n.formatNumber(item.moles.toFixed(4))} × ${i18n.formatNumber(ion.count)} × ${i18n.formatNumber(ion.charge)} × ${i18n.formatNumber(1000)} ÷ ${i18n.formatNumber(volume)}`;
 
         content += `
           <tr>
             <td data-label="Ion"><strong>${ion.ion}</strong></td>
-            <td data-label="Type">${ion.type === 'cation' ? 'Cation (+)' : 'Anion (-)'}</td>
-            <td data-label="Count × Charge">${ion.count} × ${ion.charge}</td>
+            <td data-label="Type">${ion.type === 'cation' ? i18n.t('cationType') : i18n.t('anionType')}</td>
+            <td data-label="Count × Charge">${i18n.formatNumber(ion.count)} × ${i18n.formatNumber(ion.charge)}</td>
             <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
-            <td data-label="meq/L"><strong>${ion.meq.toFixed(2)} meq/L</strong></td>
+            <td data-label="meq/L"><strong>${i18n.formatNumber(ion.meq.toFixed(2))} meq/L</strong></td>
           </tr>
         `;
       });
@@ -10388,32 +10832,32 @@ function generateIonBalanceExplanation() {
 
     content += `
       <div class="explanation-section" style="background: ${statusColor}20; border-left-color: ${statusColor};">
-        <h3 style="color: ${statusColor};">Final Ion Balance Results</h3>
+        <h3 style="color: ${statusColor};">${i18n.t('finalIonBalanceResults')}</h3>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
           <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Cations (+)</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${totalCations.toFixed(2)}</div>
-            <div style="font-size: 0.9em; color: #666;">meq/L</div>
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalCationsPlus')}</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))}</div>
+            <div style="font-size: 0.9em; color: #666;">${i18n.t('meqLHeader')}</div>
           </div>
           <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Anions (-)</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${totalAnions.toFixed(2)}</div>
-            <div style="font-size: 0.9em; color: #666;">meq/L</div>
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalAnionsMinus')}</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))}</div>
+            <div style="font-size: 0.9em; color: #666;">${i18n.t('meqLHeader')}</div>
           </div>
         </div>
 
         <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${statusColor};">
-          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Imbalance Percentage</div>
-          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${imbalance.toFixed(1)}%</div>
+          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('imbalancePercentage')}</div>
+          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
           <div style="font-size: 1em; color: ${statusColor}; margin-top: 5px;">${statusText}</div>
         </div>
 
         <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
-          <h4 style="margin-top: 0;">How we calculated imbalance:</h4>
+          <h4 style="margin-top: 0;">${i18n.t('howWeCalculatedImbalance')}</h4>
           <p style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px;">
-            Average = (${totalCations.toFixed(2)} + ${totalAnions.toFixed(2)}) ÷ 2 = ${average.toFixed(2)} meq/L<br>
-            Imbalance = |${totalCations.toFixed(2)} - ${totalAnions.toFixed(2)}| ÷ ${average.toFixed(2)} × 100 = <strong>${imbalance.toFixed(1)}%</strong>
+            Average = (${i18n.formatNumber(totalCations.toFixed(2))} + ${i18n.formatNumber(totalAnions.toFixed(2))}) ÷ ${i18n.formatNumber(2)} = ${i18n.formatNumber(average.toFixed(2))} ${i18n.t('meqLHeader')}<br>
+            Imbalance = |${i18n.formatNumber(totalCations.toFixed(2))} - ${i18n.formatNumber(totalAnions.toFixed(2))}| ÷ ${i18n.formatNumber(average.toFixed(2))} × ${i18n.formatNumber(100)} = <strong>${i18n.formatNumber(imbalance.toFixed(1))}%</strong>
           </p>
         </div>
       </div>
@@ -10423,14 +10867,14 @@ function generateIonBalanceExplanation() {
     if (cations.length > 0 || anions.length > 0) {
       content += `
         <div class="explanation-section">
-          <h3>Ion Breakdown by Type</h3>
+          <h3>${i18n.t('ionBreakdownByType')}</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
       `;
 
       // Cations
       content += `
         <div>
-          <h4 style="color: #007bff; margin-top: 0;">Cations (+)</h4>
+          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('cationsPlus')}</h4>
       `;
       cations.forEach(([ion, data]) => {
         const percentage = totalCations > 0 ? (data.meq / totalCations * 100).toFixed(1) : 0;
@@ -10438,9 +10882,9 @@ function generateIonBalanceExplanation() {
           <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
             <div style="display: flex; justify-content: space-between;">
               <strong>${ion}</strong>
-              <span>${data.meq.toFixed(2)} meq/L</span>
+              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
             </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${percentage}% of total cations</div>
+            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalCations', {percentage})}</div>
           </div>
         `;
       });
@@ -10449,7 +10893,7 @@ function generateIonBalanceExplanation() {
       // Anions
       content += `
         <div>
-          <h4 style="color: #007bff; margin-top: 0;">Anions (-)</h4>
+          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('anionsMinus')}</h4>
       `;
       anions.forEach(([ion, data]) => {
         const percentage = totalAnions > 0 ? (data.meq / totalAnions * 100).toFixed(1) : 0;
@@ -10457,9 +10901,9 @@ function generateIonBalanceExplanation() {
           <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
             <div style="display: flex; justify-content: space-between;">
               <strong>${ion}</strong>
-              <span>${data.meq.toFixed(2)} meq/L</span>
+              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
             </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${percentage}% of total anions</div>
+            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalAnions', {percentage})}</div>
           </div>
         `;
       });
@@ -10472,15 +10916,14 @@ function generateIonBalanceExplanation() {
   // Always include interpretation guide
   content += `
     <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-      <h3 style="color: #28a745;">Interpreting Your Results</h3>
+      <h3 style="color: #28a745;">${i18n.t('interpretingResults')}</h3>
       <ul style="line-height: 1.8;">
-        <li><strong>≤10% Imbalance:</strong> Balanced ✓ - Excellent! Your solution has good charge balance</li>
-        <li><strong>10-20% Imbalance:</strong> Caution ⚠ - Acceptable, but monitor pH closely</li>
-        <li><strong>>20% Imbalance:</strong> Imbalanced ✗ - May cause pH swings and nutrient lockouts</li>
+        <li><strong>${i18n.t('imbalanceLessThan10')}</strong> ${i18n.t('imbalanceLessThan10Desc')}</li>
+        <li><strong>${i18n.t('imbalance10To20')}</strong> ${i18n.t('imbalance10To20Desc')}</li>
+        <li><strong>${i18n.t('imbalanceOver20')}</strong> ${i18n.t('imbalanceOver20Desc')}</li>
       </ul>
       <p style="margin-top: 15px;">
-        <strong>Why does this matter?</strong> Charge imbalance can cause pH to drift up or down,
-        which may lock out certain nutrients even if they're present in your solution.
+        <strong>${i18n.t('whyDoesThisMatter')}</strong> ${i18n.t('whyDoesThisMatterExplanation')}
       </p>
     </div>
   `;
@@ -10519,8 +10962,8 @@ function generateReversePPMExplanation() {
   if (!lastReverseCalculation) {
     return `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Calculation Yet</h3>
-        <p>Please run a calculation first to see the explanation.</p>
+        <h3 style="color: #856404;">${i18n.t('noCalculationYet')}</h3>
+        <p>${i18n.t('pleaseRunCalculation')}</p>
       </div>
     `;
   }
@@ -10538,29 +10981,29 @@ function generateReversePPMExplanation() {
   let content = `
     <!-- What is PPM? -->
     <div class="explanation-section">
-      <h3>What is PPM?</h3>
+      <h3>${i18n.t('whatIsPpm')}</h3>
       <p>
-        <strong>PPM stands for "Parts Per Million"</strong> - it's a way to measure very small concentrations.
-        Think of it like this: <span class="highlight">1 PPM = 1 milligram per liter (mg/L)</span>.
+        ${i18n.t('ppmStandsFor')}
+        ${i18n.t('thinkOfItLikeThis')}
       </p>
       <p>
-        For example, 100 PPM of Nitrogen means there are 100 milligrams of nitrogen in every liter of water.
+        ${i18n.t('ppmExample')}
       </p>
     </div>
 
     <!-- The Basic Formula -->
     <div class="explanation-section">
-      <h3>The Basic Formula</h3>
+      <h3>${i18n.t('theBasicFormula')}</h3>
       <div class="formula-box">
-        <div class="formula">PPM = (grams × 1000 × percentage) ÷ liters</div>
-        <div class="description">This tells us the concentration of nutrients in your solution</div>
+        <div class="formula">${i18n.t('ppmFormulaEquation')}</div>
+        <div class="description">${i18n.t('ppmFormulaDescription')}</div>
       </div>
-      <p><strong>Where:</strong></p>
+      <p><strong>${i18n.t('whereLabel')}</strong></p>
       <ul style="line-height: 1.8;">
-        <li><strong>grams</strong> = Amount of fertilizer you're adding</li>
-        <li><strong>1000</strong> = Converts grams to milligrams (mg)</li>
-        <li><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
-        <li><strong>liters</strong> = Volume of water in your solution</li>
+        <li>${i18n.t('formulaPartGrams')}</li>
+        <li>${i18n.t('formulaPart1000')}</li>
+        <li>${i18n.t('formulaPartPercentage')}</li>
+        <li>${i18n.t('formulaPartLiters')}</li>
       </ul>
     </div>
   `;
@@ -10568,17 +11011,17 @@ function generateReversePPMExplanation() {
   if (activeFertilizers.length === 0) {
     content += `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Fertilizers in Formula</h3>
-        <p>The calculation did not produce a valid formula. Try adjusting your target values or selecting different fertilizers.</p>
+        <h3 style="color: #856404;">${i18n.t('noFertilizersInFormula')}</h3>
+        <p>${i18n.t('noValidFormulaLong')}</p>
       </div>
     `;
   } else {
     content += `
       <!-- Your Calculation -->
       <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
-        <h3 style="color: #17a2b8;">Your Current Calculation</h3>
-        <p><strong>Solution Volume:</strong> ${volume} liters</p>
-        <p><strong>Fertilizers Used:</strong> ${activeFertilizers.length}</p>
+        <h3 style="color: #17a2b8;">${i18n.t('yourCurrentCalculation')}</h3>
+        <p><strong>${i18n.t('solutionVolumeLabel')}</strong> ${i18n.formatNumber(volume)} ${i18n.t('litersUnit')}</p>
+        <p><strong>${i18n.t('fertilizersUsedLabel')}</strong> ${i18n.formatNumber(activeFertilizers.length)}</p>
       </div>
     `;
 
@@ -10587,8 +11030,8 @@ function generateReversePPMExplanation() {
 
     content += `
       <div class="explanation-section">
-        <h3>Step-by-Step Breakdown</h3>
-        <p>Here's exactly how each fertilizer contributes to the achieved PPM values:</p>
+        <h3>${i18n.t('stepByStepBreakdown')}</h3>
+        <p>${i18n.t('howEachFertilizerContributesToAchieved')}</p>
     `;
 
     activeFertilizers.forEach((fert, index) => {
@@ -10603,10 +11046,10 @@ function generateReversePPMExplanation() {
             <table class="conversion-table" style="font-size: 0.9em;">
               <thead>
                 <tr>
-                  <th>Nutrient</th>
-                  <th>% in Fertilizer</th>
-                  <th>Calculation</th>
-                  <th>PPM</th>
+                  <th>${i18n.t('nutrientHeader')}</th>
+                  <th>${i18n.t('percentInFertilizerHeader')}</th>
+                  <th>${i18n.t('calculationHeader')}</th>
+                  <th>${i18n.t('ppmHeader')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -10614,7 +11057,7 @@ function generateReversePPMExplanation() {
 
       Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
         const ppm = (fert.grams * 1000 * (percentage / 100)) / volume;
-        const calculation = `(${fert.grams.toFixed(2)} × 1000 × ${(percentage / 100).toFixed(4)}) ÷ ${volume}`;
+        const calculation = `(${i18n.formatNumber(fert.grams.toFixed(2))} × ${i18n.formatNumber(1000)} × ${i18n.formatNumber((percentage / 100).toFixed(4))}) ÷ ${i18n.formatNumber(volume)}`;
 
         // Track contributions for summary
         if (!nutrientContributions[nutrient]) {
@@ -10628,10 +11071,10 @@ function generateReversePPMExplanation() {
 
         content += `
           <tr>
-            <td data-label="Nutrient"><strong>${nutrient}</strong></td>
-            <td data-label="% in Fertilizer">${percentage}%</td>
-            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
-            <td data-label="PPM"><strong>${ppm.toFixed(2)} PPM</strong></td>
+            <td data-label="${i18n.t('nutrientHeader')}"><strong>${nutrient}</strong></td>
+            <td data-label="${i18n.t('percentInFertilizerHeader')}">${i18n.formatNumber(percentage)}%</td>
+            <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td data-label="${i18n.t('ppmHeader')}"><strong>${i18n.formatNumber(ppm.toFixed(2))} PPM</strong></td>
           </tr>
         `;
       });
@@ -10649,14 +11092,14 @@ function generateReversePPMExplanation() {
     // Summary table showing totals
     content += `
       <div class="explanation-section">
-        <h3>Nutrient Totals Summary</h3>
-        <p>When nutrients come from multiple fertilizers, we add them together:</p>
+        <h3>${i18n.t('nutrientTotalsSummary')}</h3>
+        <p>${i18n.t('whenNutrientsFromMultiple')}</p>
         <table class="conversion-table">
           <thead>
             <tr>
-              <th>Nutrient</th>
-              <th>Sources</th>
-              <th>Total PPM</th>
+              <th>${i18n.t('nutrientHeader')}</th>
+              <th>${i18n.t('sourcesHeader')}</th>
+              <th>${i18n.t('totalPpmHeader')}</th>
             </tr>
           </thead>
           <tbody>
@@ -10685,17 +11128,16 @@ function generateReversePPMExplanation() {
   // Oxide conversions info
   content += `
     <div class="explanation-section">
-      <h3>Understanding Oxide Conversions</h3>
+      <h3>${i18n.t('understandingOxideConversions')}</h3>
       <p>
-        Many fertilizers list nutrients in their <strong>oxide form</strong> (like P₂O₅ for phosphorus or K₂O for potassium),
-        but plants actually use the <strong>elemental form</strong>. The calculator handles this automatically!
+        ${i18n.t('oxideConversionsExplanation')}
       </p>
       <table class="conversion-table">
         <thead>
           <tr>
-            <th>Oxide Form</th>
-            <th>Elemental Form</th>
-            <th>Conversion</th>
+            <th>${i18n.t('oxideFormHeader')}</th>
+            <th>${i18n.t('elementalFormHeader')}</th>
+            <th>${i18n.t('conversionFactorHeader')}</th>
           </tr>
         </thead>
         <tbody>
@@ -10722,8 +11164,8 @@ function generateReverseIonBalanceExplanation() {
   if (!lastReverseCalculation) {
     return `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Calculation Yet</h3>
-        <p>Please run a calculation first to see the explanation.</p>
+        <h3 style="color: #856404;">${i18n.t('noCalculationYet')}</h3>
+        <p>${i18n.t('pleaseRunCalculation')}</p>
       </div>
     `;
   }
@@ -10741,41 +11183,39 @@ function generateReverseIonBalanceExplanation() {
   let content = `
     <!-- What is Ion Balance? -->
     <div class="explanation-section">
-      <h3>What is Ion Balance?</h3>
+      <h3>${i18n.t('whatIsIonBalance')}</h3>
       <p>
-        When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:
+        ${i18n.t('ionBalanceExplanation')}
       </p>
       <ul style="line-height: 1.8;">
-        <li><strong>Cations (+)</strong> - Positively charged ions like K⁺, Ca²⁺, Mg²⁺, NH₄⁺</li>
-        <li><strong>Anions (-)</strong> - Negatively charged ions like NO₃⁻, SO₄²⁻, H₂PO₄⁻</li>
+        <li>${i18n.t('cationsDescription')}</li>
+        <li>${i18n.t('anionsDescription')}</li>
       </ul>
       <p>
-        For a <span class="highlight">healthy nutrient solution</span>, the total positive charges should roughly equal the total negative charges.
-        This keeps the pH stable and prevents nutrient lockout.
+        ${i18n.t('ionBalanceImportance')}
       </p>
     </div>
 
     <!-- What is meq/L? -->
     <div class="explanation-section">
-      <h3>Understanding meq/L (Milliequivalents per Liter)</h3>
+      <h3>${i18n.t('understandingMeqL')}</h3>
       <p>
-        <strong>meq/L</strong> is a unit that measures the <strong>electrical charge</strong> of ions in solution, not their weight.
+        ${i18n.t('meqLDescription')}
       </p>
       <p>
-        Think of it like this: A calcium ion (Ca²⁺) has twice the charge of a potassium ion (K⁺), even if they weigh the same.
-        meq/L accounts for this difference in charge.
+        ${i18n.t('meqLAnalogy')}
       </p>
       <div class="formula-box">
-        <div class="formula">meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters</div>
-        <div class="description">This tells us the electrical charge contribution of each ion</div>
+        <div class="formula">${i18n.t('meqLFormula')}</div>
+        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
       </div>
       <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
         <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>Important Notes:</strong>
+          <strong>${i18n.t('importantNotes')}</strong>
         </p>
         <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li><strong>Hydration water</strong> (e.g., ·7H₂O, ·4H₂O) adds to molar mass but NOT to charge</li>
-          <li><strong>Urea</strong> doesn't form charged ions, so it's excluded from ion balance</li>
+          <li>${i18n.t('hydrationWaterNote')}</li>
+          <li>${i18n.t('ureaNote')}</li>
         </ul>
       </div>
     </div>
@@ -10784,8 +11224,8 @@ function generateReverseIonBalanceExplanation() {
   if (activeFertilizers.length === 0) {
     content += `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Fertilizers in Formula</h3>
-        <p>The calculation did not produce a valid formula. Try adjusting your target values or selecting different fertilizers.</p>
+        <h3 style="color: #856404;">${i18n.t('noFertilizersInFormula')}</h3>
+        <p>${i18n.t('noValidFormulaLong')}</p>
       </div>
     `;
   } else {
@@ -10850,15 +11290,15 @@ function generateReverseIonBalanceExplanation() {
     content += `
       <!-- Your Calculation -->
       <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
-        <h3 style="color: #17a2b8;">Your Current Solution</h3>
-        <p><strong>Solution Volume:</strong> ${volume} liters</p>
-        <p><strong>Fertilizers Used:</strong> ${activeFertilizers.length}</p>
+        <h3 style="color: #17a2b8;">${i18n.t('yourCurrentSolution')}</h3>
+        <p><strong>${i18n.t('solutionVolumeLabel')}</strong> ${i18n.formatNumber(volume)} ${i18n.t('litersUnit')}</p>
+        <p><strong>${i18n.t('fertilizersUsedLabel')}</strong> ${i18n.formatNumber(activeFertilizers.length)}</p>
       </div>
 
       <!-- Step-by-Step Breakdown -->
       <div class="explanation-section">
-        <h3>Step-by-Step Ion Calculation</h3>
-        <p>Here's how each fertilizer contributes ions to your solution:</p>
+        <h3>${i18n.t('stepByStepIonCalculation')}</h3>
+        <p>${i18n.t('howEachFertilizerContributesIons')}</p>
     `;
 
     fertilizerBreakdown.forEach((item, index) => {
@@ -10876,17 +11316,16 @@ function generateReverseIonBalanceExplanation() {
             ${formulaDisplay}
           </h4>
           <p style="margin: 10px 0 10px 38px;">
-            <strong>Amount:</strong> ${item.fert.grams.toFixed(2)} grams<br>
-            <strong>Molar Mass:</strong> ${item.ionData.molarMass} g/mol<br>
-            <strong>Moles:</strong> ${item.fert.grams.toFixed(2)} ÷ ${item.ionData.molarMass} = <strong>${item.moles.toFixed(4)} mol</strong>
+            <strong>${i18n.t('amountLabel')}</strong> ${i18n.formatNumber(item.fert.grams.toFixed(2))} ${i18n.t('gramsUnit')}<br>
+            <strong>${i18n.t('molarMassLabel')}</strong> ${i18n.formatNumber(item.ionData.molarMass)} g/mol<br>
+            <strong>${i18n.t('molesLabel')}</strong> ${i18n.formatNumber(item.fert.grams.toFixed(2))} ÷ ${i18n.formatNumber(item.ionData.molarMass)} = <strong>${i18n.formatNumber(item.moles.toFixed(4))} mol</strong>
           </p>
       `;
 
       if (hasHydrationWater) {
         content += `
           <div style="margin: 10px 0 10px 38px; padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 0.9em;">
-            <strong>About Hydration Water:</strong> The water molecules in this formula add to the molar mass
-            but do NOT contribute to the ion balance.
+            <strong>${i18n.t('hydrationWaterTitle')}</strong> ${i18n.t('hydrationWaterExplanation')}
           </div>
         `;
       }
@@ -10947,32 +11386,32 @@ function generateReverseIonBalanceExplanation() {
     content += `
       <!-- Summary -->
       <div class="explanation-section" style="background: ${statusColor}15; border-left-color: ${statusColor};">
-        <h3 style="color: ${statusColor};">Final Results</h3>
+        <h3 style="color: ${statusColor};">${i18n.t('finalResults')}</h3>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
           <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Cations (+)</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${totalCations.toFixed(2)}</div>
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalCationsPlus')}</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))}</div>
             <div style="font-size: 0.9em; color: #666;">meq/L</div>
           </div>
           <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Anions (-)</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${totalAnions.toFixed(2)}</div>
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalAnionsMinus')}</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))}</div>
             <div style="font-size: 0.9em; color: #666;">meq/L</div>
           </div>
         </div>
 
         <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${statusColor};">
-          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Imbalance Percentage</div>
-          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${imbalance.toFixed(1)}%</div>
+          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('imbalancePercentage')}</div>
+          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
           <div style="font-size: 1em; color: ${statusColor}; margin-top: 5px;">${statusText}</div>
         </div>
 
         <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
-          <h4 style="margin-top: 0;">How we calculated imbalance:</h4>
+          <h4 style="margin-top: 0;">${i18n.t('howWeCalculatedImbalance')}</h4>
           <p style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px;">
-            Average = (${totalCations.toFixed(2)} + ${totalAnions.toFixed(2)}) ÷ 2 = ${average.toFixed(2)} meq/L<br>
-            Imbalance = |${totalCations.toFixed(2)} - ${totalAnions.toFixed(2)}| ÷ ${average.toFixed(2)} × 100 = <strong>${imbalance.toFixed(1)}%</strong>
+            Average = (${i18n.formatNumber(totalCations.toFixed(2))} + ${i18n.formatNumber(totalAnions.toFixed(2))}) ÷ 2 = ${i18n.formatNumber(average.toFixed(2))} meq/L<br>
+            Imbalance = |${i18n.formatNumber(totalCations.toFixed(2))} - ${i18n.formatNumber(totalAnions.toFixed(2))}| ÷ ${i18n.formatNumber(average.toFixed(2))} × 100 = <strong>${i18n.formatNumber(imbalance.toFixed(1))}%</strong>
           </p>
         </div>
       </div>
@@ -10982,14 +11421,14 @@ function generateReverseIonBalanceExplanation() {
     if (cations.length > 0 || anions.length > 0) {
       content += `
         <div class="explanation-section">
-          <h3>Ion Breakdown by Type</h3>
+          <h3>${i18n.t('ionBreakdownByType')}</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
       `;
 
       // Cations
       content += `
         <div>
-          <h4 style="color: #007bff; margin-top: 0;">Cations (+)</h4>
+          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('cationsPlus')}</h4>
       `;
       cations.forEach(([ion, data]) => {
         const percentage = totalCations > 0 ? (data.meq / totalCations * 100).toFixed(1) : 0;
@@ -10997,9 +11436,9 @@ function generateReverseIonBalanceExplanation() {
           <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
             <div style="display: flex; justify-content: space-between;">
               <strong>${ion}</strong>
-              <span>${data.meq.toFixed(2)} meq/L</span>
+              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
             </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${percentage}% of total cations</div>
+            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalCations', {percentage})}</div>
           </div>
         `;
       });
@@ -11008,7 +11447,7 @@ function generateReverseIonBalanceExplanation() {
       // Anions
       content += `
         <div>
-          <h4 style="color: #007bff; margin-top: 0;">Anions (-)</h4>
+          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('anionsMinus')}</h4>
       `;
       anions.forEach(([ion, data]) => {
         const percentage = totalAnions > 0 ? (data.meq / totalAnions * 100).toFixed(1) : 0;
@@ -11016,9 +11455,9 @@ function generateReverseIonBalanceExplanation() {
           <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
             <div style="display: flex; justify-content: space-between;">
               <strong>${ion}</strong>
-              <span>${data.meq.toFixed(2)} meq/L</span>
+              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
             </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${percentage}% of total anions</div>
+            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalAnions', {percentage})}</div>
           </div>
         `;
       });
@@ -11031,15 +11470,14 @@ function generateReverseIonBalanceExplanation() {
   // Always include interpretation guide
   content += `
     <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-      <h3 style="color: #28a745;">Interpreting Your Results</h3>
+      <h3 style="color: #28a745;">${i18n.t('interpretingResults')}</h3>
       <ul style="line-height: 1.8;">
-        <li><strong>≤10% Imbalance:</strong> Balanced - Excellent! Your solution has good charge balance</li>
-        <li><strong>10-20% Imbalance:</strong> Caution - Acceptable, but monitor pH closely</li>
-        <li><strong>>20% Imbalance:</strong> Imbalanced - May cause pH swings and nutrient lockouts</li>
+        <li><strong>${i18n.t('imbalanceLessThan10')}</strong> ${i18n.t('imbalanceLessThan10Desc')}</li>
+        <li><strong>${i18n.t('imbalance10To20')}</strong> ${i18n.t('imbalance10To20Desc')}</li>
+        <li><strong>${i18n.t('imbalanceOver20')}</strong> ${i18n.t('imbalanceOver20Desc')}</li>
       </ul>
       <p style="margin-top: 15px;">
-        <strong>Why does this matter?</strong> Charge imbalance can cause pH to drift up or down,
-        which may lock out certain nutrients even if they're present in your solution.
+        <strong>${i18n.t('whyDoesThisMatter')}</strong> ${i18n.t('whyDoesThisMatterExplanation')}
       </p>
     </div>
   `;
@@ -11090,8 +11528,8 @@ function generateTwoTankPPMExplanation() {
   if (!currentTwoTankData) {
     return `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Calculation Yet</h3>
-        <p>Please run a calculation first to see the explanation.</p>
+        <h3 style="color: #856404;">${i18n.t('noCalculationYet')}</h3>
+        <p>${i18n.t('pleaseRunCalculation')}</p>
       </div>
     `;
   }
@@ -11106,29 +11544,29 @@ function generateTwoTankPPMExplanation() {
   let content = `
     <!-- What is PPM? -->
     <div class="explanation-section">
-      <h3>What is PPM?</h3>
+      <h3>${i18n.t('whatIsPpm')}</h3>
       <p>
-        <strong>PPM stands for "Parts Per Million"</strong> - it's a way to measure very small concentrations.
-        Think of it like this: <span class="highlight">1 PPM = 1 milligram per liter (mg/L)</span>.
+        ${i18n.t('ppmStandsFor')}
+        ${i18n.t('thinkOfItLikeThis')}
       </p>
       <p>
-        For example, 100 PPM of Nitrogen means there are 100 milligrams of nitrogen in every liter of water.
+        ${i18n.t('ppmExample')}
       </p>
     </div>
 
     <!-- The Basic Formula -->
     <div class="explanation-section">
-      <h3>The Basic Formula</h3>
+      <h3>${i18n.t('theBasicFormula')}</h3>
       <div class="formula-box">
-        <div class="formula">PPM = (grams × 1000 × percentage) ÷ liters</div>
-        <div class="description">This tells us the concentration of nutrients in your solution</div>
+        <div class="formula">${i18n.t('ppmFormulaEquation')}</div>
+        <div class="description">${i18n.t('ppmFormulaDescription')}</div>
       </div>
-      <p><strong>Where:</strong></p>
+      <p><strong>${i18n.t('whereLabel')}</strong></p>
       <ul style="line-height: 1.8;">
-        <li><strong>grams</strong> = Amount of fertilizer you're adding</li>
-        <li><strong>1000</strong> = Converts grams to milligrams (mg)</li>
-        <li><strong>percentage</strong> = The nutrient content in the fertilizer (÷ 100)</li>
-        <li><strong>liters</strong> = Volume of water in your solution</li>
+        <li>${i18n.t('formulaPartGrams')}</li>
+        <li>${i18n.t('formulaPart1000')}</li>
+        <li>${i18n.t('formulaPartPercentage')}</li>
+        <li>${i18n.t('formulaPartLiters')}</li>
       </ul>
     </div>
 
@@ -11148,8 +11586,8 @@ function generateTwoTankPPMExplanation() {
   if (allFertilizers.length === 0) {
     content += `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Fertilizers in Formula</h3>
-        <p>The calculation did not produce a valid formula.</p>
+        <h3 style="color: #856404;">${i18n.t('noFertilizersInFormula')}</h3>
+        <p>${i18n.t('noValidFormulaShort')}</p>
       </div>
     `;
   } else {
@@ -11158,8 +11596,8 @@ function generateTwoTankPPMExplanation() {
 
     content += `
       <div class="explanation-section">
-        <h3>Step-by-Step Breakdown</h3>
-        <p>Here's exactly how each fertilizer contributes to the PPM values:</p>
+        <h3>${i18n.t('stepByStepBreakdown')}</h3>
+        <p>${i18n.t('howEachFertilizerContributesToPpm')}</p>
     `;
 
     allFertilizers.forEach((fert, index) => {
@@ -11179,10 +11617,10 @@ function generateTwoTankPPMExplanation() {
             <table class="conversion-table" style="font-size: 0.9em;">
               <thead>
                 <tr>
-                  <th>Nutrient</th>
-                  <th>% in Fertilizer</th>
-                  <th>Calculation</th>
-                  <th>PPM</th>
+                  <th>${i18n.t('nutrientHeader')}</th>
+                  <th>${i18n.t('percentInFertilizerHeader')}</th>
+                  <th>${i18n.t('calculationHeader')}</th>
+                  <th>${i18n.t('ppmHeader')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -11190,7 +11628,7 @@ function generateTwoTankPPMExplanation() {
 
       Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
         const ppm = (fert.grams * 1000 * (percentage / 100)) / volume;
-        const calculation = `(${fert.grams.toFixed(2)} × 1000 × ${(percentage / 100).toFixed(4)}) ÷ ${volume}`;
+        const calculation = `(${i18n.formatNumber(fert.grams.toFixed(2))} × ${i18n.formatNumber(1000)} × ${i18n.formatNumber((percentage / 100).toFixed(4))}) ÷ ${i18n.formatNumber(volume)}`;
 
         // Track contributions for summary
         if (!nutrientContributions[nutrient]) {
@@ -11204,10 +11642,10 @@ function generateTwoTankPPMExplanation() {
 
         content += `
           <tr>
-            <td data-label="Nutrient"><strong>${nutrient}</strong></td>
-            <td data-label="% in Fertilizer">${percentage}%</td>
-            <td data-label="Calculation" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
-            <td data-label="PPM"><strong>${ppm.toFixed(2)} PPM</strong></td>
+            <td data-label="${i18n.t('nutrientHeader')}"><strong>${nutrient}</strong></td>
+            <td data-label="${i18n.t('percentInFertilizerHeader')}">${i18n.formatNumber(percentage)}%</td>
+            <td data-label="${i18n.t('calculationHeader')}" style="font-family: monospace; font-size: 0.85em;">${calculation}</td>
+            <td data-label="${i18n.t('ppmHeader')}"><strong>${i18n.formatNumber(ppm.toFixed(2))} PPM</strong></td>
           </tr>
         `;
       });
@@ -11230,10 +11668,10 @@ function generateTwoTankPPMExplanation() {
         <table class="conversion-table">
           <thead>
             <tr>
-              <th>Nutrient</th>
-              <th>Tank A PPM</th>
-              <th>Tank B PPM</th>
-              <th>Combined PPM</th>
+              <th>${i18n.t('nutrientHeader')}</th>
+              <th>${i18n.t('tankAPpmHeader')}</th>
+              <th>${i18n.t('tankBPpmHeader')}</th>
+              <th>${i18n.t('combinedPpmHeader')}</th>
             </tr>
           </thead>
           <tbody>
@@ -11264,17 +11702,16 @@ function generateTwoTankPPMExplanation() {
   // Oxide conversions info
   content += `
     <div class="explanation-section">
-      <h3>Understanding Oxide Conversions</h3>
+      <h3>${i18n.t('understandingOxideConversions')}</h3>
       <p>
-        Many fertilizers list nutrients in their <strong>oxide form</strong> (like P₂O₅ for phosphorus or K₂O for potassium),
-        but plants actually use the <strong>elemental form</strong>. The calculator handles this automatically!
+        ${i18n.t('oxideConversionsExplanation')}
       </p>
       <table class="conversion-table">
         <thead>
           <tr>
-            <th>Oxide Form</th>
-            <th>Elemental Form</th>
-            <th>Conversion</th>
+            <th>${i18n.t('oxideFormHeader')}</th>
+            <th>${i18n.t('elementalFormHeader')}</th>
+            <th>${i18n.t('conversionFactorHeader')}</th>
           </tr>
         </thead>
         <tbody>
@@ -11301,8 +11738,8 @@ function generateTwoTankIonBalanceExplanation() {
   if (!currentTwoTankData) {
     return `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Calculation Yet</h3>
-        <p>Please run a calculation first to see the explanation.</p>
+        <h3 style="color: #856404;">${i18n.t('noCalculationYet')}</h3>
+        <p>${i18n.t('pleaseRunCalculation')}</p>
       </div>
     `;
   }
@@ -11318,41 +11755,39 @@ function generateTwoTankIonBalanceExplanation() {
   let content = `
     <!-- What is Ion Balance? -->
     <div class="explanation-section">
-      <h3>What is Ion Balance?</h3>
+      <h3>${i18n.t('whatIsIonBalance')}</h3>
       <p>
-        When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:
+        ${i18n.t('ionBalanceExplanation')}
       </p>
       <ul style="line-height: 1.8;">
-        <li><strong>Cations (+)</strong> - Positively charged ions like K⁺, Ca²⁺, Mg²⁺, NH₄⁺</li>
-        <li><strong>Anions (-)</strong> - Negatively charged ions like NO₃⁻, SO₄²⁻, H₂PO₄⁻</li>
+        <li>${i18n.t('cationsDescription')}</li>
+        <li>${i18n.t('anionsDescription')}</li>
       </ul>
       <p>
-        For a <span class="highlight">healthy nutrient solution</span>, the total positive charges should roughly equal the total negative charges.
-        This keeps the pH stable and prevents nutrient lockout.
+        ${i18n.t('ionBalanceImportance')}
       </p>
     </div>
 
     <!-- What is meq/L? -->
     <div class="explanation-section">
-      <h3>Understanding meq/L (Milliequivalents per Liter)</h3>
+      <h3>${i18n.t('understandingMeqL')}</h3>
       <p>
-        <strong>meq/L</strong> is a unit that measures the <strong>electrical charge</strong> of ions in solution, not their weight.
+        ${i18n.t('meqLDescription')}
       </p>
       <p>
-        Think of it like this: A calcium ion (Ca²⁺) has twice the charge of a potassium ion (K⁺), even if they weigh the same.
-        meq/L accounts for this difference in charge.
+        ${i18n.t('meqLAnalogy')}
       </p>
       <div class="formula-box">
-        <div class="formula">meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters</div>
-        <div class="description">This tells us the electrical charge contribution of each ion</div>
+        <div class="formula">${i18n.t('meqLFormula')}</div>
+        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
       </div>
       <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
         <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>Important Notes:</strong>
+          <strong>${i18n.t('importantNotes')}</strong>
         </p>
         <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li><strong>Hydration water</strong> (e.g., ·7H₂O, ·4H₂O) adds to molar mass but NOT to charge</li>
-          <li><strong>Urea</strong> doesn't form charged ions, so it's excluded from ion balance</li>
+          <li>${i18n.t('hydrationWaterNote')}</li>
+          <li>${i18n.t('ureaNote')}</li>
         </ul>
       </div>
     </div>
@@ -11372,8 +11807,8 @@ function generateTwoTankIonBalanceExplanation() {
   if (allFertilizers.length === 0) {
     content += `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Fertilizers in Formula</h3>
-        <p>The calculation did not produce a valid formula.</p>
+        <h3 style="color: #856404;">${i18n.t('noFertilizersInFormula')}</h3>
+        <p>${i18n.t('noValidFormulaShort')}</p>
       </div>
     `;
   } else {
@@ -11566,15 +12001,14 @@ function generateTwoTankIonBalanceExplanation() {
   // Interpretation guide
   content += `
     <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-      <h3 style="color: #28a745;">Interpreting Your Results</h3>
+      <h3 style="color: #28a745;">${i18n.t('interpretingResults')}</h3>
       <ul style="line-height: 1.8;">
-        <li><strong>≤10% Imbalance:</strong> Balanced - Excellent! Your solution has good charge balance</li>
-        <li><strong>10-20% Imbalance:</strong> Caution - Acceptable, but monitor pH closely</li>
-        <li><strong>>20% Imbalance:</strong> Imbalanced - May cause pH swings and nutrient lockouts</li>
+        <li><strong>${i18n.t('imbalanceLessThan10')}</strong> ${i18n.t('imbalanceLessThan10Desc')}</li>
+        <li><strong>${i18n.t('imbalance10To20')}</strong> ${i18n.t('imbalance10To20Desc')}</li>
+        <li><strong>${i18n.t('imbalanceOver20')}</strong> ${i18n.t('imbalanceOver20Desc')}</li>
       </ul>
       <p style="margin-top: 15px;">
-        <strong>Why does this matter?</strong> Charge imbalance can cause pH to drift up or down,
-        which may lock out certain nutrients even if they're present in your solution.
+        <strong>${i18n.t('whyDoesThisMatter')}</strong> ${i18n.t('whyDoesThisMatterExplanation')}
       </p>
     </div>
   `;
@@ -11598,8 +12032,8 @@ function generateFormulaIonBalanceExplanation() {
   if (!lastFormulaCalculation) {
     return `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Calculation Yet</h3>
-        <p>Please run a calculation first to see the explanation.</p>
+        <h3 style="color: #856404;">${i18n.t('noCalculationYet')}</h3>
+        <p>${i18n.t('pleaseRunCalculation')}</p>
       </div>
     `;
   }
@@ -11617,41 +12051,39 @@ function generateFormulaIonBalanceExplanation() {
   let content = `
     <!-- What is Ion Balance? -->
     <div class="explanation-section">
-      <h3>What is Ion Balance?</h3>
+      <h3>${i18n.t('whatIsIonBalance')}</h3>
       <p>
-        When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:
+        ${i18n.t('ionBalanceExplanation')}
       </p>
       <ul style="line-height: 1.8;">
-        <li><strong>Cations (+)</strong> - Positively charged ions like K⁺, Ca²⁺, Mg²⁺, NH₄⁺</li>
-        <li><strong>Anions (-)</strong> - Negatively charged ions like NO₃⁻, SO₄²⁻, H₂PO₄⁻</li>
+        <li>${i18n.t('cationsDescription')}</li>
+        <li>${i18n.t('anionsDescription')}</li>
       </ul>
       <p>
-        For a <span class="highlight">healthy nutrient solution</span>, the total positive charges should roughly equal the total negative charges.
-        This keeps the pH stable and prevents nutrient lockout.
+        ${i18n.t('ionBalanceImportance')}
       </p>
     </div>
 
     <!-- What is meq/L? -->
     <div class="explanation-section">
-      <h3>Understanding meq/L (Milliequivalents per Liter)</h3>
+      <h3>${i18n.t('understandingMeqL')}</h3>
       <p>
-        <strong>meq/L</strong> is a unit that measures the <strong>electrical charge</strong> of ions in solution, not their weight.
+        ${i18n.t('meqLDescription')}
       </p>
       <p>
-        Think of it like this: A calcium ion (Ca²⁺) has twice the charge of a potassium ion (K⁺), even if they weigh the same.
-        meq/L accounts for this difference in charge.
+        ${i18n.t('meqLAnalogy')}
       </p>
       <div class="formula-box">
-        <div class="formula">meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters</div>
-        <div class="description">This tells us the electrical charge contribution of each ion</div>
+        <div class="formula">${i18n.t('meqLFormula')}</div>
+        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
       </div>
       <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
         <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>Important Notes:</strong>
+          <strong>${i18n.t('importantNotes')}</strong>
         </p>
         <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li><strong>Hydration water</strong> (e.g., ·7H₂O, ·4H₂O) adds to molar mass but NOT to charge</li>
-          <li><strong>Urea</strong> doesn't form charged ions, so it's excluded from ion balance</li>
+          <li>${i18n.t('hydrationWaterNote')}</li>
+          <li>${i18n.t('ureaNote')}</li>
         </ul>
       </div>
     </div>
@@ -11660,8 +12092,8 @@ function generateFormulaIonBalanceExplanation() {
   if (activeFertilizers.length === 0) {
     content += `
       <div class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-        <h3 style="color: #856404;">No Fertilizers in Formula</h3>
-        <p>The calculation did not produce a valid formula. Try adjusting your target values or selecting different fertilizers.</p>
+        <h3 style="color: #856404;">${i18n.t('noFertilizersInFormula')}</h3>
+        <p>${i18n.t('noValidFormulaLong')}</p>
       </div>
     `;
   } else {
@@ -11715,14 +12147,14 @@ function generateFormulaIonBalanceExplanation() {
 
     content += `
       <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
-        <h3 style="color: #17a2b8;">Your Current Solution</h3>
-        <p><strong>Solution Volume:</strong> ${volume} liters</p>
-        <p><strong>Fertilizers Used:</strong> ${activeFertilizers.length}</p>
+        <h3 style="color: #17a2b8;">${i18n.t('yourCurrentSolution')}</h3>
+        <p><strong>${i18n.t('solutionVolumeLabel')}</strong> ${i18n.formatNumber(volume)} ${i18n.t('litersUnit')}</p>
+        <p><strong>${i18n.t('fertilizersUsedLabel')}</strong> ${i18n.formatNumber(activeFertilizers.length)}</p>
       </div>
 
       <div class="explanation-section">
-        <h3>Step-by-Step Ion Calculation</h3>
-        <p>Here's how each fertilizer contributes ions to your solution:</p>
+        <h3>${i18n.t('stepByStepIonCalculation')}</h3>
+        <p>${i18n.t('howEachFertilizerContributesIons')}</p>
     `;
 
     fertilizerBreakdown.forEach((item, index) => {
@@ -11738,14 +12170,14 @@ function generateFormulaIonBalanceExplanation() {
             ${formulaDisplay}
           </h4>
           <p style="margin: 10px 0 10px 38px;">
-            <strong>Amount:</strong> ${item.fert.grams.toFixed(2)} grams<br>
-            <strong>Molar Mass:</strong> ${item.ionData.molarMass} g/mol<br>
-            <strong>Moles:</strong> ${item.fert.grams.toFixed(2)} ÷ ${item.ionData.molarMass} = <strong>${item.moles.toFixed(4)} mol</strong>
+            <strong>${i18n.t('amountLabel')}</strong> ${i18n.formatNumber(item.fert.grams.toFixed(2))} ${i18n.t('gramsUnit')}<br>
+            <strong>${i18n.t('molarMassLabel')}</strong> ${i18n.formatNumber(item.ionData.molarMass)} g/mol<br>
+            <strong>${i18n.t('molesLabel')}</strong> ${i18n.formatNumber(item.fert.grams.toFixed(2))} ÷ ${i18n.formatNumber(item.ionData.molarMass)} = <strong>${i18n.formatNumber(item.moles.toFixed(4))} mol</strong>
           </p>
           <div style="margin-left: 38px;">
             <table class="conversion-table" style="font-size: 0.9em;">
               <thead>
-                <tr><th>Ion</th><th>Type</th><th>Calculation</th><th>meq/L</th></tr>
+                <tr><th>${i18n.t('ionHeader')}</th><th>${i18n.t('typeHeader')}</th><th>${i18n.t('calculationHeader')}</th><th>meq/L</th></tr>
               </thead>
               <tbody>
       `;
@@ -11782,22 +12214,22 @@ function generateFormulaIonBalanceExplanation() {
 
     content += `
       <div class="explanation-section" style="background: ${statusColor}15; border-left-color: ${statusColor};">
-        <h3 style="color: ${statusColor};">Final Results</h3>
+        <h3 style="color: ${statusColor};">${i18n.t('finalResults')}</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
           <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666;">Total Cations (+)</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${totalCations.toFixed(2)}</div>
+            <div style="font-size: 0.9em; color: #666;">${i18n.t('totalCationsPlus')}</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))}</div>
             <div style="font-size: 0.9em; color: #666;">meq/L</div>
           </div>
           <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666;">Total Anions (-)</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${totalAnions.toFixed(2)}</div>
+            <div style="font-size: 0.9em; color: #666;">${i18n.t('totalAnionsMinus')}</div>
+            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))}</div>
             <div style="font-size: 0.9em; color: #666;">meq/L</div>
           </div>
         </div>
         <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${statusColor};">
-          <div style="font-size: 0.9em; color: #666;">Imbalance</div>
-          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${imbalance.toFixed(1)}%</div>
+          <div style="font-size: 0.9em; color: #666;">${i18n.t('imbalance')}</div>
+          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
           <div style="font-size: 1em; color: ${statusColor};">${statusText}</div>
         </div>
       </div>
@@ -11806,11 +12238,11 @@ function generateFormulaIonBalanceExplanation() {
 
   content += `
     <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-      <h3 style="color: #28a745;">Interpreting Your Results</h3>
+      <h3 style="color: #28a745;">${i18n.t('interpretingResults')}</h3>
       <ul style="line-height: 1.8;">
-        <li><strong>≤10% Imbalance:</strong> Balanced - Excellent!</li>
-        <li><strong>10-20% Imbalance:</strong> Caution - Monitor pH closely</li>
-        <li><strong>>20% Imbalance:</strong> Imbalanced - May cause pH swings</li>
+        <li><strong>${i18n.t('imbalanceLessThan10')}</strong> ${i18n.t('imbalanceLessThan10Desc')}</li>
+        <li><strong>${i18n.t('imbalance10To20')}</strong> ${i18n.t('imbalance10To20Desc')}</li>
+        <li><strong>${i18n.t('imbalanceOver20')}</strong> ${i18n.t('imbalanceOver20Desc')}</li>
       </ul>
     </div>
   `;
@@ -11854,18 +12286,18 @@ function copyGramsToPPMResults() {
 
   const { activeFertilizers, volume, results, ecData, ionBalance, ratios } = lastGramsToPPMCalculation;
 
-  let text = `*🌱 Fertilizer Calculator Results*\n`;
+  let text = `*${i18n.t('shareTitle')}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
   // Fertilizers used
-  text += `*📦 Fertilizers Used* (${volume}L solution)\n`;
+  text += `*${i18n.t('shareFertilizersUsed')}* ${i18n.t('shareSolutionVolume', {volume: i18n.formatNumber(volume)})}\n`;
   activeFertilizers.forEach(fert => {
-    text += `• ${fert.name}: *${fert.grams.toFixed(2)}g*\n`;
+    text += `• ${fert.name}: *${i18n.formatNumber(fert.grams.toFixed(2))}g*\n`;
   });
   text += `\n`;
 
   // PPM Results
-  text += `*📊 Nutrient Concentrations (PPM)*\n`;
+  text += `*${i18n.t('shareNutrientConcentrations')}*\n`;
 
   const displayOrder = [
     { key: 'N_total', label: 'Total N' },
@@ -11886,7 +12318,7 @@ function copyGramsToPPMResults() {
 
   displayOrder.forEach(item => {
     if (results[item.key] !== undefined && results[item.key] > 0.01) {
-      text += `• ${item.label}: *${results[item.key].toFixed(2)} ppm*\n`;
+      text += `• ${item.label}: *${i18n.formatNumber(results[item.key].toFixed(2))} ppm*\n`;
     }
   });
   text += `\n`;
@@ -11909,7 +12341,7 @@ function copyGramsToPPMResults() {
 
   // Key Ratios
   if (ratios && ratios.length > 0) {
-    text += `*📐 Key Ratios*\n`;
+    text += `*${i18n.t('shareKeyRatios')}*\n`;
     ratios.slice(0, 4).forEach(ratio => {
       text += `• ${ratio.name}: *${ratio.ratio}*\n`;
     });
@@ -11917,7 +12349,7 @@ function copyGramsToPPMResults() {
   }
 
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Generated by https://umangbhatt.in/fertilizer-calculator/_`;
+  text += `_${i18n.t('shareGeneratedBy')}_`;
 
   const button = event.target.closest('.copy-btn');
   copyToClipboard(text, button);
@@ -11932,11 +12364,11 @@ function copyPPMToGramsResults() {
 
   const { result, targets, volume, mode } = lastFormulaCalculation;
 
-  let text = `*🌱 Formula Builder Results*\n`;
+  let text = `*${i18n.t('shareFormulaBuilderTitle')}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
   // Target values
-  text += `*🎯 Target PPM Values*\n`;
+  text += `*${i18n.t('shareTargetPpmValues')}*\n`;
   const targetLabels = mode === 'elemental'
     ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
     : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
@@ -11944,13 +12376,13 @@ function copyPPMToGramsResults() {
   Object.entries(targets).forEach(([key, value]) => {
     if (value > 0) {
       const label = targetLabels[key] || key;
-      text += `• ${label}: *${value} ppm*\n`;
+      text += `${i18n.t('shareLabelValuePpm', {label: label, value: i18n.formatNumber(value)})}\n`;
     }
   });
   text += `\n`;
 
   // Fertilizers to add
-  text += `*📦 Fertilizers to Add* (${volume}L)\n`;
+  text += `*${i18n.t('shareFertilizersToAddVolume', {volume: i18n.formatNumber(volume)})}*\n`;
   const activeFertilizers = Object.entries(result.formula)
     .filter(([fertId, grams]) => grams > 0.01)
     .map(([fertId, grams]) => {
@@ -11959,16 +12391,16 @@ function copyPPMToGramsResults() {
     });
 
   if (activeFertilizers.length === 0) {
-    text += `_No suitable formula found_\n`;
+    text += `_${i18n.t('shareNoSuitableFormula')}_\n`;
   } else {
     activeFertilizers.forEach(fert => {
-      text += `• ${fert.name}: *${fert.grams.toFixed(2)}g*\n`;
+      text += `${i18n.t('shareFertilizerGrams', {name: fert.name, grams: i18n.formatNumber(fert.grams.toFixed(2))})}\n`;
     });
   }
   text += `\n`;
 
   // Achieved values
-  text += `*✅ Achieved PPM*\n`;
+  text += `*${i18n.t('shareAchievedPpm')}*\n`;
   const achievedOrder = mode === 'elemental'
     ? [
         { key: 'N_total', label: 'N' },
@@ -11990,7 +12422,7 @@ function copyPPMToGramsResults() {
   achievedOrder.forEach(item => {
     const value = result.achieved[item.key];
     if (value !== undefined && value > 0.01) {
-      text += `• ${item.label}: *${value.toFixed(1)} ppm*\n`;
+      text += `${i18n.t('shareLabelValuePpm', {label: item.label, value: i18n.formatNumber(value.toFixed(1))})}\n`;
     }
   });
   text += `\n`;
@@ -12005,15 +12437,15 @@ function copyPPMToGramsResults() {
   );
 
   if (ionBalance) {
-    text += `*⚖️ Ion Balance*\n`;
-    text += `• Cations: *${ionBalance.totalCations.toFixed(2)} meq/L*\n`;
-    text += `• Anions: *${ionBalance.totalAnions.toFixed(2)} meq/L*\n`;
-    text += `• Imbalance: *${ionBalance.imbalance.toFixed(1)}%* (${ionBalance.statusText})\n`;
+    text += `*${i18n.t('shareIonBalance')}*\n`;
+    text += `${i18n.t('shareCationsValue', {value: i18n.formatNumber(ionBalance.totalCations.toFixed(2))})}\n`;
+    text += `${i18n.t('shareAnionsValue', {value: i18n.formatNumber(ionBalance.totalAnions.toFixed(2))})}\n`;
+    text += `${i18n.t('shareImbalanceValue', {value: i18n.formatNumber(ionBalance.imbalance.toFixed(1)), status: ionBalance.statusText})}\n`;
     text += `\n`;
   }
 
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Generated by https://umangbhatt.in/fertilizer-calculator/_`;
+  text += `_${i18n.t('shareGeneratedBy')}_`;
 
   const button = event.target.closest('.copy-btn');
   copyToClipboard(text, button);
@@ -12029,11 +12461,11 @@ function copyNPKRatioResults() {
   const { result, targets, volume } = lastReverseCalculation;
   const calculationMode = document.getElementById('reverse-calculation-mode').value;
 
-  let text = `*🌱 NPK Ratio Calculator Results*\n`;
+  let text = `*${i18n.t('shareNpkRatioTitle')}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
   // Target ratios
-  text += `*🎯 Target Ratios*\n`;
+  text += `*${i18n.t('shareTargetRatios')}*\n`;
   const targetLabels = calculationMode === 'elemental'
     ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
     : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
@@ -12042,13 +12474,13 @@ function copyNPKRatioResults() {
   ['N', 'P', 'K', 'Ca', 'Mg', 'S'].forEach(key => {
     if (targets[key] > 0) {
       const label = targetLabels[key] || key;
-      targetParts.push(`${label}:${targets[key]}`);
+      targetParts.push(`${label}:${i18n.formatNumber(targets[key])}`);
     }
   });
-  text += `• Ratio: *${targetParts.join(' : ')}*\n\n`;
+  text += `${i18n.t('shareRatioValue', {ratio: targetParts.join(' : ')})}\n\n`;
 
   // Fertilizers to add
-  text += `*📦 Fertilizers to Add* (${volume}L)\n`;
+  text += `*${i18n.t('shareFertilizersToAddVolume', {volume: i18n.formatNumber(volume)})}*\n`;
   const activeFertilizers = Object.entries(result.formula)
     .filter(([fertId, grams]) => grams > 0.01)
     .map(([fertId, grams]) => {
@@ -12057,16 +12489,16 @@ function copyNPKRatioResults() {
     });
 
   if (activeFertilizers.length === 0) {
-    text += `_No suitable formula found_\n`;
+    text += `_${i18n.t('shareNoSuitableFormula')}_\n`;
   } else {
     activeFertilizers.forEach(fert => {
-      text += `• ${fert.name}: *${fert.grams.toFixed(2)}g*\n`;
+      text += `${i18n.t('shareFertilizerGrams', {name: fert.name, grams: i18n.formatNumber(fert.grams.toFixed(2))})}\n`;
     });
   }
   text += `\n`;
 
   // Achieved PPM values
-  text += `*✅ Achieved PPM*\n`;
+  text += `*${i18n.t('shareAchievedPpm')}*\n`;
   const achievedOrder = calculationMode === 'elemental'
     ? [
         { key: 'N_total', label: 'N' },
@@ -12088,18 +12520,18 @@ function copyNPKRatioResults() {
   achievedOrder.forEach(item => {
     const value = result.achieved[item.key];
     if (value !== undefined && value > 0.01) {
-      text += `• ${item.label}: *${value.toFixed(1)} ppm*\n`;
+      text += `${i18n.t('shareLabelValuePpm', {label: item.label, value: i18n.formatNumber(value.toFixed(1))})}\n`;
     }
   });
   text += `\n`;
 
   // Nitrogen breakdown
   if (result.achieved.N_NO3 > 0 || result.achieved.N_NH4 > 0) {
-    text += `*🧪 Nitrogen Forms*\n`;
-    text += `• NO₃-N: *${result.achieved.N_NO3.toFixed(1)} ppm*\n`;
-    text += `• NH₄-N: *${result.achieved.N_NH4.toFixed(1)} ppm*\n`;
+    text += `*${i18n.t('shareNitrogenForms')}*\n`;
+    text += `${i18n.t('shareNo3N', {value: i18n.formatNumber(result.achieved.N_NO3.toFixed(1))})}\n`;
+    text += `${i18n.t('shareNh4N', {value: i18n.formatNumber(result.achieved.N_NH4.toFixed(1))})}\n`;
     const nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
-    text += `• NH₄ ratio: *${nh4Percent.toFixed(0)}%*\n`;
+    text += `${i18n.t('shareNh4Ratio', {value: i18n.formatNumber(nh4Percent.toFixed(0))})}\n`;
     text += `\n`;
   }
 
@@ -12113,15 +12545,15 @@ function copyNPKRatioResults() {
   );
 
   if (ionBalance) {
-    text += `*⚖️ Ion Balance*\n`;
-    text += `• Cations: *${ionBalance.totalCations.toFixed(2)} meq/L*\n`;
-    text += `• Anions: *${ionBalance.totalAnions.toFixed(2)} meq/L*\n`;
-    text += `• Imbalance: *${ionBalance.imbalance.toFixed(1)}%* (${ionBalance.statusText})\n`;
+    text += `*${i18n.t('shareIonBalance')}*\n`;
+    text += `${i18n.t('shareCationsValue', {value: i18n.formatNumber(ionBalance.totalCations.toFixed(2))})}\n`;
+    text += `${i18n.t('shareAnionsValue', {value: i18n.formatNumber(ionBalance.totalAnions.toFixed(2))})}\n`;
+    text += `${i18n.t('shareImbalanceValue', {value: i18n.formatNumber(ionBalance.imbalance.toFixed(1)), status: ionBalance.statusText})}\n`;
     text += `\n`;
   }
 
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Generated by https://umangbhatt.in/fertilizer-calculator/_`;
+  text += `_${i18n.t('shareGeneratedBy')}_`;
 
   const button = event.target.closest('.copy-btn');
   copyToClipboard(text, button);
