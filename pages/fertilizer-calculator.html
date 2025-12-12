@@ -2024,7 +2024,110 @@ permalink: /fertilizer-calculator/
       margin-left: 0 !important;
     }
   }
+
+  /* Language Selection Splash */
+  .language-splash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+  }
+
+  .language-splash-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: splashFadeIn 0.3s ease-out;
+  }
+
+  @keyframes splashFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .language-splash-modal h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.5em;
+    color: #333;
+  }
+
+  .language-splash-modal p {
+    margin: 0 0 30px 0;
+    color: #666;
+    font-size: 0.95em;
+  }
+
+  .language-splash-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .language-splash-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.1em;
+  }
+
+  .language-splash-btn:hover {
+    border-color: #007bff;
+    background: #f0f7ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+  }
+
+  .language-splash-btn .lang-native {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .language-splash-btn .lang-english {
+    color: #888;
+    font-size: 0.85em;
+  }
 </style>
+
+<!-- Language Selection Splash (shown on first visit) -->
+<div id="language-splash" class="language-splash-overlay" style="display: none;">
+  <div class="language-splash-modal">
+    <h2>Select Your Language</h2>
+    <p>ભાષા પસંદ કરો</p>
+    <div class="language-splash-options">
+      <button class="language-splash-btn" onclick="selectLanguageFromSplash('en')">
+        <span class="lang-native">English</span>
+      </button>
+      <button class="language-splash-btn" onclick="selectLanguageFromSplash('gu')">
+        <span class="lang-native">ગુજરાતી</span>
+        <span class="lang-english">(Gujarati)</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Progress Bar Overlay -->
 <div id="progress-overlay" class="progress-overlay">
@@ -6644,6 +6747,13 @@ function init() {
   // Add Enter key support for wizard steps
   setupWizardKeyboardNavigation();
 
+  // Check if this is the first visit (no language saved)
+  const savedLang = localStorage.getItem('fertCalcLanguage');
+  if (!savedLang) {
+    // Show language selection splash
+    showLanguageSplash();
+  }
+
   // Initialize i18n (update UI with current language)
   i18n.updateUI();
 
@@ -6651,6 +6761,32 @@ function init() {
   const langSelect = document.getElementById('language-select');
   if (langSelect) {
     langSelect.value = i18n.currentLanguage;
+  }
+}
+
+// Show the language selection splash screen
+function showLanguageSplash() {
+  const splash = document.getElementById('language-splash');
+  if (splash) {
+    splash.style.display = 'flex';
+  }
+}
+
+// Handle language selection from splash screen
+function selectLanguageFromSplash(langCode) {
+  // Hide splash
+  const splash = document.getElementById('language-splash');
+  if (splash) {
+    splash.style.display = 'none';
+  }
+
+  // Set the language (this also saves to localStorage)
+  i18n.setLanguage(langCode);
+
+  // Update the language selector dropdown
+  const langSelect = document.getElementById('language-select');
+  if (langSelect) {
+    langSelect.value = langCode;
   }
 }
 
