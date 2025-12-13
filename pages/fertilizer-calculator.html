@@ -2394,7 +2394,7 @@ function backToModeSelector() {
 // Store pending wizard calculation for two-tank decision
 let pendingWizardCalculation = null;
 
-function calculateFromWizardGrams() {
+async function calculateFromWizardGrams() {
   // Get the volume from wizard input (with Vue fallback)
   const wizardVolume = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
 
@@ -2450,7 +2450,7 @@ function calculateFromWizardGrams() {
   }
 
   // Run the calculation (this renders results in the main calculator)
-  calculate();
+  await calculate();
 
   // Copy results to wizard results container
   const resultsContainer = document.getElementById('wizard-results-container');
@@ -3029,10 +3029,12 @@ function setupWizardKeyboardNavigation() {
 let lastGramsToPPMCalculation = null;
 
 // Main calculation function
-function calculate() {
+async function calculate() {
   // Now handled by Vue
   if (window.vueApp && window.vueApp.calculatePPM) {
     window.vueApp.calculatePPM();
+    // Wait for Vue to render the results
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 }
 
@@ -3880,6 +3882,8 @@ async function buildFormula() {
   // Now handled by Vue
   if (window.vueApp && window.vueApp.buildFormulaVue) {
     window.vueApp.buildFormulaVue();
+    // Wait for Vue to render the results
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 }
 
@@ -4251,6 +4255,8 @@ async function calculateReverse() {
   // Now handled by Vue
   if (window.vueApp && window.vueApp.calculateReverseVue) {
     window.vueApp.calculateReverseVue();
+    // Wait for Vue to render the results
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 }
 
