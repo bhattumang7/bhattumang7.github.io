@@ -4429,6 +4429,11 @@ const i18n = {
 
   // Refresh dynamically generated content (results, tables) after language change
   refreshDynamicContent() {
+    // Update wizard mode indicator
+    if (typeof selectedMode !== 'undefined' && selectedMode && typeof updateWizardModeIndicator === 'function') {
+      updateWizardModeIndicator();
+    }
+
     // Re-render Grams → PPM results
     if (typeof lastGramsToPPMCalculation !== 'undefined' && lastGramsToPPMCalculation) {
       const { activeFertilizers, volume, results, ecData, ionBalance, ratios } = lastGramsToPPMCalculation;
@@ -6064,6 +6069,27 @@ function proceedToCalculator() {
 
   // Scroll to top smoothly
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Update the wizard mode indicator text (called on language change)
+function updateWizardModeIndicator() {
+  if (!selectedMode) return;
+
+  const wizardVolume = parseFloat(document.getElementById('wizard-volume')?.value) || 10;
+  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + i18n.formatNumber(wizardVolume) + i18n.t('litersShort');
+
+  if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
+    indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
+  }
+  if (MODES_WITH_EC.includes(selectedMode)) {
+    const ecValue = selectedEC.replace('ec:', '');
+    indicatorText += ' · ' + ecValue + ' mS/cm';
+  }
+
+  const modeIndicator = document.getElementById('wizard-current-mode');
+  if (modeIndicator) {
+    modeIndicator.innerHTML = indicatorText;
+  }
 }
 
 function backToECStep() {
