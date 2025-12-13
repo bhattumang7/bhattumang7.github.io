@@ -4430,7 +4430,7 @@ const i18n = {
   // Refresh dynamically generated content (results, tables) after language change
   refreshDynamicContent() {
     // Update wizard mode indicator
-    if (typeof selectedMode !== 'undefined' && selectedMode && typeof updateWizardModeIndicator === 'function') {
+    if (typeof updateWizardModeIndicator === 'function') {
       updateWizardModeIndicator();
     }
 
@@ -6086,9 +6086,21 @@ function updateWizardModeIndicator() {
     indicatorText += ' · ' + ecValue + ' mS/cm';
   }
 
+  // Update both mode indicators (calculator page and results page)
   const modeIndicator = document.getElementById('wizard-current-mode');
   if (modeIndicator) {
     modeIndicator.innerHTML = indicatorText;
+  }
+
+  const resultsIndicator = document.getElementById('wizard-results-mode');
+  if (resultsIndicator) {
+    // Check if two-tank view is active
+    const twoTankSection = document.getElementById('two-tank-section');
+    if (twoTankSection && twoTankSection.style.display !== 'none') {
+      resultsIndicator.innerHTML = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
+    } else {
+      resultsIndicator.innerHTML = indicatorText;
+    }
   }
 }
 
