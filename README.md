@@ -6,25 +6,39 @@ Personal blog and portfolio website built with Jekyll.
 
 ### Quick Start (Pre-built Image - Recommended)
 
-This method pre-bakes all 98 gem dependencies into a custom Docker image, reducing startup time from ~2+ minutes to ~35 seconds (just site generation, no network downloads).
+This method pre-bakes all 98 gem dependencies into a custom Docker image, reducing startup time from ~2+ minutes to ~27 seconds (just site generation, no network downloads).
 
-**Step 1:** Build the image once (only needed initially or when `Gemfile` changes):
-
-```bash
-docker build -t my-jekyll .
-```
-
-**Step 2:** Run the server:
+**One-liner (builds image if missing, then runs):**
 
 ```bash
 # Windows (Git Bash)
-MSYS_NO_PATHCONV=1 docker run --rm -p 4000:4000 -p 35729:35729 -v "/c/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io:/srv/jekyll" my-jekyll
+docker image inspect my-jekyll:latest >/dev/null 2>&1 || docker build -t my-jekyll:latest . && \
+MSYS_NO_PATHCONV=1 docker run --rm -p 4000:4000 -p 35729:35729 -v "/c/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io:/srv/jekyll" my-jekyll:latest
 
 # Mac/Linux
-docker run --rm -p 4000:4000 -p 35729:35729 -v "$(pwd):/srv/jekyll" my-jekyll
+docker image inspect my-jekyll:latest >/dev/null 2>&1 || docker build -t my-jekyll:latest . && \
+docker run --rm -p 4000:4000 -p 35729:35729 -v "$(pwd):/srv/jekyll" my-jekyll:latest
+```
+
+**Or step-by-step:**
+
+```bash
+# Step 1: Build image (only needed once, or when Gemfile changes)
+docker build -t my-jekyll:latest .
+
+# Step 2: Run the server
+# Windows (Git Bash)
+MSYS_NO_PATHCONV=1 docker run --rm -p 4000:4000 -p 35729:35729 -v "/c/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io:/srv/jekyll" my-jekyll:latest
+
+# Mac/Linux
+docker run --rm -p 4000:4000 -p 35729:35729 -v "$(pwd):/srv/jekyll" my-jekyll:latest
 ```
 
 The site will be available at `http://localhost:4000`.
+
+**When to rebuild the image:**
+- After modifying `Gemfile` or `Gemfile.lock`
+- Run: `docker build -t my-jekyll:latest .`
 
 ---
 
