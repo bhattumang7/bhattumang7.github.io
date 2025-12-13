@@ -35,6 +35,26 @@
       return numStr.replace(/[0-9]/g, digit => numerals[parseInt(digit)]);
     },
 
+    // Get localized fertilizer name
+    getFertilizerName(fert) {
+      if (!fert) return '';
+      const key = 'fert_' + fert.id;
+      const translated = this.t(key);
+      // If translation exists (not returning the key itself), use it
+      if (translated !== key) {
+        return translated;
+      }
+      // Fallback to original name
+      return fert.name;
+    },
+
+    // Get localized fertilizer aliases (with localized numerals)
+    getFertilizerAliases(fert) {
+      if (!fert || !fert.aliases || fert.aliases.length === 0) return '';
+      // Localize numbers in each alias
+      return fert.aliases.map(alias => this.formatNumber(alias)).join(', ');
+    },
+
     // Format nutrient key into display-friendly label with proper subscripts
     formatNutrientLabel(nutrientKey) {
       const labelMap = {
@@ -158,6 +178,14 @@
         const { tankA, tankB, volume, mode, sourceType, achieved, targets } = currentTwoTankData;
         window.vueApp.setTwoTankResults(tankA, tankB, volume, mode, sourceType, achieved, targets);
       }
+
+      // After Vue re-renders, refresh wizard results container (which uses copied HTML)
+      // Use setTimeout to ensure Vue has finished rendering
+      setTimeout(() => {
+        if (typeof window.refreshWizardResults === 'function') {
+          window.refreshWizardResults();
+        }
+      }, 100);
     },
 
     // Initialize language from localStorage or browser preference

@@ -6,6 +6,7 @@ permalink: /fertilizer-calculator/
 
 <link rel="stylesheet" href="{{ '/assets/css/fertilizer-calculator.css' | relative_url }}">
 
+{% raw %}
 <!-- Progress Bar Overlay -->
 <div id="progress-overlay" class="progress-overlay">
   <div class="progress-container">
@@ -103,7 +104,7 @@ permalink: /fertilizer-calculator/
     <p data-i18n="volumeDescription">Enter the total volume of water you'll be mixing your fertilizers into.</p>
 
     <div class="volume-step-input">
-      <input type="number" id="wizard-volume" v-model.number="wizardVolume" min="0.1" step="0.1" required @keypress.enter="proceedFromVolumeStep()">
+      <input type="number" id="wizard-volume" v-model.number="wizardVolume" min="0.1" step="0.1" required onkeydown="if(event.key==='Enter')proceedFromVolumeStep()">
       <span data-i18n="liters">liters</span>
     </div>
 
@@ -204,8 +205,8 @@ permalink: /fertilizer-calculator/
                  :checked="wizardGramsFertilizers[fert.id]?.checked"
                  @change="toggleWizardGramsFertilizer(fert.id)">
           <label :for="'wizard-grams-check-' + fert.id" class="wizard-fert-label">
-            <span class="wizard-fert-name">{{ fert.name }}</span>
-            <span v-if="fert.aliases && fert.aliases.length" class="wizard-fert-aliases">{{ fert.aliases.join(', ') }}</span>
+            <span class="wizard-fert-name">{{ i18n.getFertilizerName(fert) }}</span>
+            <span v-if="fert.aliases && fert.aliases.length" class="wizard-fert-aliases">{{ i18n.getFertilizerAliases(fert) }}</span>
           </label>
           <input type="number"
                  class="wizard-grams-input"
@@ -334,8 +335,8 @@ permalink: /fertilizer-calculator/
                  :checked="wizardAvailFertilizers[fert.id]"
                  @change="toggleWizardAvailFertilizer(fert.id)">
           <label :for="'wizard-avail-check-' + fert.id" class="wizard-fert-label">
-            <span class="wizard-fert-name">{{ fert.name }}</span>
-            <span v-if="fert.aliases && fert.aliases.length" class="wizard-fert-aliases">{{ fert.aliases.join(', ') }}</span>
+            <span class="wizard-fert-name">{{ i18n.getFertilizerName(fert) }}</span>
+            <span v-if="fert.aliases && fert.aliases.length" class="wizard-fert-aliases">{{ i18n.getFertilizerAliases(fert) }}</span>
           </label>
         </div>
       </div>
@@ -459,7 +460,7 @@ permalink: /fertilizer-calculator/
               </div>
               <div class="fertilizer-info">
                 <div class="fertilizer-name">
-                  <label :for="'check-' + fert.id">{{ fert.name }}</label>
+                  <label :for="'check-' + fert.id">{{ i18n.getFertilizerName(fert) }}</label>
                 </div>
                 <div class="fertilizer-composition">{{ formatComposition(fert) }}</div>
               </div>
@@ -480,7 +481,7 @@ permalink: /fertilizer-calculator/
     </div>
 
   <!-- Vue-powered Grams to PPM Results Sections -->
-  <div class="results-section" id="selected-fertilizers-section" v-show="gramsToPpmDisplayData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')">
+  <div class="results-section" id="selected-fertilizers-section" v-if="gramsToPpmDisplayData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')">
     <div class="results-header">
       <h2>{{ i18n.t('selectedFertilizers') }}</h2>
       <div id="grams-to-ppm-header-buttons" style="display: flex; gap: 10px;">
@@ -493,7 +494,7 @@ permalink: /fertilizer-calculator/
     <div id="selected-fertilizers-list">
       <div v-for="fert in gramsToPpmDisplayData.fertilizers" :key="fert.id" class="selected-fertilizer-item">
         <div class="selected-fertilizer-info">
-          <div class="selected-fertilizer-name"><span class="fertilizer-number">{{ fert.index }}.</span> {{ fert.name }}</div>
+          <div class="selected-fertilizer-name"><span class="fertilizer-number">{{ fert.index }}.</span> {{ i18n.getFertilizerName(fert) }}</div>
           <div class="selected-fertilizer-composition">{{ fert.composition }}</div>
         </div>
         <div class="selected-fertilizer-amount">{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
@@ -507,7 +508,7 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <div class="results-section" id="results" v-show="gramsToPpmDisplayData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
+  <div class="results-section" id="results" v-if="gramsToPpmDisplayData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>
       <span>{{ i18n.t('resultsPpm') }}</span>
       <span class="info-icon" onclick="openPPMExplanation()" :title="i18n.t('clickToLearnPpm')">?</span>
@@ -516,7 +517,7 @@ permalink: /fertilizer-calculator/
       <div v-for="item in gramsToPpmDisplayData.displayOrder" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
         <div class="result-label">{{ item.label }}</div>
         <div class="result-value">
-          {{ item.value.toFixed(2) }}
+          {{ (item.value || 0).toFixed(2) }}
           <span class="result-unit">ppm</span>
         </div>
       </div>
@@ -526,7 +527,7 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <div class="results-section" id="ion-balance-section" v-show="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ionBalance && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
+  <div class="results-section" id="ion-balance-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ionBalance && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>
       <span>{{ i18n.t('ionBalance') }}</span>
       <span class="info-icon" onclick="openIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
@@ -554,7 +555,7 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <div class="results-section" id="ratio-analysis-section" v-show="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ratios.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
+  <div class="results-section" id="ratio-analysis-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
       <div v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
@@ -562,7 +563,7 @@ permalink: /fertilizer-calculator/
         <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ ratio.ratio }}</div>
         <div style="font-size: 0.85em; color: #666;">
           <span v-for="(label, i) in ratio.labels" :key="i">
-            {{ label }}: {{ ratio.values[i].toFixed(1) }} {{ ratio.unit || 'ppm' }}<span v-if="i < ratio.labels.length - 1"> | </span>
+            {{ label }}: {{ (ratio.values[i] || 0).toFixed(1) }} {{ ratio.unit || 'ppm' }}<span v-if="i < ratio.labels.length - 1"> | </span>
           </span>
         </div>
       </div>
@@ -572,7 +573,7 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <div class="results-section" id="ec-tds-section" v-show="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ecPrediction && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
+  <div class="results-section" id="ec-tds-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ecPrediction && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>{{ i18n.t('achievedEc') }}</h2>
     <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
       <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: gramsToPpmDisplayData.ecPrediction.color + '22', borderLeft: '4px solid ' + gramsToPpmDisplayData.ecPrediction.color }">
@@ -583,7 +584,7 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <div class="results-section" id="warnings-section" v-show="gramsToPpmDisplayData.show && gramsToPpmDisplayData.warnings.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
+  <div class="results-section" id="warnings-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
     <div v-for="(warning, idx) in gramsToPpmDisplayData.warnings" :key="idx" :class="warning.level === 'warning' ? 'warning-box' : warning.level === 'error' ? 'error-box' : 'conversion-note'" style="margin-bottom: 10px;">
       <strong>{{ warning.level === 'warning' ? '⚠️' : warning.level === 'error' ? '❌' : 'ℹ️' }} {{ warning.category }}</strong><br>
@@ -592,7 +593,7 @@ permalink: /fertilizer-calculator/
   </div>
 
   <!-- Vue-powered Two-Tank Results Section for Grams to PPM -->
-  <div class="results-section two-tank-results" v-show="twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm'" style="margin-top: 20px;">
+  <div class="results-section two-tank-results" v-if="twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm'" style="margin-top: 20px;">
     <!-- Header with copy button and back button -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
       <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
@@ -625,7 +626,7 @@ permalink: /fertilizer-calculator/
       </div>
       <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
         <div v-for="fert in twoTankDisplayData.tankA.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
-          <span>{{ fert.name }}</span>
+          <span>{{ i18n.getFertilizerName(fert) }}</span>
           <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
         </div>
         <div v-if="twoTankDisplayData.tankA.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #007bff20; border-radius: 4px; border-top: 2px solid #007bff; margin-top: 5px;">
@@ -661,7 +662,7 @@ permalink: /fertilizer-calculator/
           </tr>
           <tr v-for="item in twoTankDisplayData.tankA.ppmData" :key="item.label" style="background: white;">
             <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ item.label }}</td>
-            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">{{ i18n.formatNumber(item.value.toFixed(2)) }}</td>
+            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">{{ i18n.formatNumber((item.value || 0).toFixed(2)) }}</td>
           </tr>
         </table>
 
@@ -714,7 +715,7 @@ permalink: /fertilizer-calculator/
       </div>
       <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
         <div v-for="fert in twoTankDisplayData.tankB.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
-          <span>{{ fert.name }}</span>
+          <span>{{ i18n.getFertilizerName(fert) }}</span>
           <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
         </div>
         <div v-if="twoTankDisplayData.tankB.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fd7e1420; border-radius: 4px; border-top: 2px solid #fd7e14; margin-top: 5px;">
@@ -750,7 +751,7 @@ permalink: /fertilizer-calculator/
           </tr>
           <tr v-for="item in twoTankDisplayData.tankB.ppmData" :key="item.label" style="background: white;">
             <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ item.label }}</td>
-            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">{{ i18n.formatNumber(item.value.toFixed(2)) }}</td>
+            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">{{ i18n.formatNumber((item.value || 0).toFixed(2)) }}</td>
           </tr>
         </table>
 
@@ -882,8 +883,8 @@ permalink: /fertilizer-calculator/
                    :checked="availableFertilizers[fert.id]"
                    @change="toggleAvailableFertilizer(fert.id)">
             <label :for="'available-' + fert.id">
-              <span class="fertilizer-label-name">{{ fert.name }}</span>
-              <span v-if="fert.aliases && fert.aliases.length" class="fertilizer-label-aliases">{{ fert.aliases.join(', ') }}</span>
+              <span class="fertilizer-label-name">{{ i18n.getFertilizerName(fert) }}</span>
+              <span v-if="fert.aliases && fert.aliases.length" class="fertilizer-label-aliases">{{ i18n.getFertilizerAliases(fert) }}</span>
             </label>
           </div>
         </div>
@@ -906,7 +907,7 @@ permalink: /fertilizer-calculator/
     </div>
 
     <!-- Vue-powered Formula Builder Results Section -->
-    <div class="results-section" id="formula-results" v-show="formulaResultsData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'formula')">
+    <div class="results-section" id="formula-results" v-if="formulaResultsData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'formula')">
       <div class="results-header" id="formula-results-header">
         <h2>{{ i18n.t('recommendedFormula') }}</h2>
         <div id="formula-header-buttons" style="display: flex; gap: 10px;">
@@ -924,7 +925,7 @@ permalink: /fertilizer-calculator/
         <!-- Fertilizer list -->
         <div v-for="fert in formulaResultsData.fertilizers" :key="fert.id" class="formula-fertilizer">
           <div class="formula-fertilizer-info">
-            <div class="formula-fertilizer-name">{{ fert.name }}</div>
+            <div class="formula-fertilizer-name">{{ i18n.getFertilizerName(fert) }}</div>
             <div class="formula-fertilizer-composition">{{ fert.composition }}</div>
           </div>
           <div class="formula-fertilizer-amount">{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
@@ -1054,7 +1055,7 @@ permalink: /fertilizer-calculator/
     </div>
 
     <!-- Vue-powered Two-Tank Results Section for Formula Builder -->
-    <div class="results-section two-tank-results" v-show="twoTankDisplayData.show && twoTankDisplayData.sourceType === 'formula'" style="margin-top: 20px;">
+    <div class="results-section two-tank-results" v-if="twoTankDisplayData.show && twoTankDisplayData.sourceType === 'formula'" style="margin-top: 20px;">
       <!-- Header with copy button and back button -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
@@ -1084,7 +1085,7 @@ permalink: /fertilizer-calculator/
         <div v-if="twoTankDisplayData.tankA.fertilizers.length === 0" style="color: #999; font-style: italic;">{{ i18n.t('noFertilizersInTank') || 'No fertilizers in this tank' }}</div>
         <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
           <div v-for="fert in twoTankDisplayData.tankA.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
-            <span>{{ fert.name }}</span>
+            <span>{{ i18n.getFertilizerName(fert) }}</span>
             <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
           </div>
           <div v-if="twoTankDisplayData.tankA.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #007bff20; border-radius: 4px; border-top: 2px solid #007bff; margin-top: 5px;">
@@ -1119,7 +1120,7 @@ permalink: /fertilizer-calculator/
         <div v-if="twoTankDisplayData.tankB.fertilizers.length === 0" style="color: #999; font-style: italic;">{{ i18n.t('noFertilizersInTank') || 'No fertilizers in this tank' }}</div>
         <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
           <div v-for="fert in twoTankDisplayData.tankB.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
-            <span>{{ fert.name }}</span>
+            <span>{{ i18n.getFertilizerName(fert) }}</span>
             <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
           </div>
           <div v-if="twoTankDisplayData.tankB.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fd7e1420; border-radius: 4px; border-top: 2px solid #fd7e14; margin-top: 5px;">
@@ -1254,8 +1255,8 @@ permalink: /fertilizer-calculator/
                    :checked="reverseFertilizers[fert.id]?.checked"
                    @change="toggleReverseFertilizer(fert.id)">
             <label :for="'reverse-' + fert.id">
-              <span class="fertilizer-label-name">{{ fert.name }}</span>
-              <span v-if="fert.aliases && fert.aliases.length" class="fertilizer-label-aliases">{{ fert.aliases.join(', ') }}</span>
+              <span class="fertilizer-label-name">{{ i18n.getFertilizerName(fert) }}</span>
+              <span v-if="fert.aliases && fert.aliases.length" class="fertilizer-label-aliases">{{ i18n.getFertilizerAliases(fert) }}</span>
             </label>
             <div class="fertilizer-priority">
               <input type="number"
@@ -1288,7 +1289,7 @@ permalink: /fertilizer-calculator/
     </div>
 
     <!-- Vue-powered Reverse Results Section -->
-    <div class="results-section" id="reverse-results" v-show="reverseResultsData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'reverse')">
+    <div class="results-section" id="reverse-results" v-if="reverseResultsData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'reverse')">
       <div class="results-header" id="reverse-results-header">
         <h2>{{ i18n.t('requiredFertilizers') }}</h2>
         <div id="reverse-header-buttons" style="display: flex; gap: 10px;">
@@ -1313,7 +1314,7 @@ permalink: /fertilizer-calculator/
         <template v-else>
           <div v-for="fert in reverseResultsData.fertilizers" :key="fert.id" class="formula-fertilizer">
             <div class="formula-fertilizer-info">
-              <div class="formula-fertilizer-name">{{ fert.name }}</div>
+              <div class="formula-fertilizer-name">{{ i18n.getFertilizerName(fert) }}</div>
               <div class="formula-fertilizer-composition">{{ fert.composition }}</div>
             </div>
             <div class="formula-fertilizer-amount">{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
@@ -1468,7 +1469,7 @@ permalink: /fertilizer-calculator/
     </div>
 
     <!-- Vue-powered Two-Tank Results Section for Reverse Calculator -->
-    <div class="results-section two-tank-results" v-show="twoTankDisplayData.show && twoTankDisplayData.sourceType === 'reverse'" style="margin-top: 20px;">
+    <div class="results-section two-tank-results" v-if="twoTankDisplayData.show && twoTankDisplayData.sourceType === 'reverse'" style="margin-top: 20px;">
       <!-- Header with copy button and back button -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
@@ -1498,7 +1499,7 @@ permalink: /fertilizer-calculator/
         <div v-if="twoTankDisplayData.tankA.fertilizers.length === 0" style="color: #999; font-style: italic;">{{ i18n.t('noFertilizersInTank') || 'No fertilizers in this tank' }}</div>
         <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
           <div v-for="fert in twoTankDisplayData.tankA.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
-            <span>{{ fert.name }}</span>
+            <span>{{ i18n.getFertilizerName(fert) }}</span>
             <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
           </div>
           <div v-if="twoTankDisplayData.tankA.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #007bff20; border-radius: 4px; border-top: 2px solid #007bff; margin-top: 5px;">
@@ -1533,7 +1534,7 @@ permalink: /fertilizer-calculator/
         <div v-if="twoTankDisplayData.tankB.fertilizers.length === 0" style="color: #999; font-style: italic;">{{ i18n.t('noFertilizersInTank') || 'No fertilizers in this tank' }}</div>
         <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
           <div v-for="fert in twoTankDisplayData.tankB.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
-            <span>{{ fert.name }}</span>
+            <span>{{ i18n.getFertilizerName(fert) }}</span>
             <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
           </div>
           <div v-if="twoTankDisplayData.tankB.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fd7e1420; border-radius: 4px; border-top: 2px solid #fd7e14; margin-top: 5px;">
@@ -1638,7 +1639,7 @@ permalink: /fertilizer-calculator/
               <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step">
                 <h4 style="margin-top: 0; color: #007bff;">
                   <span class="step-number">{{ index + 1 }}</span>
-                  {{ fert.name }}
+                  {{ i18n.getFertilizerName(fert) }}
                 </h4>
                 <p style="margin: 10px 0 10px 38px;"><strong>{{ i18n.t('amountUsedLabel') }}</strong> {{ formatNumber(fert.grams) }} {{ i18n.t('gramsUnit') }}</p>
                 <div style="margin-left: 38px;">
@@ -1769,6 +1770,7 @@ permalink: /fertilizer-calculator/
   </div><!-- End calculator-content -->
 
 </div>
+{% endraw %}
 
 <!-- Legacy static modals removed - now using Vue modal component -->
 
@@ -1787,8 +1789,8 @@ permalink: /fertilizer-calculator/
 <script src="/scripts/locales/gu.js"></script>
 <script src="/scripts/i18n.js"></script>
 
-<!-- Vue 3 CDN -->
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<!-- Vue 3 CDN (using dev build for better error messages - switch back to .prod.js for production) -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <script>
 // =============================================================================
@@ -2389,8 +2391,8 @@ function backToModeSelector() {
 let pendingWizardCalculation = null;
 
 function calculateFromWizardGrams() {
-  // Get the volume from wizard input
-  const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
+  // Get the volume from wizard input (with Vue fallback)
+  const wizardVolume = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
 
   // Update volume in Vue app if available, otherwise in DOM
   if (window.vueApp) {
@@ -2601,7 +2603,7 @@ async function calculateFromWizardFertilizerSelect() {
       updateFormulaCalculationMode();
     }
 
-    // Transfer target PPM values from Vue state to main calculator inputs
+    // Transfer target PPM values from wizard Vue state to main calculator Vue state and DOM
     const wTargets = window.vueApp?.wizardTargets || {};
     const ppmMapping = {
       'N': 'target-n',
@@ -2612,6 +2614,15 @@ async function calculateFromWizardFertilizerSelect() {
       'S': 'target-s'
     };
 
+    // Sync to Vue state (formulaTargets) - this is what buildFormulaVue() reads from
+    if (window.vueApp && window.vueApp.formulaTargets) {
+      Object.keys(ppmMapping).forEach(field => {
+        window.vueApp.formulaTargets[field] = wTargets[field] || '';
+      });
+      window.vueApp.formulaTargets.Si = wTargets.Si || '0';
+    }
+
+    // Also sync to DOM for backwards compatibility
     Object.entries(ppmMapping).forEach(([vueField, formulaField]) => {
       const formulaInput = document.getElementById(formulaField);
       if (formulaInput) {
@@ -2623,6 +2634,12 @@ async function calculateFromWizardFertilizerSelect() {
     const formulaSiInput = document.getElementById('target-si');
     if (formulaSiInput) {
       formulaSiInput.value = wTargets.Si || '0';
+    }
+
+    // Sync volume and calculation mode to Vue state
+    if (window.vueApp) {
+      window.vueApp.formulaVolume = wizardVolume;
+      window.vueApp.formulaCalcMode = selectedCalcMode;
     }
 
     // Transfer fertilizer selections to main calculator Vue state
@@ -2666,7 +2683,7 @@ async function calculateFromWizardFertilizerSelect() {
       reverseConcentration.value = selectedEC;
     }
 
-    // Transfer ratio values from Vue state to main calculator inputs
+    // Transfer ratio values from wizard Vue state to main calculator Vue state and DOM
     const wRatios = window.vueApp?.wizardRatios || {};
     const ratioMapping = {
       'N': 'reverse-n',
@@ -2677,6 +2694,15 @@ async function calculateFromWizardFertilizerSelect() {
       'S': 'reverse-s'
     };
 
+    // Sync to Vue state (ratioTargets) - this is what calculateReverseVue() reads from
+    if (window.vueApp && window.vueApp.ratioTargets) {
+      Object.keys(ratioMapping).forEach(field => {
+        window.vueApp.ratioTargets[field] = wRatios[field] || '';
+      });
+      window.vueApp.ratioTargets.Si = wRatios.Si || '0';
+    }
+
+    // Also sync to DOM for backwards compatibility
     Object.entries(ratioMapping).forEach(([vueField, reverseField]) => {
       const reverseInput = document.getElementById(reverseField);
       if (reverseInput) {
@@ -2690,10 +2716,19 @@ async function calculateFromWizardFertilizerSelect() {
       reverseSiInput.value = wRatios.Si || '0';
     }
 
+    // Sync volume and EC to Vue state
+    if (window.vueApp) {
+      window.vueApp.ratioVolume = wizardVolume;
+      window.vueApp.ratioTargetEC = selectedEC;
+    }
+
     // Transfer fertilizer selections to main calculator Vue state
     if (window.vueApp && window.vueApp.reverseFertilizers) {
       FERTILIZERS.forEach(fert => {
-        window.vueApp.reverseFertilizers[fert.id] = selectedFerts.includes(fert.id);
+        // reverseFertilizers uses { checked: boolean, priority: number } structure
+        if (window.vueApp.reverseFertilizers[fert.id]) {
+          window.vueApp.reverseFertilizers[fert.id].checked = selectedFerts.includes(fert.id);
+        }
       });
     }
 
@@ -2829,6 +2864,51 @@ function backFromTwoTankQuestion() {
   // Show previous step or fallback to fertilizer select
   showWizardStep(previousStep || 'fertilizer-select-step');
 }
+
+// Refresh wizard results display after language change
+// This re-copies the Vue-rendered HTML to the wizard container
+function refreshWizardResults() {
+  const resultsContainer = document.getElementById('wizard-results-container');
+  if (!resultsContainer) return;
+
+  // Check which type of results are currently showing
+  const wizardResultsStep = document.getElementById('wizard-results');
+  if (!wizardResultsStep || !wizardResultsStep.classList.contains('active')) return;
+
+  // Determine source based on current mode
+  if (typeof selectedMode !== 'undefined') {
+    if (selectedMode === 'grams-to-ppm') {
+      const selectedFertSection = document.getElementById('selected-fertilizers-section');
+      const resultsSection = document.getElementById('results');
+      const ionBalanceSection = document.getElementById('ion-balance-section');
+      const ratioSection = document.getElementById('ratio-analysis-section');
+      const ecSection = document.getElementById('ec-tds-section');
+      const warningsSection = document.getElementById('warnings-section');
+
+      if (selectedFertSection && resultsSection) {
+        let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
+        if (ionBalanceSection) html += ionBalanceSection.outerHTML;
+        if (ratioSection) html += ratioSection.outerHTML;
+        if (ecSection) html += ecSection.outerHTML;
+        if (warningsSection) html += warningsSection.outerHTML;
+        resultsContainer.innerHTML = html;
+      }
+    } else if (selectedMode === 'formula-builder') {
+      const formulaResults = document.getElementById('formula-results');
+      if (formulaResults) {
+        resultsContainer.innerHTML = formulaResults.outerHTML;
+      }
+    } else if (selectedMode === 'reverse-calc') {
+      const reverseResults = document.getElementById('reverse-results');
+      if (reverseResults) {
+        resultsContainer.innerHTML = reverseResults.outerHTML;
+      }
+    }
+  }
+}
+
+// Expose refreshWizardResults globally for i18n
+window.refreshWizardResults = refreshWizardResults;
 
 // ==========================================
 // END WIZARD STEP FUNCTIONS
@@ -4131,12 +4211,27 @@ function updateFormulaCalculationMode() {
   const pLabel = document.getElementById('target-p-label');
   const kLabel = document.getElementById('target-k-label');
 
-  if (mode === 'elemental') {
-    pLabel.textContent = i18n.t('phosphorusElemental') + ' *';
-    kLabel.textContent = i18n.t('potassiumElemental') + ' *';
-  } else {
-    pLabel.textContent = i18n.t('phosphorusOxide') + ' *';
-    kLabel.textContent = i18n.t('potassiumOxide') + ' *';
+  // Update DOM labels if they exist (legacy support)
+  if (pLabel) {
+    pLabel.textContent = mode === 'elemental' ? i18n.t('phosphorusElemental') + ' *' : i18n.t('phosphorusOxide') + ' *';
+  }
+  if (kLabel) {
+    kLabel.textContent = mode === 'elemental' ? i18n.t('potassiumElemental') + ' *' : i18n.t('potassiumOxide') + ' *';
+  }
+
+  // Sync with Vue state if available
+  if (window.vueApp && mode) {
+    window.vueApp.formulaCalcMode = mode;
+  }
+}
+
+// Update calculation mode for reverse calculator (legacy support)
+function updateReverseCalculationMode() {
+  const mode = document.getElementById('reverse-calculation-mode')?.value;
+
+  // Sync with Vue state if available
+  if (window.vueApp && mode) {
+    window.vueApp.ratioCalcMode = mode;
   }
 }
 
@@ -4372,7 +4467,7 @@ function copyNPKRatioResults() {
   }
 
   const { result, targets, volume } = lastReverseCalculation;
-  const calculationMode = document.getElementById('reverse-calculation-mode').value;
+  const calculationMode = document.getElementById('reverse-calculation-mode')?.value || 'oxide';
 
   // Calculate ion balance for the formula
   const ionBalance = calculateIonBalanceForFormula(
@@ -4490,8 +4585,8 @@ const FertilizerApp = {
       totalGrams: 0,
       comparison: [], // { key, label, userInput, achievedRatio, achievedPPM, status, className }
       nh4Percent: 0,
-      ionBalance: null,
-      ecPrediction: null,
+      ionBalance: { totalCations: 0, totalAnions: 0, imbalance: 0, statusColor: '#666', statusText: '' },
+      ecPrediction: { ec: 0, color: '#666', text: '' },
       ratios: null,
       warnings: [],
       nutritionalWarnings: [],
@@ -4510,8 +4605,8 @@ const FertilizerApp = {
       totalGrams: 0,
       comparison: [], // { key, label, target, achieved, diff, percentDiff, status, className }
       nh4Percent: 0,
-      ionBalance: null,
-      ecPrediction: null,
+      ionBalance: { totalCations: 0, totalAnions: 0, imbalance: 0, statusColor: '#666', statusText: '' },
+      ecPrediction: { ec: 0, color: '#666', text: '' },
       ratios: null,
       warnings: [],
       nutritionalWarnings: [],
@@ -4527,8 +4622,8 @@ const FertilizerApp = {
       totalGrams: 0,
       results: null, // PPM results object
       displayOrder: [], // Array of { key, label, value } for display
-      ionBalance: null,
-      ecPrediction: null,
+      ionBalance: { totalCations: 0, totalAnions: 0, imbalance: 0, statusColor: '#666', statusText: '' },
+      ecPrediction: { ec: 0, color: '#666', text: '' },
       ratios: [], // Array of { name, ratio, labels, values, unit }
       warnings: [] // Array of { level, category, message }
     });
@@ -4546,9 +4641,9 @@ const FertilizerApp = {
         description: '',
         fertilizers: [], // { id, name, grams }
         totalGrams: 0,
-        nutrients: null,
-        ionBalance: null,
-        ecPrediction: null,
+        nutrients: { N_total: 0, N_NO3: 0, N_NH4: 0, P: 0, P2O5: 0, K: 0, K2O: 0, Ca: 0, Mg: 0, S: 0 },
+        ionBalance: { totalCations: 0, totalAnions: 0, imbalance: 0, statusColor: '#666', statusText: '' },
+        ecPrediction: { ec: 0, color: '#666', text: '' },
         ppmData: [], // { label, value }
         nh4Percent: 0,
         no3Percent: 0,
@@ -4566,9 +4661,9 @@ const FertilizerApp = {
         description: '',
         fertilizers: [], // { id, name, grams }
         totalGrams: 0,
-        nutrients: null,
-        ionBalance: null,
-        ecPrediction: null,
+        nutrients: { N_total: 0, N_NO3: 0, N_NH4: 0, P: 0, P2O5: 0, K: 0, K2O: 0, Ca: 0, Mg: 0, S: 0 },
+        ionBalance: { totalCations: 0, totalAnions: 0, imbalance: 0, statusColor: '#666', statusText: '' },
+        ecPrediction: { ec: 0, color: '#666', text: '' },
         ppmData: [], // { label, value }
         nh4Percent: 0,
         no3Percent: 0,
@@ -4582,8 +4677,8 @@ const FertilizerApp = {
         detailsExpanded: false
       },
       // Combined data
-      combinedNutrients: null,
-      combinedEc: null,
+      combinedNutrients: { N_total: 0, P: 0, P2O5: 0, K: 0, K2O: 0, Ca: 0, Mg: 0, S: 0 },
+      combinedEc: { ec: 0, color: '#666', text: '' },
       grandTotalGrams: 0,
       nutrientLabels: { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
     });
@@ -4635,7 +4730,9 @@ const FertilizerApp = {
       const term = searchTerm.value.toLowerCase();
       return FERTILIZERS.filter(f =>
         f.name.toLowerCase().includes(term) ||
-        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term)))
+        i18n.getFertilizerName(f).toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term))) ||
+        i18n.getFertilizerAliases(f).toLowerCase().includes(term)
       );
     });
 
@@ -4656,7 +4753,9 @@ const FertilizerApp = {
       const term = formulaSearchTerm.value.toLowerCase();
       return FERTILIZERS.filter(f =>
         f.name.toLowerCase().includes(term) ||
-        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term)))
+        i18n.getFertilizerName(f).toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term))) ||
+        i18n.getFertilizerAliases(f).toLowerCase().includes(term)
       );
     });
 
@@ -4671,7 +4770,9 @@ const FertilizerApp = {
       const term = ratioSearchTerm.value.toLowerCase();
       return FERTILIZERS.filter(f =>
         f.name.toLowerCase().includes(term) ||
-        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term)))
+        i18n.getFertilizerName(f).toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term))) ||
+        i18n.getFertilizerAliases(f).toLowerCase().includes(term)
       );
     });
 
@@ -4692,7 +4793,9 @@ const FertilizerApp = {
       const term = wizardGramsSearchTerm.value.toLowerCase();
       return FERTILIZERS.filter(f =>
         f.name.toLowerCase().includes(term) ||
-        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term)))
+        i18n.getFertilizerName(f).toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term))) ||
+        i18n.getFertilizerAliases(f).toLowerCase().includes(term)
       );
     });
 
@@ -4702,7 +4805,9 @@ const FertilizerApp = {
       const term = wizardAvailSearchTerm.value.toLowerCase();
       return FERTILIZERS.filter(f =>
         f.name.toLowerCase().includes(term) ||
-        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term)))
+        i18n.getFertilizerName(f).toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term))) ||
+        i18n.getFertilizerAliases(f).toLowerCase().includes(term)
       );
     });
 
@@ -5152,7 +5257,7 @@ const FertilizerApp = {
       // Get selected fertilizers
       const selected = selectedReverseFertilizers.value;
       if (selected.length === 0) {
-        alert(i18n.t('alertSelectAtLeastOneFertilizer'));
+        alert(i18n.t('alertSelectFertilizer'));
         return;
       }
 
@@ -5245,7 +5350,7 @@ const FertilizerApp = {
           totalGrams += grams;
           ferts.push({
             id: fertId,
-            name: fert.name,
+            name: i18n.getFertilizerName(fert),
             composition: Object.entries(fert.pct).map(([k, v]) => `${k}: ${v}%`).join(', '),
             grams: grams
           });
@@ -5349,10 +5454,20 @@ const FertilizerApp = {
       });
       reverseResultsData.ionBalance = calculateIonBalanceForFormula(activeFerts, volume);
 
-      // EC prediction
-      reverseResultsData.ecPrediction = estimateECFromPPM(result.achieved);
-      reverseResultsData.ecPrediction.targetEC = targetEC;
-      reverseResultsData.ecPrediction.ecScaling = result.ecScaling;
+      // EC prediction - transform raw ecData to display format
+      const rawEcDataReverse = estimateECFromPPM(result.achieved);
+      if (rawEcDataReverse && rawEcDataReverse.ec_mS_cm !== undefined) {
+        const ecStatusReverse = getEcStatus(rawEcDataReverse.ec_mS_cm);
+        reverseResultsData.ecPrediction = {
+          ec: rawEcDataReverse.ec_mS_cm,
+          color: ecStatusReverse.color,
+          text: ecStatusReverse.text,
+          targetEC: targetEC,
+          ecScaling: result.ecScaling
+        };
+      } else {
+        reverseResultsData.ecPrediction = { ec: 0, color: '#666', text: '', targetEC: targetEC, ecScaling: result.ecScaling };
+      }
 
       // Nutrient ratios
       reverseResultsData.ratios = calculateNutrientRatios(result.achieved);
@@ -5384,7 +5499,7 @@ const FertilizerApp = {
           totalGrams += grams;
           ferts.push({
             id: fertId,
-            name: fert.name,
+            name: i18n.getFertilizerName(fert),
             composition: Object.entries(fert.pct).map(([k, v]) => `${k}: ${v}%`).join(', '),
             grams: grams
           });
@@ -5454,8 +5569,18 @@ const FertilizerApp = {
       });
       formulaResultsData.ionBalance = calculateIonBalanceForFormula(activeFerts, volume);
 
-      // EC prediction
-      formulaResultsData.ecPrediction = estimateECFromPPM(result.achieved);
+      // EC prediction - transform raw ecData to display format
+      const rawEcData = estimateECFromPPM(result.achieved);
+      if (rawEcData && rawEcData.ec_mS_cm !== undefined) {
+        const ecStatus = getEcStatus(rawEcData.ec_mS_cm);
+        formulaResultsData.ecPrediction = {
+          ec: rawEcData.ec_mS_cm,
+          color: ecStatus.color,
+          text: ecStatus.text
+        };
+      } else {
+        formulaResultsData.ecPrediction = { ec: 0, color: '#666', text: '' };
+      }
 
       // Nutrient ratios
       formulaResultsData.ratios = calculateNutrientRatios(result.achieved);
@@ -5490,7 +5615,7 @@ const FertilizerApp = {
         ferts.push({
           id: fert.id,
           index: index + 1,
-          name: fert.name,
+          name: i18n.getFertilizerName(fert),
           composition: Object.entries(fert.pct).map(([k, v]) => `${k}: ${v}%`).join(', '),
           grams: fert.grams
         });
@@ -5537,11 +5662,24 @@ const FertilizerApp = {
       });
       gramsToPpmDisplayData.displayOrder = displayOrder;
 
-      // Ion balance
-      gramsToPpmDisplayData.ionBalance = ionBalanceData;
+      // Ion balance (merge with defaults to ensure all properties exist)
+      const defaultIonBalance = { totalCations: 0, totalAnions: 0, imbalance: 0, statusColor: '#666', statusText: '' };
+      gramsToPpmDisplayData.ionBalance = ionBalanceData && typeof ionBalanceData === 'object'
+        ? { ...defaultIonBalance, ...ionBalanceData }
+        : defaultIonBalance;
 
-      // EC prediction
-      gramsToPpmDisplayData.ecPrediction = ecData;
+      // EC prediction - transform raw ecData (with ec_mS_cm) to display format (with ec, color, text)
+      const defaultEcPrediction = { ec: 0, color: '#666', text: '' };
+      if (ecData && typeof ecData === 'object' && ecData.ec_mS_cm !== undefined) {
+        const ecStatus = getEcStatus(ecData.ec_mS_cm);
+        gramsToPpmDisplayData.ecPrediction = {
+          ec: ecData.ec_mS_cm,
+          color: ecStatus.color,
+          text: ecStatus.text
+        };
+      } else {
+        gramsToPpmDisplayData.ecPrediction = defaultEcPrediction;
+      }
 
       // Nutrient ratios (array format)
       gramsToPpmDisplayData.ratios = ratioData || [];
@@ -5621,7 +5759,7 @@ const FertilizerApp = {
         const fert = FERTILIZERS.find(f => f.id === fertId);
         if (fert) {
           totalGrams += grams;
-          ferts.push({ id: fertId, name: fert.name, grams: grams });
+          ferts.push({ id: fertId, name: i18n.getFertilizerName(fert), grams: grams });
         }
       });
 
@@ -5833,8 +5971,9 @@ const FertilizerApp = {
       return oxideConversions.some(o => hasOxide(o.key));
     }
 
-    // Format number for display
+    // Format number for display (handles null/undefined safely)
     function formatNumber(num, decimals = 2) {
+      if (num == null) return '0';
       return i18n.formatNumber(typeof num === 'number' ? num.toFixed(decimals) : num);
     }
 
