@@ -145,6 +145,7 @@ window.i18nLocales.en = {
   // Buttons
   back: '← Back',
   continue: 'Continue →',
+  cancel: 'Cancel',
   calculate: 'Calculate',
   calculatePpm: 'Calculate PPM',
   calculateFertilizers: 'Calculate Fertilizers',

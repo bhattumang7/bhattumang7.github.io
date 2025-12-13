@@ -136,6 +136,7 @@ window.i18nLocales.gu = {
 
   back: '← પાછા',
   continue: 'ચાલુ રાખો →',
+  cancel: 'રદ કરો',
   calculate: 'ગણતરી કરો',
   calculatePpm: 'PPM ગણો',
   calculateFertilizers: 'ખાતર ગણો',

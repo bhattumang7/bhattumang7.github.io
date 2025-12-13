@@ -154,6 +154,24 @@
   margin: 0;
 }
 
+.progress-cancel-btn {
+  margin-top: 15px;
+  padding: 8px 24px;
+  font-size: 14px;
+  color: #666;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.progress-cancel-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #333;
+}
+
 .fertilizer-selector {
   margin-bottom: 20px;
 }

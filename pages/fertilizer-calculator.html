@@ -14,6 +14,7 @@ permalink: /fertilizer-calculator/
       <div id="progress-bar" class="progress-bar"></div>
     </div>
     <p id="progress-text" class="progress-text" data-i18n="initializingSolver">Initializing solver...</p>
+    <button id="progress-cancel-btn" class="progress-cancel-btn" onclick="progressBar.cancel()" data-i18n="cancel">Cancel</button>
   </div>
 </div>
 
@@ -1104,6 +1105,8 @@ const progressBar = {
   bar: null,
   title: null,
   text: null,
+  cancelled: false,
+  onCancel: null,
 
   init() {
     this.overlay = document.getElementById('progress-overlay');
@@ -1114,6 +1117,8 @@ const progressBar = {
 
   show(title = 'Calculating...') {
     if (!this.overlay) this.init();
+    this.cancelled = false;
+    this.onCancel = null;
     this.title.textContent = title;
     this.bar.style.width = '0%';
     this.bar.classList.remove('indeterminate');
@@ -1137,6 +1142,19 @@ const progressBar = {
   hide() {
     if (!this.overlay) this.init();
     this.overlay.classList.remove('active');
+    this.onCancel = null;
+  },
+
+  cancel() {
+    this.cancelled = true;
+    if (this.onCancel) {
+      this.onCancel();
+    }
+    this.hide();
+  },
+
+  isCancelled() {
+    return this.cancelled;
   }
 };
 
@@ -5333,18 +5351,22 @@ async function buildFormula() {
   try {
     // Allow UI to update
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (progressBar.isCancelled()) return;
 
     progressBar.update(30, i18n.t('preparingModel'));
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (progressBar.isCancelled()) return;
 
     progressBar.update(50, i18n.t('runningSolver'));
     progressBar.setIndeterminate(i18n.t('optimizingCombination'));
 
     // Run optimization algorithm using absolute PPM targets
     const result = await optimizeFormula(targets, volume, availableFertilizers, 75, mode, { useAbsoluteTargets: true, useMilp: true });
+    if (progressBar.isCancelled()) return;
 
     progressBar.update(90, i18n.t('preparingResults'));
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (progressBar.isCancelled()) return;
 
     progressBar.update(100, i18n.t('complete'));
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -5355,6 +5377,7 @@ async function buildFormula() {
     // Display results
     displayFormulaResults(result, targets, volume, mode);
   } catch (error) {
+    if (progressBar.isCancelled()) return;
     progressBar.hide();
     console.error('Formula optimization error:', error);
     alert(i18n.t('alertCalculationError'));
@@ -7104,20 +7127,24 @@ async function calculateReverse() {
   try {
     // Allow UI to update
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (progressBar.isCancelled()) return;
 
     progressBar.update(30, i18n.t('preparingModel'));
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (progressBar.isCancelled()) return;
 
     progressBar.update(50, i18n.t('runningSolver'));
     progressBar.setIndeterminate(i18n.t('optimizingCombination'));
 
     // Run optimization
     let result = await optimizeFormula(targets, volume, selectedFertilizers, concentration, calculationMode, { useMilp: true });
+    if (progressBar.isCancelled()) return;
 
     // If targeting EC, scale fertilizer amounts to achieve target EC
     if (targetEC !== null && Object.keys(result.formula).length > 0) {
       progressBar.update(70, i18n.t('scalingToTargetEc'));
       await new Promise(resolve => setTimeout(resolve, 50));
+      if (progressBar.isCancelled()) return;
 
       // Calculate predicted EC from initial result
       const initialEC = estimateECFromPPM(result.achieved);
@@ -7164,6 +7191,7 @@ async function calculateReverse() {
 
     progressBar.update(90, i18n.t('preparingResults'));
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (progressBar.isCancelled()) return;
 
     progressBar.update(100, i18n.t('complete'));
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -7174,6 +7202,7 @@ async function calculateReverse() {
     // Display results
     displayReverseResults(result, targets, volume, targetEC);
   } catch (error) {
+    if (progressBar.isCancelled()) return;
     progressBar.hide();
     console.error('Reverse calculation error:', error);
     alert(i18n.t('alertCalculationError'));
