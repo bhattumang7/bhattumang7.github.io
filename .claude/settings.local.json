@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(docker run:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -p 4000:4000 -p 35729:35729 -v \"/c/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io:/srv/jekyll\" -v \"/c/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io/vendor/bundle:/usr/local/bundle\" jekyll/jekyll:4 bash -lc \"bundle install && bundle exec jekyll serve --livereload --force_polling --host 0.0.0.0\")",
+      "Bash(mkdir:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(where:*)",
+      "Bash(git -C \"c:\\Users\\bhatt\\OneDrive\\Desktop\\bhattumang7.github.io\" diff pages/fertilizer-calculator.html)",
+      "Bash(python:*)",
+      "Bash(git -C \"c:/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io\" diff --stat pages/fertilizer-calculator.html)",
+      "Bash(git -C \"c:/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io\" status)",
+      "Bash(git -C \"c:/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io\" diff --stat)",
+      "Bash(git -C \"c:/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io\" log --oneline -5)",
+      "Bash(git -C \"c:/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io\" add pages/fertilizer-calculator.html)",
+      "Bash(git -C \"c:/Users/bhatt/OneDrive/Desktop/bhattumang7.github.io\" diff pages/fertilizer-calculator.html)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
