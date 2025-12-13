@@ -319,6 +319,7 @@ window.i18nLocales.en = {
   estimatedEC: 'Estimated EC',
   targetEC: 'Target EC',
   nutrientRatios: 'Nutrient Ratios',
+  nutritionalConsiderations: 'Nutritional Considerations',
   predictedEc: 'Predicted EC',
   electricalConductivity25C: 'Electrical Conductivity (25°C)',
   whatIsPpm: 'What is PPM?',
