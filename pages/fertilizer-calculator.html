@@ -103,7 +103,7 @@ permalink: /fertilizer-calculator/
     <p data-i18n="volumeDescription">Enter the total volume of water you'll be mixing your fertilizers into.</p>
 
     <div class="volume-step-input">
-      <input type="number" id="wizard-volume" value="10" min="0.1" step="0.1" required onkeypress="if(event.key === 'Enter') proceedFromVolumeStep()">
+      <input type="number" id="wizard-volume" v-model.number="wizardVolume" min="0.1" step="0.1" required @keypress.enter="proceedFromVolumeStep()">
       <span data-i18n="liters">liters</span>
     </div>
 
@@ -157,20 +157,20 @@ permalink: /fertilizer-calculator/
     <p data-i18n="ecDescription">Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we'll scale the fertilizer amounts to hit that strength for your batch.</p>
 
     <div class="ec-step-select">
-      <select id="wizard-ec" onchange="updateECDescription()">
+      <select id="wizard-ec" v-model="wizardSelectedEC">
         <option value="ec:0.2" data-i18n="ecOption02">0.2 mS/cm - Plain Water Supplement</option>
         <option value="ec:0.4" data-i18n="ecOption04">0.4 mS/cm - Recovery/Flush</option>
         <option value="ec:0.6" data-i18n="ecOption06">0.6 mS/cm - Fresh Clones/Cuttings</option>
         <option value="ec:0.8" data-i18n="ecOption08">0.8 mS/cm - Rooted Cuttings</option>
         <option value="ec:1.0" data-i18n="ecOption10">1.0 mS/cm - Seedlings/Young Plants</option>
-        <option value="ec:1.2" selected data-i18n="ecOption12">1.2 mS/cm - General Purpose</option>
+        <option value="ec:1.2" data-i18n="ecOption12">1.2 mS/cm - General Purpose</option>
         <option value="ec:1.5" data-i18n="ecOption15">1.5 mS/cm - Vegetative Growth</option>
         <option value="ec:1.8" data-i18n="ecOption18">1.8 mS/cm - Active Growth</option>
         <option value="ec:2.0" data-i18n="ecOption20">2.0 mS/cm - Heavy Feeders</option>
         <option value="ec:2.5" data-i18n="ecOption25">2.5 mS/cm - Flowering/Fruiting</option>
         <option value="ec:3.0" data-i18n="ecOption30">3.0 mS/cm - Maximum (experienced growers)</option>
       </select>
-      <p class="ec-description" id="ec-description" data-i18n="ecDesc12">Good starting point for most plants in active growth.</p>
+      <p class="ec-description" id="ec-description">{{ wizardECDescription }}</p>
     </div>
 
     <div class="volume-step-buttons">
@@ -234,31 +234,31 @@ permalink: /fertilizer-calculator/
     <div class="input-grid">
       <div class="input-field">
         <label for="wizard-target-n" data-i18n="nitrogen">Nitrogen (N)</label>
-        <input type="number" id="wizard-target-n" min="0" step="1" data-i18n-placeholder="exampleN" placeholder="e.g., 150">
+        <input type="number" id="wizard-target-n" v-model="wizardTargets.N" min="0" step="1" data-i18n-placeholder="exampleN" placeholder="e.g., 150">
       </div>
       <div class="input-field">
-        <label for="wizard-target-p" id="wizard-target-p-label" data-i18n="phosphorusOxide">Phosphorus (P₂O₅)</label>
-        <input type="number" id="wizard-target-p" min="0" step="1" data-i18n-placeholder="exampleP" placeholder="e.g., 50">
+        <label for="wizard-target-p" id="wizard-target-p-label">{{ wizardPLabel }}</label>
+        <input type="number" id="wizard-target-p" v-model="wizardTargets.P" min="0" step="1" data-i18n-placeholder="exampleP" placeholder="e.g., 50">
       </div>
       <div class="input-field">
-        <label for="wizard-target-k" id="wizard-target-k-label" data-i18n="potassiumOxide">Potassium (K₂O)</label>
-        <input type="number" id="wizard-target-k" min="0" step="1" data-i18n-placeholder="exampleK" placeholder="e.g., 200">
+        <label for="wizard-target-k" id="wizard-target-k-label">{{ wizardKLabel }}</label>
+        <input type="number" id="wizard-target-k" v-model="wizardTargets.K" min="0" step="1" data-i18n-placeholder="exampleK" placeholder="e.g., 200">
       </div>
       <div class="input-field">
         <label for="wizard-target-ca" data-i18n="calcium">Calcium (Ca)</label>
-        <input type="number" id="wizard-target-ca" min="0" step="1" data-i18n-placeholder="exampleCa" placeholder="e.g., 150">
+        <input type="number" id="wizard-target-ca" v-model="wizardTargets.Ca" min="0" step="1" data-i18n-placeholder="exampleCa" placeholder="e.g., 150">
       </div>
       <div class="input-field">
         <label for="wizard-target-mg" data-i18n="magnesium">Magnesium (Mg)</label>
-        <input type="number" id="wizard-target-mg" min="0" step="1" data-i18n-placeholder="exampleMg" placeholder="e.g., 50">
+        <input type="number" id="wizard-target-mg" v-model="wizardTargets.Mg" min="0" step="1" data-i18n-placeholder="exampleMg" placeholder="e.g., 50">
       </div>
       <div class="input-field">
         <label for="wizard-target-s" data-i18n="sulfur">Sulfur (S)</label>
-        <input type="number" id="wizard-target-s" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
+        <input type="number" id="wizard-target-s" v-model="wizardTargets.S" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
         <label for="wizard-target-si" data-i18n="silicon">Silicon (Si)</label>
-        <input type="number" id="wizard-target-si" min="0" step="1" value="0" data-i18n-placeholder="optional" placeholder="Optional">
+        <input type="number" id="wizard-target-si" v-model="wizardTargets.Si" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
     </div>
 
@@ -277,31 +277,31 @@ permalink: /fertilizer-calculator/
     <div class="input-grid">
       <div class="input-field">
         <label for="wizard-ratio-n" data-i18n="nitrogen">Nitrogen (N)</label>
-        <input type="number" id="wizard-ratio-n" min="0" step="1" data-i18n-placeholder="exampleRatioN" placeholder="e.g., 3">
+        <input type="number" id="wizard-ratio-n" v-model="wizardRatios.N" min="0" step="1" data-i18n-placeholder="exampleRatioN" placeholder="e.g., 3">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-p" data-i18n="phosphorusElemental">Phosphorus (P)</label>
-        <input type="number" id="wizard-ratio-p" min="0" step="1" data-i18n-placeholder="exampleRatioP" placeholder="e.g., 1">
+        <input type="number" id="wizard-ratio-p" v-model="wizardRatios.P" min="0" step="1" data-i18n-placeholder="exampleRatioP" placeholder="e.g., 1">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-k" data-i18n="potassiumElemental">Potassium (K)</label>
-        <input type="number" id="wizard-ratio-k" min="0" step="1" data-i18n-placeholder="exampleRatioK" placeholder="e.g., 2">
+        <input type="number" id="wizard-ratio-k" v-model="wizardRatios.K" min="0" step="1" data-i18n-placeholder="exampleRatioK" placeholder="e.g., 2">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-ca" data-i18n="calcium">Calcium (Ca)</label>
-        <input type="number" id="wizard-ratio-ca" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
+        <input type="number" id="wizard-ratio-ca" v-model="wizardRatios.Ca" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-mg" data-i18n="magnesium">Magnesium (Mg)</label>
-        <input type="number" id="wizard-ratio-mg" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
+        <input type="number" id="wizard-ratio-mg" v-model="wizardRatios.Mg" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-s" data-i18n="sulfur">Sulfur (S)</label>
-        <input type="number" id="wizard-ratio-s" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
+        <input type="number" id="wizard-ratio-s" v-model="wizardRatios.S" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
       <div class="input-field">
         <label for="wizard-ratio-si" data-i18n="siliconPpm">Silicon (Si) PPM</label>
-        <input type="number" id="wizard-ratio-si" min="0" step="1" value="0" data-i18n-placeholder="targetPpm" placeholder="Target PPM">
+        <input type="number" id="wizard-ratio-si" v-model="wizardRatios.Si" min="0" step="1" data-i18n-placeholder="targetPpm" placeholder="Target PPM">
       </div>
     </div>
 
@@ -2193,15 +2193,7 @@ function updateWizardPPMLabels() {
   }
 }
 
-function updateECDescription() {
-  const ecSelect = document.getElementById('wizard-ec');
-  const descEl = document.getElementById('ec-description');
-  if (ecSelect && descEl) {
-    selectedEC = ecSelect.value;
-    const descKey = EC_DESCRIPTIONS[selectedEC];
-    descEl.textContent = descKey ? i18n.t(descKey) : '';
-  }
-}
+// updateECDescription - now handled by Vue computed property wizardECDescription
 
 function proceedFromECStep() {
   // EC step is only for NPK Ratio → Grams, go to npk-ratios-step
@@ -2209,18 +2201,22 @@ function proceedFromECStep() {
 }
 
 function proceedToCalculator() {
-  // Get the volume from wizard input
-  const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
+  // Get the volume from Vue state (with fallback to DOM for compatibility)
+  const wizardVolumeValue = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
+
+  // Sync legacy variables with Vue state
+  selectedCalcMode = window.vueApp?.wizardCalcMode || selectedCalcMode;
+  selectedEC = window.vueApp?.wizardSelectedEC || selectedEC;
 
   // Update volume inputs in all calculator tabs
   const volumeInput = document.getElementById('volume');
-  if (volumeInput) volumeInput.value = wizardVolume;
+  if (volumeInput) volumeInput.value = wizardVolumeValue;
 
   const formulaVolumeInput = document.getElementById('formula-volume');
-  if (formulaVolumeInput) formulaVolumeInput.value = wizardVolume;
+  if (formulaVolumeInput) formulaVolumeInput.value = wizardVolumeValue;
 
   const reverseVolumeInput = document.getElementById('reverse-volume');
-  if (reverseVolumeInput) reverseVolumeInput.value = wizardVolume;
+  if (reverseVolumeInput) reverseVolumeInput.value = wizardVolumeValue;
 
   // Apply calculation mode if applicable
   if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
@@ -2251,7 +2247,7 @@ function proceedToCalculator() {
   showWizardStep('calculator-content', { updateIndicator: false });
 
   // Build mode indicator text
-  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
+  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolumeValue + i18n.t('litersShort');
   if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
     indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
   }
@@ -2349,10 +2345,16 @@ function backToModeSelector() {
   // Show the mode selector
   showWizardStep('mode-selector');
 
-  // Reset state
+  // Reset state (both legacy and Vue)
   selectedMode = null;
   selectedCalcMode = 'oxide';
   selectedEC = 'ec:1.2';
+
+  // Sync Vue state
+  if (window.vueApp) {
+    window.vueApp.wizardCalcMode = 'oxide';
+    window.vueApp.wizardSelectedEC = 'ec:1.2';
+  }
 
   // Reset calc mode selection UI
   document.querySelectorAll('.calc-mode-option').forEach(opt => opt.classList.remove('selected'));
@@ -2362,12 +2364,7 @@ function backToModeSelector() {
     oxideOption.closest('.calc-mode-option').classList.add('selected');
   }
 
-  // Reset EC selection
-  const ecSelect = document.getElementById('wizard-ec');
-  if (ecSelect) {
-    ecSelect.value = 'ec:1.2';
-    updateECDescription();
-  }
+  // EC selection is now handled by Vue v-model, no need to update DOM
 
   // Reset wizard inputs
   if (window.vueApp && window.vueApp.clearWizardGramsSelectionsVue) {
@@ -2494,23 +2491,19 @@ function calculateFromWizardGrams() {
 // --- PPM → Grams Wizard Functions ---
 
 function clearWizardPPMTargets() {
-  const fields = ['n', 'p', 'k', 'ca', 'mg', 's', 'si'];
-  fields.forEach(field => {
-    const input = document.getElementById(`wizard-target-${field}`);
-    if (input) input.value = '';
-  });
+  // Clear via Vue state
+  if (window.vueApp?.wizardTargets) {
+    Object.keys(window.vueApp.wizardTargets).forEach(key => {
+      window.vueApp.wizardTargets[key] = '';
+    });
+  }
 }
 
 function proceedToFormulaFertilizerStep() {
-  // Validate that at least one target is entered
-  const fields = ['n', 'p', 'k', 'ca', 'mg', 's'];
-  let hasTarget = false;
-  fields.forEach(field => {
-    const input = document.getElementById(`wizard-target-${field}`);
-    if (input && parseFloat(input.value) > 0) {
-      hasTarget = true;
-    }
-  });
+  // Validate that at least one target is entered (via Vue state)
+  const targets = window.vueApp?.wizardTargets || {};
+  const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+  const hasTarget = fields.some(field => parseFloat(targets[field]) > 0);
 
   if (!hasTarget) {
     alert(i18n.t('alertEnterTargetPpm'));
@@ -2526,23 +2519,19 @@ function proceedToFormulaFertilizerStep() {
 // --- NPK Ratio → Grams Wizard Functions ---
 
 function clearWizardNPKRatios() {
-  const fields = ['n', 'p', 'k', 'ca', 'mg', 's', 'si'];
-  fields.forEach(field => {
-    const input = document.getElementById(`wizard-ratio-${field}`);
-    if (input) input.value = '';
-  });
+  // Clear via Vue state
+  if (window.vueApp?.wizardRatios) {
+    Object.keys(window.vueApp.wizardRatios).forEach(key => {
+      window.vueApp.wizardRatios[key] = '';
+    });
+  }
 }
 
 function proceedToReverseFertilizerStep() {
-  // Validate that at least one ratio is entered
-  const fields = ['n', 'p', 'k', 'ca', 'mg', 's'];
-  let hasRatio = false;
-  fields.forEach(field => {
-    const input = document.getElementById(`wizard-ratio-${field}`);
-    if (input && parseFloat(input.value) > 0) {
-      hasRatio = true;
-    }
-  });
+  // Validate that at least one ratio is entered (via Vue state)
+  const ratios = window.vueApp?.wizardRatios || {};
+  const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+  const hasRatio = fields.some(field => parseFloat(ratios[field]) > 0);
 
   if (!hasRatio) {
     alert(i18n.t('alertEnterRatioValue'));
@@ -2571,8 +2560,12 @@ function backFromFertilizerSelectStep() {
 }
 
 async function calculateFromWizardFertilizerSelect() {
-  // Get the volume from wizard input
-  const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
+  // Get the volume from Vue state (with fallback)
+  const wizardVolume = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
+
+  // Sync legacy variables with Vue state
+  selectedCalcMode = window.vueApp?.wizardCalcMode || selectedCalcMode;
+  selectedEC = window.vueApp?.wizardSelectedEC || selectedEC;
 
   // Get selected fertilizers from Vue state
   const selectedFerts = [];
@@ -2608,29 +2601,28 @@ async function calculateFromWizardFertilizerSelect() {
       updateFormulaCalculationMode();
     }
 
-    // Transfer target PPM values to the main calculator inputs
+    // Transfer target PPM values from Vue state to main calculator inputs
+    const wTargets = window.vueApp?.wizardTargets || {};
     const ppmMapping = {
-      'n': 'target-n',
-      'p': 'target-p',
-      'k': 'target-k',
-      'ca': 'target-ca',
-      'mg': 'target-mg',
-      's': 'target-s'
+      'N': 'target-n',
+      'P': 'target-p',
+      'K': 'target-k',
+      'Ca': 'target-ca',
+      'Mg': 'target-mg',
+      'S': 'target-s'
     };
 
-    Object.entries(ppmMapping).forEach(([wizardField, formulaField]) => {
-      const wizardInput = document.getElementById(`wizard-target-${wizardField}`);
+    Object.entries(ppmMapping).forEach(([vueField, formulaField]) => {
       const formulaInput = document.getElementById(formulaField);
-      if (wizardInput && formulaInput) {
-        formulaInput.value = wizardInput.value || '';
+      if (formulaInput) {
+        formulaInput.value = wTargets[vueField] || '';
       }
     });
 
     // Handle Silicon
-    const siInput = document.getElementById('wizard-target-si');
     const formulaSiInput = document.getElementById('target-si');
-    if (siInput && formulaSiInput) {
-      formulaSiInput.value = siInput.value || '0';
+    if (formulaSiInput) {
+      formulaSiInput.value = wTargets.Si || '0';
     }
 
     // Transfer fertilizer selections to main calculator Vue state
@@ -2674,29 +2666,28 @@ async function calculateFromWizardFertilizerSelect() {
       reverseConcentration.value = selectedEC;
     }
 
-    // Transfer ratio values to the main calculator inputs
+    // Transfer ratio values from Vue state to main calculator inputs
+    const wRatios = window.vueApp?.wizardRatios || {};
     const ratioMapping = {
-      'n': 'reverse-n',
-      'p': 'reverse-p',
-      'k': 'reverse-k',
-      'ca': 'reverse-ca',
-      'mg': 'reverse-mg',
-      's': 'reverse-s'
+      'N': 'reverse-n',
+      'P': 'reverse-p',
+      'K': 'reverse-k',
+      'Ca': 'reverse-ca',
+      'Mg': 'reverse-mg',
+      'S': 'reverse-s'
     };
 
-    Object.entries(ratioMapping).forEach(([wizardField, reverseField]) => {
-      const wizardInput = document.getElementById(`wizard-ratio-${wizardField}`);
+    Object.entries(ratioMapping).forEach(([vueField, reverseField]) => {
       const reverseInput = document.getElementById(reverseField);
-      if (wizardInput && reverseInput) {
-        reverseInput.value = wizardInput.value || '';
+      if (reverseInput) {
+        reverseInput.value = wRatios[vueField] || '';
       }
     });
 
     // Handle Silicon
-    const siInput = document.getElementById('wizard-ratio-si');
     const reverseSiInput = document.getElementById('reverse-si');
-    if (siInput && reverseSiInput) {
-      reverseSiInput.value = siInput.value || '0';
+    if (reverseSiInput) {
+      reverseSiInput.value = wRatios.Si || '0';
     }
 
     // Transfer fertilizer selections to main calculator Vue state
@@ -4426,6 +4417,18 @@ const FertilizerApp = {
     const currentMode = ref(null); // 'ppm-calc', 'formula-builder', 'reverse-calc'
     const wizardStep = ref('mode-selector');
     const wizardVolume = ref(10);
+    const wizardSelectedEC = ref('ec:1.2');
+    const wizardCalcMode = ref('oxide');
+
+    // Wizard PPM target inputs (for PPM → Grams mode)
+    const wizardTargets = reactive({
+      N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0'
+    });
+
+    // Wizard ratio inputs (for NPK Ratio → Grams mode)
+    const wizardRatios = reactive({
+      N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0'
+    });
 
     // Wizard Grams Fertilizer List state
     const wizardGramsFertilizers = reactive({}); // { fertilizer_id: { checked: false, grams: '' } }
@@ -4610,6 +4613,21 @@ const FertilizerApp = {
     // =========================================================================
     // COMPUTED PROPERTIES
     // =========================================================================
+
+    // EC description based on selected EC level
+    const wizardECDescription = computed(() => {
+      const descKey = EC_DESCRIPTIONS[wizardSelectedEC.value];
+      return descKey ? i18n.t(descKey) : '';
+    });
+
+    // P and K labels based on calculation mode
+    const wizardPLabel = computed(() => {
+      return wizardCalcMode.value === 'elemental' ? i18n.t('phosphorusElemental') : i18n.t('phosphorusOxide');
+    });
+
+    const wizardKLabel = computed(() => {
+      return wizardCalcMode.value === 'elemental' ? i18n.t('potassiumElemental') : i18n.t('potassiumOxide');
+    });
 
     // Filter fertilizers based on search
     const filteredFertilizers = computed(() => {
@@ -5897,10 +5915,17 @@ const FertilizerApp = {
 
       // Wizard State
       wizardVolume,
+      wizardSelectedEC,
+      wizardCalcMode,
+      wizardTargets,
+      wizardRatios,
       wizardGramsFertilizers,
       wizardGramsSearchTerm,
       wizardAvailFertilizers,
       wizardAvailSearchTerm,
+      wizardECDescription,
+      wizardPLabel,
+      wizardKLabel,
 
       // PPM to Grams (Formula Builder) State
       formulaTargets,
@@ -6016,9 +6041,9 @@ const FertilizerApp = {
 // Mount Vue app when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    window.vueApp = createApp(FertilizerApp).mount('#calculator-content');
+    window.vueApp = createApp(FertilizerApp).mount('.calculator-container');
   });
 } else {
-  window.vueApp = createApp(FertilizerApp).mount('#calculator-content');
+  window.vueApp = createApp(FertilizerApp).mount('.calculator-container');
 }
 </script>
