@@ -7574,6 +7574,501 @@ function displayNutrientRatios(ratios) {
   ratioResult.innerHTML = html;
 }
 
+// ============================================================
+// REUSABLE RENDER FUNCTIONS (to reduce code duplication)
+// ============================================================
+
+/**
+ * Renders EC breakdown by ion table (collapsible)
+ * @param {Object} ecPrediction - EC prediction data with contributions
+ * @returns {string} HTML string
+ */
+function renderEcBreakdownTable(ecPrediction) {
+  if (!ecPrediction || !ecPrediction.contributions) return '';
+
+  const ionContributions = Object.entries(ecPrediction.contributions)
+    .sort((a, b) => b[1].contribution_mS_cm - a[1].contribution_mS_cm);
+
+  if (ionContributions.length === 0) return '';
+
+  let html = `<details style="margin-top: 10px;">
+    <summary style="cursor: pointer; color: #007bff; font-size: 0.9em;">${i18n.t('showEcBreakdownByIon')}</summary>
+    <div style="margin-top: 10px; background: #f8f9fa; padding: 15px; border-radius: 4px;">
+      <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #dee2e6;">
+            <th style="text-align: left; padding: 8px;">${i18n.t('ionHeader')}</th>
+            <th style="text-align: right; padding: 8px;">${i18n.t('concMmolLHeader')}</th>
+            <th style="text-align: right; padding: 8px;">${i18n.t('lambdaHeader')}</th>
+            <th style="text-align: right; padding: 8px;">${i18n.t('ecContribHeader')}</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  ionContributions.forEach(([ion, data]) => {
+    const percentage = i18n.formatNumber((data.contribution_mS_cm / ecPrediction.rawEC * 100).toFixed(1));
+    html += `
+          <tr style="border-bottom: 1px solid #dee2e6;">
+            <td style="padding: 8px;">${ion}</td>
+            <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.concentration_mmolL.toFixed(2))}</td>
+            <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.lambda)}</td>
+            <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.contribution_mS_cm.toFixed(3))} ${i18n.t('mScmUnit')} (${percentage}%)</td>
+          </tr>`;
+  });
+
+  html += `
+        </tbody>
+      </table>
+      <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+        <strong>${i18n.t('ecBreakdownNote')}</strong> ${i18n.t('rawEcLabel')} = ${i18n.formatNumber(ecPrediction.rawEC.toFixed(3))} ${i18n.t('mScmUnit')}.
+        ${i18n.t('ionicStrengthCorrectionApplied', { factor: i18n.formatNumber((ecPrediction.rawEC / ecPrediction.ec_mS_cm).toFixed(3)) })}
+      </div>
+    </div>
+  </details>`;
+
+  return html;
+}
+
+/**
+ * Renders nutrient ratio analysis cards
+ * @param {Array} ratios - Array of ratio objects from calculateNutrientRatios
+ * @returns {string} HTML string
+ */
+function renderNutrientRatioCards(ratios) {
+  if (!ratios || ratios.length === 0) return '';
+
+  let html = '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
+  html += '<div class="nutrient-ratio-grid">';
+
+  ratios.forEach(ratio => {
+    const unit = ratio.unit || 'ppm';
+    html += `
+      <div class="nutrient-ratio-card">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
+          ${ratio.name}
+        </div>
+        <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
+          ${ratio.ratio}
+        </div>
+        <div style="font-size: 0.85em; color: #666;">
+          ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+/**
+ * Renders nutritional warnings section
+ * @param {Array} warnings - Array of warning objects from checkWarnings
+ * @returns {string} HTML string
+ */
+function renderNutritionalWarnings(warnings) {
+  if (!warnings || warnings.length === 0) return '';
+
+  let html = '<h3 style="margin-top: 20px;">' + i18n.t('warningsAndRecommendations') + '</h3>';
+
+  warnings.forEach(warning => {
+    const boxClass = warning.level === 'warning' ? 'warning-box' :
+                     warning.level === 'error' ? 'error-box' : 'conversion-note';
+    const icon = warning.level === 'warning' ? '⚠️' :
+                 warning.level === 'error' ? '❌' : 'ℹ️';
+    html += `
+      <div class="${boxClass}" style="margin-bottom: 10px;">
+        <strong>${icon} ${warning.category}</strong><br>
+        ${warning.message}
+      </div>
+    `;
+  });
+
+  return html;
+}
+
+/**
+ * Renders Ion Balance explanation sections
+ * @returns {string} HTML string
+ */
+function renderIonBalanceExplanation() {
+  return `
+    <!-- What is Ion Balance? -->
+    <div class="explanation-section">
+      <h3>${i18n.t('whatIsIonBalance')}</h3>
+      <p>
+        ${i18n.t('ionBalanceExplanation')}
+      </p>
+      <ul style="line-height: 1.8;">
+        <li>${i18n.t('cationsDescription')}</li>
+        <li>${i18n.t('anionsDescription')}</li>
+      </ul>
+      <p>
+        ${i18n.t('ionBalanceImportance')}
+      </p>
+    </div>
+
+    <!-- What is meq/L? -->
+    <div class="explanation-section">
+      <h3>${i18n.t('understandingMeqL')}</h3>
+      <p>
+        ${i18n.t('meqLDescription')}
+      </p>
+      <p>
+        ${i18n.t('meqLAnalogy')}
+      </p>
+      <div class="formula-box">
+        <div class="formula">${i18n.t('meqLFormula')}</div>
+        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
+      </div>
+      <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
+        <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
+          <strong>${i18n.t('importantNotes')}</strong>
+        </p>
+        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
+          <li>${i18n.t('hydrationWaterNote')}</li>
+          <li>${i18n.t('ureaNote')}</li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Renders Oxide Conversion explanation table (full version with all 4 conversions)
+ * @returns {string} HTML string
+ */
+function renderOxideConversionTable() {
+  return `
+    <table class="conversion-table">
+      <caption data-i18n="conversionTableCaption">${i18n.t('conversionTableCaption')}</caption>
+      <thead>
+        <tr>
+          <th>${i18n.t('oxideFormHeader')}</th>
+          <th>${i18n.t('elementalFormHeader')}</th>
+          <th>${i18n.t('conversionFactorHeader')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('phosphateOxide')}</td>
+          <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('phosphorusElemental')}</td>
+          <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.436')}</td>
+        </tr>
+        <tr>
+          <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('potassiumOxide')}</td>
+          <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('potassiumElemental')}</td>
+          <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.830')}</td>
+        </tr>
+        <tr>
+          <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('magnesiumOxide')}</td>
+          <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('magnesiumElemental')}</td>
+          <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.603')}</td>
+        </tr>
+        <tr>
+          <td data-label="${i18n.t('oxideFormHeader')}">${i18n.t('calciumOxide')}</td>
+          <td data-label="${i18n.t('elementalFormHeader')}">${i18n.t('calciumElemental')}</td>
+          <td data-label="${i18n.t('conversionFactorHeader')}">×${i18n.formatNumber('0.715')}</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
+
+/**
+ * Renders Oxide Conversion explanation section (simplified version with P and K only)
+ * Used in reverse calculator and two-tank explanation views
+ * @returns {string} HTML string
+ */
+function renderOxideConversionExplanation() {
+  return `
+    <div class="explanation-section">
+      <h3>${i18n.t('understandingOxideConversions')}</h3>
+      <p>
+        ${i18n.t('oxideConversionsExplanation')}
+      </p>
+      <table class="conversion-table">
+        <thead>
+          <tr>
+            <th>${i18n.t('oxideFormHeader')}</th>
+            <th>${i18n.t('elementalFormHeader')}</th>
+            <th>${i18n.t('conversionFactorHeader')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>P₂O₅</td>
+            <td>P</td>
+            <td>× 0.436</td>
+          </tr>
+          <tr>
+            <td>K₂O</td>
+            <td>K</td>
+            <td>× 0.830</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Determines EC status color and text based on EC value
+ * @param {number} ecValue - EC value in mS/cm
+ * @returns {Object} {color, text} - Status color and localized text
+ */
+function getEcStatus(ecValue) {
+  if (ecValue < 0.8) {
+    return { color: '#17a2b8', text: i18n.t('ecVeryLight') };
+  } else if (ecValue < 1.2) {
+    return { color: '#28a745', text: i18n.t('ecLight') };
+  } else if (ecValue < 1.8) {
+    return { color: '#28a745', text: i18n.t('ecModerate') };
+  } else if (ecValue < 2.5) {
+    return { color: '#ffc107', text: i18n.t('ecStrong') };
+  } else if (ecValue < 3.5) {
+    return { color: '#fd7e14', text: i18n.t('ecVeryStrong') };
+  } else {
+    return { color: '#dc3545', text: i18n.t('ecVeryHigh') };
+  }
+}
+
+/**
+ * Renders ion balance summary cards (cations, anions, imbalance)
+ * @param {Object} ionBalance - Ion balance data with totalCations, totalAnions, imbalance, statusColor, statusText
+ * @returns {string} HTML string
+ */
+function renderIonBalanceSummary(ionBalance) {
+  return `<div class="ion-balance-summary" style="margin-top: 10px;">
+    <div class="ion-balance-card">
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('cations')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalCations.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
+    </div>
+    <div class="ion-balance-card">
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('anions')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalAnions.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
+    </div>
+    <div class="ion-balance-card status" style="background: ${ionBalance.statusColor}20; border-color: ${ionBalance.statusColor};">
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('imbalance')}</div>
+      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${i18n.formatNumber(ionBalance.imbalance.toFixed(1))}%</div>
+      <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
+    </div>
+  </div>`;
+}
+
+/**
+ * Renders EC prediction summary card
+ * @param {number} ecValue - EC value in mS/cm
+ * @param {number} ionicStrength - Ionic strength in mol/L
+ * @returns {string} HTML string
+ */
+function renderEcPredictionCard(ecValue, ionicStrength) {
+  const ecStatus = getEcStatus(ecValue);
+  return `<div class="ion-balance-summary" style="margin-top: 10px;">
+    <div class="ion-balance-card" style="flex: 2;">
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('electricalConductivity25C')}</div>
+      <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatus.color};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
+      <div style="font-size: 0.9em; color: ${ecStatus.color}; margin-top: 5px;">${ecStatus.text}</div>
+    </div>
+    <div class="ion-balance-card">
+      <div style="font-size: 0.9em; color: #666;">${i18n.t('ionicStrength')}</div>
+      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber((ionicStrength * 1000).toFixed(1))} <span style="font-size: 0.7em;">${i18n.t('mMUnit')}</span></div>
+    </div>
+  </div>`;
+}
+
+/**
+ * Renders individual ion card for breakdown display
+ * @param {string} ion - Ion name
+ * @param {number} meq - meq/L value
+ * @param {number} percentage - Percentage of total
+ * @param {string} percentageKey - i18n key for percentage label
+ * @returns {string} HTML string
+ */
+function renderIonCard(ion, meq, percentage, percentageKey) {
+  return `
+    <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
+      <div style="display: flex; justify-content: space-between;">
+        <strong>${ion}</strong>
+        <span>${i18n.formatNumber(meq.toFixed(2))} meq/L</span>
+      </div>
+      <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t(percentageKey, {percentage})}</div>
+    </div>
+  `;
+}
+
+/**
+ * Renders ion breakdown grid (cations and anions side by side)
+ * @param {Array} cations - Array of [ion, data] pairs
+ * @param {Array} anions - Array of [ion, data] pairs
+ * @param {number} totalCations - Total cations in meq/L
+ * @param {number} totalAnions - Total anions in meq/L
+ * @returns {string} HTML string
+ */
+function renderIonBreakdownGrid(cations, anions, totalCations, totalAnions) {
+  if (cations.length === 0 && anions.length === 0) return '';
+
+  let html = `
+    <div class="explanation-section">
+      <h3>${i18n.t('ionBreakdownByType')}</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+  `;
+
+  // Cations column
+  html += `<div><h4 style="color: #007bff; margin-top: 0;">${i18n.t('cationsPlus')}</h4>`;
+  cations.forEach(([ion, data]) => {
+    const percentage = totalCations > 0 ? (data.meq / totalCations * 100).toFixed(1) : 0;
+    html += renderIonCard(ion, data.meq, percentage, 'percentOfTotalCations');
+  });
+  html += `</div>`;
+
+  // Anions column
+  html += `<div><h4 style="color: #007bff; margin-top: 0;">${i18n.t('anionsMinus')}</h4>`;
+  anions.forEach(([ion, data]) => {
+    const percentage = totalAnions > 0 ? (data.meq / totalAnions * 100).toFixed(1) : 0;
+    html += renderIonCard(ion, data.meq, percentage, 'percentOfTotalAnions');
+  });
+  html += `</div>`;
+
+  html += `</div></div>`;
+  return html;
+}
+
+/**
+ * Renders the final ion balance results section with totals, imbalance, and optional calculation explanation
+ * @param {number} totalCations - Total cations in meq/L
+ * @param {number} totalAnions - Total anions in meq/L
+ * @param {number} imbalance - Imbalance percentage
+ * @param {string} statusColor - Status color based on imbalance level
+ * @param {string} statusText - Status text (e.g., "Balanced", "Caution", "Imbalanced")
+ * @param {string} titleKey - i18n key for section title (e.g., 'finalIonBalanceResults' or 'finalResults')
+ * @param {boolean} useLocalized2 - Whether to use localized "2" in the formula display
+ * @param {boolean} showCalculation - Whether to show the calculation explanation section
+ * @returns {string} HTML string
+ */
+function renderFinalIonBalanceResults(totalCations, totalAnions, imbalance, statusColor, statusText, titleKey = 'finalIonBalanceResults', useLocalized2 = true, showCalculation = true) {
+  const average = (totalCations + totalAnions) / 2;
+  const twoDisplay = useLocalized2 ? i18n.formatNumber(2) : '2';
+  const hundredDisplay = useLocalized2 ? i18n.formatNumber(100) : '100';
+
+  let html = `
+    <div class="explanation-section" style="background: ${statusColor}20; border-left-color: ${statusColor};">
+      <h3 style="color: ${statusColor};">${i18n.t(titleKey)}</h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalCationsPlus')}</div>
+          <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))}</div>
+          <div style="font-size: 0.9em; color: #666;">${i18n.t('meqLHeader')}</div>
+        </div>
+        <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalAnionsMinus')}</div>
+          <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))}</div>
+          <div style="font-size: 0.9em; color: #666;">${i18n.t('meqLHeader')}</div>
+        </div>
+      </div>
+
+      <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${statusColor};">
+        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('imbalancePercentage')}</div>
+        <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
+        <div style="font-size: 1em; color: ${statusColor}; margin-top: 5px;">${statusText}</div>
+      </div>`;
+
+  if (showCalculation) {
+    html += `
+      <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
+        <h4 style="margin-top: 0;">${i18n.t('howWeCalculatedImbalance')}</h4>
+        <p style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px;">
+          Average = (${i18n.formatNumber(totalCations.toFixed(2))} + ${i18n.formatNumber(totalAnions.toFixed(2))}) ÷ ${twoDisplay} = ${i18n.formatNumber(average.toFixed(2))} ${i18n.t('meqLHeader')}<br>
+          Imbalance = |${i18n.formatNumber(totalCations.toFixed(2))} - ${i18n.formatNumber(totalAnions.toFixed(2))}| ÷ ${i18n.formatNumber(average.toFixed(2))} × ${hundredDisplay} = <strong>${i18n.formatNumber(imbalance.toFixed(1))}%</strong>
+        </p>
+      </div>`;
+  }
+
+  html += `
+    </div>
+  `;
+  return html;
+}
+
+/**
+ * Calculates ion balance details for a list of fertilizers
+ * Returns all calculated data without rendering
+ * @param {Array} activeFertilizers - Array of fertilizer objects with grams
+ * @param {number} volume - Solution volume in liters
+ * @returns {Object} {totalCations, totalAnions, ionDetails, fertilizerBreakdown, imbalance}
+ */
+function calculateIonBalanceDetails(activeFertilizers, volume) {
+  let totalCations = 0;
+  let totalAnions = 0;
+  const ionDetails = {};
+  const fertilizerBreakdown = [];
+
+  activeFertilizers.forEach(fert => {
+    const ionData = ION_DATA[fert.id];
+
+    if (!ionData) {
+      return; // Skip fertilizers without ion data
+    }
+
+    const moles = fert.grams / ionData.molarMass;
+    const fertIons = [];
+
+    ionData.ions.forEach(ionInfo => {
+      const meq = moles * ionInfo.count * ionInfo.charge * 1000;
+      const meqPerLiter = meq / volume;
+
+      fertIons.push({
+        ...ionInfo,
+        meq: meqPerLiter,
+        calculation: {
+          moles: moles,
+          meq: meq,
+          meqPerLiter: meqPerLiter
+        }
+      });
+
+      // Track by ion name
+      if (!ionDetails[ionInfo.ion]) {
+        ionDetails[ionInfo.ion] = {
+          meq: 0,
+          type: ionInfo.type
+        };
+      }
+      ionDetails[ionInfo.ion].meq += meqPerLiter;
+
+      // Add to totals
+      if (ionInfo.type === 'cation') {
+        totalCations += meqPerLiter;
+      } else {
+        totalAnions += meqPerLiter;
+      }
+    });
+
+    fertilizerBreakdown.push({
+      fert: fert,
+      ionData: ionData,
+      moles: moles,
+      ions: fertIons
+    });
+  });
+
+  const average = (totalCations + totalAnions) / 2;
+  const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
+
+  return {
+    totalCations,
+    totalAnions,
+    ionDetails,
+    fertilizerBreakdown,
+    imbalance
+  };
+}
+
+// ============================================================
+// END OF REUSABLE RENDER FUNCTIONS
+// ============================================================
+
 // Calculate and display ion balance
 function calculateIonBalance(activeFertilizers, volume) {
   let totalCations = 0;  // meq/L
@@ -8587,145 +9082,26 @@ function displayFormulaResults(result, targets, volume, mode = 'oxide') {
   const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
 
   html += '<h3 style="margin-top: 20px;">' + i18n.t('ionBalance') + ' <span class="info-icon" onclick="openFormulaIonBalanceExplanation()" title="' + i18n.t('clickToLearnIonBalance') + '">?</span></h3>';
-  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
-    <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('cations')}</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalCations.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
-    </div>
-    <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('anions')}</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalAnions.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
-    </div>
-    <div class="ion-balance-card status" style="background: ${ionBalance.statusColor}20; border-color: ${ionBalance.statusColor};">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('imbalance')}</div>
-      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${i18n.formatNumber(ionBalance.imbalance.toFixed(1))}%</div>
-      <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
-    </div>
-  </div>`;
+  // Ion balance summary - using reusable function
+  html += renderIonBalanceSummary(ionBalance);
 
   // Calculate and display EC prediction using ionic molar conductivity model
   const ecPrediction = estimateECFromPPM(result.achieved);
-  const ecValue = ecPrediction.ec_mS_cm;
 
-  // Determine EC status color and text
-  let ecStatusColor, ecStatusText;
-  if (ecValue < 0.8) {
-    ecStatusColor = '#17a2b8';  // Info blue - very light
-    ecStatusText = i18n.t('ecVeryLight');
-  } else if (ecValue < 1.2) {
-    ecStatusColor = '#28a745';  // Green - light/seedlings
-    ecStatusText = i18n.t('ecLight');
-  } else if (ecValue < 1.8) {
-    ecStatusColor = '#28a745';  // Green - moderate
-    ecStatusText = i18n.t('ecModerate');
-  } else if (ecValue < 2.5) {
-    ecStatusColor = '#ffc107';  // Yellow - strong
-    ecStatusText = i18n.t('ecStrong');
-  } else if (ecValue < 3.5) {
-    ecStatusColor = '#fd7e14';  // Orange - very strong
-    ecStatusText = i18n.t('ecVeryStrong');
-  } else {
-    ecStatusColor = '#dc3545';  // Red - too high
-    ecStatusText = i18n.t('ecVeryHigh');
-  }
-
+  // EC prediction card - using reusable function
   html += '<h3 style="margin-top: 20px;">' + i18n.t('predictedEc') + '</h3>';
-  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
-    <div class="ion-balance-card" style="flex: 2;">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('electricalConductivity25C')}</div>
-      <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
-      <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
-    </div>
-    <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('ionicStrength')}</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber((ecPrediction.ionicStrength * 1000).toFixed(1))} <span style="font-size: 0.7em;">${i18n.t('mMUnit')}</span></div>
-    </div>
-  </div>`;
+  html += renderEcPredictionCard(ecPrediction.ec_mS_cm, ecPrediction.ionicStrength);
 
-  // EC breakdown by ion (collapsible)
-  const ionContributions = Object.entries(ecPrediction.contributions)
-    .sort((a, b) => b[1].contribution_mS_cm - a[1].contribution_mS_cm);
+  // EC breakdown by ion (collapsible) - using reusable function
+  html += renderEcBreakdownTable(ecPrediction);
 
-  if (ionContributions.length > 0) {
-    html += `<details style="margin-top: 10px;">
-      <summary style="cursor: pointer; color: #007bff; font-size: 0.9em;">${i18n.t('showEcBreakdownByIon')}</summary>
-      <div style="margin-top: 10px; background: #f8f9fa; padding: 15px; border-radius: 4px;">
-        <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 2px solid #dee2e6;">
-              <th style="text-align: left; padding: 8px;">${i18n.t('ionHeader')}</th>
-              <th style="text-align: right; padding: 8px;">${i18n.t('concMmolLHeader')}</th>
-              <th style="text-align: right; padding: 8px;">${i18n.t('lambdaHeader')}</th>
-              <th style="text-align: right; padding: 8px;">${i18n.t('ecContribHeader')}</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-    ionContributions.forEach(([ion, data]) => {
-      const percentage = i18n.formatNumber((data.contribution_mS_cm / ecPrediction.rawEC * 100).toFixed(1));
-      html += `
-            <tr style="border-bottom: 1px solid #dee2e6;">
-              <td style="padding: 8px;">${ion}</td>
-              <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.concentration_mmolL.toFixed(2))}</td>
-              <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.lambda)}</td>
-              <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.contribution_mS_cm.toFixed(3))} ${i18n.t('mScmUnit')} (${percentage}%)</td>
-            </tr>`;
-    });
-
-    html += `
-          </tbody>
-        </table>
-        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
-          <strong>${i18n.t('ecBreakdownNote')}</strong> ${i18n.t('rawEcLabel')} = ${i18n.formatNumber(ecPrediction.rawEC.toFixed(3))} ${i18n.t('mScmUnit')}.
-          ${i18n.t('ionicStrengthCorrectionApplied', { factor: i18n.formatNumber((ecPrediction.rawEC / ecPrediction.ec_mS_cm).toFixed(3)) })}
-        </div>
-      </div>
-    </details>`;
-  }
-
-  // Add nutrient ratio analysis
+  // Add nutrient ratio analysis - using reusable function
   const ratios = calculateNutrientRatios(result.achieved);
-  if (ratios.length > 0) {
-    html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
-    html += '<div class="nutrient-ratio-grid">';
+  html += renderNutrientRatioCards(ratios);
 
-    ratios.forEach(ratio => {
-      const unit = ratio.unit || 'ppm';
-      html += `
-        <div class="nutrient-ratio-card">
-          <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
-            ${ratio.name}
-          </div>
-          <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
-            ${ratio.ratio}
-          </div>
-          <div style="font-size: 0.85em; color: #666;">
-            ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
-          </div>
-        </div>
-      `;
-    });
-
-    html += '</div>';
-  }
-
-  // Nutritional warnings (from checkWarnings function)
+  // Nutritional warnings - using reusable function
   const nutritionalWarnings = checkWarnings(result.achieved, activeFertilizers);
-  if (nutritionalWarnings.length > 0) {
-    html += '<h3 style="margin-top: 20px;">' + i18n.t('warningsAndRecommendations') + '</h3>';
-    nutritionalWarnings.forEach(warning => {
-      const boxClass = warning.level === 'warning' ? 'warning-box' :
-                       warning.level === 'error' ? 'error-box' : 'conversion-note';
-      const icon = warning.level === 'warning' ? '⚠️' :
-                   warning.level === 'error' ? '❌' : 'ℹ️';
-      html += `
-        <div class="${boxClass}" style="margin-bottom: 10px;">
-          <strong>${icon} ${warning.category}</strong><br>
-          ${warning.message}
-        </div>
-      `;
-    });
-  }
+  html += renderNutritionalWarnings(nutritionalWarnings);
 
   // Warnings or errors (target deviation warnings)
   if (!allGood) {
@@ -10212,47 +10588,15 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
   const ionBalance = calculateIonBalanceForFormula(activeFertilizers, volume);
 
   html += '<h3 style="margin-top: 20px;">' + i18n.t('ionBalance') + ' <span class="info-icon" onclick="openReverseIonBalanceExplanation()" title="' + i18n.t('clickToLearnIonBalance') + '">?</span></h3>';
-  html += `<div class="ion-balance-summary" style="margin-top: 10px;">
-    <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('cations')}</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalCations.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
-    </div>
-    <div class="ion-balance-card">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('anions')}</div>
-      <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber(ionBalance.totalAnions.toFixed(2))} ${i18n.t('meqPerLiter')}</div>
-    </div>
-    <div class="ion-balance-card status" style="background: ${ionBalance.statusColor}20; border-color: ${ionBalance.statusColor};">
-      <div style="font-size: 0.9em; color: #666;">${i18n.t('imbalance')}</div>
-      <div style="font-size: 1.3em; font-weight: bold; color: ${ionBalance.statusColor};">${i18n.formatNumber(ionBalance.imbalance.toFixed(1))}%</div>
-      <div style="font-size: 0.9em; color: ${ionBalance.statusColor};">${ionBalance.statusText}</div>
-    </div>
-  </div>`;
+  // Ion balance summary - using reusable function
+  html += renderIonBalanceSummary(ionBalance);
 
   // Calculate and display EC prediction using new ionic molar conductivity model
   const ecPrediction = estimateECFromPPM(result.achieved);
   const ecValue = ecPrediction.ec_mS_cm;
 
-  // Determine EC status color and text
-  let ecStatusColor, ecStatusText;
-  if (ecValue < 0.8) {
-    ecStatusColor = '#17a2b8';  // Info blue - very light
-    ecStatusText = i18n.t('ecVeryLight');
-  } else if (ecValue < 1.2) {
-    ecStatusColor = '#28a745';  // Green - light/seedlings
-    ecStatusText = i18n.t('ecLight');
-  } else if (ecValue < 1.8) {
-    ecStatusColor = '#28a745';  // Green - moderate
-    ecStatusText = i18n.t('ecModerate');
-  } else if (ecValue < 2.5) {
-    ecStatusColor = '#ffc107';  // Yellow - strong
-    ecStatusText = i18n.t('ecStrong');
-  } else if (ecValue < 3.5) {
-    ecStatusColor = '#fd7e14';  // Orange - very strong
-    ecStatusText = i18n.t('ecVeryStrong');
-  } else {
-    ecStatusColor = '#dc3545';  // Red - too high
-    ecStatusText = i18n.t('ecVeryHigh');
-  }
+  // Determine EC status color and text - using reusable function
+  const ecStatus = getEcStatus(ecValue);
 
   // Show different header based on whether EC was targeted
   if (targetEC !== null) {
@@ -10264,8 +10608,8 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
       </div>
       <div class="ion-balance-card" style="flex: 2;">
         <div style="font-size: 0.9em; color: #666;">${i18n.t('achievedEc')}</div>
-        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
-        <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
+        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatus.color};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
+        <div style="font-size: 0.9em; color: ${ecStatus.color}; margin-top: 5px;">${ecStatus.text}</div>
       </div>
       <div class="ion-balance-card">
         <div style="font-size: 0.9em; color: #666;">${i18n.t('ionicStrength')}</div>
@@ -10282,104 +10626,21 @@ function displayReverseResults(result, targets, volume, targetEC = null) {
       </div>`;
     }
   } else {
+    // EC prediction card - using reusable function
     html += '<h3 style="margin-top: 20px;">' + i18n.t('predictedEc') + '</h3>';
-    html += `<div class="ion-balance-summary" style="margin-top: 10px;">
-      <div class="ion-balance-card" style="flex: 2;">
-        <div style="font-size: 0.9em; color: #666;">${i18n.t('electricalConductivity25C')}</div>
-        <div style="font-size: 1.8em; font-weight: bold; color: ${ecStatusColor};">${i18n.formatNumber(ecValue.toFixed(2))} <span style="font-size: 0.6em;">${i18n.t('mScmUnit')}</span></div>
-        <div style="font-size: 0.9em; color: ${ecStatusColor}; margin-top: 5px;">${ecStatusText}</div>
-      </div>
-      <div class="ion-balance-card">
-        <div style="font-size: 0.9em; color: #666;">${i18n.t('ionicStrength')}</div>
-        <div style="font-size: 1.3em; font-weight: bold;">${i18n.formatNumber((ecPrediction.ionicStrength * 1000).toFixed(1))} <span style="font-size: 0.7em;">${i18n.t('mMUnit')}</span></div>
-      </div>
-    </div>`;
+    html += renderEcPredictionCard(ecValue, ecPrediction.ionicStrength);
   }
 
-  // EC breakdown by ion (collapsible)
-  const ionContributions = Object.entries(ecPrediction.contributions)
-    .sort((a, b) => b[1].contribution_mS_cm - a[1].contribution_mS_cm);
+  // EC breakdown by ion (collapsible) - using reusable function
+  html += renderEcBreakdownTable(ecPrediction);
 
-  if (ionContributions.length > 0) {
-    html += `<details style="margin-top: 10px;">
-      <summary style="cursor: pointer; color: #007bff; font-size: 0.9em;">${i18n.t('showEcBreakdownByIon')}</summary>
-      <div style="margin-top: 10px; background: #f8f9fa; padding: 15px; border-radius: 4px;">
-        <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 2px solid #dee2e6;">
-              <th style="text-align: left; padding: 8px;">${i18n.t('ionHeader')}</th>
-              <th style="text-align: right; padding: 8px;">${i18n.t('concMmolLHeader')}</th>
-              <th style="text-align: right; padding: 8px;">${i18n.t('lambdaHeader')}</th>
-              <th style="text-align: right; padding: 8px;">${i18n.t('ecContribHeader')}</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-    ionContributions.forEach(([ion, data]) => {
-      const percentage = i18n.formatNumber((data.contribution_mS_cm / ecPrediction.rawEC * 100).toFixed(1));
-      html += `
-            <tr style="border-bottom: 1px solid #dee2e6;">
-              <td style="padding: 8px;">${ion}</td>
-              <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.concentration_mmolL.toFixed(2))}</td>
-              <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.lambda)}</td>
-              <td style="text-align: right; padding: 8px;">${i18n.formatNumber(data.contribution_mS_cm.toFixed(3))} ${i18n.t('mScmUnit')} (${percentage}%)</td>
-            </tr>`;
-    });
-
-    html += `
-          </tbody>
-        </table>
-        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
-          <strong>${i18n.t('ecBreakdownNote')}</strong> ${i18n.t('rawEcLabel')} = ${i18n.formatNumber(ecPrediction.rawEC.toFixed(3))} ${i18n.t('mScmUnit')}.
-          ${i18n.t('ionicStrengthCorrectionApplied', { factor: i18n.formatNumber((ecPrediction.rawEC / ecPrediction.ec_mS_cm).toFixed(3)) })}
-        </div>
-      </div>
-    </details>`;
-  }
-
-  // Add nutrient ratio analysis
+  // Add nutrient ratio analysis - using reusable function
   const ratios = calculateNutrientRatios(result.achieved);
-  if (ratios.length > 0) {
-    html += '<h3 style="margin-top: 20px;">Nutrient Ratio Analysis</h3>';
-    html += '<div class="nutrient-ratio-grid">';
+  html += renderNutrientRatioCards(ratios);
 
-    ratios.forEach(ratio => {
-      const unit = ratio.unit || 'ppm';
-      html += `
-        <div class="nutrient-ratio-card">
-          <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">
-            ${ratio.name}
-          </div>
-          <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
-            ${ratio.ratio}
-          </div>
-          <div style="font-size: 0.85em; color: #666;">
-            ${ratio.labels.map((label, i) => `${label}: ${ratio.values[i].toFixed(1)} ${unit}`).join(' | ')}
-          </div>
-        </div>
-      `;
-    });
-
-    html += '</div>';
-  }
-
-  // Nutritional warnings (from checkWarnings function)
+  // Nutritional warnings - using reusable function
   const nutritionalWarnings = checkWarnings(result.achieved, activeFertilizers);
-  if (nutritionalWarnings.length > 0) {
-    html += '<h3 style="margin-top: 20px;">' + i18n.t('warningsAndRecommendations') + '</h3>';
-    nutritionalWarnings.forEach(warning => {
-      const boxClass = warning.level === 'warning' ? 'warning-box' :
-                       warning.level === 'error' ? 'error-box' : 'conversion-note';
-      const icon = warning.level === 'warning' ? '⚠️' :
-                   warning.level === 'error' ? '❌' : 'ℹ️';
-      html += `
-        <div class="${boxClass}" style="margin-bottom: 10px;">
-          <strong>${icon} ${warning.category}</strong><br>
-          ${warning.message}
-        </div>
-      `;
-    });
-  }
+  html += renderNutritionalWarnings(nutritionalWarnings);
 
   // Warnings or errors (target deviation warnings)
   if (!allGood) {
@@ -10745,46 +11006,8 @@ function generateIonBalanceExplanation() {
     };
   });
 
-  let content = `
-    <!-- What is Ion Balance? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('whatIsIonBalance')}</h3>
-      <p>
-        ${i18n.t('ionBalanceExplanation')}
-      </p>
-      <ul style="line-height: 1.8;">
-        <li>${i18n.t('cationsDescription')}</li>
-        <li>${i18n.t('anionsDescription')}</li>
-      </ul>
-      <p>
-        ${i18n.t('ionBalanceImportance')}
-      </p>
-    </div>
-
-    <!-- What is meq/L? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('understandingMeqL')}</h3>
-      <p>
-        ${i18n.t('meqLDescription')}
-      </p>
-      <p>
-        ${i18n.t('meqLAnalogy')}
-      </p>
-      <div class="formula-box">
-        <div class="formula">${i18n.t('meqLFormula')}</div>
-        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
-      </div>
-      <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
-        <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>${i18n.t('importantNotes')}</strong>
-        </p>
-        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li>${i18n.t('hydrationWaterNote')}</li>
-          <li>${i18n.t('ureaNote')}</li>
-        </ul>
-      </div>
-    </div>
-  `;
+  // Ion Balance explanation - using reusable function
+  let content = renderIonBalanceExplanation();
 
   if (activeFertilizers.length === 0) {
     content += `
@@ -10799,63 +11022,8 @@ function generateIonBalanceExplanation() {
       </div>
     `;
   } else {
-    // Calculate ion balance
-    let totalCations = 0;
-    let totalAnions = 0;
-    const ionDetails = {};
-    const fertilizerBreakdown = [];
-
-    activeFertilizers.forEach(fert => {
-      const ionData = ION_DATA[fert.id];
-
-      if (!ionData) {
-        return; // Skip fertilizers without ion data
-      }
-
-      const moles = fert.grams / ionData.molarMass;
-      const fertIons = [];
-
-      ionData.ions.forEach(ionInfo => {
-        const meq = moles * ionInfo.count * ionInfo.charge * 1000;
-        const meqPerLiter = meq / volume;
-
-        fertIons.push({
-          ...ionInfo,
-          meq: meqPerLiter,
-          calculation: {
-            moles: moles,
-            meq: meq,
-            meqPerLiter: meqPerLiter
-          }
-        });
-
-        // Track by ion name
-        if (!ionDetails[ionInfo.ion]) {
-          ionDetails[ionInfo.ion] = {
-            meq: 0,
-            type: ionInfo.type
-          };
-        }
-        ionDetails[ionInfo.ion].meq += meqPerLiter;
-
-        // Add to totals
-        if (ionInfo.type === 'cation') {
-          totalCations += meqPerLiter;
-        } else {
-          totalAnions += meqPerLiter;
-        }
-      });
-
-      fertilizerBreakdown.push({
-        fert: fert,
-        ionData: ionData,
-        moles: moles,
-        ions: fertIons
-      });
-    });
-
-    const average = (totalCations + totalAnions) / 2;
-    const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
+    // Calculate ion balance - using reusable function
+    const { totalCations, totalAnions, ionDetails, fertilizerBreakdown, imbalance } = calculateIonBalanceDetails(activeFertilizers, volume);
 
     content += `
       <!-- Your Calculation -->
@@ -10972,87 +11140,11 @@ function generateIonBalanceExplanation() {
       statusText = i18n.t('imbalancedX');
     }
 
-    content += `
-      <div class="explanation-section" style="background: ${statusColor}20; border-left-color: ${statusColor};">
-        <h3 style="color: ${statusColor};">${i18n.t('finalIonBalanceResults')}</h3>
+    // Final Ion Balance Results - using reusable function
+    content += renderFinalIonBalanceResults(totalCations, totalAnions, imbalance, statusColor, statusText, 'finalIonBalanceResults', true);
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalCationsPlus')}</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))}</div>
-            <div style="font-size: 0.9em; color: #666;">${i18n.t('meqLHeader')}</div>
-          </div>
-          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalAnionsMinus')}</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))}</div>
-            <div style="font-size: 0.9em; color: #666;">${i18n.t('meqLHeader')}</div>
-          </div>
-        </div>
-
-        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${statusColor};">
-          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('imbalancePercentage')}</div>
-          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
-          <div style="font-size: 1em; color: ${statusColor}; margin-top: 5px;">${statusText}</div>
-        </div>
-
-        <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
-          <h4 style="margin-top: 0;">${i18n.t('howWeCalculatedImbalance')}</h4>
-          <p style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px;">
-            Average = (${i18n.formatNumber(totalCations.toFixed(2))} + ${i18n.formatNumber(totalAnions.toFixed(2))}) ÷ ${i18n.formatNumber(2)} = ${i18n.formatNumber(average.toFixed(2))} ${i18n.t('meqLHeader')}<br>
-            Imbalance = |${i18n.formatNumber(totalCations.toFixed(2))} - ${i18n.formatNumber(totalAnions.toFixed(2))}| ÷ ${i18n.formatNumber(average.toFixed(2))} × ${i18n.formatNumber(100)} = <strong>${i18n.formatNumber(imbalance.toFixed(1))}%</strong>
-          </p>
-        </div>
-      </div>
-    `;
-
-    // Individual ion breakdown
-    if (cations.length > 0 || anions.length > 0) {
-      content += `
-        <div class="explanation-section">
-          <h3>${i18n.t('ionBreakdownByType')}</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-      `;
-
-      // Cations
-      content += `
-        <div>
-          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('cationsPlus')}</h4>
-      `;
-      cations.forEach(([ion, data]) => {
-        const percentage = totalCations > 0 ? (data.meq / totalCations * 100).toFixed(1) : 0;
-        content += `
-          <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
-            <div style="display: flex; justify-content: space-between;">
-              <strong>${ion}</strong>
-              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
-            </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalCations', {percentage})}</div>
-          </div>
-        `;
-      });
-      content += `</div>`;
-
-      // Anions
-      content += `
-        <div>
-          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('anionsMinus')}</h4>
-      `;
-      anions.forEach(([ion, data]) => {
-        const percentage = totalAnions > 0 ? (data.meq / totalAnions * 100).toFixed(1) : 0;
-        content += `
-          <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
-            <div style="display: flex; justify-content: space-between;">
-              <strong>${ion}</strong>
-              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
-            </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalAnions', {percentage})}</div>
-          </div>
-        `;
-      });
-      content += `</div>`;
-
-      content += `</div></div>`;
-    }
+    // Individual ion breakdown - using reusable function
+    content += renderIonBreakdownGrid(cations, anions, totalCations, totalAnions);
   }
 
   // Always include interpretation guide
@@ -11268,35 +11360,8 @@ function generateReversePPMExplanation() {
   }
 
   // Oxide conversions info
-  content += `
-    <div class="explanation-section">
-      <h3>${i18n.t('understandingOxideConversions')}</h3>
-      <p>
-        ${i18n.t('oxideConversionsExplanation')}
-      </p>
-      <table class="conversion-table">
-        <thead>
-          <tr>
-            <th>${i18n.t('oxideFormHeader')}</th>
-            <th>${i18n.t('elementalFormHeader')}</th>
-            <th>${i18n.t('conversionFactorHeader')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>P₂O₅</td>
-            <td>P</td>
-            <td>× 0.436</td>
-          </tr>
-          <tr>
-            <td>K₂O</td>
-            <td>K</td>
-            <td>× 0.830</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  `;
+  // Oxide conversion explanation - using reusable function
+  content += renderOxideConversionExplanation();
 
   return content;
 }
@@ -11322,46 +11387,8 @@ function generateReverseIonBalanceExplanation() {
       return { ...fert, grams };
     });
 
-  let content = `
-    <!-- What is Ion Balance? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('whatIsIonBalance')}</h3>
-      <p>
-        ${i18n.t('ionBalanceExplanation')}
-      </p>
-      <ul style="line-height: 1.8;">
-        <li>${i18n.t('cationsDescription')}</li>
-        <li>${i18n.t('anionsDescription')}</li>
-      </ul>
-      <p>
-        ${i18n.t('ionBalanceImportance')}
-      </p>
-    </div>
-
-    <!-- What is meq/L? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('understandingMeqL')}</h3>
-      <p>
-        ${i18n.t('meqLDescription')}
-      </p>
-      <p>
-        ${i18n.t('meqLAnalogy')}
-      </p>
-      <div class="formula-box">
-        <div class="formula">${i18n.t('meqLFormula')}</div>
-        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
-      </div>
-      <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
-        <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>${i18n.t('importantNotes')}</strong>
-        </p>
-        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li>${i18n.t('hydrationWaterNote')}</li>
-          <li>${i18n.t('ureaNote')}</li>
-        </ul>
-      </div>
-    </div>
-  `;
+  // Ion Balance explanation - using reusable function
+  let content = renderIonBalanceExplanation();
 
   if (activeFertilizers.length === 0) {
     content += `
@@ -11371,63 +11398,8 @@ function generateReverseIonBalanceExplanation() {
       </div>
     `;
   } else {
-    // Calculate ion balance
-    let totalCations = 0;
-    let totalAnions = 0;
-    const ionDetails = {};
-    const fertilizerBreakdown = [];
-
-    activeFertilizers.forEach(fert => {
-      const ionData = ION_DATA[fert.id];
-
-      if (!ionData) {
-        return; // Skip fertilizers without ion data
-      }
-
-      const moles = fert.grams / ionData.molarMass;
-      const fertIons = [];
-
-      ionData.ions.forEach(ionInfo => {
-        const meq = moles * ionInfo.count * ionInfo.charge * 1000;
-        const meqPerLiter = meq / volume;
-
-        fertIons.push({
-          ...ionInfo,
-          meq: meqPerLiter,
-          calculation: {
-            moles: moles,
-            meq: meq,
-            meqPerLiter: meqPerLiter
-          }
-        });
-
-        // Track by ion name
-        if (!ionDetails[ionInfo.ion]) {
-          ionDetails[ionInfo.ion] = {
-            meq: 0,
-            type: ionInfo.type
-          };
-        }
-        ionDetails[ionInfo.ion].meq += meqPerLiter;
-
-        // Add to totals
-        if (ionInfo.type === 'cation') {
-          totalCations += meqPerLiter;
-        } else {
-          totalAnions += meqPerLiter;
-        }
-      });
-
-      fertilizerBreakdown.push({
-        fert: fert,
-        ionData: ionData,
-        moles: moles,
-        ions: fertIons
-      });
-    });
-
-    const average = (totalCations + totalAnions) / 2;
-    const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
+    // Calculate ion balance - using reusable function
+    const { totalCations, totalAnions, ionDetails, fertilizerBreakdown, imbalance } = calculateIonBalanceDetails(activeFertilizers, volume);
 
     content += `
       <!-- Your Calculation -->
@@ -11525,88 +11497,11 @@ function generateReverseIonBalanceExplanation() {
     const cations = Object.entries(ionDetails).filter(([ion, data]) => data.type === 'cation').sort((a, b) => b[1].meq - a[1].meq);
     const anions = Object.entries(ionDetails).filter(([ion, data]) => data.type === 'anion').sort((a, b) => b[1].meq - a[1].meq);
 
-    content += `
-      <!-- Summary -->
-      <div class="explanation-section" style="background: ${statusColor}15; border-left-color: ${statusColor};">
-        <h3 style="color: ${statusColor};">${i18n.t('finalResults')}</h3>
+    // Final Results - using reusable function
+    content += renderFinalIonBalanceResults(totalCations, totalAnions, imbalance, statusColor, statusText, 'finalResults', false);
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalCationsPlus')}</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))}</div>
-            <div style="font-size: 0.9em; color: #666;">meq/L</div>
-          </div>
-          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('totalAnionsMinus')}</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))}</div>
-            <div style="font-size: 0.9em; color: #666;">meq/L</div>
-          </div>
-        </div>
-
-        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${statusColor};">
-          <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${i18n.t('imbalancePercentage')}</div>
-          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
-          <div style="font-size: 1em; color: ${statusColor}; margin-top: 5px;">${statusText}</div>
-        </div>
-
-        <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
-          <h4 style="margin-top: 0;">${i18n.t('howWeCalculatedImbalance')}</h4>
-          <p style="font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px;">
-            Average = (${i18n.formatNumber(totalCations.toFixed(2))} + ${i18n.formatNumber(totalAnions.toFixed(2))}) ÷ 2 = ${i18n.formatNumber(average.toFixed(2))} meq/L<br>
-            Imbalance = |${i18n.formatNumber(totalCations.toFixed(2))} - ${i18n.formatNumber(totalAnions.toFixed(2))}| ÷ ${i18n.formatNumber(average.toFixed(2))} × 100 = <strong>${i18n.formatNumber(imbalance.toFixed(1))}%</strong>
-          </p>
-        </div>
-      </div>
-    `;
-
-    // Individual ion breakdown
-    if (cations.length > 0 || anions.length > 0) {
-      content += `
-        <div class="explanation-section">
-          <h3>${i18n.t('ionBreakdownByType')}</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-      `;
-
-      // Cations
-      content += `
-        <div>
-          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('cationsPlus')}</h4>
-      `;
-      cations.forEach(([ion, data]) => {
-        const percentage = totalCations > 0 ? (data.meq / totalCations * 100).toFixed(1) : 0;
-        content += `
-          <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
-            <div style="display: flex; justify-content: space-between;">
-              <strong>${ion}</strong>
-              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
-            </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalCations', {percentage})}</div>
-          </div>
-        `;
-      });
-      content += `</div>`;
-
-      // Anions
-      content += `
-        <div>
-          <h4 style="color: #007bff; margin-top: 0;">${i18n.t('anionsMinus')}</h4>
-      `;
-      anions.forEach(([ion, data]) => {
-        const percentage = totalAnions > 0 ? (data.meq / totalAnions * 100).toFixed(1) : 0;
-        content += `
-          <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
-            <div style="display: flex; justify-content: space-between;">
-              <strong>${ion}</strong>
-              <span>${i18n.formatNumber(data.meq.toFixed(2))} meq/L</span>
-            </div>
-            <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${i18n.t('percentOfTotalAnions', {percentage})}</div>
-          </div>
-        `;
-      });
-      content += `</div>`;
-
-      content += `</div></div>`;
-    }
+    // Individual ion breakdown - using reusable function
+    content += renderIonBreakdownGrid(cations, anions, totalCations, totalAnions);
   }
 
   // Always include interpretation guide
@@ -11842,35 +11737,8 @@ function generateTwoTankPPMExplanation() {
   }
 
   // Oxide conversions info
-  content += `
-    <div class="explanation-section">
-      <h3>${i18n.t('understandingOxideConversions')}</h3>
-      <p>
-        ${i18n.t('oxideConversionsExplanation')}
-      </p>
-      <table class="conversion-table">
-        <thead>
-          <tr>
-            <th>${i18n.t('oxideFormHeader')}</th>
-            <th>${i18n.t('elementalFormHeader')}</th>
-            <th>${i18n.t('conversionFactorHeader')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>P₂O₅</td>
-            <td>P</td>
-            <td>× 0.436</td>
-          </tr>
-          <tr>
-            <td>K₂O</td>
-            <td>K</td>
-            <td>× 0.830</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  `;
+  // Oxide conversion explanation - using reusable function
+  content += renderOxideConversionExplanation();
 
   return content;
 }
@@ -11894,46 +11762,10 @@ function generateTwoTankIonBalanceExplanation() {
     ...getTankFertilizerArray(tankB.fertilizers, 'B')
   ];
 
-  let content = `
-    <!-- What is Ion Balance? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('whatIsIonBalance')}</h3>
-      <p>
-        ${i18n.t('ionBalanceExplanation')}
-      </p>
-      <ul style="line-height: 1.8;">
-        <li>${i18n.t('cationsDescription')}</li>
-        <li>${i18n.t('anionsDescription')}</li>
-      </ul>
-      <p>
-        ${i18n.t('ionBalanceImportance')}
-      </p>
-    </div>
+  // Ion Balance explanation - using reusable function
+  let content = renderIonBalanceExplanation();
 
-    <!-- What is meq/L? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('understandingMeqL')}</h3>
-      <p>
-        ${i18n.t('meqLDescription')}
-      </p>
-      <p>
-        ${i18n.t('meqLAnalogy')}
-      </p>
-      <div class="formula-box">
-        <div class="formula">${i18n.t('meqLFormula')}</div>
-        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
-      </div>
-      <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
-        <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>${i18n.t('importantNotes')}</strong>
-        </p>
-        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li>${i18n.t('hydrationWaterNote')}</li>
-          <li>${i18n.t('ureaNote')}</li>
-        </ul>
-      </div>
-    </div>
-
+  content += `
     <!-- Two-Tank Note -->
     <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
       <h3 style="color: #17a2b8;">Two-Tank System Ion Balance</h3>
@@ -12190,46 +12022,8 @@ function generateFormulaIonBalanceExplanation() {
       return { ...fert, grams };
     });
 
-  let content = `
-    <!-- What is Ion Balance? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('whatIsIonBalance')}</h3>
-      <p>
-        ${i18n.t('ionBalanceExplanation')}
-      </p>
-      <ul style="line-height: 1.8;">
-        <li>${i18n.t('cationsDescription')}</li>
-        <li>${i18n.t('anionsDescription')}</li>
-      </ul>
-      <p>
-        ${i18n.t('ionBalanceImportance')}
-      </p>
-    </div>
-
-    <!-- What is meq/L? -->
-    <div class="explanation-section">
-      <h3>${i18n.t('understandingMeqL')}</h3>
-      <p>
-        ${i18n.t('meqLDescription')}
-      </p>
-      <p>
-        ${i18n.t('meqLAnalogy')}
-      </p>
-      <div class="formula-box">
-        <div class="formula">${i18n.t('meqLFormula')}</div>
-        <div class="description">${i18n.t('meqLFormulaDesc')}</div>
-      </div>
-      <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
-        <p style="margin: 0; font-size: 0.95em; line-height: 1.6;">
-          <strong>${i18n.t('importantNotes')}</strong>
-        </p>
-        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
-          <li>${i18n.t('hydrationWaterNote')}</li>
-          <li>${i18n.t('ureaNote')}</li>
-        </ul>
-      </div>
-    </div>
-  `;
+  // Ion Balance explanation - using reusable function
+  let content = renderIonBalanceExplanation();
 
   if (activeFertilizers.length === 0) {
     content += `
@@ -12354,28 +12148,8 @@ function generateFormulaIonBalanceExplanation() {
       statusText = i18n.t('caution');
     }
 
-    content += `
-      <div class="explanation-section" style="background: ${statusColor}15; border-left-color: ${statusColor};">
-        <h3 style="color: ${statusColor};">${i18n.t('finalResults')}</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666;">${i18n.t('totalCationsPlus')}</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalCations.toFixed(2))}</div>
-            <div style="font-size: 0.9em; color: #666;">meq/L</div>
-          </div>
-          <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-            <div style="font-size: 0.9em; color: #666;">${i18n.t('totalAnionsMinus')}</div>
-            <div style="font-size: 1.8em; font-weight: bold; color: #007bff;">${i18n.formatNumber(totalAnions.toFixed(2))}</div>
-            <div style="font-size: 0.9em; color: #666;">meq/L</div>
-          </div>
-        </div>
-        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid ${statusColor};">
-          <div style="font-size: 0.9em; color: #666;">${i18n.t('imbalance')}</div>
-          <div style="font-size: 2em; font-weight: bold; color: ${statusColor};">${i18n.formatNumber(imbalance.toFixed(1))}%</div>
-          <div style="font-size: 1em; color: ${statusColor};">${statusText}</div>
-        </div>
-      </div>
-    `;
+    // Final Results - using reusable function (without calculation explanation)
+    content += renderFinalIonBalanceResults(totalCations, totalAnions, imbalance, statusColor, statusText, 'finalResults', false, false);
   }
 
   content += `
