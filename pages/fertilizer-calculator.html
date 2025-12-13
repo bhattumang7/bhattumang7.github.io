@@ -191,13 +191,31 @@ permalink: /fertilizer-calculator/
 
     <div class="wizard-fertilizer-section">
       <div class="wizard-fertilizer-search">
-        <input type="text" id="wizard-grams-search" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers..." oninput="filterWizardGramsFertilizers(this.value)">
+        <input type="text" v-model="wizardGramsSearchTerm" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
       </div>
       <div class="wizard-selection-controls">
-        <button onclick="clearWizardGramsSelections()" data-i18n="clearAll">Clear All</button>
+        <button @click="clearWizardGramsSelectionsVue" data-i18n="clearAll">Clear All</button>
       </div>
-      <div class="wizard-fertilizer-list" id="wizard-grams-fertilizer-list">
-        <!-- Populated by JavaScript -->
+      <div class="wizard-fertilizer-list">
+        <div v-for="fert in filteredWizardGramsFertilizers" :key="fert.id" class="wizard-fertilizer-item">
+          <input type="checkbox"
+                 :id="'wizard-grams-check-' + fert.id"
+                 class="wizard-fert-checkbox"
+                 :checked="wizardGramsFertilizers[fert.id]?.checked"
+                 @change="toggleWizardGramsFertilizer(fert.id)">
+          <label :for="'wizard-grams-check-' + fert.id" class="wizard-fert-label">
+            <span class="wizard-fert-name">{{ fert.name }}</span>
+            <span v-if="fert.aliases && fert.aliases.length" class="wizard-fert-aliases">{{ fert.aliases.join(', ') }}</span>
+          </label>
+          <input type="number"
+                 class="wizard-grams-input"
+                 :value="wizardGramsFertilizers[fert.id]?.grams"
+                 @input="updateWizardGrams(fert.id, $event.target.value)"
+                 data-i18n-placeholder="grams"
+                 placeholder="Grams"
+                 min="0"
+                 step="0.1">
+        </div>
       </div>
     </div>
 
@@ -301,15 +319,25 @@ permalink: /fertilizer-calculator/
 
     <div class="wizard-fertilizer-section">
       <div class="wizard-fertilizer-search">
-        <input type="text" id="wizard-available-search" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers..." oninput="filterWizardAvailableFertilizers(this.value)">
+        <input type="text" v-model="wizardAvailSearchTerm" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
       </div>
       <div class="wizard-selection-controls">
-        <button onclick="selectAllWizardFertilizers()" data-i18n="selectAll">Select All</button>
-        <button onclick="deselectAllWizardFertilizers()" data-i18n="deselectAll">Deselect All</button>
-        <button onclick="selectCommonWizardFertilizers()" data-i18n="commonOnly">Common Only</button>
+        <button @click="selectAllWizardFertilizersVue" data-i18n="selectAll">Select All</button>
+        <button @click="deselectAllWizardFertilizersVue" data-i18n="deselectAll">Deselect All</button>
+        <button @click="selectCommonWizardFertilizersVue" data-i18n="commonOnly">Common Only</button>
       </div>
-      <div class="wizard-fertilizer-list" id="wizard-available-fertilizer-list">
-        <!-- Populated by JavaScript -->
+      <div class="wizard-fertilizer-list">
+        <div v-for="fert in filteredWizardAvailFertilizers" :key="fert.id" class="wizard-fertilizer-item">
+          <input type="checkbox"
+                 :id="'wizard-avail-check-' + fert.id"
+                 class="wizard-fert-checkbox"
+                 :checked="wizardAvailFertilizers[fert.id]"
+                 @change="toggleWizardAvailFertilizer(fert.id)">
+          <label :for="'wizard-avail-check-' + fert.id" class="wizard-fert-label">
+            <span class="wizard-fert-name">{{ fert.name }}</span>
+            <span v-if="fert.aliases && fert.aliases.length" class="wizard-fert-aliases">{{ fert.aliases.join(', ') }}</span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -2311,7 +2339,7 @@ function proceedFromVolumeStep() {
     showWizardStep('calc-mode-step');
   } else if (selectedMode === 'ppm-calc') {
     showWizardStep('grams-input-step');
-    renderWizardGramsFertilizerList();
+    // Vue renders the fertilizer list reactively
   } else {
     // Skip directly to calculator (fallback)
     proceedToCalculator();
@@ -2535,7 +2563,9 @@ function backToModeSelector() {
   }
 
   // Reset wizard inputs
-  clearWizardGramsSelections();
+  if (window.vueApp && window.vueApp.clearWizardGramsSelectionsVue) {
+    window.vueApp.clearWizardGramsSelectionsVue();
+  }
   clearWizardPPMTargets();
   clearWizardNPKRatios();
 
@@ -2548,86 +2578,8 @@ function backToModeSelector() {
 // ==========================================
 
 // --- Grams → PPM Wizard Functions ---
-
-function renderWizardGramsFertilizerList() {
-  const container = document.getElementById('wizard-grams-fertilizer-list');
-  if (!container) return;
-  container.innerHTML = '';
-
-  FERTILIZERS.forEach(fert => {
-    const item = document.createElement('div');
-    item.className = 'wizard-fertilizer-item';
-    item.id = `wizard-grams-item-${fert.id}`;
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = `wizard-grams-check-${fert.id}`;
-    checkbox.className = 'wizard-fert-checkbox';
-
-    const label = document.createElement('label');
-    label.htmlFor = `wizard-grams-check-${fert.id}`;
-    label.className = 'wizard-fert-label';
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'wizard-fert-name';
-    nameSpan.textContent = fert.name;
-    label.appendChild(nameSpan);
-
-    if (fert.aliases && fert.aliases.length > 0) {
-      const aliasSpan = document.createElement('span');
-      aliasSpan.className = 'wizard-fert-aliases';
-      aliasSpan.textContent = fert.aliases.join(', ');
-      label.appendChild(aliasSpan);
-    }
-
-    const gramsInput = document.createElement('input');
-    gramsInput.type = 'number';
-    gramsInput.id = `wizard-grams-input-${fert.id}`;
-    gramsInput.className = 'wizard-grams-input';
-    gramsInput.placeholder = i18n.t('grams');
-    gramsInput.setAttribute('data-i18n-placeholder', 'grams');
-    gramsInput.min = '0';
-    gramsInput.step = '0.1';
-    gramsInput.oninput = function() {
-      // Auto-check checkbox when user enters a value
-      if (parseFloat(this.value) > 0) {
-        checkbox.checked = true;
-      }
-    };
-
-    item.appendChild(checkbox);
-    item.appendChild(label);
-    item.appendChild(gramsInput);
-    container.appendChild(item);
-  });
-}
-
-function filterWizardGramsFertilizers(searchTerm) {
-  const term = searchTerm.toLowerCase();
-  FERTILIZERS.forEach(fert => {
-    const item = document.getElementById(`wizard-grams-item-${fert.id}`);
-    if (!item) return;
-
-    const nameMatch = fert.name.toLowerCase().includes(term);
-    const aliasMatch = fert.aliases && fert.aliases.some(a => a.toLowerCase().includes(term));
-
-    item.style.display = (nameMatch || aliasMatch || term === '') ? '' : 'none';
-  });
-}
-
-function clearWizardGramsSelections() {
-  FERTILIZERS.forEach(fert => {
-    const checkbox = document.getElementById(`wizard-grams-check-${fert.id}`);
-    const input = document.getElementById(`wizard-grams-input-${fert.id}`);
-    if (checkbox) checkbox.checked = false;
-    if (input) input.value = '';
-  });
-  const searchInput = document.getElementById('wizard-grams-search');
-  if (searchInput) {
-    searchInput.value = '';
-    filterWizardGramsFertilizers('');
-  }
-}
+// NOTE: renderWizardGramsFertilizerList, filterWizardGramsFertilizers, and clearWizardGramsSelections
+// have been replaced with Vue reactive templates and methods (see Vue app section)
 
 // Store pending wizard calculation for two-tank decision
 let pendingWizardCalculation = null;
@@ -2662,29 +2614,25 @@ function calculateFromWizardGrams() {
   // Transfer wizard selections to Vue state and build formula for compatibility check
   let hasSelection = false;
   const formula = {};
-  FERTILIZERS.forEach(fert => {
-    const wizardCheckbox = document.getElementById(`wizard-grams-check-${fert.id}`);
-    const wizardInput = document.getElementById(`wizard-grams-input-${fert.id}`);
 
-    if (wizardCheckbox && wizardCheckbox.checked && wizardInput) {
-      const grams = parseFloat(wizardInput.value) || 0;
-      if (grams > 0) {
-        // Update Vue state if available
-        if (window.vueApp && window.vueApp.fertilizerAmounts && window.vueApp.fertilizerAmounts[fert.id]) {
-          window.vueApp.fertilizerAmounts[fert.id].checked = true;
-          window.vueApp.fertilizerAmounts[fert.id].grams = grams;
+  // Use Vue state directly if available
+  if (window.vueApp && window.vueApp.wizardGramsFertilizers) {
+    FERTILIZERS.forEach(fert => {
+      const wizardState = window.vueApp.wizardGramsFertilizers[fert.id];
+      if (wizardState && wizardState.checked) {
+        const grams = parseFloat(wizardState.grams) || 0;
+        if (grams > 0) {
+          // Update Vue state for main calculator
+          if (window.vueApp.fertilizerAmounts && window.vueApp.fertilizerAmounts[fert.id]) {
+            window.vueApp.fertilizerAmounts[fert.id].checked = true;
+            window.vueApp.fertilizerAmounts[fert.id].grams = grams;
+          }
+          hasSelection = true;
+          formula[fert.id] = grams;
         }
-        // Also update DOM for backwards compatibility
-        const mainCheckbox = document.getElementById(`check-${fert.id}`);
-        const mainInput = document.getElementById(`grams-${fert.id}`);
-        if (mainCheckbox) mainCheckbox.checked = true;
-        if (mainInput) mainInput.value = grams;
-
-        hasSelection = true;
-        formula[fert.id] = grams;
       }
-    }
-  });
+    });
+  }
 
   if (!hasSelection) {
     alert(i18n.t('alertSelectFertilizerAndAmount'));
@@ -2762,8 +2710,7 @@ function proceedToFormulaFertilizerStep() {
     return;
   }
 
-  // Render the fertilizer selection list
-  renderWizardAvailableFertilizerList();
+  // Vue renders the fertilizer selection list reactively
 
   // Show fertilizer select step
   showWizardStep('fertilizer-select-step');
@@ -2795,88 +2742,16 @@ function proceedToReverseFertilizerStep() {
     return;
   }
 
-  // Render the fertilizer selection list
-  renderWizardAvailableFertilizerList();
+  // Vue renders the fertilizer selection list reactively
 
   // Show fertilizer select step
   showWizardStep('fertilizer-select-step');
 }
 
 // --- Shared Fertilizer Selection Functions ---
-
-function renderWizardAvailableFertilizerList() {
-  const container = document.getElementById('wizard-available-fertilizer-list');
-  if (!container) return;
-  container.innerHTML = '';
-
-  FERTILIZERS.forEach(fert => {
-    const item = document.createElement('div');
-    item.className = 'wizard-fertilizer-item';
-    item.id = `wizard-avail-item-${fert.id}`;
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = `wizard-avail-check-${fert.id}`;
-    checkbox.className = 'wizard-fert-checkbox';
-    checkbox.checked = COMMON_FERTILIZERS.includes(fert.id);
-
-    const label = document.createElement('label');
-    label.htmlFor = `wizard-avail-check-${fert.id}`;
-    label.className = 'wizard-fert-label';
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'wizard-fert-name';
-    nameSpan.textContent = fert.name;
-    label.appendChild(nameSpan);
-
-    if (fert.aliases && fert.aliases.length > 0) {
-      const aliasSpan = document.createElement('span');
-      aliasSpan.className = 'wizard-fert-aliases';
-      aliasSpan.textContent = fert.aliases.join(', ');
-      label.appendChild(aliasSpan);
-    }
-
-    item.appendChild(checkbox);
-    item.appendChild(label);
-    container.appendChild(item);
-  });
-}
-
-function filterWizardAvailableFertilizers(searchTerm) {
-  const term = searchTerm.toLowerCase();
-  FERTILIZERS.forEach(fert => {
-    const item = document.getElementById(`wizard-avail-item-${fert.id}`);
-    if (!item) return;
-
-    const nameMatch = fert.name.toLowerCase().includes(term);
-    const aliasMatch = fert.aliases && fert.aliases.some(a => a.toLowerCase().includes(term));
-
-    item.style.display = (nameMatch || aliasMatch || term === '') ? '' : 'none';
-  });
-}
-
-function selectAllWizardFertilizers() {
-  FERTILIZERS.forEach(fert => {
-    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
-    if (checkbox) checkbox.checked = true;
-  });
-}
-
-function deselectAllWizardFertilizers() {
-  FERTILIZERS.forEach(fert => {
-    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
-    if (checkbox) checkbox.checked = false;
-  });
-}
-
-function selectCommonWizardFertilizers() {
-  FERTILIZERS.forEach(fert => {
-    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
-    if (checkbox) {
-      checkbox.checked = COMMON_FERTILIZERS.includes(fert.id);
-    }
-  });
-}
+// NOTE: renderWizardAvailableFertilizerList, filterWizardAvailableFertilizers, selectAllWizardFertilizers,
+// deselectAllWizardFertilizers, and selectCommonWizardFertilizers have been replaced with
+// Vue reactive templates and methods (see Vue app section)
 
 function backFromFertilizerSelectStep() {
   if (selectedMode === 'formula-builder') {
@@ -2892,14 +2767,15 @@ async function calculateFromWizardFertilizerSelect() {
   // Get the volume from wizard input
   const wizardVolume = parseFloat(document.getElementById('wizard-volume').value) || 10;
 
-  // Get selected fertilizers
+  // Get selected fertilizers from Vue state
   const selectedFerts = [];
-  FERTILIZERS.forEach(fert => {
-    const checkbox = document.getElementById(`wizard-avail-check-${fert.id}`);
-    if (checkbox && checkbox.checked) {
-      selectedFerts.push(fert.id);
-    }
-  });
+  if (window.vueApp && window.vueApp.wizardAvailFertilizers) {
+    FERTILIZERS.forEach(fert => {
+      if (window.vueApp.wizardAvailFertilizers[fert.id]) {
+        selectedFerts.push(fert.id);
+      }
+    });
+  }
 
   if (selectedFerts.length === 0) {
     alert(i18n.t('alertSelectFertilizer'));
@@ -2950,13 +2826,12 @@ async function calculateFromWizardFertilizerSelect() {
       formulaSiInput.value = siInput.value || '0';
     }
 
-    // Transfer fertilizer selections to main calculator
-    FERTILIZERS.forEach(fert => {
-      const mainCheckbox = document.getElementById(`available-${fert.id}`);
-      if (mainCheckbox) {
-        mainCheckbox.checked = selectedFerts.includes(fert.id);
-      }
-    });
+    // Transfer fertilizer selections to main calculator Vue state
+    if (window.vueApp && window.vueApp.availableFertilizers) {
+      FERTILIZERS.forEach(fert => {
+        window.vueApp.availableFertilizers[fert.id] = selectedFerts.includes(fert.id);
+      });
+    }
 
     // Run the calculation and wait for it to complete
     await buildFormula();
@@ -3017,13 +2892,12 @@ async function calculateFromWizardFertilizerSelect() {
       reverseSiInput.value = siInput.value || '0';
     }
 
-    // Transfer fertilizer selections to main calculator
-    FERTILIZERS.forEach(fert => {
-      const mainCheckbox = document.getElementById(`reverse-${fert.id}`);
-      if (mainCheckbox) {
-        mainCheckbox.checked = selectedFerts.includes(fert.id);
-      }
-    });
+    // Transfer fertilizer selections to main calculator Vue state
+    if (window.vueApp && window.vueApp.reverseFertilizers) {
+      FERTILIZERS.forEach(fert => {
+        window.vueApp.reverseFertilizers[fert.id] = selectedFerts.includes(fert.id);
+      });
+    }
 
     // Add EC to indicator
     const ecValue = selectedEC.replace('ec:', '');
@@ -5049,6 +4923,14 @@ const FertilizerApp = {
     const wizardStep = ref('mode-selector');
     const wizardVolume = ref(10);
 
+    // Wizard Grams Fertilizer List state
+    const wizardGramsFertilizers = reactive({}); // { fertilizer_id: { checked: false, grams: '' } }
+    const wizardGramsSearchTerm = ref('');
+
+    // Wizard Available Fertilizers List state (for formula/reverse)
+    const wizardAvailFertilizers = reactive({}); // { fertilizer_id: checked }
+    const wizardAvailSearchTerm = ref('');
+
     // Shared inputs
     const volume = ref(10);
     const calculationMode = ref('oxide'); // 'oxide' or 'elemental'
@@ -5282,6 +5164,42 @@ const FertilizerApp = {
       }));
     });
 
+    // Wizard: Filter grams fertilizers based on search
+    const filteredWizardGramsFertilizers = computed(() => {
+      if (!wizardGramsSearchTerm.value.trim()) return FERTILIZERS;
+      const term = wizardGramsSearchTerm.value.toLowerCase();
+      return FERTILIZERS.filter(f =>
+        f.name.toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term)))
+      );
+    });
+
+    // Wizard: Filter available fertilizers based on search
+    const filteredWizardAvailFertilizers = computed(() => {
+      if (!wizardAvailSearchTerm.value.trim()) return FERTILIZERS;
+      const term = wizardAvailSearchTerm.value.toLowerCase();
+      return FERTILIZERS.filter(f =>
+        f.name.toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term)))
+      );
+    });
+
+    // Wizard: Get active grams fertilizers (checked with amount > 0)
+    const activeWizardGramsFertilizers = computed(() => {
+      return FERTILIZERS.filter(f => {
+        const state = wizardGramsFertilizers[f.id];
+        return state && state.checked && parseFloat(state.grams) > 0;
+      }).map(f => ({
+        ...f,
+        grams: parseFloat(wizardGramsFertilizers[f.id].grams)
+      }));
+    });
+
+    // Wizard: Get selected available fertilizers
+    const selectedWizardAvailFertilizers = computed(() => {
+      return FERTILIZERS.filter(f => wizardAvailFertilizers[f.id]);
+    });
+
     // =========================================================================
     // METHODS
     // =========================================================================
@@ -5300,6 +5218,79 @@ const FertilizerApp = {
     function initAvailableFertilizers() {
       FERTILIZERS.forEach(f => {
         availableFertilizers[f.id] = COMMON_FERTILIZERS.includes(f.id);
+      });
+    }
+
+    // Initialize wizard grams fertilizers state
+    function initWizardGramsFertilizers() {
+      FERTILIZERS.forEach(f => {
+        wizardGramsFertilizers[f.id] = {
+          checked: false,
+          grams: ''
+        };
+      });
+      wizardGramsSearchTerm.value = '';
+    }
+
+    // Initialize wizard available fertilizers state
+    function initWizardAvailFertilizers() {
+      FERTILIZERS.forEach(f => {
+        wizardAvailFertilizers[f.id] = COMMON_FERTILIZERS.includes(f.id);
+      });
+      wizardAvailSearchTerm.value = '';
+    }
+
+    // Clear wizard grams selections
+    function clearWizardGramsSelectionsVue() {
+      FERTILIZERS.forEach(f => {
+        wizardGramsFertilizers[f.id] = {
+          checked: false,
+          grams: ''
+        };
+      });
+      wizardGramsSearchTerm.value = '';
+    }
+
+    // Update wizard grams - auto-check when user enters value
+    function updateWizardGrams(id, value) {
+      if (wizardGramsFertilizers[id]) {
+        wizardGramsFertilizers[id].grams = value;
+        if (parseFloat(value) > 0) {
+          wizardGramsFertilizers[id].checked = true;
+        }
+      }
+    }
+
+    // Toggle wizard grams fertilizer checkbox
+    function toggleWizardGramsFertilizer(id) {
+      if (wizardGramsFertilizers[id]) {
+        wizardGramsFertilizers[id].checked = !wizardGramsFertilizers[id].checked;
+      }
+    }
+
+    // Toggle wizard available fertilizer checkbox
+    function toggleWizardAvailFertilizer(id) {
+      wizardAvailFertilizers[id] = !wizardAvailFertilizers[id];
+    }
+
+    // Select all wizard available fertilizers
+    function selectAllWizardFertilizersVue() {
+      FERTILIZERS.forEach(f => {
+        wizardAvailFertilizers[f.id] = true;
+      });
+    }
+
+    // Deselect all wizard available fertilizers
+    function deselectAllWizardFertilizersVue() {
+      FERTILIZERS.forEach(f => {
+        wizardAvailFertilizers[f.id] = false;
+      });
+    }
+
+    // Select only common wizard available fertilizers
+    function selectCommonWizardFertilizersVue() {
+      FERTILIZERS.forEach(f => {
+        wizardAvailFertilizers[f.id] = COMMON_FERTILIZERS.includes(f.id);
       });
     }
 
@@ -6383,6 +6374,8 @@ const FertilizerApp = {
       initFertilizerAmounts();
       initAvailableFertilizers();
       initReverseFertilizers();
+      initWizardGramsFertilizers();
+      initWizardAvailFertilizers();
     });
 
     // Expose to template
@@ -6397,6 +6390,13 @@ const FertilizerApp = {
       searchTerm,
       gramsToPpmResults,
       showResults,
+
+      // Wizard State
+      wizardVolume,
+      wizardGramsFertilizers,
+      wizardGramsSearchTerm,
+      wizardAvailFertilizers,
+      wizardAvailSearchTerm,
 
       // PPM to Grams (Formula Builder) State
       formulaTargets,
@@ -6424,6 +6424,10 @@ const FertilizerApp = {
       selectedAvailableFertilizers,
       filteredReverseFertilizers,
       selectedReverseFertilizers,
+      filteredWizardGramsFertilizers,
+      filteredWizardAvailFertilizers,
+      activeWizardGramsFertilizers,
+      selectedWizardAvailFertilizers,
 
       // Grams to PPM Methods
       toggleFertilizer,
@@ -6470,6 +6474,17 @@ const FertilizerApp = {
       // Wizard State
       wizardStep,
       wizardVolume,
+
+      // Wizard Methods
+      initWizardGramsFertilizers,
+      initWizardAvailFertilizers,
+      clearWizardGramsSelectionsVue,
+      updateWizardGrams,
+      toggleWizardGramsFertilizer,
+      toggleWizardAvailFertilizer,
+      selectAllWizardFertilizersVue,
+      deselectAllWizardFertilizersVue,
+      selectCommonWizardFertilizersVue,
 
       // Modal State
       activeModal,
