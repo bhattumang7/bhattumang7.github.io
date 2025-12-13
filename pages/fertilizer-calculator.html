@@ -1018,12 +1018,12 @@ permalink: /fertilizer-calculator/
       </div>
 
       <!-- Nutrient Ratio Cards -->
-      <div v-if="formulaResultsData.ratios" class="ratio-section" style="margin-top: 20px;">
+      <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="ratio-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatios') }}</h3>
         <div class="ratio-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
-          <div v-for="(ratio, key) in formulaResultsData.ratios" :key="key" class="ratio-card" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #007bff;">
-            <div style="font-size: 0.8em; color: #666; text-transform: uppercase;">{{ key }}</div>
-            <div style="font-size: 1.4em; font-weight: bold; color: #333;">{{ ratio }}</div>
+          <div v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" class="ratio-card" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #007bff;">
+            <div style="font-size: 0.8em; color: #666; text-transform: uppercase;">{{ ratioObj.name }}</div>
+            <div style="font-size: 1.4em; font-weight: bold; color: #333;">{{ ratioObj.ratio }}</div>
           </div>
         </div>
       </div>
@@ -1423,12 +1423,12 @@ permalink: /fertilizer-calculator/
       </div>
 
       <!-- Nutrient Ratio Cards -->
-      <div v-if="reverseResultsData.ratios" class="ratio-section" style="margin-top: 20px;">
+      <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="ratio-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatios') }}</h3>
         <div class="ratio-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
-          <div v-for="(ratio, key) in reverseResultsData.ratios" :key="key" class="ratio-card" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #007bff;">
-            <div style="font-size: 0.8em; color: #666; text-transform: uppercase;">{{ key }}</div>
-            <div style="font-size: 1.4em; font-weight: bold; color: #333;">{{ ratio }}</div>
+          <div v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" class="ratio-card" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #007bff;">
+            <div style="font-size: 0.8em; color: #666; text-transform: uppercase;">{{ ratioObj.name }}</div>
+            <div style="font-size: 1.4em; font-weight: bold; color: #333;">{{ ratioObj.ratio }}</div>
           </div>
         </div>
       </div>
