@@ -743,11 +743,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
         Si: targetRatios.Si || 0
       };
     } else {
-      // Include Si in ratio normalization if it's provided (non-zero)
       const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
-      if (targetRatios.Si > 0) {
-        ratioNutrients.Si = targetRatios.Si;
-      }
       const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
       const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
       const normalizedRatios = {
@@ -756,8 +752,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
         K: targetRatios.K / minRatio,
         Ca: targetRatios.Ca / minRatio,
         Mg: targetRatios.Mg / minRatio,
-        S: targetRatios.S / minRatio,
-        Si: targetRatios.Si > 0 ? targetRatios.Si / minRatio : 0
+        S: targetRatios.S / minRatio
       };
       const basePPMForMinRatio = concentration;
 
@@ -772,7 +767,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
         Ca: normalizedRatios.Ca * basePPMForMinRatio,
         Mg: normalizedRatios.Mg * basePPMForMinRatio,
         S: normalizedRatios.S * basePPMForMinRatio,
-        Si: normalizedRatios.Si * basePPMForMinRatio
+        Si: targetRatios.Si || 0
       };
     }
 
@@ -831,11 +826,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
   }
 
   // Fallback gradient descent + pruning path
-  // Include Si in ratio normalization if it's provided (non-zero)
   const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
-  if (targetRatios.Si > 0) {
-    ratioNutrients.Si = targetRatios.Si;
-  }
   const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
   const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
 
@@ -845,8 +836,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
     K: targetRatios.K / minRatio,
     Ca: targetRatios.Ca / minRatio,
     Mg: targetRatios.Mg / minRatio,
-    S: targetRatios.S / minRatio,
-    Si: targetRatios.Si > 0 ? targetRatios.Si / minRatio : 0
+    S: targetRatios.S / minRatio
   };
 
   const basePPMForMinRatio = concentration;
@@ -864,7 +854,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
     Ca: normalizedRatios.Ca * basePPMForMinRatio,
     Mg: normalizedRatios.Mg * basePPMForMinRatio,
     S: normalizedRatios.S * basePPMForMinRatio,
-    Si: normalizedRatios.Si * basePPMForMinRatio
+    Si: targetRatios.Si || 0
   };
 
   if (options.useAbsoluteTargets) {
