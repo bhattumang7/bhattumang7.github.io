@@ -400,7 +400,240 @@ permalink: /fertilizer-calculator/
       <span class="wizard-current-mode" id="wizard-results-mode" v-html="wizardResultsModeText"></span>
     </div>
     <div id="wizard-results-container">
-      <!-- Results will be rendered here -->
+      <!-- Grams to PPM Results (when wizardResultsSource === 'ppm-calc') -->
+      <template v-if="wizardResultsSource === 'ppm-calc' && gramsToPpmDisplayData.show && !twoTankDisplayData.show">
+        <div class="results-section" id="wizard-selected-fertilizers-section">
+          <div class="results-header">
+            <h2>{{ i18n.t('selectedFertilizers') }}</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="copy-btn" @click="copyGramsToPPMResults($event)" :title="i18n.t('copyToClipboard')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>{{ i18n.t('copyResults') }}</span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <div v-for="fert in gramsToPpmDisplayData.fertilizers" :key="fert.id" class="selected-fertilizer-item">
+              <div class="selected-fertilizer-info">
+                <div class="selected-fertilizer-name"><span class="fertilizer-number">{{ fert.index }}.</span> {{ i18n.getFertilizerName(fert) }}</div>
+                <div class="selected-fertilizer-composition">{{ fert.composition }}</div>
+              </div>
+              <div class="selected-fertilizer-amount">{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
+            </div>
+            <div v-if="gramsToPpmDisplayData.fertilizers.length > 0" class="selected-fertilizer-item selected-fertilizer-total">
+              <div class="selected-fertilizer-info">
+                <div class="selected-fertilizer-name">{{ i18n.t('totalFertilizers', { count: i18n.formatNumber(gramsToPpmDisplayData.fertilizers.length) }) }}</div>
+              </div>
+              <div class="selected-fertilizer-amount">{{ i18n.formatNumber(gramsToPpmDisplayData.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="results-section" style="margin-top: 20px;">
+          <h2>
+            <span>{{ i18n.t('resultsPpm') }}</span>
+            <span class="info-icon" @click="openPPMExplanation()" :title="i18n.t('clickToLearnPpm')">?</span>
+          </h2>
+          <div class="results-grid">
+            <div v-for="item in gramsToPpmDisplayData.displayOrder" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
+              <div class="result-label">{{ item.label }}</div>
+              <div class="result-value">{{ (item.value || 0).toFixed(2) }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="results-section" v-if="gramsToPpmDisplayData.ionBalance" style="margin-top: 20px;">
+          <h2>
+            <span>{{ i18n.t('ionBalance') }}</span>
+            <span class="info-icon" @click="openIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+          </h2>
+          <div class="ion-balance-result">
+            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalCations') }}</span><span class="ion-value">{{ gramsToPpmDisplayData.ionBalance.cations.toFixed(2) }} meq/L</span></div>
+            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalAnions') }}</span><span class="ion-value">{{ gramsToPpmDisplayData.ionBalance.anions.toFixed(2) }} meq/L</span></div>
+            <div class="ion-row imbalance"><span class="ion-label">{{ i18n.t('imbalance') }}</span><span class="ion-value" :style="{ color: gramsToPpmDisplayData.ionBalance.color }">{{ gramsToPpmDisplayData.ionBalance.imbalance.toFixed(1) }}% ({{ gramsToPpmDisplayData.ionBalance.status }})</span></div>
+          </div>
+        </div>
+        <div class="results-section" v-if="gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0" style="margin-top: 20px;">
+          <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
+          <div class="ratio-grid">
+            <div v-for="ratio in gramsToPpmDisplayData.ratios" :key="ratio.label" class="ratio-item">
+              <span class="ratio-label">{{ ratio.label }}</span>
+              <span class="ratio-value" :class="ratio.statusClass">{{ ratio.display }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction" style="margin-top: 20px;">
+          <h2>{{ i18n.t('estimatedEcTds') }}</h2>
+          <div class="ec-result">
+            <div class="ec-row"><span class="ec-label">{{ i18n.t('estimatedEc') }}</span><span class="ec-value">{{ gramsToPpmDisplayData.ecPrediction.ec.toFixed(2) }} mS/cm</span></div>
+            <div class="ec-row"><span class="ec-label">{{ i18n.t('estimatedTds') }}</span><span class="ec-value">{{ gramsToPpmDisplayData.ecPrediction.tds }} ppm</span></div>
+            <div class="ec-row"><span class="ec-label">{{ i18n.t('concentrationLevel') }}</span><span class="ec-value" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ gramsToPpmDisplayData.ecPrediction.description }}</span></div>
+          </div>
+        </div>
+        <div class="results-section warnings" v-if="gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0" style="margin-top: 20px;">
+          <h2>{{ i18n.t('warnings') }}</h2>
+          <div class="warnings-list">
+            <div v-for="(warning, idx) in gramsToPpmDisplayData.warnings" :key="idx" class="warning-item" :class="warning.type">{{ warning.message }}</div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Formula Builder Results (when wizardResultsSource === 'formula-builder') -->
+      <template v-if="wizardResultsSource === 'formula-builder' && formulaResultsData.show && !twoTankDisplayData.show">
+        <div class="results-section">
+          <div class="results-header">
+            <h2>{{ i18n.t('recommendedFormula') }}</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="copy-btn" @click="copyPPMToGramsResults($event)" :title="i18n.t('copyToClipboard')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>{{ i18n.t('copyResults') }}</span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <div v-for="fert in formulaResultsData.fertilizers" :key="fert.id" class="selected-fertilizer-item">
+              <div class="selected-fertilizer-info">
+                <div class="selected-fertilizer-name">{{ i18n.getFertilizerName(fert) }}</div>
+                <div class="selected-fertilizer-composition">{{ fert.composition }}</div>
+              </div>
+              <div class="selected-fertilizer-amount">{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
+            </div>
+            <div v-if="formulaResultsData.fertilizers.length > 0" class="selected-fertilizer-item selected-fertilizer-total">
+              <div class="selected-fertilizer-info">
+                <div class="selected-fertilizer-name">{{ i18n.t('totalFertilizers', { count: i18n.formatNumber(formulaResultsData.fertilizers.length) }) }}</div>
+              </div>
+              <div class="selected-fertilizer-amount">{{ i18n.formatNumber(formulaResultsData.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="results-section" style="margin-top: 20px;">
+          <h2>{{ i18n.t('achievedPpm') }}</h2>
+          <div class="results-grid">
+            <div v-for="item in formulaResultsData.achievedPpm" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
+              <div class="result-label">{{ item.label }}</div>
+              <div class="result-value">{{ (item.achieved || 0).toFixed(2) }}</div>
+              <div v-if="item.target" class="result-target">{{ i18n.t('targetLabel') }} {{ item.target.toFixed(2) }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="results-section" v-if="formulaResultsData.ionBalance" style="margin-top: 20px;">
+          <h2>
+            <span>{{ i18n.t('ionBalance') }}</span>
+            <span class="info-icon" @click="openFormulaIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+          </h2>
+          <div class="ion-balance-result">
+            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalCations') }}</span><span class="ion-value">{{ formulaResultsData.ionBalance.cations.toFixed(2) }} meq/L</span></div>
+            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalAnions') }}</span><span class="ion-value">{{ formulaResultsData.ionBalance.anions.toFixed(2) }} meq/L</span></div>
+            <div class="ion-row imbalance"><span class="ion-label">{{ i18n.t('imbalance') }}</span><span class="ion-value" :style="{ color: formulaResultsData.ionBalance.color }">{{ formulaResultsData.ionBalance.imbalance.toFixed(1) }}% ({{ formulaResultsData.ionBalance.status }})</span></div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Reverse Calculator Results (when wizardResultsSource === 'reverse-calc') -->
+      <template v-if="wizardResultsSource === 'reverse-calc' && reverseResultsData.show && !twoTankDisplayData.show">
+        <div class="results-section">
+          <div class="results-header">
+            <h2>{{ i18n.t('requiredFertilizers') }}</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="copy-btn" @click="copyNPKRatioResults($event)" :title="i18n.t('copyToClipboard')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>{{ i18n.t('copyResults') }}</span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <div v-for="fert in reverseResultsData.fertilizers" :key="fert.id" class="selected-fertilizer-item">
+              <div class="selected-fertilizer-info">
+                <div class="selected-fertilizer-name">{{ i18n.getFertilizerName(fert) }}</div>
+                <div class="selected-fertilizer-composition">{{ fert.composition }}</div>
+              </div>
+              <div class="selected-fertilizer-amount">{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
+            </div>
+            <div v-if="reverseResultsData.fertilizers.length > 0" class="selected-fertilizer-item selected-fertilizer-total">
+              <div class="selected-fertilizer-info">
+                <div class="selected-fertilizer-name">{{ i18n.t('totalFertilizers', { count: i18n.formatNumber(reverseResultsData.fertilizers.length) }) }}</div>
+              </div>
+              <div class="selected-fertilizer-amount">{{ i18n.formatNumber(reverseResultsData.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="results-section" style="margin-top: 20px;">
+          <h2>{{ i18n.t('achievedPpm') }}</h2>
+          <div class="results-grid">
+            <div v-for="item in reverseResultsData.achievedPpm" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
+              <div class="result-label">{{ item.label }}</div>
+              <div class="result-value">{{ (item.achieved || 0).toFixed(2) }}</div>
+              <div v-if="item.target" class="result-target">{{ i18n.t('targetLabel') }} {{ item.target.toFixed(2) }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="results-section" v-if="reverseResultsData.ionBalance" style="margin-top: 20px;">
+          <h2>
+            <span>{{ i18n.t('ionBalance') }}</span>
+            <span class="info-icon" @click="openReverseIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+          </h2>
+          <div class="ion-balance-result">
+            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalCations') }}</span><span class="ion-value">{{ reverseResultsData.ionBalance.cations.toFixed(2) }} meq/L</span></div>
+            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalAnions') }}</span><span class="ion-value">{{ reverseResultsData.ionBalance.anions.toFixed(2) }} meq/L</span></div>
+            <div class="ion-row imbalance"><span class="ion-label">{{ i18n.t('imbalance') }}</span><span class="ion-value" :style="{ color: reverseResultsData.ionBalance.color }">{{ reverseResultsData.ionBalance.imbalance.toFixed(1) }}% ({{ reverseResultsData.ionBalance.status }})</span></div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Two-Tank Results (shown in wizard when twoTankDisplayData.show is true) -->
+      <template v-if="wizardResultsSource && twoTankDisplayData.show">
+        <div class="results-section two-tank-results">
+          <div class="results-header">
+            <h2>{{ i18n.t('twoTankSolution') }}</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>{{ i18n.t('copyResults') }}</span>
+              </button>
+              <button class="secondary-btn" @click="hideTwoTankView()">{{ i18n.t('backToSingleTank') }}</button>
+            </div>
+          </div>
+          <p class="two-tank-explanation">{{ i18n.t('twoTankExplanation') }}</p>
+          <div class="tanks-container">
+            <div class="tank" v-for="tank in [twoTankDisplayData.tankA, twoTankDisplayData.tankB]" :key="tank.name">
+              <div class="tank-header" @click="toggleTankDetailsVue(tank.name)">
+                <h3>{{ tank.name }}</h3>
+                <span class="tank-toggle">{{ tank.expanded ? '▼' : '▶' }}</span>
+              </div>
+              <p class="tank-description">{{ tank.description }}</p>
+              <div class="tank-details" v-show="tank.expanded">
+                <div class="tank-fertilizers">
+                  <h4>{{ i18n.t('fertilizers') }}</h4>
+                  <div v-for="fert in tank.fertilizers" :key="fert.id" class="tank-fertilizer-item">
+                    <span>{{ fert.name }}</span>
+                    <span>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</span>
+                  </div>
+                  <div class="tank-fertilizer-total">
+                    <span>{{ i18n.t('total') }}</span>
+                    <span>{{ i18n.formatNumber(tank.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</span>
+                  </div>
+                </div>
+                <div class="tank-nutrients">
+                  <h4>{{ i18n.t('nutrientsPpm') }}</h4>
+                  <div class="tank-nutrient-grid">
+                    <div v-for="item in tank.ppmData" :key="item.label" class="tank-nutrient-item">
+                      <span class="nutrient-label">{{ item.label }}</span>
+                      <span class="nutrient-value">{{ item.value.toFixed(2) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="combined-results" style="margin-top: 20px;">
+            <h3>{{ i18n.t('combinedResult') }}</h3>
+            <div class="results-grid">
+              <div v-for="item in twoTankDisplayData.combinedPpm" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
+                <div class="result-label">{{ item.label }}</div>
+                <div class="result-value">{{ (item.value || 0).toFixed(2) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 
@@ -2277,6 +2510,8 @@ function goToModeSelector() {
     window.vueApp.formulaResultsData.show = false;
     window.vueApp.reverseResultsData.show = false;
     window.vueApp.twoTankDisplayData.show = false;
+    // Clear wizard results source
+    window.vueApp.wizardResultsSource = null;
   }
 }
 
@@ -2292,6 +2527,8 @@ function backToModeSelector() {
     window.vueApp.currentMode = null;
     window.vueApp.wizardCalcMode = 'oxide';
     window.vueApp.ratioTargetEC = 'ec:1.2';
+    // Clear wizard results source
+    window.vueApp.wizardResultsSource = null;
   }
 
   // Reset wizard inputs
@@ -2363,22 +2600,9 @@ async function calculateFromWizardGrams() {
   // Run the calculation (this renders results in the main calculator)
   await calculate();
 
-  // Copy results to wizard results container
-  const resultsContainer = document.getElementById('wizard-results-container');
-  const selectedFertSection = document.getElementById('selected-fertilizers-section');
-  const resultsSection = document.getElementById('results');
-  const ionBalanceSection = document.getElementById('ion-balance-section');
-  const ratioSection = document.getElementById('ratio-analysis-section');
-  const ecSection = document.getElementById('ec-tds-section');
-  const warningsSection = document.getElementById('warnings-section');
-
-  if (resultsContainer && selectedFertSection && resultsSection) {
-    let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
-    if (ionBalanceSection) html += ionBalanceSection.outerHTML;
-    if (ratioSection) html += ratioSection.outerHTML;
-    if (ecSection) html += ecSection.outerHTML;
-    if (warningsSection) html += warningsSection.outerHTML;
-    resultsContainer.innerHTML = html;
+  // Set wizard results source to show results via Vue template (no innerHTML copying needed)
+  if (window.vueApp) {
+    window.vueApp.wizardResultsSource = 'ppm-calc';
   }
 
   // Build mode indicator text
@@ -2545,11 +2769,9 @@ async function calculateFromWizardFertilizerSelect() {
     // Run the calculation and wait for it to complete
     await buildFormula();
 
-    // Copy results to wizard results container
-    const resultsContainer = document.getElementById('wizard-results-container');
-    const formulaResults = document.getElementById('formula-results');
-    if (resultsContainer && formulaResults) {
-      resultsContainer.innerHTML = formulaResults.outerHTML;
+    // Set wizard results source to show results via Vue template (no innerHTML copying needed)
+    if (window.vueApp) {
+      window.vueApp.wizardResultsSource = 'formula-builder';
     }
 
     // Get the calculated formula for incompatibility check
@@ -2599,11 +2821,9 @@ async function calculateFromWizardFertilizerSelect() {
     // Run the calculation and wait for it to complete
     await calculateReverse();
 
-    // Copy results to wizard results container
-    const resultsContainer = document.getElementById('wizard-results-container');
-    const reverseResults = document.getElementById('reverse-results');
-    if (resultsContainer && reverseResults) {
-      resultsContainer.innerHTML = reverseResults.outerHTML;
+    // Set wizard results source to show results via Vue template (no innerHTML copying needed)
+    if (window.vueApp) {
+      window.vueApp.wizardResultsSource = 'reverse-calc';
     }
 
     // Get the calculated formula for incompatibility check
@@ -2647,24 +2867,9 @@ function skipTwoTankView() {
   if (pendingCalc && window.vueApp) {
     window.vueApp.wizardResultsModeText = pendingCalc.indicatorText;
 
-    // Re-copy all results to wizard container (in case they were modified)
+    // Set wizard results source based on calculation type (Vue template handles rendering)
     if (pendingCalc.type === 'grams-to-ppm') {
-      const resultsContainer = document.getElementById('wizard-results-container');
-      const selectedFertSection = document.getElementById('selected-fertilizers-section');
-      const resultsSection = document.getElementById('results');
-      const ionBalanceSection = document.getElementById('ion-balance-section');
-      const ratioSection = document.getElementById('ratio-analysis-section');
-      const ecSection = document.getElementById('ec-tds-section');
-      const warningsSection = document.getElementById('warnings-section');
-
-      if (resultsContainer && selectedFertSection && resultsSection) {
-        let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
-        if (ionBalanceSection) html += ionBalanceSection.outerHTML;
-        if (ratioSection) html += ratioSection.outerHTML;
-        if (ecSection) html += ecSection.outerHTML;
-        if (warningsSection) html += warningsSection.outerHTML;
-        resultsContainer.innerHTML = html;
-      }
+      window.vueApp.wizardResultsSource = 'ppm-calc';
     }
   }
 
@@ -2683,7 +2888,7 @@ function showTwoTankView() {
     return;
   }
 
-  const { type, formula, volume, indicatorText } = pendingCalc;
+  const { type, indicatorText } = pendingCalc;
 
   // Call the appropriate two-tank display function based on calculation type
   if (type === 'grams-to-ppm') {
@@ -2694,25 +2899,16 @@ function showTwoTankView() {
     displayTwoTankReverseResults();
   }
 
-  // Copy two-tank results to wizard results container
-  const resultsContainer = document.getElementById('wizard-results-container');
-  let sourceResults;
-
-  if (type === 'grams-to-ppm') {
-    const selectedFertSection = document.getElementById('selected-fertilizers-section');
-    sourceResults = selectedFertSection;
-  } else if (type === 'ppm-to-grams') {
-    sourceResults = document.getElementById('formula-results');
-  } else {
-    sourceResults = document.getElementById('reverse-results');
-  }
-
-  if (resultsContainer && sourceResults) {
-    resultsContainer.innerHTML = sourceResults.outerHTML;
-  }
-
-  // Update the mode indicator in wizard results via Vue state
+  // Set wizard results source based on calculation type (Vue template handles rendering)
   if (window.vueApp) {
+    if (type === 'grams-to-ppm') {
+      window.vueApp.wizardResultsSource = 'ppm-calc';
+    } else if (type === 'ppm-to-grams') {
+      window.vueApp.wizardResultsSource = 'formula-builder';
+    } else if (type === 'npk-ratio-to-grams') {
+      window.vueApp.wizardResultsSource = 'reverse-calc';
+    }
+    // Update the mode indicator in wizard results via Vue state
     window.vueApp.wizardResultsModeText = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
   }
 
@@ -2725,47 +2921,14 @@ function showTwoTankView() {
 
 // backFromTwoTankQuestion - removed, was unused
 
-// Refresh wizard results display after language change
-// This re-copies the Vue-rendered HTML to the wizard container
+// refreshWizardResults - no longer needed
+// Vue templates in wizard-results-container react directly to state changes and i18n updates
+// Kept as no-op for backwards compatibility with i18n.js calls
 function refreshWizardResults() {
-  const resultsContainer = document.getElementById('wizard-results-container');
-  if (!resultsContainer) return;
-
-  // Check if wizard results step is active via Vue state (not DOM classList)
-  if (window.vueApp?.wizardStep !== 'wizard-results') return;
-
-  // Determine source based on current mode
-  const mode = getSelectedMode();
-  if (mode === 'ppm-calc') {
-    const selectedFertSection = document.getElementById('selected-fertilizers-section');
-    const resultsSection = document.getElementById('results');
-    const ionBalanceSection = document.getElementById('ion-balance-section');
-    const ratioSection = document.getElementById('ratio-analysis-section');
-    const ecSection = document.getElementById('ec-tds-section');
-    const warningsSection = document.getElementById('warnings-section');
-
-    if (selectedFertSection && resultsSection) {
-      let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
-      if (ionBalanceSection) html += ionBalanceSection.outerHTML;
-      if (ratioSection) html += ratioSection.outerHTML;
-      if (ecSection) html += ecSection.outerHTML;
-      if (warningsSection) html += warningsSection.outerHTML;
-      resultsContainer.innerHTML = html;
-    }
-  } else if (mode === 'formula-builder') {
-    const formulaResults = document.getElementById('formula-results');
-    if (formulaResults) {
-      resultsContainer.innerHTML = formulaResults.outerHTML;
-    }
-  } else if (mode === 'reverse-calc') {
-    const reverseResults = document.getElementById('reverse-results');
-    if (reverseResults) {
-      resultsContainer.innerHTML = reverseResults.outerHTML;
-    }
-  }
+  // No-op: Vue templates handle reactivity automatically
 }
 
-// Expose refreshWizardResults globally for i18n
+// Expose refreshWizardResults globally for i18n backwards compatibility
 window.refreshWizardResults = refreshWizardResults;
 
 // ==========================================
@@ -3706,6 +3869,7 @@ const FertilizerApp = {
     const language = ref(i18n?.currentLanguage || 'en');
     const currentTab = ref('ppm-calc'); // 'ppm-calc', 'formula-builder', 'reverse-calc'
     const wizardResultsModeText = ref(''); // Dynamic text for wizard results mode indicator
+    const wizardResultsSource = ref(null); // 'ppm-calc', 'formula-builder', 'reverse-calc', or null - controls which results show in wizard
 
     // Watch language changes and sync with i18n
     watch(language, (newLang) => {
@@ -5276,6 +5440,7 @@ const FertilizerApp = {
       wizardKLabel,
       modeIndicatorText,
       wizardResultsModeText,
+      wizardResultsSource,
 
       // PPM to Grams (Formula Builder) State
       formulaTargets,
