@@ -88,6 +88,6 @@ This site is hosted on GitHub Pages and automatically deploys when changes are p
 
 ## Fertilizer Calculator Version
 
-**Current Version: 1.0.3**
+**Current Version: 1.0.4**
 
 Version history is tracked with each release.
