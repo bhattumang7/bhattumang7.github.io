@@ -1977,11 +1977,33 @@ const EC_DESCRIPTIONS = {
   'ec:3.0': 'ecDesc30'
 };
 
-// Legacy state variables - kept for backward compatibility during Vue migration
-// These are progressively being replaced by Vue refs (currentMode, wizardCalcMode, wizardSelectedEC)
-let selectedMode = null;
-let selectedCalcMode = 'oxide';
-let selectedEC = 'ec:1.2';
+// State accessor functions - always read from Vue state (single source of truth)
+function getSelectedMode() {
+  return window.vueApp?.currentMode ?? null;
+}
+function getSelectedCalcMode() {
+  // Use mode-specific calc mode based on current mode
+  const mode = getSelectedMode();
+  if (mode === 'formula-builder') {
+    return window.vueApp?.formulaCalcMode ?? 'oxide';
+  } else if (mode === 'reverse-calc') {
+    return window.vueApp?.ratioCalcMode ?? 'oxide';
+  }
+  return window.vueApp?.wizardCalcMode ?? 'oxide';
+}
+function getSelectedEC() {
+  return window.vueApp?.ratioTargetEC ?? 'ec:1.2';
+}
+// Setter functions - update Vue state directly
+function setSelectedMode(mode) {
+  if (window.vueApp) window.vueApp.currentMode = mode;
+}
+function setSelectedCalcMode(mode) {
+  if (window.vueApp) window.vueApp.wizardCalcMode = mode;
+}
+function setSelectedEC(ec) {
+  if (window.vueApp) window.vueApp.ratioTargetEC = ec;
+}
 
 function getStepCount(mode) {
   // Grams → PPM: mode, volume, grams input = 3 steps
@@ -2066,13 +2088,14 @@ function showWizardStep(stepId, options = {}) {
   }
 
   // Update step indicator if configured
-  if (updateIndicator && selectedMode) {
+  const currentMode = getSelectedMode();
+  if (updateIndicator && currentMode) {
     const config = STEP_CONFIG[stepId];
     if (config && config.indicatorId) {
       const indicator = document.getElementById(config.indicatorId);
       if (indicator) {
-        const total = totalSteps || getStepCount(selectedMode);
-        const current = stepNumber || (config.stepNumber && config.stepNumber[selectedMode]);
+        const total = totalSteps || getStepCount(currentMode);
+        const current = stepNumber || (config.stepNumber && config.stepNumber[currentMode]);
         if (current) {
           indicator.textContent = i18n.t('stepOf', { current, total });
         }
@@ -2094,13 +2117,8 @@ function showWizardStep(stepId, options = {}) {
 // =============================================================================
 
 function selectMode(tabId) {
-  // Store the selected mode
-  selectedMode = tabId;
-
-  // Sync currentMode with Vue state
-  if (window.vueApp) {
-    window.vueApp.currentMode = tabId;
-  }
+  // Store the selected mode in Vue state (single source of truth)
+  setSelectedMode(tabId);
 
   // Show volume step (also updates wizardStep via Vue)
   showWizardStep('volume-step');
@@ -2121,9 +2139,10 @@ function proceedFromVolumeStep() {
   }
 
   // Check if this mode needs the calculation mode step
-  if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
+  const mode = getSelectedMode();
+  if (MODES_WITH_CALC_MODE.includes(mode)) {
     showWizardStep('calc-mode-step');
-  } else if (selectedMode === 'ppm-calc') {
+  } else if (mode === 'ppm-calc') {
     showWizardStep('grams-input-step');
     // Vue renders the fertilizer list reactively
   } else {
@@ -2133,19 +2152,16 @@ function proceedFromVolumeStep() {
 }
 
 function selectCalcMode(mode) {
-  selectedCalcMode = mode;
-
-  // Update Vue state - visual selection is handled by :class binding
-  if (window.vueApp) {
-    window.vueApp.wizardCalcMode = mode;
-  }
+  // Update Vue state directly (single source of truth)
+  setSelectedCalcMode(mode);
 }
 
 function proceedFromCalcModeStep() {
   // Check if this mode needs the EC step (NPK Ratio → Grams)
-  if (MODES_WITH_EC.includes(selectedMode)) {
+  const mode = getSelectedMode();
+  if (MODES_WITH_EC.includes(mode)) {
     showWizardStep('ec-step');
-  } else if (selectedMode === 'formula-builder') {
+  } else if (mode === 'formula-builder') {
     // P and K labels are now handled by Vue computed properties (wizardPLabel, wizardKLabel)
     showWizardStep('ppm-targets-step');
   } else {
@@ -2167,9 +2183,10 @@ function proceedToCalculator() {
   // Get the volume from Vue state (with fallback to DOM for compatibility)
   const wizardVolumeValue = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
 
-  // Sync legacy variables with Vue state
-  selectedCalcMode = window.vueApp?.wizardCalcMode || selectedCalcMode;
-  selectedEC = window.vueApp?.wizardSelectedEC || selectedEC;
+  // Get current mode and calc mode from Vue state
+  const mode = getSelectedMode();
+  const calcMode = getSelectedCalcMode();
+  const ec = getSelectedEC();
 
   // Update volume in all calculator tabs via Vue state (v-model handles DOM sync)
   if (window.vueApp) {
@@ -2179,19 +2196,19 @@ function proceedToCalculator() {
   }
 
   // Apply calculation mode if applicable via Vue state
-  if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
-    if (selectedMode === 'formula-builder' && window.vueApp) {
-      window.vueApp.formulaCalcMode = selectedCalcMode;
+  if (MODES_WITH_CALC_MODE.includes(mode)) {
+    if (mode === 'formula-builder' && window.vueApp) {
+      window.vueApp.formulaCalcMode = calcMode;
       updateFormulaCalculationMode();
-    } else if (selectedMode === 'reverse-calc' && window.vueApp) {
-      window.vueApp.ratioCalcMode = selectedCalcMode;
+    } else if (mode === 'reverse-calc' && window.vueApp) {
+      window.vueApp.ratioCalcMode = calcMode;
       updateReverseCalculationMode();
     }
   }
 
   // Apply EC setting if applicable via Vue state
-  if (MODES_WITH_EC.includes(selectedMode) && window.vueApp) {
-    window.vueApp.ratioTargetEC = selectedEC;
+  if (MODES_WITH_EC.includes(mode) && window.vueApp) {
+    window.vueApp.ratioTargetEC = ec;
   }
 
   // Show the calculator content (hides all wizard steps)
@@ -2201,7 +2218,7 @@ function proceedToCalculator() {
   // which reacts to currentMode, wizardVolume, formulaCalcMode/ratioCalcMode, ratioTargetEC
 
   // Switch to the selected tab
-  switchTab(selectedMode);
+  switchTab(mode);
 
   // Scroll to top smoothly
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2221,9 +2238,10 @@ function backToVolumeStep() {
 
 function backFromCalculator() {
   // Go back to the appropriate step based on mode
-  if (selectedMode === 'ppm-calc') {
+  const mode = getSelectedMode();
+  if (mode === 'ppm-calc') {
     showWizardStep('grams-input-step');
-  } else if (selectedMode === 'formula-builder' || selectedMode === 'reverse-calc') {
+  } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
     showWizardStep('fertilizer-select-step');
   } else {
     showWizardStep('volume-step');
@@ -2232,9 +2250,10 @@ function backFromCalculator() {
 
 function backFromWizardResults() {
   // Go back to the appropriate step based on mode
-  if (selectedMode === 'ppm-calc') {
+  const mode = getSelectedMode();
+  if (mode === 'ppm-calc') {
     showWizardStep('grams-input-step');
-  } else if (selectedMode === 'formula-builder' || selectedMode === 'reverse-calc') {
+  } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
     showWizardStep('fertilizer-select-step');
   } else {
     showWizardStep('volume-step');
@@ -2246,17 +2265,12 @@ function goToModeSelector() {
   // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
 
-  // Reset state
-  selectedMode = null;
-  selectedCalcMode = 'oxide';
-  selectedEC = 'ec:1.2';
-
-  // Sync with Vue state - calc mode UI is now handled by Vue :class bindings
-  // Hide results sections by resetting Vue state (visibility controlled via v-if)
+  // Reset all Vue state (single source of truth)
   if (window.vueApp) {
     window.vueApp.currentMode = null;
     window.vueApp.calculationMode = 'oxide';
     window.vueApp.wizardCalcMode = 'oxide';
+    window.vueApp.ratioTargetEC = 'ec:1.2';
     // Clear pending two-tank calculation
     window.vueApp.pendingWizardCalculation = null;
     // Reset results display state (controls v-if visibility)
@@ -2274,16 +2288,11 @@ function backToModeSelector() {
   // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
 
-  // Reset state (both legacy and Vue)
-  selectedMode = null;
-  selectedCalcMode = 'oxide';
-  selectedEC = 'ec:1.2';
-
-  // Sync Vue state - calc mode UI is now handled by Vue :class bindings
+  // Reset all Vue state (single source of truth)
   if (window.vueApp) {
     window.vueApp.currentMode = null;
     window.vueApp.wizardCalcMode = 'oxide';
-    window.vueApp.wizardSelectedEC = 'ec:1.2';
+    window.vueApp.ratioTargetEC = 'ec:1.2';
   }
 
   // Reset wizard inputs
@@ -2384,7 +2393,8 @@ async function calculateFromWizardGrams() {
   }
 
   // Build mode indicator text
-  const indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
+  const mode = getSelectedMode();
+  const indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(mode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
 
   // Check for incompatible fertilizers
   if (hasIncompatibleFertilizers(formula)) {
@@ -2400,7 +2410,7 @@ async function calculateFromWizardGrams() {
     }
 
     // Show two-tank question step with dynamic step number
-    const totalSteps = getStepCount(selectedMode) + 1;
+    const totalSteps = getStepCount(mode) + 1;
     showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
   } else {
     // No incompatibilities - show results directly
@@ -2473,10 +2483,11 @@ function proceedToReverseFertilizerStep() {
 // Vue reactive templates and methods (see Vue app section)
 
 function backFromFertilizerSelectStep() {
-  if (selectedMode === 'formula-builder') {
+  const mode = getSelectedMode();
+  if (mode === 'formula-builder') {
     // Go back to PPM targets step
     showWizardStep('ppm-targets-step');
-  } else if (selectedMode === 'reverse-calc') {
+  } else if (mode === 'reverse-calc') {
     // Go back to NPK ratios step
     showWizardStep('npk-ratios-step');
   }
@@ -2486,9 +2497,10 @@ async function calculateFromWizardFertilizerSelect() {
   // Get the volume from Vue state (with fallback)
   const wizardVolume = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
 
-  // Sync legacy variables with Vue state
-  selectedCalcMode = window.vueApp?.wizardCalcMode || selectedCalcMode;
-  selectedEC = window.vueApp?.wizardSelectedEC || selectedEC;
+  // Get current mode, calc mode, and EC from Vue state
+  const mode = getSelectedMode();
+  const calcMode = getSelectedCalcMode();
+  const ec = getSelectedEC();
 
   // Get selected fertilizers from Vue state
   const selectedFerts = [];
@@ -2506,12 +2518,12 @@ async function calculateFromWizardFertilizerSelect() {
   }
 
   // Build mode indicator text
-  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
-  indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
+  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(mode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
+  indicatorText += ' · ' + (calcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
 
   let calculatedFormula = null;
 
-  if (selectedMode === 'formula-builder') {
+  if (mode === 'formula-builder') {
     // PPM → Grams calculation
     // Update volume
     const formulaVolumeInput = document.getElementById('formula-volume');
@@ -2520,7 +2532,7 @@ async function calculateFromWizardFertilizerSelect() {
     // Apply calculation mode
     const formulaModeSelect = document.getElementById('formula-calculation-mode');
     if (formulaModeSelect) {
-      formulaModeSelect.value = selectedCalcMode;
+      formulaModeSelect.value = calcMode;
       updateFormulaCalculationMode();
     }
 
@@ -2560,7 +2572,7 @@ async function calculateFromWizardFertilizerSelect() {
     // Sync volume and calculation mode to Vue state
     if (window.vueApp) {
       window.vueApp.formulaVolume = wizardVolume;
-      window.vueApp.formulaCalcMode = selectedCalcMode;
+      window.vueApp.formulaCalcMode = calcMode;
     }
 
     // Transfer fertilizer selections to main calculator Vue state
@@ -2586,7 +2598,7 @@ async function calculateFromWizardFertilizerSelect() {
       calculatedFormula = lastFormula.result.formula;
     }
 
-  } else if (selectedMode === 'reverse-calc') {
+  } else if (mode === 'reverse-calc') {
     // NPK Ratio → Grams calculation
     // Update volume
     const reverseVolumeInput = document.getElementById('reverse-volume');
@@ -2595,14 +2607,14 @@ async function calculateFromWizardFertilizerSelect() {
     // Apply calculation mode
     const reverseModeSelect = document.getElementById('reverse-calculation-mode');
     if (reverseModeSelect) {
-      reverseModeSelect.value = selectedCalcMode;
+      reverseModeSelect.value = calcMode;
       updateReverseCalculationMode();
     }
 
     // Apply EC setting
     const reverseConcentration = document.getElementById('reverse-concentration');
     if (reverseConcentration) {
-      reverseConcentration.value = selectedEC;
+      reverseConcentration.value = ec;
     }
 
     // Transfer ratio values from wizard Vue state to main calculator Vue state and DOM
@@ -2641,7 +2653,7 @@ async function calculateFromWizardFertilizerSelect() {
     // Sync volume and EC to Vue state
     if (window.vueApp) {
       window.vueApp.ratioVolume = wizardVolume;
-      window.vueApp.ratioTargetEC = selectedEC;
+      window.vueApp.ratioTargetEC = ec;
     }
 
     // Transfer fertilizer selections to main calculator Vue state
@@ -2655,7 +2667,7 @@ async function calculateFromWizardFertilizerSelect() {
     }
 
     // Add EC to indicator
-    const ecValue = selectedEC.replace('ec:', '');
+    const ecValue = ec.replace('ec:', '');
     indicatorText += ' · ' + ecValue + ' mS/cm';
 
     // Run the calculation and wait for it to complete
@@ -2680,7 +2692,7 @@ async function calculateFromWizardFertilizerSelect() {
     // Store pending calculation for later (via Vue ref)
     if (window.vueApp) {
       window.vueApp.pendingWizardCalculation = {
-        type: selectedMode === 'formula-builder' ? 'ppm-to-grams' : 'npk-ratio-to-grams',
+        type: mode === 'formula-builder' ? 'ppm-to-grams' : 'npk-ratio-to-grams',
         formula: calculatedFormula,
         volume: wizardVolume,
         indicatorText: indicatorText,
@@ -2689,7 +2701,7 @@ async function calculateFromWizardFertilizerSelect() {
     }
 
     // Show two-tank question step with dynamic step number
-    const totalSteps = getStepCount(selectedMode) + 1;
+    const totalSteps = getStepCount(mode) + 1;
     showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
   } else {
     // No incompatibilities - show results directly
@@ -2798,33 +2810,32 @@ function refreshWizardResults() {
   if (!wizardResultsStep || !wizardResultsStep.classList.contains('active')) return;
 
   // Determine source based on current mode
-  if (typeof selectedMode !== 'undefined') {
-    if (selectedMode === 'grams-to-ppm') {
-      const selectedFertSection = document.getElementById('selected-fertilizers-section');
-      const resultsSection = document.getElementById('results');
-      const ionBalanceSection = document.getElementById('ion-balance-section');
-      const ratioSection = document.getElementById('ratio-analysis-section');
-      const ecSection = document.getElementById('ec-tds-section');
-      const warningsSection = document.getElementById('warnings-section');
+  const mode = getSelectedMode();
+  if (mode === 'ppm-calc') {
+    const selectedFertSection = document.getElementById('selected-fertilizers-section');
+    const resultsSection = document.getElementById('results');
+    const ionBalanceSection = document.getElementById('ion-balance-section');
+    const ratioSection = document.getElementById('ratio-analysis-section');
+    const ecSection = document.getElementById('ec-tds-section');
+    const warningsSection = document.getElementById('warnings-section');
 
-      if (selectedFertSection && resultsSection) {
-        let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
-        if (ionBalanceSection) html += ionBalanceSection.outerHTML;
-        if (ratioSection) html += ratioSection.outerHTML;
-        if (ecSection) html += ecSection.outerHTML;
-        if (warningsSection) html += warningsSection.outerHTML;
-        resultsContainer.innerHTML = html;
-      }
-    } else if (selectedMode === 'formula-builder') {
-      const formulaResults = document.getElementById('formula-results');
-      if (formulaResults) {
-        resultsContainer.innerHTML = formulaResults.outerHTML;
-      }
-    } else if (selectedMode === 'reverse-calc') {
-      const reverseResults = document.getElementById('reverse-results');
-      if (reverseResults) {
-        resultsContainer.innerHTML = reverseResults.outerHTML;
-      }
+    if (selectedFertSection && resultsSection) {
+      let html = selectedFertSection.outerHTML + resultsSection.outerHTML;
+      if (ionBalanceSection) html += ionBalanceSection.outerHTML;
+      if (ratioSection) html += ratioSection.outerHTML;
+      if (ecSection) html += ecSection.outerHTML;
+      if (warningsSection) html += warningsSection.outerHTML;
+      resultsContainer.innerHTML = html;
+    }
+  } else if (mode === 'formula-builder') {
+    const formulaResults = document.getElementById('formula-results');
+    if (formulaResults) {
+      resultsContainer.innerHTML = formulaResults.outerHTML;
+    }
+  } else if (mode === 'reverse-calc') {
+    const reverseResults = document.getElementById('reverse-results');
+    if (reverseResults) {
+      resultsContainer.innerHTML = reverseResults.outerHTML;
     }
   }
 }
