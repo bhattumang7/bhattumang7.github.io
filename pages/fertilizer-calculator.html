@@ -3606,9 +3606,7 @@ function switchTab(tabId) {
 async function buildFormula() {
   // Now handled by Vue
   if (window.vueApp && window.vueApp.buildFormulaVue) {
-    window.vueApp.buildFormulaVue();
-    // Wait for Vue to render the results
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await window.vueApp.buildFormulaVue();
   }
 }
 
@@ -3889,9 +3887,7 @@ function getI18nFormatter() {
 async function calculateReverse() {
   // Now handled by Vue
   if (window.vueApp && window.vueApp.calculateReverseVue) {
-    window.vueApp.calculateReverseVue();
-    // Wait for Vue to render the results
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await window.vueApp.calculateReverseVue();
   }
 }
 
