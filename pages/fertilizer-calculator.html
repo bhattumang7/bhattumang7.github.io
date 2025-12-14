@@ -22,7 +22,7 @@ permalink: /fertilizer-calculator/
 
 <div class="calculator-container" v-cloak>
   <!-- Vue-powered Unified Modal (placed at top for proper rendering) -->
-  <div v-if="activeModal" class="modal-overlay" :class="{ active: activeModal }" style="display: none" @click="closeModal">
+  <div v-if="activeModal" class="modal-overlay active" style="display: flex !important;" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
         <h2>{{ modalTitle }}</h2>
@@ -73,7 +73,8 @@ permalink: /fertilizer-calculator/
               <h3>{{ i18n.t('stepByStepBreakdown') }}</h3>
               <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('howEachFertilizerContributesToPpm') }}</p>
 
-              <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+              <template v-for="(fert, index) in modalData.activeFertilizers" :key="fert?.id || index">
+                <div v-if="fert && fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
                 <h4 style="margin: 0 0 15px 0; color: #007bff; display: flex; align-items: center; gap: 10px;">
                   <span class="step-number" style="background: #007bff; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
                   {{ i18n.getFertilizerName(fert) }}
@@ -88,7 +89,8 @@ permalink: /fertilizer-calculator/
                 <div v-if="getNutrientContributions(fert).length > 0" style="margin-top: 10px;">
                   <p style="font-weight: bold; margin-bottom: 10px; color: #555;">{{ i18n.t('nutrientPpmValues') }}:</p>
                   <div style="display: grid; gap: 10px;">
-                    <div v-for="nutrient in getNutrientContributions(fert)" :key="nutrient.key"
+                    <template v-for="nutrient in getNutrientContributions(fert)" :key="nutrient?.key || Math.random()">
+                      <div v-if="nutrient && nutrient.key"
                          style="background: #e8f5e9; padding: 12px 15px; border-radius: 8px; border-left: 3px solid #4caf50;">
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span style="font-weight: bold; font-size: 1.1em; color: #2e7d32;">{{ nutrient.name }}</span>
@@ -98,9 +100,11 @@ permalink: /fertilizer-calculator/
                         {{ formatNumber(fert.grams) }} g × 1000 × ({{ formatNumber(nutrient.percent, 2) }}% ÷ 100) ÷ {{ formatNumber(modalData.volume) }} L = {{ formatNumber(nutrient.ppm, 2) }} ppm
                       </div>
                     </div>
+                    </template>
                   </div>
                 </div>
               </div>
+              </template>
             </div>
 
             <!-- Oxide conversions info -->
@@ -116,11 +120,13 @@ permalink: /fertilizer-calculator/
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="conv in oxideConversions" :key="conv.key" v-if="hasOxide(conv.key)" style="border-bottom: 1px solid #ffe0b2;">
-                    <td style="padding: 10px;">{{ conv.oxide }}</td>
-                    <td style="padding: 10px;">{{ conv.elemental }}</td>
-                    <td style="padding: 10px; font-family: monospace;">× {{ conv.factor }}</td>
-                  </tr>
+                  <template v-for="conv in oxideConversions" :key="conv.key">
+                    <tr v-if="hasOxide(conv.key)" style="border-bottom: 1px solid #ffe0b2;">
+                      <td style="padding: 10px;">{{ conv.oxideName }}</td>
+                      <td style="padding: 10px;">{{ conv.elementalName }}</td>
+                      <td style="padding: 10px; font-family: monospace;">× {{ conv.factor }}</td>
+                    </tr>
+                  </template>
                 </tbody>
               </table>
             </div>
@@ -179,7 +185,8 @@ permalink: /fertilizer-calculator/
               <h3>{{ i18n.t('stepByStepIonCalculation') }}</h3>
               <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('howEachFertilizerContributesIons') }}</p>
 
-              <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+              <template v-for="(fert, index) in modalData.activeFertilizers" :key="fert?.id || index">
+                <div v-if="fert && fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
                 <h4 style="margin: 0 0 15px 0; color: #007bff; display: flex; align-items: center; gap: 10px;">
                   <span class="step-number" style="background: #007bff; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
                   {{ i18n.getFertilizerName(fert) }}
@@ -232,6 +239,7 @@ permalink: /fertilizer-calculator/
                   </span>
                 </div>
               </div>
+              </template>
             </div>
 
             <!-- Ion totals breakdown -->
