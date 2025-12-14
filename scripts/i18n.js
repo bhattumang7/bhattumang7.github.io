@@ -155,6 +155,12 @@
 
     // Refresh dynamically generated content (results, tables) after language change
     refreshDynamicContent() {
+      // Debug: check what's available
+      const hasVueApp = !!window.vueApp;
+      const hasLastReverse = !!window.vueApp?.lastReverseCalculation;
+      const hasLastReverseValue = !!window.vueApp?.lastReverseCalculation?.value;
+      alert('refreshDynamicContent called! vueApp: ' + hasVueApp + ', lastReverseCalculation: ' + hasLastReverse + ', .value: ' + hasLastReverseValue);
+
       // Re-render Grams → PPM results (using Vue)
       if (window.vueApp?.lastGramsToPPMCalculation?.value) {
         const { activeFertilizers, volume, results, ecData, ionBalance, ratios, warnings } = window.vueApp.lastGramsToPPMCalculation.value;
