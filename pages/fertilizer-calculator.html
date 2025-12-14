@@ -432,13 +432,13 @@ permalink: /fertilizer-calculator/
                 <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #1976d2;"><strong>{{ i18n.t('ppmLearnMoreNote') }}</strong></p>
               </div>
 
-              <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+              <div class="ec-breakdown-table-wrapper" style="overflow-x: auto;">
+                <table class="ec-breakdown-table" style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
                   <thead>
                     <tr style="background: #c8e6c9; border-bottom: 2px solid #4caf50;">
                       <th style="text-align: left; padding: 8px;">{{ i18n.t('ionHeader') }}</th>
                       <th style="text-align: right; padding: 8px;">PPM</th>
-                      <th style="text-align: center; padding: 8px;">{{ i18n.t('concentrationCalcHeader') }}</th>
+                      <th class="calc-column" style="text-align: center; padding: 8px;">{{ i18n.t('concentrationCalcHeader') }}</th>
                       <th style="text-align: right; padding: 8px;">λ</th>
                       <th style="text-align: right; padding: 8px;">{{ i18n.t('ecContribHeader') }}</th>
                       <th style="text-align: right; padding: 8px;">%</th>
@@ -447,15 +447,15 @@ permalink: /fertilizer-calculator/
                   <tbody>
                     <template v-for="(data, ion) in modalData.ecContributions" :key="ion">
                       <tr style="border-bottom: 1px solid #c8e6c9;">
-                        <td style="padding: 8px;">{{ ion }}</td>
-                        <td style="text-align: right; padding: 8px;">{{ data.ppm ? i18n.formatNumber(data.ppm.toFixed(2)) : '-' }}</td>
-                        <td style="text-align: center; padding: 8px; font-family: monospace; font-size: 0.85em; color: #666;">
+                        <td data-label="Ion" style="padding: 8px;"><strong>{{ ion }}</strong></td>
+                        <td data-label="PPM" style="text-align: right; padding: 8px;">{{ data.ppm ? i18n.formatNumber(data.ppm.toFixed(2)) : '-' }}</td>
+                        <td data-label="Calculation" class="calc-column" style="text-align: center; padding: 8px; font-family: monospace; font-size: 0.85em; color: #666;">
                           <span v-if="data.ppm && data.molarMass">{{ i18n.formatNumber(data.ppm.toFixed(2)) }} ÷ {{ i18n.formatNumber(data.molarMass.toFixed(3)) }} = {{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</span>
                           <span v-else>{{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</span>
                         </td>
-                        <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.lambda) }}</td>
-                        <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
-                        <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber((data.contribution_mS_cm / modalData.rawEC * 100).toFixed(1)) }}%</td>
+                        <td data-label="λ" style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.lambda) }}</td>
+                        <td data-label="EC Contrib" style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
+                        <td data-label="%" style="text-align: right; padding: 8px;">{{ i18n.formatNumber((data.contribution_mS_cm / modalData.rawEC * 100).toFixed(1)) }}%</td>
                       </tr>
                     </template>
                   </tbody>
