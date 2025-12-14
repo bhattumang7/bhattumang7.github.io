@@ -20,6 +20,228 @@ permalink: /fertilizer-calculator/
 </div>
 
 <div class="calculator-container">
+  <!-- Vue-powered Unified Modal (placed at top for proper rendering) -->
+  <div v-if="activeModal" class="modal-overlay active" @click="closeModal" style="display: flex !important;">
+    <div class="modal-content" @click.stop>
+      <div class="modal-header">
+        <h2>{{ modalTitle }}</h2>
+        <button class="modal-close" @click="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- PPM EXPLANATION MODAL -->
+        <template v-if="activeModal === 'ppm'">
+          <div class="explanation-section">
+            <h3>{{ i18n.t('whatIsPpm') }}</h3>
+            <p>{{ i18n.t('ppmStandsFor') }} {{ i18n.t('thinkOfItLikeThis') }}</p>
+          </div>
+          <div class="explanation-section">
+            <h3>{{ i18n.t('theBasicFormula') }}</h3>
+            <div class="formula-box">
+              <div class="formula">{{ i18n.t('ppmFormulaEquation') }}</div>
+            </div>
+          </div>
+          <div v-if="modalData.activeFertilizers.length === 0" class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
+            <h3 style="color: #856404;">{{ i18n.t('noCalculationYet') }}</h3>
+            <p>{{ i18n.t('addFertilizersToSeeBreakdown') }}</p>
+          </div>
+          <template v-else>
+            <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
+              <h3 style="color: #17a2b8;">{{ i18n.t('yourCurrentCalculation') }}</h3>
+              <p><strong>{{ i18n.t('solutionVolumeLabel') }}</strong> {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }}</p>
+              <p><strong>{{ i18n.t('fertilizersUsedLabel') }}</strong> {{ modalData.activeFertilizers.length }}</p>
+            </div>
+            <div class="explanation-section">
+              <h3>{{ i18n.t('stepByStepBreakdown') }}</h3>
+              <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step">
+                <h4 style="margin-top: 0; color: #007bff;">
+                  <span class="step-number">{{ index + 1 }}</span>
+                  {{ i18n.getFertilizerName(fert) }}
+                </h4>
+                <p style="margin: 10px 0 10px 38px;"><strong>{{ i18n.t('amountUsedLabel') }}</strong> {{ formatNumber(fert.grams) }} {{ i18n.t('gramsUnit') }}</p>
+              </div>
+            </div>
+          </template>
+        </template>
+
+        <!-- ION BALANCE EXPLANATION MODAL -->
+        <template v-if="activeModal === 'ion-balance'">
+          <!-- What is Ion Balance explanation -->
+          <div class="explanation-section">
+            <h3>{{ i18n.t('whatIsIonBalance') }}</h3>
+            <p v-html="i18n.t('ionBalanceExplanation')"></p>
+            <ul style="margin: 10px 0 10px 20px; line-height: 1.8;">
+              <li v-html="i18n.t('cationsDescription')"></li>
+              <li v-html="i18n.t('anionsDescription')"></li>
+            </ul>
+            <p v-html="i18n.t('ionBalanceImportance')"></p>
+          </div>
+
+          <!-- meq/L explanation -->
+          <div class="explanation-section" style="background: #f0f7ff; border-left-color: #2196f3;">
+            <h3 style="color: #1976d2;">{{ i18n.t('understandingMeqL') }}</h3>
+            <p v-html="i18n.t('meqLDescription')"></p>
+            <p style="font-style: italic; color: #666;">{{ i18n.t('meqLAnalogy') }}</p>
+            <div class="formula-box" style="margin: 15px 0; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #bbdefb;">
+              <div class="formula" style="font-family: monospace; font-size: 1.1em;">{{ i18n.t('meqLFormula') }}</div>
+              <div style="font-size: 0.9em; color: #666; margin-top: 8px;">{{ i18n.t('meqLFormulaDesc') }}</div>
+            </div>
+          </div>
+
+          <div v-if="modalData.activeFertilizers.length === 0" class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
+            <h3 style="color: #856404;">{{ i18n.t('noCalculationYet') }}</h3>
+            <p>{{ i18n.t('addFertilizersForIonBalance') }}</p>
+          </div>
+          <template v-else>
+            <!-- Current solution info -->
+            <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
+              <h3 style="color: #17a2b8;">{{ i18n.t('yourCurrentSolution') }}</h3>
+              <p><strong>{{ i18n.t('solutionVolumeLabel') }}</strong> {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }}</p>
+              <p><strong>{{ i18n.t('fertilizersUsedLabel') }}</strong> {{ modalData.activeFertilizers.length }}</p>
+            </div>
+
+            <!-- Step-by-step per-fertilizer ion breakdown with detailed calculations -->
+            <div class="explanation-section">
+              <h3>{{ i18n.t('stepByStepIonCalculation') }}</h3>
+              <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('howEachFertilizerContributesIons') }}</p>
+
+              <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                <h4 style="margin: 0 0 15px 0; color: #007bff; display: flex; align-items: center; gap: 10px;">
+                  <span class="step-number" style="background: #007bff; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
+                  {{ i18n.getFertilizerName(fert) }}
+                </h4>
+
+                <!-- Basic info -->
+                <div style="margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 6px;">
+                  <p style="margin: 0 0 8px 0;"><strong>{{ i18n.t('amountUsedLabel') }}</strong> {{ formatNumber(fert.grams) }} {{ i18n.t('gramsUnit') }}</p>
+                  <p v-if="getIonDataForFert(fert)" style="margin: 0 0 8px 0;"><strong>{{ i18n.t('molarMassLabel') }}</strong> {{ formatNumber(getIonDataForFert(fert).molarMass, 2) }} g/mol</p>
+                  <p v-if="getIonDataForFert(fert)" style="margin: 0; font-family: monospace; background: #e3f2fd; padding: 8px 12px; border-radius: 4px;">
+                    <strong>{{ i18n.t('molesLabel') }}</strong> {{ formatNumber(fert.grams) }} g ÷ {{ formatNumber(getIonDataForFert(fert).molarMass, 2) }} g/mol = <strong>{{ formatNumber(fert.grams / getIonDataForFert(fert).molarMass, 6) }} mol</strong>
+                  </p>
+                </div>
+
+                <!-- Ion contributions with detailed calculation -->
+                <div v-if="getIonDataForFert(fert)" style="margin-top: 10px;">
+                  <p style="font-weight: bold; margin-bottom: 10px; color: #555;">Ion Contributions:</p>
+                  <div style="display: grid; gap: 10px;">
+                    <div v-for="ionInfo in getIonDataForFert(fert).ions" :key="ionInfo.ion"
+                         :style="{
+                           background: ionInfo.type === 'cation' ? '#e3f2fd' : '#fce4ec',
+                           padding: '12px 15px',
+                           borderRadius: '8px',
+                           borderLeft: ionInfo.type === 'cation' ? '3px solid #1565c0' : '3px solid #c2185b'
+                         }">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span :style="{ fontWeight: 'bold', fontSize: '1.1em', color: ionInfo.type === 'cation' ? '#1565c0' : '#c2185b' }">
+                          {{ ionInfo.ion }} <span style="font-size: 0.85em; font-weight: normal;">({{ ionInfo.type === 'cation' ? '+' : '-' }})</span>
+                        </span>
+                        <span style="font-weight: bold; font-size: 1.2em;" :style="{ color: ionInfo.type === 'cation' ? '#1565c0' : '#c2185b' }">
+                          {{ formatNumber(calculateIonMeq(fert, ionInfo), 3) }} meq/L
+                        </span>
+                      </div>
+                      <div style="font-family: monospace; font-size: 0.85em; color: #666; background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
+                        {{ formatNumber(fert.grams / getIonDataForFert(fert).molarMass, 6) }} mol × {{ ionInfo.count }} ions × {{ ionInfo.charge }} charge × 1000 ÷ {{ formatNumber(modalData.volume) }} L = {{ formatNumber(calculateIonMeq(fert, ionInfo), 3) }} meq/L
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Fertilizer subtotal -->
+                <div v-if="getIonDataForFert(fert)" style="margin-top: 15px; padding: 10px; background: #fff; border-radius: 6px; display: flex; justify-content: space-between;">
+                  <span>
+                    <strong style="color: #28a745;">Cations subtotal:</strong>
+                    {{ formatNumber(calculateFertCationTotal(fert), 3) }} meq/L
+                  </span>
+                  <span>
+                    <strong style="color: #dc3545;">Anions subtotal:</strong>
+                    {{ formatNumber(calculateFertAnionTotal(fert), 3) }} meq/L
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ion totals breakdown -->
+            <div v-if="modalData.ionBalance && modalData.ionBalance.ionDetails" class="explanation-section">
+              <h3>{{ i18n.t('nutrientTotalsSummary') }}</h3>
+              <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('whenNutrientsFromMultiple') }}</p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Cations column -->
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                  <h4 style="margin: 0 0 10px 0; color: #1565c0;">{{ i18n.t('cations') }} (+)</h4>
+                  <template v-for="(data, ion) in modalData.ionBalance.ionDetails" :key="ion">
+                    <div v-if="data.type === 'cation'" style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #bbdefb;">
+                      <span>{{ ion }}</span>
+                      <strong>{{ formatNumber(data.meq, 3) }} meq/L</strong>
+                    </div>
+                  </template>
+                  <div style="display: flex; justify-content: space-between; padding: 8px 0; margin-top: 5px; font-weight: bold; color: #1565c0; border-top: 2px solid #1565c0;">
+                    <span>{{ i18n.t('totalCations') }}</span>
+                    <span>{{ formatNumber(modalData.ionBalance.totalCations, 3) }} meq/L</span>
+                  </div>
+                </div>
+                <!-- Anions column -->
+                <div style="background: #fce4ec; padding: 15px; border-radius: 8px;">
+                  <h4 style="margin: 0 0 10px 0; color: #c2185b;">{{ i18n.t('anions') }} (-)</h4>
+                  <template v-for="(data, ion) in modalData.ionBalance.ionDetails" :key="ion">
+                    <div v-if="data.type === 'anion'" style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #f8bbd9;">
+                      <span>{{ ion }}</span>
+                      <strong>{{ formatNumber(data.meq, 3) }} meq/L</strong>
+                    </div>
+                  </template>
+                  <div style="display: flex; justify-content: space-between; padding: 8px 0; margin-top: 5px; font-weight: bold; color: #c2185b; border-top: 2px solid #c2185b;">
+                    <span>{{ i18n.t('totalAnions') }}</span>
+                    <span>{{ formatNumber(modalData.ionBalance.totalAnions, 3) }} meq/L</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Final Summary with imbalance calculation -->
+            <div v-if="modalData.ionBalance" class="explanation-section" style="background: #f8f9fa; border-left-color: #6c757d;">
+              <h3>{{ i18n.t('finalIonBalanceResults') }}</h3>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin: 15px 0;">
+                <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('totalCationsPlus') }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ formatNumber(modalData.ionBalance.totalCations, 3) }} meq/L</div>
+                </div>
+                <div style="font-size: 1.5em; color: #666;">vs</div>
+                <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('totalAnionsMinus') }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ formatNumber(modalData.ionBalance.totalAnions, 3) }} meq/L</div>
+                </div>
+                <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: modalData.ionBalance.statusColor + '22', borderLeft: '4px solid ' + modalData.ionBalance.statusColor }">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalancePercentage') }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: modalData.ionBalance.statusColor }">{{ formatNumber(modalData.ionBalance.imbalance, 1) }}%</div>
+                  <div style="font-size: 0.85em;" :style="{ color: modalData.ionBalance.statusColor }">{{ modalData.ionBalance.statusText }}</div>
+                </div>
+              </div>
+
+              <!-- Imbalance calculation formula -->
+              <div style="margin-top: 15px; padding: 12px; background: #fff; border-radius: 6px; border: 1px solid #dee2e6;">
+                <p style="margin: 0 0 8px 0; font-weight: bold; color: #495057;">{{ i18n.t('howWeCalculatedImbalance') }}</p>
+                <div style="font-family: monospace; font-size: 0.9em; background: #f8f9fa; padding: 10px; border-radius: 4px;">
+                  |{{ formatNumber(modalData.ionBalance.totalCations, 3) }} - {{ formatNumber(modalData.ionBalance.totalAnions, 3) }}| ÷ (({{ formatNumber(modalData.ionBalance.totalCations, 3) }} + {{ formatNumber(modalData.ionBalance.totalAnions, 3) }}) ÷ 2) × 100 = <strong>{{ formatNumber(modalData.ionBalance.imbalance, 1) }}%</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interpretation guide -->
+            <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
+              <h3 style="color: #28a745;">{{ i18n.t('interpretingResults') }}</h3>
+              <ul style="line-height: 1.8;">
+                <li><strong>{{ i18n.t('imbalanceLessThan10') }}</strong> {{ i18n.t('imbalanceLessThan10Desc') }}</li>
+                <li><strong>{{ i18n.t('imbalance10To20') }}</strong> {{ i18n.t('imbalance10To20Desc') }}</li>
+                <li><strong>{{ i18n.t('imbalanceOver20') }}</strong> {{ i18n.t('imbalanceOver20Desc') }}</li>
+              </ul>
+              <p style="margin-top: 15px; color: #155724;"><strong>{{ i18n.t('whyDoesThisMatter') }}</strong> {{ i18n.t('whyDoesThisMatterExplanation') }}</p>
+            </div>
+          </template>
+        </template>
+
+      </div>
+    </div>
+  </div>
+
   <h1 @click="goToModeSelector()" style="cursor: pointer;" title="Return to calculator selection">Fertilizer Calculator</h1>
 
   <!-- Experimental Warning Banner -->
@@ -352,7 +574,7 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-calculate" id="fertilizer-select-calc-btn" @click="calculateFromWizardFertilizerSelect()" data-i18n="calculate">Calculate</button>
+      <button class="btn-calculate" id="fertilizer-select-calc-btn" @click="calculateFromWizardFertilizerSelectVue()" data-i18n="calculate">Calculate</button>
       <button class="btn-back" id="fertilizer-select-back-btn" @click="backFromFertilizerSelectStep()" data-i18n="back">← Back</button>
     </div>
   </div>
@@ -446,10 +668,23 @@ permalink: /fertilizer-calculator/
             <span>{{ i18n.t('ionBalance') }}</span>
             <span class="info-icon" @click="openIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
           </h2>
-          <div class="ion-balance-result">
-            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalCations') }}</span><span class="ion-value">{{ gramsToPpmDisplayData.ionBalance.cations.toFixed(2) }} meq/L</span></div>
-            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalAnions') }}</span><span class="ion-value">{{ gramsToPpmDisplayData.ionBalance.anions.toFixed(2) }} meq/L</span></div>
-            <div class="ion-row imbalance"><span class="ion-label">{{ i18n.t('imbalance') }}</span><span class="ion-value" :style="{ color: gramsToPpmDisplayData.ionBalance.color }">{{ gramsToPpmDisplayData.ionBalance.imbalance.toFixed(1) }}% ({{ gramsToPpmDisplayData.ionBalance.status }})</span></div>
+          <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+            <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ i18n.formatNumber(gramsToPpmDisplayData.ionBalance.totalCations.toFixed(2)) }}</div>
+              <div style="font-size: 0.75em; color: #888;">meq/L</div>
+            </div>
+            <div style="font-size: 1.5em; color: #666;">vs</div>
+            <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('anions') }} (-)</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ i18n.formatNumber(gramsToPpmDisplayData.ionBalance.totalAnions.toFixed(2)) }}</div>
+              <div style="font-size: 0.75em; color: #888;">meq/L</div>
+            </div>
+            <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: gramsToPpmDisplayData.ionBalance.statusColor + '22', borderLeft: '4px solid ' + gramsToPpmDisplayData.ionBalance.statusColor }">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalance') }}</div>
+              <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.ionBalance.statusColor }">{{ i18n.formatNumber(gramsToPpmDisplayData.ionBalance.imbalance.toFixed(1)) }}%</div>
+              <div style="font-size: 0.85em;" :style="{ color: gramsToPpmDisplayData.ionBalance.statusColor }">{{ gramsToPpmDisplayData.ionBalance.statusText }}</div>
+            </div>
           </div>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0" style="margin-top: 20px;">
@@ -507,12 +742,12 @@ permalink: /fertilizer-calculator/
           </div>
         </div>
         <div class="results-section" style="margin-top: 20px;">
-          <h2>{{ i18n.t('achievedPpm') }}</h2>
+          <h2>{{ i18n.t('targetVsAchieved') || 'Target vs Achieved' }}</h2>
           <div class="results-grid">
-            <div v-for="item in formulaResultsData.achievedPpm" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
+            <div v-for="item in formulaResultsData.comparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : item.className === 'miss' ? '#dc3545' : '#ddd') }">
               <div class="result-label">{{ item.label }}</div>
-              <div class="result-value">{{ (item.achieved || 0).toFixed(2) }}</div>
-              <div v-if="item.target" class="result-target">{{ i18n.t('targetLabel') }} {{ item.target.toFixed(2) }}</div>
+              <div class="result-value">{{ (item.achieved || 0).toFixed(2) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
+              <div v-if="item.target" class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('targetLabel') || 'Target:' }} {{ item.target.toFixed(2) }}</div>
             </div>
           </div>
         </div>
@@ -521,10 +756,23 @@ permalink: /fertilizer-calculator/
             <span>{{ i18n.t('ionBalance') }}</span>
             <span class="info-icon" @click="openFormulaIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
           </h2>
-          <div class="ion-balance-result">
-            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalCations') }}</span><span class="ion-value">{{ formulaResultsData.ionBalance.cations.toFixed(2) }} meq/L</span></div>
-            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalAnions') }}</span><span class="ion-value">{{ formulaResultsData.ionBalance.anions.toFixed(2) }} meq/L</span></div>
-            <div class="ion-row imbalance"><span class="ion-label">{{ i18n.t('imbalance') }}</span><span class="ion-value" :style="{ color: formulaResultsData.ionBalance.color }">{{ formulaResultsData.ionBalance.imbalance.toFixed(1) }}% ({{ formulaResultsData.ionBalance.status }})</span></div>
+          <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+            <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ i18n.formatNumber(formulaResultsData.ionBalance.totalCations.toFixed(2)) }}</div>
+              <div style="font-size: 0.75em; color: #888;">meq/L</div>
+            </div>
+            <div style="font-size: 1.5em; color: #666;">vs</div>
+            <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('anions') }} (-)</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ i18n.formatNumber(formulaResultsData.ionBalance.totalAnions.toFixed(2)) }}</div>
+              <div style="font-size: 0.75em; color: #888;">meq/L</div>
+            </div>
+            <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: formulaResultsData.ionBalance.statusColor + '22', borderLeft: '4px solid ' + formulaResultsData.ionBalance.statusColor }">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalance') }}</div>
+              <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: formulaResultsData.ionBalance.statusColor }">{{ i18n.formatNumber(formulaResultsData.ionBalance.imbalance.toFixed(1)) }}%</div>
+              <div style="font-size: 0.85em;" :style="{ color: formulaResultsData.ionBalance.statusColor }">{{ formulaResultsData.ionBalance.statusText }}</div>
+            </div>
           </div>
         </div>
       </template>
@@ -559,12 +807,12 @@ permalink: /fertilizer-calculator/
           </div>
         </div>
         <div class="results-section" style="margin-top: 20px;">
-          <h2>{{ i18n.t('achievedPpm') }}</h2>
+          <h2>{{ i18n.t('targetVsAchievedRatios') || 'Achieved PPM' }}</h2>
           <div class="results-grid">
-            <div v-for="item in reverseResultsData.achievedPpm" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
+            <div v-for="item in reverseResultsData.comparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : item.className === 'miss' ? '#dc3545' : '#ddd') }">
               <div class="result-label">{{ item.label }}</div>
-              <div class="result-value">{{ (item.achieved || 0).toFixed(2) }}</div>
-              <div v-if="item.target" class="result-target">{{ i18n.t('targetLabel') }} {{ item.target.toFixed(2) }}</div>
+              <div class="result-value">{{ (item.achievedPPM || 0).toFixed(2) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
+              <div class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('ratioLabel') || 'Ratio:' }} {{ item.userInput }} → {{ (item.achievedRatio || 0).toFixed(2) }}</div>
             </div>
           </div>
         </div>
@@ -573,10 +821,23 @@ permalink: /fertilizer-calculator/
             <span>{{ i18n.t('ionBalance') }}</span>
             <span class="info-icon" @click="openReverseIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
           </h2>
-          <div class="ion-balance-result">
-            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalCations') }}</span><span class="ion-value">{{ reverseResultsData.ionBalance.cations.toFixed(2) }} meq/L</span></div>
-            <div class="ion-row"><span class="ion-label">{{ i18n.t('totalAnions') }}</span><span class="ion-value">{{ reverseResultsData.ionBalance.anions.toFixed(2) }} meq/L</span></div>
-            <div class="ion-row imbalance"><span class="ion-label">{{ i18n.t('imbalance') }}</span><span class="ion-value" :style="{ color: reverseResultsData.ionBalance.color }">{{ reverseResultsData.ionBalance.imbalance.toFixed(1) }}% ({{ reverseResultsData.ionBalance.status }})</span></div>
+          <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+            <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ i18n.formatNumber(reverseResultsData.ionBalance.totalCations.toFixed(2)) }}</div>
+              <div style="font-size: 0.75em; color: #888;">meq/L</div>
+            </div>
+            <div style="font-size: 1.5em; color: #666;">vs</div>
+            <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('anions') }} (-)</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ i18n.formatNumber(reverseResultsData.ionBalance.totalAnions.toFixed(2)) }}</div>
+              <div style="font-size: 0.75em; color: #888;">meq/L</div>
+            </div>
+            <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: reverseResultsData.ionBalance.statusColor + '22', borderLeft: '4px solid ' + reverseResultsData.ionBalance.statusColor }">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalance') }}</div>
+              <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: reverseResultsData.ionBalance.statusColor }">{{ i18n.formatNumber(reverseResultsData.ionBalance.imbalance.toFixed(1)) }}%</div>
+              <div style="font-size: 0.85em;" :style="{ color: reverseResultsData.ionBalance.statusColor }">{{ reverseResultsData.ionBalance.statusText }}</div>
+            </div>
           </div>
         </div>
       </template>
@@ -1866,193 +2127,6 @@ permalink: /fertilizer-calculator/
             <span style="color: #666; font-size: 0.85em;"> (Tank A: {{ i18n.formatNumber(twoTankDisplayData.tankA.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }} + Tank B: {{ i18n.formatNumber(twoTankDisplayData.tankB.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }})</span>
           </span>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Vue-powered Unified Modal -->
-  <div v-if="activeModal" class="modal-overlay" @click="closeModal">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h2>{{ modalTitle }}</h2>
-        <button class="modal-close" @click="closeModal">&times;</button>
-      </div>
-      <div class="modal-body">
-
-        <!-- ============================================ -->
-        <!-- PPM EXPLANATION MODAL -->
-        <!-- ============================================ -->
-        <template v-if="activeModal === 'ppm'">
-          <!-- What is PPM? -->
-          <div class="explanation-section">
-            <h3>{{ i18n.t('whatIsPpm') }}</h3>
-            <p>{{ i18n.t('ppmStandsFor') }} {{ i18n.t('thinkOfItLikeThis') }}</p>
-            <p>{{ i18n.t('ppmExample') }}</p>
-          </div>
-
-          <!-- The Basic Formula -->
-          <div class="explanation-section">
-            <h3>{{ i18n.t('theBasicFormula') }}</h3>
-            <div class="formula-box">
-              <div class="formula">{{ i18n.t('ppmFormulaEquation') }}</div>
-              <div class="description">{{ i18n.t('ppmFormulaDescription') }}</div>
-            </div>
-            <p><strong>{{ i18n.t('whereLabel') }}</strong></p>
-            <ul style="line-height: 1.8;">
-              <li>{{ i18n.t('formulaPartGrams') }}</li>
-              <li>{{ i18n.t('formulaPart1000') }}</li>
-              <li>{{ i18n.t('formulaPartPercentage') }}</li>
-              <li>{{ i18n.t('formulaPartLiters') }}</li>
-            </ul>
-          </div>
-
-          <!-- No calculation yet -->
-          <div v-if="modalData.activeFertilizers.length === 0" class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-            <h3 style="color: #856404;">{{ i18n.t('noCalculationYet') }}</h3>
-            <p>{{ i18n.t('addFertilizersToSeeBreakdown') }}</p>
-            <p>{{ i18n.t('calculatorShowsStepByStep') }}</p>
-          </div>
-
-          <!-- Current calculation info -->
-          <template v-else>
-            <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
-              <h3 style="color: #17a2b8;">{{ i18n.t('yourCurrentCalculation') }}</h3>
-              <p><strong>{{ i18n.t('solutionVolumeLabel') }}</strong> {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }}</p>
-              <p><strong>{{ i18n.t('fertilizersUsedLabel') }}</strong> {{ modalData.activeFertilizers.length }}</p>
-            </div>
-
-            <!-- Step by step breakdown -->
-            <div class="explanation-section">
-              <h3>{{ i18n.t('stepByStepBreakdown') }}</h3>
-              <p>{{ i18n.t('howWeCalculatedEachNutrient') }}</p>
-
-              <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step">
-                <h4 style="margin-top: 0; color: #007bff;">
-                  <span class="step-number">{{ index + 1 }}</span>
-                  {{ i18n.getFertilizerName(fert) }}
-                </h4>
-                <p style="margin: 10px 0 10px 38px;"><strong>{{ i18n.t('amountUsedLabel') }}</strong> {{ formatNumber(fert.grams) }} {{ i18n.t('gramsUnit') }}</p>
-                <div style="margin-left: 38px;">
-                  <table class="conversion-table" style="font-size: 0.9em;">
-                    <thead>
-                      <tr>
-                        <th>{{ i18n.t('nutrientHeader') }}</th>
-                        <th>{{ i18n.t('percentInFertilizerHeader') }}</th>
-                        <th>{{ i18n.t('calculationHeader') }}</th>
-                        <th>{{ i18n.t('ppmHeader') }}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="nutrient in getNutrientContributions(fert)" :key="nutrient.name">
-                        <td :data-label="i18n.t('nutrientHeader')">{{ nutrient.name }}</td>
-                        <td :data-label="i18n.t('percentInFertilizerHeader')">{{ formatNumber(nutrient.percent, 1) }}%</td>
-                        <td :data-label="i18n.t('calculationHeader')" style="font-family: monospace; font-size: 0.85em;">
-                          {{ formatNumber(fert.grams) }} × 1000 × {{ formatNumber(nutrient.percent/100, 4) }} ÷ {{ formatNumber(modalData.volume) }}
-                        </td>
-                        <td :data-label="i18n.t('ppmHeader')"><strong>{{ formatNumber(nutrient.ppm) }} PPM</strong></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Oxide Conversions Table -->
-            <div v-if="hasAnyOxides()" class="explanation-section">
-              <h3>{{ i18n.t('aboutOxideConversions') }}</h3>
-              <p>{{ i18n.t('oxideConversionExplanation') }}</p>
-              <table class="conversion-table" style="margin-top: 10px;">
-                <thead>
-                  <tr>
-                    <th>{{ i18n.t('oxideFormHeader') }}</th>
-                    <th>{{ i18n.t('elementalFormHeader') }}</th>
-                    <th>{{ i18n.t('conversionFactorHeader') }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="oxide in oxideConversions" :key="oxide.key" v-show="hasOxide(oxide.key)">
-                    <td :data-label="i18n.t('oxideFormHeader')">{{ i18n.t(oxide.oxideLabel) }}</td>
-                    <td :data-label="i18n.t('elementalFormHeader')">{{ i18n.t(oxide.elementalLabel) }}</td>
-                    <td :data-label="i18n.t('conversionFactorHeader')">&times;{{ formatNumber(oxide.factor, 3) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </template>
-        </template>
-
-        <!-- ============================================ -->
-        <!-- ION BALANCE EXPLANATION MODAL -->
-        <!-- ============================================ -->
-        <template v-if="activeModal === 'ion-balance'">
-          <!-- What is Ion Balance? -->
-          <div class="explanation-section">
-            <h3>{{ i18n.t('whatIsIonBalance') }}</h3>
-            <p>{{ i18n.t('ionBalanceExplanation1') }}</p>
-            <p>{{ i18n.t('ionBalanceExplanation2') }}</p>
-          </div>
-
-          <!-- No calculation yet -->
-          <div v-if="modalData.activeFertilizers.length === 0" class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
-            <h3 style="color: #856404;">{{ i18n.t('noCalculationYet') }}</h3>
-            <p>{{ i18n.t('addFertilizersForIonBalance') }}</p>
-          </div>
-
-          <!-- Current solution info -->
-          <template v-else>
-            <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
-              <h3 style="color: #17a2b8;">{{ i18n.t('yourCurrentSolution') }}</h3>
-              <p><strong>{{ i18n.t('solutionVolumeLabel') }}</strong> {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }}</p>
-              <p><strong>{{ i18n.t('fertilizersUsedLabel') }}</strong> {{ modalData.activeFertilizers.length }}</p>
-            </div>
-
-            <!-- Ion balance results -->
-            <div v-if="modalData.ionBalance" class="explanation-section">
-              <h3>{{ i18n.t('ionBalanceResults') }}</h3>
-              <div class="ion-balance-summary" :style="{ borderLeftColor: modalData.ionBalance.statusColor }">
-                <div class="ion-totals">
-                  <div class="ion-total cation">
-                    <span class="label">{{ i18n.t('totalCations') }}</span>
-                    <span class="value">{{ formatNumber(modalData.ionBalance.totalCations) }} meq/L</span>
-                  </div>
-                  <div class="ion-total anion">
-                    <span class="label">{{ i18n.t('totalAnions') }}</span>
-                    <span class="value">{{ formatNumber(modalData.ionBalance.totalAnions) }} meq/L</span>
-                  </div>
-                </div>
-                <div class="ion-imbalance" :style="{ color: modalData.ionBalance.statusColor }">
-                  <strong>{{ i18n.t('imbalanceLabel') }}</strong> {{ formatNumber(modalData.ionBalance.imbalance) }}%
-                  <span class="status-text">{{ modalData.ionBalance.statusText }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Interpretation guide -->
-            <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-              <h3 style="color: #28a745;">{{ i18n.t('interpretingResults') }}</h3>
-              <ul style="line-height: 1.8;">
-                <li><strong>{{ i18n.t('imbalanceLessThan10') }}</strong> {{ i18n.t('imbalanceLessThan10Desc') }}</li>
-                <li><strong>{{ i18n.t('imbalance10To20') }}</strong> {{ i18n.t('imbalance10To20Desc') }}</li>
-                <li><strong>{{ i18n.t('imbalanceOver20') }}</strong> {{ i18n.t('imbalanceOver20Desc') }}</li>
-              </ul>
-            </div>
-          </template>
-        </template>
-
-        <!-- ============================================ -->
-        <!-- QUICK TIPS (shown for all modal types) -->
-        <!-- ============================================ -->
-        <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
-          <h3 style="color: #28a745;">{{ i18n.t('quickTips') }}</h3>
-          <ul style="line-height: 1.8;">
-            <li>{{ i18n.t('tip1PpmEquals') }}</li>
-            <li>{{ i18n.t('tip2StartLower') }}</li>
-            <li>{{ i18n.t('tip3DifferentPlants') }}</li>
-            <li>{{ i18n.t('tip4BalanceIsKey') }}</li>
-            <li>{{ i18n.t('tip5CheckWater') }}</li>
-          </ul>
-        </div>
-
       </div>
     </div>
   </div>
@@ -3672,6 +3746,9 @@ const FertilizerApp = {
       }
     });
 
+    // Modal state (declared early for use in watchers)
+    const activeModal = ref(null); // 'ppm', 'ion-balance', 'reverse-ppm', 'reverse-ion', 'formula-ion', 'two-tank-ppm', 'two-tank-ion'
+
     // Watch for modal/progress overlay and control body scroll
     watch([activeModal, () => progressState.show], ([modal, progress]) => {
       document.body.style.overflow = (modal || progress) ? 'hidden' : '';
@@ -3819,8 +3896,7 @@ const FertilizerApp = {
     const gramsToPpmResults = ref(null);
     const showResults = ref(false);
 
-    // Modal state
-    const activeModal = ref(null); // 'ppm', 'ion-balance', 'reverse-ppm', 'reverse-ion', 'formula-ion', 'two-tank-ppm', 'two-tank-ion'
+    // Modal data (activeModal declared earlier for use in watchers)
     const modalData = reactive({
       volume: 0,
       activeFertilizers: [],
@@ -5172,32 +5248,36 @@ const FertilizerApp = {
 
     // Open a modal with data
     function openModal(modalType, data = {}) {
-      activeModal.value = modalType;
-
-      // Get active fertilizers from Vue state or passed data
-      const ferts = data.activeFertilizers || activeFertilizers.value;
-      const vol = data.volume || volume.value;
+      // Get active fertilizers from Vue state or passed data (ensure it's always an array)
+      const ferts = data.activeFertilizers || activeFertilizers.value || [];
+      const vol = data.volume || volume.value || 1;
 
       // Reset nutrient contributions
       const contributions = {};
 
       // Calculate contributions for each fertilizer to track oxides
-      ferts.forEach(fert => {
-        // Nutrients are in fert.pct object
-        if (fert.pct) {
-          for (const [key, value] of Object.entries(fert.pct)) {
-            if (typeof value === 'number' && value > 0) {
-              contributions[key] = true;
+      if (Array.isArray(ferts)) {
+        ferts.forEach(fert => {
+          // Nutrients are in fert.pct object
+          if (fert && fert.pct) {
+            for (const [key, value] of Object.entries(fert.pct)) {
+              if (typeof value === 'number' && value > 0) {
+                contributions[key] = true;
+              }
             }
           }
-        }
-      });
+        });
+      }
 
       // Calculate ion balance if this is an ion balance modal
       let ionBalance = data.ionBalance || null;
       if ((modalType === 'ion-balance' || modalType === 'reverse-ion' || modalType === 'formula-ion') &&
-          ferts.length > 0 && typeof calculateIonBalanceDetails === 'function') {
-        ionBalance = calculateIonBalanceDetails(ferts, vol);
+          Array.isArray(ferts) && ferts.length > 0 && typeof calculateIonBalanceDetails === 'function') {
+        try {
+          ionBalance = calculateIonBalanceDetails(ferts, vol);
+        } catch (e) {
+          console.error('Error calculating ion balance:', e);
+        }
       }
 
       Object.assign(modalData, {
@@ -5207,6 +5287,9 @@ const FertilizerApp = {
         ionBalance: ionBalance,
         calculationType: data.calculationType || 'grams-to-ppm'
       });
+
+      // Set modal type AFTER setting data to ensure everything is ready
+      activeModal.value = modalType;
       // Body overflow is handled by watcher on activeModal
     }
 
@@ -5285,6 +5368,47 @@ const FertilizerApp = {
       return null;
     }
 
+    // Helper function to get ION_DATA for a fertilizer
+    function getIonDataForFert(fert) {
+      if (!fert || !fert.id) return null;
+      return ION_DATA[fert.id] || null;
+    }
+
+    // Calculate meq/L for a specific ion from a fertilizer
+    function calculateIonMeq(fert, ionInfo) {
+      const ionData = getIonDataForFert(fert);
+      if (!ionData || !fert.grams || !modalData.volume) return 0;
+      const moles = fert.grams / ionData.molarMass;
+      const meq = moles * ionInfo.count * ionInfo.charge * 1000;
+      return meq / modalData.volume;
+    }
+
+    // Calculate total cations for a fertilizer
+    function calculateFertCationTotal(fert) {
+      const ionData = getIonDataForFert(fert);
+      if (!ionData) return 0;
+      let total = 0;
+      ionData.ions.forEach(ionInfo => {
+        if (ionInfo.type === 'cation') {
+          total += calculateIonMeq(fert, ionInfo);
+        }
+      });
+      return total;
+    }
+
+    // Calculate total anions for a fertilizer
+    function calculateFertAnionTotal(fert) {
+      const ionData = getIonDataForFert(fert);
+      if (!ionData) return 0;
+      let total = 0;
+      ionData.ions.forEach(ionInfo => {
+        if (ionInfo.type === 'anion') {
+          total += calculateIonMeq(fert, ionInfo);
+        }
+      });
+      return total;
+    }
+
     // =========================================================================
     // WIZARD VOLUME HELPERS (Vue-powered)
     // =========================================================================
@@ -5334,8 +5458,156 @@ const FertilizerApp = {
     // Handle keydown.enter for fertilizer select step
     function handleFertilizerSelectEnter(event) {
       if (wizardStep.value === 'fertilizer-select-step' && !isSearchInput(event)) {
-        calculateFromWizardFertilizerSelect();
+        calculateFromWizardFertilizerSelectVue();
       }
+    }
+
+    // Wrapper for global calculateFromWizardFertilizerSelect
+    async function calculateFromWizardFertilizerSelectVue() {
+      // Call the global function which handles the complex logic
+      await calculateFromWizardFertilizerSelect();
+    }
+
+    // Show two-tank view (Vue version)
+    function showTwoTankView() {
+      const pendingCalc = pendingWizardCalculation.value;
+      if (!pendingCalc) {
+        alert(i18n.t('alertNoCalculationData'));
+        return;
+      }
+
+      const { type } = pendingCalc;
+
+      // Call the appropriate two-tank display function based on calculation type
+      if (type === 'grams-to-ppm') {
+        displayTwoTankGramsToPPMResults();
+      } else if (type === 'ppm-to-grams') {
+        displayTwoTankFormulaResults();
+      } else if (type === 'npk-ratio-to-grams') {
+        displayTwoTankReverseResults();
+      }
+
+      // Set wizard results source
+      if (type === 'grams-to-ppm') {
+        wizardResultsSource.value = 'ppm-calc';
+      } else if (type === 'ppm-to-grams') {
+        wizardResultsSource.value = 'formula-builder';
+      } else if (type === 'npk-ratio-to-grams') {
+        wizardResultsSource.value = 'reverse-calc';
+      }
+      wizardResultsModeText.value = pendingCalc.indicatorText;
+
+      // Clear pending calculation
+      pendingWizardCalculation.value = null;
+
+      // Show wizard results
+      showWizardStepVue('wizard-results', { updateIndicator: false });
+    }
+
+    // Skip two-tank view (Vue version)
+    function skipTwoTankView() {
+      const pendingCalc = pendingWizardCalculation.value;
+      if (pendingCalc) {
+        wizardResultsModeText.value = pendingCalc.indicatorText;
+
+        // Set wizard results source based on calculation type
+        if (pendingCalc.type === 'grams-to-ppm') {
+          wizardResultsSource.value = 'ppm-calc';
+        } else if (pendingCalc.type === 'ppm-to-grams') {
+          wizardResultsSource.value = 'formula-builder';
+        } else if (pendingCalc.type === 'npk-ratio-to-grams') {
+          wizardResultsSource.value = 'reverse-calc';
+        }
+      }
+
+      // Clear pending calculation
+      pendingWizardCalculation.value = null;
+
+      // Show wizard results
+      showWizardStepVue('wizard-results', { updateIndicator: false });
+    }
+
+    // Tab switching (Vue version)
+    function switchTab(tabId) {
+      currentTab.value = tabId;
+      currentMode.value = tabId;
+    }
+
+    // Modal opening functions (wrappers that use openModal)
+    function openPPMExplanation() {
+      // Get data from the last calculation
+      const lastCalc = lastGramsToPPMCalculation.value;
+      const data = lastCalc ? {
+        volume: lastCalc.volume,
+        activeFertilizers: lastCalc.activeFertilizers || [],
+        calculationType: 'grams-to-ppm'
+      } : {};
+
+      openModal('ppm', data);
+    }
+
+    function openIonBalanceExplanation() {
+      // Get data from the last calculation
+      const lastCalc = lastGramsToPPMCalculation.value;
+      const data = lastCalc ? {
+        volume: lastCalc.volume,
+        activeFertilizers: lastCalc.activeFertilizers || [],
+        calculationType: 'grams-to-ppm'
+      } : {};
+      openModal('ion-balance', data);
+    }
+
+    function openReversePPMExplanation() {
+      const lastCalc = lastReverseCalculation.value;
+      let data = {};
+      if (lastCalc) {
+        const { result, volume } = lastCalc;
+        // Fertilizers are in result.formula (same structure as formula builder)
+        const activeFertilizers = Object.entries(result.formula)
+          .filter(([fertId, grams]) => grams > 0.01)
+          .map(([fertId, grams]) => {
+            const fert = FERTILIZERS.find(f => f.id === fertId);
+            return fert ? { ...fert, grams } : null;
+          })
+          .filter(Boolean);
+        data = { volume, activeFertilizers, calculationType: 'ratio-to-grams' };
+      }
+      openModal('ppm', data);
+    }
+
+    function openReverseIonBalanceExplanation() {
+      const lastCalc = lastReverseCalculation.value;
+      let data = {};
+      if (lastCalc) {
+        const { result, volume } = lastCalc;
+        // Fertilizers are in result.formula (same structure as formula builder)
+        const activeFertilizers = Object.entries(result.formula)
+          .filter(([fertId, grams]) => grams > 0.01)
+          .map(([fertId, grams]) => {
+            const fert = FERTILIZERS.find(f => f.id === fertId);
+            return fert ? { ...fert, grams } : null;
+          })
+          .filter(Boolean);
+        data = { volume, activeFertilizers, calculationType: 'ratio-to-grams' };
+      }
+      openModal('ion-balance', data);
+    }
+
+    function openFormulaIonBalanceExplanation() {
+      const lastCalc = lastFormulaCalculation.value;
+      let data = {};
+      if (lastCalc) {
+        const { result, volume } = lastCalc;
+        const activeFertilizers = Object.entries(result.formula)
+          .filter(([fertId, grams]) => grams > 0.01)
+          .map(([fertId, grams]) => {
+            const fert = FERTILIZERS.find(f => f.id === fertId);
+            return fert ? { ...fert, grams } : null;
+          })
+          .filter(Boolean);
+        data = { volume, activeFertilizers, calculationType: 'ppm-to-grams' };
+      }
+      openModal('ion-balance', data);
     }
 
     // Show wizard step (Vue-powered replacement for window.vueApp.wizardStep = stepId)
@@ -5345,6 +5617,218 @@ const FertilizerApp = {
       if (scroll) {
         scrollToWizardStep(stepId);
       }
+    }
+
+    // Select mode (Vue-powered replacement for global selectMode)
+    function selectMode(tabId) {
+      // Store the selected mode in Vue state (single source of truth)
+      currentMode.value = tabId;
+      // Show volume step
+      showWizardStepVue('volume-step');
+      // Focus on the volume input
+      focusWizardVolume();
+    }
+
+    // Select calculation mode (oxide/elemental)
+    function selectCalcMode(mode) {
+      wizardCalcMode.value = mode;
+    }
+
+    // Proceed from volume step
+    function proceedFromVolumeStep() {
+      if (!validateWizardVolume()) {
+        return;
+      }
+      const mode = currentMode.value;
+      if (MODES_WITH_CALC_MODE.includes(mode)) {
+        showWizardStepVue('calc-mode-step');
+      } else if (mode === 'ppm-calc') {
+        showWizardStepVue('grams-input-step');
+      } else {
+        proceedToCalculator();
+      }
+    }
+
+    // Proceed from calculation mode step
+    function proceedFromCalcModeStep() {
+      const mode = currentMode.value;
+      if (MODES_WITH_EC.includes(mode)) {
+        showWizardStepVue('ec-step');
+      } else if (mode === 'formula-builder') {
+        showWizardStepVue('ppm-targets-step');
+      } else {
+        proceedToCalculator();
+      }
+    }
+
+    // Proceed from EC step
+    function proceedFromECStep() {
+      showWizardStepVue('npk-ratios-step');
+    }
+
+    // Proceed to formula fertilizer selection step
+    function proceedToFormulaFertilizerStep() {
+      const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+      const hasTarget = fields.some(field => parseFloat(wizardTargets[field]) > 0);
+      if (!hasTarget) {
+        alert(i18n.t('alertEnterTargetPpm'));
+        return;
+      }
+      showWizardStepVue('fertilizer-select-step');
+    }
+
+    // Proceed to reverse fertilizer selection step
+    function proceedToReverseFertilizerStep() {
+      const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+      const hasRatio = fields.some(field => parseFloat(wizardRatios[field]) > 0);
+      if (!hasRatio) {
+        alert(i18n.t('alertEnterRatioValue'));
+        return;
+      }
+      showWizardStepVue('fertilizer-select-step');
+    }
+
+    // Proceed to calculator (final step)
+    function proceedToCalculator() {
+      const wizardVolumeValue = wizardVolume.value || 10;
+      const mode = currentMode.value;
+      const calcMode = wizardCalcMode.value;
+      const ec = ratioTargetEC.value;
+
+      // Update volume in all calculator tabs
+      volume.value = wizardVolumeValue;
+      formulaVolume.value = wizardVolumeValue;
+      ratioVolume.value = wizardVolumeValue;
+
+      // Apply calculation mode if applicable
+      if (MODES_WITH_CALC_MODE.includes(mode)) {
+        if (mode === 'formula-builder') {
+          formulaCalcMode.value = calcMode;
+        } else if (mode === 'reverse-calc') {
+          ratioCalcMode.value = calcMode;
+        }
+      }
+
+      // Show the calculator content
+      showWizardStepVue('calculator-content', { updateIndicator: false });
+
+      // Switch to the selected tab
+      currentTab.value = mode;
+
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Back navigation functions
+    function backToECStep() {
+      showWizardStepVue('ec-step');
+    }
+
+    function backToCalcModeStep() {
+      showWizardStepVue('calc-mode-step');
+    }
+
+    function backToVolumeStep() {
+      showWizardStepVue('volume-step');
+    }
+
+    function backToModeSelector() {
+      showWizardStepVue('mode-selector');
+    }
+
+    function backFromCalculator() {
+      const mode = currentMode.value;
+      if (mode === 'ppm-calc') {
+        showWizardStepVue('grams-input-step');
+      } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
+        showWizardStepVue('fertilizer-select-step');
+      } else {
+        showWizardStepVue('volume-step');
+      }
+    }
+
+    function backFromWizardResults() {
+      const mode = currentMode.value;
+      if (mode === 'ppm-calc') {
+        showWizardStepVue('grams-input-step');
+      } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
+        showWizardStepVue('fertilizer-select-step');
+      } else {
+        showWizardStepVue('volume-step');
+      }
+    }
+
+    function backFromFertilizerSelectStep() {
+      const mode = currentMode.value;
+      if (mode === 'formula-builder') {
+        showWizardStepVue('ppm-targets-step');
+      } else if (mode === 'reverse-calc') {
+        showWizardStepVue('npk-ratios-step');
+      } else {
+        showWizardStepVue('volume-step');
+      }
+    }
+
+    function goToModeSelector() {
+      showWizardStepVue('mode-selector');
+      // Reset state
+      currentMode.value = null;
+      calculationMode.value = 'oxide';
+      wizardCalcMode.value = 'oxide';
+      ratioTargetEC.value = 'ec:1.2';
+      pendingWizardCalculation.value = null;
+      gramsToPpmDisplayData.show = false;
+      formulaResultsData.show = false;
+      reverseResultsData.show = false;
+      twoTankDisplayData.show = false;
+      wizardResultsSource.value = null;
+    }
+
+    // Calculate from wizard grams input step
+    async function calculateFromWizardGrams() {
+      // Get active fertilizers from wizard state
+      const activeFerts = [];
+      Object.entries(wizardGramsFertilizers).forEach(([fertId, data]) => {
+        if (data.checked && data.grams > 0) {
+          const fert = FERTILIZERS.find(f => f.id === fertId);
+          if (fert) {
+            activeFerts.push({ ...fert, grams: parseFloat(data.grams) });
+          }
+        }
+      });
+
+      if (activeFerts.length === 0) {
+        alert(i18n.t('alertSelectFertilizer'));
+        return;
+      }
+
+      const vol = parseFloat(wizardVolume.value) || 10;
+
+      // Calculate PPM results
+      const results = {};
+      activeFerts.forEach(fert => {
+        Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+          if (!results[nutrient]) results[nutrient] = 0;
+          results[nutrient] += (fert.grams * pct / 100) / vol * 1000;
+        });
+      });
+
+      // Calculate totals
+      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0);
+
+      // EC and ion balance
+      const ecData = estimateECFromPPM(results);
+      const ionBalanceData = calculateIonBalanceForFormula(activeFerts, vol);
+      const ratioData = calculateNutrientRatios(results);
+      const warningsData = checkWarnings(results, activeFerts);
+
+      // Set display data
+      setGramsToPpmResults(activeFerts, vol, results, ecData, ionBalanceData, ratioData, warningsData);
+
+      // Set wizard results source and show results
+      wizardResultsSource.value = 'ppm-calc';
+      wizardResultsModeText.value = `${vol}L`;
+      showWizardStepVue('wizard-results');
     }
 
     // =========================================================================
@@ -5603,6 +6087,32 @@ const FertilizerApp = {
       handleGramsInputEnter,
       handleFertilizerSelectEnter,
       showWizardStepVue,
+      selectMode,
+      selectCalcMode,
+      proceedFromVolumeStep,
+      proceedFromCalcModeStep,
+      proceedFromECStep,
+      proceedToFormulaFertilizerStep,
+      proceedToReverseFertilizerStep,
+      proceedToCalculator,
+      backToECStep,
+      backToCalcModeStep,
+      backToVolumeStep,
+      backToModeSelector,
+      backFromCalculator,
+      backFromWizardResults,
+      backFromFertilizerSelectStep,
+      goToModeSelector,
+      calculateFromWizardGrams,
+      calculateFromWizardFertilizerSelectVue,
+      showTwoTankView,
+      skipTwoTankView,
+      switchTab,
+      openPPMExplanation,
+      openIonBalanceExplanation,
+      openReversePPMExplanation,
+      openReverseIonBalanceExplanation,
+      openFormulaIonBalanceExplanation,
 
       // Step Indicator
       stepIndicatorText,
@@ -5634,6 +6144,10 @@ const FertilizerApp = {
       formatNumber,
       getNutrientContributions,
       calculateIonBalanceForModal,
+      getIonDataForFert,
+      calculateIonMeq,
+      calculateFertCationTotal,
+      calculateFertAnionTotal,
 
       // Progress Bar State & Methods (Vue-powered)
       progressState,
