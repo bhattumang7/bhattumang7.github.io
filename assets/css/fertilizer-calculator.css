@@ -2036,4 +2036,10 @@
   .step p[style*="margin: 10px 0 10px 38px"] {
     margin-left: 0 !important;
   }
+
+  /* Lambda reference tables (cation/anion) - stack on mobile */
+  .lambda-tables-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
 }
