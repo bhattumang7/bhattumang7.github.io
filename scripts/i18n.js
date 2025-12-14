@@ -105,18 +105,11 @@
 
     // Set the current language and update UI
     setLanguage(langCode) {
-      alert('setLanguage called with: ' + langCode + ', has translation: ' + !!this.translations[langCode]);
       if (this.translations[langCode]) {
         this.currentLanguage = langCode;
         localStorage.setItem('fertCalcLanguage', langCode);
-        try {
-          this.updateUI();
-          alert('updateUI completed, now calling refreshDynamicContent');
-          this.refreshDynamicContent();
-          alert('refreshDynamicContent completed');
-        } catch (e) {
-          alert('Error: ' + e.message);
-        }
+        this.updateUI();
+        this.refreshDynamicContent();
 
         // Sync with Vue state if available
         if (window.vueApp && window.vueApp.language !== langCode) {
@@ -162,33 +155,28 @@
 
     // Refresh dynamically generated content (results, tables) after language change
     refreshDynamicContent() {
-      // Debug: check what's available
-      const hasVueApp = !!window.vueApp;
-      const hasLastReverse = !!window.vueApp?.lastReverseCalculation;
-      const hasLastReverseValue = !!window.vueApp?.lastReverseCalculation?.value;
-      alert('refreshDynamicContent called! vueApp: ' + hasVueApp + ', lastReverseCalculation: ' + hasLastReverse + ', .value: ' + hasLastReverseValue);
-
       // Re-render Grams → PPM results (using Vue)
-      if (window.vueApp?.lastGramsToPPMCalculation?.value) {
-        const { activeFertilizers, volume, results, ecData, ionBalance, ratios, warnings } = window.vueApp.lastGramsToPPMCalculation.value;
+      // Note: Vue 3's mount() returns a proxy that auto-unwraps refs, so we access directly without .value
+      if (window.vueApp?.lastGramsToPPMCalculation) {
+        const { activeFertilizers, volume, results, ecData, ionBalance, ratios, warnings } = window.vueApp.lastGramsToPPMCalculation;
         window.vueApp.setGramsToPpmResults(activeFertilizers, volume, results, ecData, ionBalance, ratios, warnings || []);
       }
 
       // Re-render PPM → Grams results (using Vue)
-      if (window.vueApp?.lastFormulaCalculation?.value) {
-        const { result, targets, volume, mode } = window.vueApp.lastFormulaCalculation.value;
+      if (window.vueApp?.lastFormulaCalculation) {
+        const { result, targets, volume, mode } = window.vueApp.lastFormulaCalculation;
         window.vueApp.setFormulaResults(result, targets, volume, mode);
       }
 
       // Re-render NPK Ratio → Grams results (using Vue)
-      if (window.vueApp?.lastReverseCalculation?.value) {
-        const { result, targets, volume, targetEC } = window.vueApp.lastReverseCalculation.value;
+      if (window.vueApp?.lastReverseCalculation) {
+        const { result, targets, volume, targetEC } = window.vueApp.lastReverseCalculation;
         window.vueApp.setReverseResults(result, targets, volume, targetEC);
       }
 
       // Re-render Two-Tank results (using Vue)
-      if (window.vueApp?.currentTwoTankData?.value) {
-        const { tankA, tankB, volume, mode, sourceType, achieved, targets } = window.vueApp.currentTwoTankData.value;
+      if (window.vueApp?.currentTwoTankData) {
+        const { tankA, tankB, volume, mode, sourceType, achieved, targets } = window.vueApp.currentTwoTankData;
         window.vueApp.setTwoTankResults(tankA, tankB, volume, mode, sourceType, achieved, targets);
       }
 
