@@ -1977,6 +1977,8 @@ const EC_DESCRIPTIONS = {
   'ec:3.0': 'ecDesc30'
 };
 
+// Legacy state variables - kept for backward compatibility during Vue migration
+// These are progressively being replaced by Vue refs (currentMode, wizardCalcMode, wizardSelectedEC)
 let selectedMode = null;
 let selectedCalcMode = 'oxide';
 let selectedEC = 'ec:1.2';
@@ -2241,9 +2243,6 @@ function backFromWizardResults() {
 
 // Go to mode selector (callable from anywhere, e.g., clicking the title)
 function goToModeSelector() {
-  // Clear pending two-tank calculation
-  pendingWizardCalculation = null;
-
   // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
 
@@ -2258,6 +2257,8 @@ function goToModeSelector() {
     window.vueApp.currentMode = null;
     window.vueApp.calculationMode = 'oxide';
     window.vueApp.wizardCalcMode = 'oxide';
+    // Clear pending two-tank calculation
+    window.vueApp.pendingWizardCalculation = null;
     // Reset results display state (controls v-if visibility)
     window.vueApp.gramsToPpmDisplayData.show = false;
     window.vueApp.formulaResultsData.show = false;
@@ -2268,7 +2269,7 @@ function goToModeSelector() {
 
 function backToModeSelector() {
   // Clear pending two-tank calculation
-  pendingWizardCalculation = null;
+  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
 
   // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
@@ -2304,8 +2305,7 @@ function backToModeSelector() {
 // NOTE: renderWizardGramsFertilizerList, filterWizardGramsFertilizers, and clearWizardGramsSelections
 // have been replaced with Vue reactive templates and methods (see Vue app section)
 
-// Store pending wizard calculation for two-tank decision
-let pendingWizardCalculation = null;
+// pendingWizardCalculation is now a Vue ref - access via window.vueApp.pendingWizardCalculation
 
 async function calculateFromWizardGrams() {
   // Get the volume from wizard input (with Vue fallback)
@@ -2388,14 +2388,16 @@ async function calculateFromWizardGrams() {
 
   // Check for incompatible fertilizers
   if (hasIncompatibleFertilizers(formula)) {
-    // Store pending calculation for later
-    pendingWizardCalculation = {
-      type: 'grams-to-ppm',
-      formula: formula,
-      volume: wizardVolume,
-      indicatorText: indicatorText,
-      previousStep: 'grams-input-step'
-    };
+    // Store pending calculation for later (via Vue ref)
+    if (window.vueApp) {
+      window.vueApp.pendingWizardCalculation = {
+        type: 'grams-to-ppm',
+        formula: formula,
+        volume: wizardVolume,
+        indicatorText: indicatorText,
+        previousStep: 'grams-input-step'
+      };
+    }
 
     // Show two-tank question step with dynamic step number
     const totalSteps = getStepCount(selectedMode) + 1;
@@ -2579,8 +2581,9 @@ async function calculateFromWizardFertilizerSelect() {
     }
 
     // Get the calculated formula for incompatibility check
-    if (lastFormulaCalculation && lastFormulaCalculation.result) {
-      calculatedFormula = lastFormulaCalculation.result.formula;
+    const lastFormula = window.vueApp?.lastFormulaCalculation;
+    if (lastFormula && lastFormula.result) {
+      calculatedFormula = lastFormula.result.formula;
     }
 
   } else if (selectedMode === 'reverse-calc') {
@@ -2666,21 +2669,24 @@ async function calculateFromWizardFertilizerSelect() {
     }
 
     // Get the calculated formula for incompatibility check
-    if (lastReverseCalculation && lastReverseCalculation.result) {
-      calculatedFormula = lastReverseCalculation.result.formula;
+    const lastReverse = window.vueApp?.lastReverseCalculation;
+    if (lastReverse && lastReverse.result) {
+      calculatedFormula = lastReverse.result.formula;
     }
   }
 
   // Check for incompatible fertilizers
   if (calculatedFormula && hasIncompatibleFertilizers(calculatedFormula)) {
-    // Store pending calculation for later
-    pendingWizardCalculation = {
-      type: selectedMode === 'formula-builder' ? 'ppm-to-grams' : 'npk-ratio-to-grams',
-      formula: calculatedFormula,
-      volume: wizardVolume,
-      indicatorText: indicatorText,
-      previousStep: 'fertilizer-select-step'
-    };
+    // Store pending calculation for later (via Vue ref)
+    if (window.vueApp) {
+      window.vueApp.pendingWizardCalculation = {
+        type: selectedMode === 'formula-builder' ? 'ppm-to-grams' : 'npk-ratio-to-grams',
+        formula: calculatedFormula,
+        volume: wizardVolume,
+        indicatorText: indicatorText,
+        previousStep: 'fertilizer-select-step'
+      };
+    }
 
     // Show two-tank question step with dynamic step number
     const totalSteps = getStepCount(selectedMode) + 1;
@@ -2698,12 +2704,13 @@ async function calculateFromWizardFertilizerSelect() {
 
 // Skip two-tank view and show regular results
 function skipTwoTankView() {
+  const pendingCalc = window.vueApp?.pendingWizardCalculation;
   // Update the mode indicator in wizard results
-  if (pendingWizardCalculation && window.vueApp) {
-    window.vueApp.wizardResultsModeText = pendingWizardCalculation.indicatorText;
+  if (pendingCalc && window.vueApp) {
+    window.vueApp.wizardResultsModeText = pendingCalc.indicatorText;
 
     // Re-copy all results to wizard container (in case they were modified)
-    if (pendingWizardCalculation.type === 'grams-to-ppm') {
+    if (pendingCalc.type === 'grams-to-ppm') {
       const resultsContainer = document.getElementById('wizard-results-container');
       const selectedFertSection = document.getElementById('selected-fertilizers-section');
       const resultsSection = document.getElementById('results');
@@ -2724,7 +2731,7 @@ function skipTwoTankView() {
   }
 
   // Clear pending calculation
-  pendingWizardCalculation = null;
+  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
 
   // Show wizard results
   showWizardStep('wizard-results', { updateIndicator: false });
@@ -2732,12 +2739,13 @@ function skipTwoTankView() {
 
 // Show two-tank view
 function showTwoTankView() {
-  if (!pendingWizardCalculation) {
+  const pendingCalc = window.vueApp?.pendingWizardCalculation;
+  if (!pendingCalc) {
     alert(i18n.t('alertNoCalculationData'));
     return;
   }
 
-  const { type, formula, volume, indicatorText } = pendingWizardCalculation;
+  const { type, formula, volume, indicatorText } = pendingCalc;
 
   // Call the appropriate two-tank display function based on calculation type
   if (type === 'grams-to-ppm') {
@@ -2771,7 +2779,7 @@ function showTwoTankView() {
   }
 
   // Clear pending calculation
-  pendingWizardCalculation = null;
+  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
 
   // Show wizard results
   showWizardStep('wizard-results', { updateIndicator: false });
@@ -2849,8 +2857,7 @@ function init() {
 
 // Legacy display functions removed - now handled by Vue via setGramsToPpmResults
 
-// Store last Grams to PPM calculation result for copy function
-let lastGramsToPPMCalculation = null;
+// lastGramsToPPMCalculation is now a Vue ref - access via window.vueApp.lastGramsToPPMCalculation
 
 // Main calculation function
 async function calculate() {
@@ -3230,8 +3237,7 @@ async function buildFormula() {
 }
 
 
-// Store last formula builder calculation result for explanation modals
-let lastFormulaCalculation = null;
+// lastFormulaCalculation is now a Vue ref - access via window.vueApp.lastFormulaCalculation
 
 // displayFormulaResults removed - now handled by Vue template with setFormulaResults
 
@@ -3414,12 +3420,13 @@ function calculateTankNutrients(fertilizers, volume) {
 
 // Display two-tank results for formula builder
 function displayTwoTankFormulaResults() {
-  if (!lastFormulaCalculation) {
+  const lastCalc = window.vueApp?.lastFormulaCalculation;
+  if (!lastCalc) {
     alert(i18n.t('alertNoFormulaResults'));
     return;
   }
 
-  const { result, targets, volume, mode } = lastFormulaCalculation;
+  const { result, targets, volume, mode } = lastCalc;
   const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
 
   // Header buttons visibility is now handled by Vue v-if on parent container
@@ -3433,12 +3440,13 @@ function displayTwoTankFormulaResults() {
 
 // Display two-tank results for reverse calculator
 function displayTwoTankReverseResults() {
-  if (!lastReverseCalculation) {
+  const lastCalc = window.vueApp?.lastReverseCalculation;
+  if (!lastCalc) {
     alert(i18n.t('alertNoCalculationResults'));
     return;
   }
 
-  const { result, targets, volume, mode } = lastReverseCalculation;
+  const { result, targets, volume, mode } = lastCalc;
   const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
 
   // Header buttons visibility is now handled by Vue v-if on parent container
@@ -3452,12 +3460,13 @@ function displayTwoTankReverseResults() {
 
 // Display two-tank results for Grams to PPM calculator (Tab 1)
 function displayTwoTankGramsToPPMResults() {
-  if (!lastGramsToPPMCalculation) {
+  const lastCalc = window.vueApp?.lastGramsToPPMCalculation;
+  if (!lastCalc) {
     alert(i18n.t('alertNoCalculationResultsPpm'));
     return;
   }
 
-  const { activeFertilizers, volume, results } = lastGramsToPPMCalculation;
+  const { activeFertilizers, volume, results } = lastCalc;
 
   // Convert activeFertilizers array to formula object format
   const formula = {};
@@ -3477,8 +3486,7 @@ function displayTwoTankGramsToPPMResults() {
   }
 }
 
-// Store current two-tank data for copy function
-let currentTwoTankData = null;
+// currentTwoTankData is now a Vue ref - access via window.vueApp.currentTwoTankData
 
 // i18n formatter for FertilizerCore copy text builders
 function getI18nFormatter() {
@@ -3491,12 +3499,13 @@ function getI18nFormatter() {
 
 // Copy two-tank results to clipboard (thin wrapper using FertilizerCore)
 function copyTwoTankResults() {
-  if (!currentTwoTankData) {
+  const twoTankData = window.vueApp?.currentTwoTankData;
+  if (!twoTankData) {
     alert(i18n.t('alertNoTwoTankData'));
     return;
   }
 
-  const text = FertilizerCore.buildTwoTankCopyText(currentTwoTankData, FERTILIZERS, getI18nFormatter());
+  const text = FertilizerCore.buildTwoTankCopyText(twoTankData, FERTILIZERS, getI18nFormatter());
 
   const btn = event.target.closest('button');
   copyToClipboard(text, btn);
@@ -3551,8 +3560,7 @@ async function calculateReverse() {
   }
 }
 
-// Store last reverse calculation result for explanation modals
-let lastReverseCalculation = null;
+// lastReverseCalculation is now a Vue ref - access via window.vueApp.lastReverseCalculation
 
 // displayReverseResults removed - now handled by Vue template with setReverseResults
 
@@ -3583,9 +3591,10 @@ function openIonBalanceExplanation() {
 function openReversePPMExplanation() {
   if (window.vueApp && window.vueApp.openModal) {
     // Pass reverse calculation data to Vue modal
-    const data = lastReverseCalculation ? {
-      volume: lastReverseCalculation.volume,
-      activeFertilizers: lastReverseCalculation.result?.fertilizers?.map(f => ({
+    const lastCalc = window.vueApp.lastReverseCalculation;
+    const data = lastCalc ? {
+      volume: lastCalc.volume,
+      activeFertilizers: lastCalc.result?.fertilizers?.map(f => ({
         ...FERTILIZERS.find(fert => fert.id === f.id),
         grams: f.grams
       })).filter(Boolean) || [],
@@ -3598,9 +3607,10 @@ function openReversePPMExplanation() {
 
 function openReverseIonBalanceExplanation() {
   if (window.vueApp && window.vueApp.openModal) {
-    const data = lastReverseCalculation ? {
-      volume: lastReverseCalculation.volume,
-      activeFertilizers: lastReverseCalculation.result?.fertilizers?.map(f => ({
+    const lastCalc = window.vueApp.lastReverseCalculation;
+    const data = lastCalc ? {
+      volume: lastCalc.volume,
+      activeFertilizers: lastCalc.result?.fertilizers?.map(f => ({
         ...FERTILIZERS.find(fert => fert.id === f.id),
         grams: f.grams
       })).filter(Boolean) || [],
@@ -3622,8 +3632,9 @@ function openReverseIonBalanceExplanation() {
 // Formula Builder (PPM to Grams) explanation functions
 // Open Ion Balance explanation for formula builder - Now uses Vue modal
 function openFormulaIonBalanceExplanation() {
-  if (window.vueApp && window.vueApp.openModal && lastFormulaCalculation) {
-    const { result, volume } = lastFormulaCalculation;
+  const lastCalc = window.vueApp?.lastFormulaCalculation;
+  if (window.vueApp && window.vueApp.openModal && lastCalc) {
+    const { result, volume } = lastCalc;
     const activeFertilizers = Object.entries(result.formula)
       .filter(([fertId, grams]) => grams > 0.01)
       .map(([fertId, grams]) => {
@@ -3670,12 +3681,13 @@ async function copyToClipboard(text, button) {
 
 // Copy Grams to PPM results (Tab 1) - thin wrapper using FertilizerCore
 function copyGramsToPPMResults() {
-  if (!lastGramsToPPMCalculation) {
+  const lastCalc = window.vueApp?.lastGramsToPPMCalculation;
+  if (!lastCalc) {
     alert(i18n.t('alertRunCalculationFirst'));
     return;
   }
 
-  const text = FertilizerCore.buildGramsToPpmCopyText(lastGramsToPPMCalculation, getI18nFormatter());
+  const text = FertilizerCore.buildGramsToPpmCopyText(lastCalc, getI18nFormatter());
 
   const button = event.target.closest('.copy-btn');
   copyToClipboard(text, button);
@@ -3683,12 +3695,13 @@ function copyGramsToPPMResults() {
 
 // Copy PPM to Grams results (Tab 2 - Formula Builder) - thin wrapper using FertilizerCore
 function copyPPMToGramsResults() {
-  if (!lastFormulaCalculation) {
+  const lastCalc = window.vueApp?.lastFormulaCalculation;
+  if (!lastCalc) {
     alert(i18n.t('alertRunCalculationFirst'));
     return;
   }
 
-  const { result, volume } = lastFormulaCalculation;
+  const { result, volume } = lastCalc;
 
   // Calculate ion balance for the formula
   const ionBalance = calculateIonBalanceForFormula(
@@ -3699,7 +3712,7 @@ function copyPPMToGramsResults() {
     volume
   );
 
-  const text = FertilizerCore.buildFormulaCopyText(lastFormulaCalculation, FERTILIZERS, ionBalance, getI18nFormatter());
+  const text = FertilizerCore.buildFormulaCopyText(lastCalc, FERTILIZERS, ionBalance, getI18nFormatter());
 
   const button = event.target.closest('.copy-btn');
   copyToClipboard(text, button);
@@ -3707,12 +3720,13 @@ function copyPPMToGramsResults() {
 
 // Copy NPK Ratio to Grams results (Tab 3 - Reverse Calculator) - thin wrapper using FertilizerCore
 function copyNPKRatioResults() {
-  if (!lastReverseCalculation) {
+  const lastCalc = window.vueApp?.lastReverseCalculation;
+  if (!lastCalc) {
     alert(i18n.t('alertRunCalculationFirst'));
     return;
   }
 
-  const { result, targets, volume } = lastReverseCalculation;
+  const { result, targets, volume } = lastCalc;
   const calculationMode = document.getElementById('reverse-calculation-mode')?.value || 'oxide';
 
   // Calculate ion balance for the formula
@@ -3952,6 +3966,15 @@ const FertilizerApp = {
       { key: 'MgO', oxideLabel: 'magnesiumOxide', oxideName: 'MgO', elementalLabel: 'magnesiumElemental', elementalName: 'Mg', factor: 0.603 },
       { key: 'CaO', oxideLabel: 'calciumOxide', oxideName: 'CaO', elementalLabel: 'calciumElemental', elementalName: 'Ca', factor: 0.715 }
     ];
+
+    // Pending wizard calculation state (for two-tank decision)
+    const pendingWizardCalculation = ref(null);
+
+    // Last calculation results (for copy/export and modal functions)
+    const lastGramsToPPMCalculation = ref(null);
+    const lastFormulaCalculation = ref(null);
+    const lastReverseCalculation = ref(null);
+    const currentTwoTankData = ref(null);
 
     // =========================================================================
     // COMPUTED PROPERTIES
@@ -4314,7 +4337,7 @@ const FertilizerApp = {
 
       // lastGramsToPPMCalculation is set inside setGramsToPpmResults
       // Legacy reference for copy function
-      lastGramsToPPMCalculation = {
+      lastGramsToPPMCalculation.value = {
         activeFertilizers: oldStyleFerts,
         volume: vol,
         results: finalResults,
@@ -4626,7 +4649,7 @@ const FertilizerApp = {
       reverseResultsData.targetEC = targetEC;
 
       // Store for modal/copy functions (legacy compatibility)
-      lastReverseCalculation = { result, targets, volume, mode, targetEC };
+      lastReverseCalculation.value = { result, targets, volume, mode, targetEC };
 
       // Process fertilizers
       const ferts = [];
@@ -4769,7 +4792,7 @@ const FertilizerApp = {
     // Set formula builder results data (Vue-powered replacement for displayFormulaResults)
     function setFormulaResults(result, targets, volume, mode = 'oxide') {
       // Store for modal/copy functions (legacy compatibility)
-      lastFormulaCalculation = { result, targets, volume, mode };
+      lastFormulaCalculation.value = { result, targets, volume, mode };
 
       // Store raw data
       formulaResultsData.result = result;
@@ -4882,7 +4905,7 @@ const FertilizerApp = {
     // Set Grams to PPM results data (Vue-powered replacement for display functions)
     function setGramsToPpmResults(activeFerts, vol, results, ecData, ionBalanceData, ratioData, warningsData) {
       // Store for modal/copy functions (legacy compatibility)
-      lastGramsToPPMCalculation = {
+      lastGramsToPPMCalculation.value = {
         activeFertilizers: activeFerts,
         volume: vol,
         results: results,
@@ -4985,7 +5008,7 @@ const FertilizerApp = {
     // Set Two-Tank results data (Vue-powered replacement for displayTwoTankResults)
     function setTwoTankResults(tankA, tankB, volume, mode, sourceType, achieved, targets) {
       // Store data for copy function (legacy compatibility)
-      currentTwoTankData = { tankA, tankB, volume, mode, sourceType, achieved, targets };
+      currentTwoTankData.value = { tankA, tankB, volume, mode, sourceType, achieved, targets };
 
       // Calculate combined nutrients
       const combinedNutrients = {
@@ -5420,6 +5443,13 @@ const FertilizerApp = {
       setTwoTankResults,
       toggleTankDetailsVue,
       hideTwoTankView,
+
+      // Calculation state (for copy/export and two-tank decision)
+      pendingWizardCalculation,
+      lastGramsToPPMCalculation,
+      lastFormulaCalculation,
+      lastReverseCalculation,
+      currentTwoTankData,
 
       // Wizard State
       wizardStep,
