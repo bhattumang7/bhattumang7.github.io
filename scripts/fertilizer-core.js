@@ -819,47 +819,80 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
             scaleFactor = scaleFactor * (options.targetEC / finalEC);
           }
 
-          // For Si: if user specified an absolute Si target, we need to ensure the formula
-          // achieves that target AFTER scaling. Re-run with adjusted Si target.
+          // For Si: if user specified an absolute Si target, we need to iteratively adjust
+          // the Si target so that after EC scaling it reaches the desired value.
           if (targetSi > 0 && scaleFactor < 1) {
-            // Si needs to be higher before scaling so it hits target after scaling
-            const adjustedSiTarget = targetSi / scaleFactor;
-            const adjustedPpmTargets = { ...ppmTargets, Si: adjustedSiTarget };
+            let currentSiTarget = targetSi;
+            let bestSiError = Math.abs((scaledAchieved.Si || 0) - targetSi);
+            let bestFormula = { ...scaledFormula };
+            let bestAchieved = { ...scaledAchieved };
+            let bestScaleFactor = scaleFactor;
 
-            // Re-run solver with adjusted Si target
-            const adjustedResult = await solveMilpBrowser({
-              fertilizers: availableFertilizers,
-              targets: adjustedPpmTargets,
-              volume,
-              tolerance: 0.01
-            });
+            // Iterate up to 5 times to converge Si to target
+            for (let siIter = 0; siIter < 5; siIter++) {
+              const achievedSi = scaledAchieved.Si || 0;
+              const siError = Math.abs(achievedSi - targetSi);
 
-            // Re-apply EC scaling to the adjusted result
-            const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
-            if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
-              let adjScaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
-
-              for (let i = 0; i < 5; i++) {
-                scaledFormula = {};
-                Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
-                  scaledFormula[fertId] = grams * adjScaleFactor;
-                });
-
-                scaledAchieved = {};
-                Object.entries(adjustedResult.achieved).forEach(([key, value]) => {
-                  scaledAchieved[key] = value * adjScaleFactor;
-                });
-
-                const newEC = estimateECFromPPM(scaledAchieved);
-                finalEC = newEC.ec_mS_cm;
-
-                const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
-                if (error < 0.01) break;
-
-                adjScaleFactor = adjScaleFactor * (options.targetEC / finalEC);
+              // Track best result
+              if (siError < bestSiError) {
+                bestSiError = siError;
+                bestFormula = { ...scaledFormula };
+                bestAchieved = { ...scaledAchieved };
+                bestScaleFactor = scaleFactor;
               }
-              scaleFactor = adjScaleFactor;
+
+              // If Si is within 10% of target, good enough
+              if (siError / targetSi < 0.1) break;
+
+              // Adjust Si target based on how much we're missing
+              // If achieved 14 but want 25, ratio is 25/14 = 1.79, so multiply current target by that
+              const siAdjustmentRatio = achievedSi > 0 ? targetSi / achievedSi : 2;
+              currentSiTarget = currentSiTarget * siAdjustmentRatio;
+
+              // Cap the adjustment to avoid runaway values
+              currentSiTarget = Math.min(currentSiTarget, targetSi * 5);
+
+              const adjustedPpmTargets = { ...ppmTargets, Si: currentSiTarget };
+
+              // Re-run solver with adjusted Si target
+              const adjustedResult = await solveMilpBrowser({
+                fertilizers: availableFertilizers,
+                targets: adjustedPpmTargets,
+                volume,
+                tolerance: 0.01
+              });
+
+              // Re-apply EC scaling to the adjusted result
+              const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
+              if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
+                scaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
+
+                for (let i = 0; i < 5; i++) {
+                  scaledFormula = {};
+                  Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
+                    scaledFormula[fertId] = grams * scaleFactor;
+                  });
+
+                  scaledAchieved = {};
+                  Object.entries(adjustedResult.achieved).forEach(([key, value]) => {
+                    scaledAchieved[key] = value * scaleFactor;
+                  });
+
+                  const newEC = estimateECFromPPM(scaledAchieved);
+                  finalEC = newEC.ec_mS_cm;
+
+                  const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
+                  if (error < 0.01) break;
+
+                  scaleFactor = scaleFactor * (options.targetEC / finalEC);
+                }
+              }
             }
+
+            // Use the best result found
+            scaledFormula = bestFormula;
+            scaledAchieved = bestAchieved;
+            scaleFactor = bestScaleFactor;
           }
 
           return {
