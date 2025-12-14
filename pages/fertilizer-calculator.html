@@ -221,7 +221,7 @@ permalink: /fertilizer-calculator/
                         </span>
                       </div>
                       <div style="font-family: monospace; font-size: 0.85em; color: #666; background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
-                        {{ formatNumber(fert.grams / getIonDataForFert(fert).molarMass, 6) }} mol × {{ formatNumber(ionInfo.count) }} ions × {{ formatNumber(ionInfo.charge) }} charge × {{ formatNumber(1000) }} ÷ {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }} = {{ formatNumber(calculateIonMeq(fert, ionInfo), 3) }} meq/L
+                        {{ formatNumber(fert.grams / getIonDataForFert(fert).molarMass, 6) }} mol × {{ formatNumber(ionInfo.count) }} {{ i18n.t('ionsUnit') }} × {{ formatNumber(ionInfo.charge) }} {{ i18n.t('chargeUnit') }} × {{ formatNumber(1000) }} ÷ {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }} = {{ formatNumber(calculateIonMeq(fert, ionInfo), 3) }} meq/L
                       </div>
                     </div>
                   </div>

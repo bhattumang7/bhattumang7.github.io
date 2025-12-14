@@ -399,6 +399,8 @@ window.i18nLocales.en = {
   meqLAnalogy: 'Think of it like this: A calcium ion (Ca²⁺) has twice the charge of a potassium ion (K⁺), even if they weigh the same. meq/L accounts for this difference in charge.',
   meqLFormula: 'meq/L = (grams ÷ molar mass) × ion count × charge × 1000 ÷ liters',
   meqLFormulaDesc: 'This tells us the electrical charge contribution of each ion',
+  ionsUnit: 'ions',
+  chargeUnit: 'charge',
   importantNotes: '📌 Important Notes:',
   hydrationWaterNote: '<strong>Hydration water</strong> (e.g., ·7H₂O, ·4H₂O) adds to molar mass but NOT to charge - it\'s just water in the crystal structure',
   ureaNote: '<strong>Urea</strong> doesn\'t form charged ions, so it\'s excluded from ion balance (but its nitrogen still counts for nutrients)',
