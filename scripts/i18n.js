@@ -156,26 +156,26 @@
     // Refresh dynamically generated content (results, tables) after language change
     refreshDynamicContent() {
       // Re-render Grams → PPM results (using Vue)
-      if (typeof lastGramsToPPMCalculation !== 'undefined' && lastGramsToPPMCalculation && window.vueApp) {
-        const { activeFertilizers, volume, results, ecData, ionBalance, ratios, warnings } = lastGramsToPPMCalculation;
+      if (window.vueApp?.lastGramsToPPMCalculation?.value) {
+        const { activeFertilizers, volume, results, ecData, ionBalance, ratios, warnings } = window.vueApp.lastGramsToPPMCalculation.value;
         window.vueApp.setGramsToPpmResults(activeFertilizers, volume, results, ecData, ionBalance, ratios, warnings || []);
       }
 
       // Re-render PPM → Grams results (using Vue)
-      if (typeof lastFormulaCalculation !== 'undefined' && lastFormulaCalculation && window.vueApp) {
-        const { result, targets, volume, mode } = lastFormulaCalculation;
+      if (window.vueApp?.lastFormulaCalculation?.value) {
+        const { result, targets, volume, mode } = window.vueApp.lastFormulaCalculation.value;
         window.vueApp.setFormulaResults(result, targets, volume, mode);
       }
 
       // Re-render NPK Ratio → Grams results (using Vue)
-      if (typeof lastReverseCalculation !== 'undefined' && lastReverseCalculation && window.vueApp) {
-        const { result, targets, volume, targetEC } = lastReverseCalculation;
+      if (window.vueApp?.lastReverseCalculation?.value) {
+        const { result, targets, volume, targetEC } = window.vueApp.lastReverseCalculation.value;
         window.vueApp.setReverseResults(result, targets, volume, targetEC);
       }
 
       // Re-render Two-Tank results (using Vue)
-      if (typeof currentTwoTankData !== 'undefined' && currentTwoTankData && window.vueApp) {
-        const { tankA, tankB, volume, mode, sourceType, achieved, targets } = currentTwoTankData;
+      if (window.vueApp?.currentTwoTankData?.value) {
+        const { tankA, tankB, volume, mode, sourceType, achieved, targets } = window.vueApp.currentTwoTankData.value;
         window.vueApp.setTwoTankResults(tankA, tankB, volume, mode, sourceType, achieved, targets);
       }
 
