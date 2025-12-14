@@ -15,12 +15,12 @@ permalink: /fertilizer-calculator/
       <div id="progress-bar" class="progress-bar"></div>
     </div>
     <p id="progress-text" class="progress-text" data-i18n="initializingSolver">Initializing solver...</p>
-    <button id="progress-cancel-btn" class="progress-cancel-btn" onclick="progressBar.cancel()" data-i18n="cancel">Cancel</button>
+    <button id="progress-cancel-btn" class="progress-cancel-btn" @click="progressBar.cancel()" data-i18n="cancel">Cancel</button>
   </div>
 </div>
 
 <div class="calculator-container">
-  <h1 onclick="goToModeSelector()" style="cursor: pointer;" title="Return to calculator selection">Fertilizer Calculator</h1>
+  <h1 @click="goToModeSelector()" style="cursor: pointer;" title="Return to calculator selection">Fertilizer Calculator</h1>
 
   <!-- Experimental Warning Banner -->
   <div class="experimental-warning" style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
@@ -34,20 +34,20 @@ permalink: /fertilizer-calculator/
   <!-- Global Language Selector (visible on all wizard steps) -->
   <div class="language-selector" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
     <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
-    <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
+    <select id="language-select" @change="i18n.setLanguage($event.target.value)" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
       <option value="en">English</option>
       <option value="gu">ગુજરાતી</option>
     </select>
   </div>
 
   <!-- Mode Selector (Wizard Step 1) -->
-  <div id="mode-selector" class="mode-selector">
+  <div id="mode-selector" class="mode-selector" v-show="wizardStep === 'mode-selector'">
     <h2 data-i18n="whatWouldYouLikeToDo">What would you like to do?</h2>
     <p data-i18n="chooseModeDescription">Choose a calculator mode based on what information you have.</p>
 
     <div class="mode-cards">
       <!-- Grams to PPM -->
-      <div class="mode-card" onclick="selectMode('ppm-calc')">
+      <div class="mode-card" @click="selectMode('ppm-calc')">
         <h3>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L6 8"></path>
@@ -67,7 +67,7 @@ permalink: /fertilizer-calculator/
       </div>
 
       <!-- PPM to Grams -->
-      <div class="mode-card" onclick="selectMode('formula-builder')">
+      <div class="mode-card" @click="selectMode('formula-builder')">
         <h3>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
@@ -85,7 +85,7 @@ permalink: /fertilizer-calculator/
       </div>
 
       <!-- NPK Ratio to Grams -->
-      <div class="mode-card" onclick="selectMode('reverse-calc')">
+      <div class="mode-card" @click="selectMode('reverse-calc')">
         <h3>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 3v18h18"></path>
@@ -107,42 +107,42 @@ permalink: /fertilizer-calculator/
   </div>
 
   <!-- Step 2: Volume Selection -->
-  <div id="volume-step" class="volume-step">
+  <div id="volume-step" class="volume-step" :class="{ active: wizardStep === 'volume-step' }" @keydown.enter="wizardStep === 'volume-step' && proceedFromVolumeStep()">
     <div class="step-indicator" id="volume-step-indicator" data-i18n-key="stepOf">Step 2 of 2</div>
     <h3 data-i18n="howMuchSolution">How much solution are you making?</h3>
     <p data-i18n="volumeDescription">Enter the total volume of water you'll be mixing your fertilizers into.</p>
 
     <div class="volume-step-input">
-      <input type="number" id="wizard-volume" v-model.number="wizardVolume" min="0.1" step="0.1" required onkeydown="if(event.key==='Enter')proceedFromVolumeStep()">
+      <input type="number" id="wizard-volume" v-model.number="wizardVolume" min="0.1" step="0.1" required @keydown.enter="proceedFromVolumeStep()">
       <span data-i18n="liters">liters</span>
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-continue" onclick="proceedFromVolumeStep()" data-i18n="continue">
+      <button class="btn-continue" @click="proceedFromVolumeStep()" data-i18n="continue">
         Continue →
       </button>
-      <button class="btn-back" onclick="backToModeSelector()" data-i18n="back">
+      <button class="btn-back" @click="backToModeSelector()" data-i18n="back">
         ← Back
       </button>
     </div>
   </div>
 
   <!-- Step 3: Calculation Mode (only for PPM→Grams and NPK Ratio→Grams) -->
-  <div id="calc-mode-step" class="calc-mode-step">
+  <div id="calc-mode-step" class="calc-mode-step" :class="{ active: wizardStep === 'calc-mode-step' }" @keydown.enter="wizardStep === 'calc-mode-step' && proceedFromCalcModeStep()">
     <div class="step-indicator" id="calc-mode-step-indicator" data-i18n-key="stepOf">Step 3 of 3</div>
     <h3 data-i18n="howToEnterValues">How do you want to enter values?</h3>
     <p data-i18n="calcModeDescription">Choose between commercial fertilizer notation or pure elemental values.</p>
 
     <div class="calc-mode-options">
-      <label class="calc-mode-option selected" onclick="selectCalcMode('oxide')">
-        <input type="radio" name="wizard-calc-mode" value="oxide" checked>
+      <label class="calc-mode-option" :class="{ selected: wizardCalcMode === 'oxide' }" @click="selectCalcMode('oxide')">
+        <input type="radio" name="wizard-calc-mode" value="oxide" :checked="wizardCalcMode === 'oxide'">
         <div class="calc-mode-option-content">
           <strong data-i18n="oxideForms">Oxide Forms (P₂O₅, K₂O)</strong>
           <span data-i18n="oxideFormsDescription">Commercial standard - matches fertilizer bag labels</span>
         </div>
       </label>
-      <label class="calc-mode-option" onclick="selectCalcMode('elemental')">
-        <input type="radio" name="wizard-calc-mode" value="elemental">
+      <label class="calc-mode-option" :class="{ selected: wizardCalcMode === 'elemental' }" @click="selectCalcMode('elemental')">
+        <input type="radio" name="wizard-calc-mode" value="elemental" :checked="wizardCalcMode === 'elemental'">
         <div class="calc-mode-option-content">
           <strong data-i18n="elementalForms">Elemental Forms (P, K)</strong>
           <span data-i18n="elementalFormsDescription">Pure elements - for scientific calculations</span>
@@ -151,17 +151,17 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-continue" onclick="proceedFromCalcModeStep()" data-i18n="continue">
+      <button class="btn-continue" @click="proceedFromCalcModeStep()" data-i18n="continue">
         Continue →
       </button>
-      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">
+      <button class="btn-back" @click="backToVolumeStep()" data-i18n="back">
         ← Back
       </button>
     </div>
   </div>
 
   <!-- Step 4: Target EC (only for NPK Ratio→Grams) -->
-  <div id="ec-step" class="ec-step">
+  <div id="ec-step" class="ec-step" :class="{ active: wizardStep === 'ec-step' }" @keydown.enter="wizardStep === 'ec-step' && proceedFromECStep()">
     <div class="step-indicator" id="ec-step-indicator" data-i18n-key="stepOf">Step 4 of 4</div>
     <h3 data-i18n="whatStrengthSolution">What strength solution do you want?</h3>
     <p data-i18n="ecDescription">Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we'll scale the fertilizer amounts to hit that strength for your batch.</p>
@@ -184,17 +184,17 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="volume-step-buttons">
-      <button class="btn-continue" onclick="proceedFromECStep()" data-i18n="continue">
+      <button class="btn-continue" @click="proceedFromECStep()" data-i18n="continue">
         Continue →
       </button>
-      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">
+      <button class="btn-back" @click="backToCalcModeStep()" data-i18n="back">
         ← Back
       </button>
     </div>
   </div>
 
   <!-- Step: Fertilizer Selection + Quantities (for Grams→PPM) -->
-  <div id="grams-input-step" class="wizard-input-step">
+  <div id="grams-input-step" class="wizard-input-step" :class="{ active: wizardStep === 'grams-input-step' }" @keydown.enter="wizardStep === 'grams-input-step' && !$event.target.classList.contains('wizard-fertilizer-search') && calculateFromWizardGrams()">
     <div class="step-indicator" id="grams-input-step-indicator" data-i18n-key="stepOf">Step 3 of 3</div>
     <h3 data-i18n="selectFertilizersAndEnterAmounts">Select Fertilizers & Enter Amounts</h3>
     <p data-i18n="selectFertilizersDescription">Check the fertilizers you're using and enter how many grams of each you'll add to your solution.</p>
@@ -230,13 +230,13 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-calculate" onclick="calculateFromWizardGrams()" data-i18n="calculatePpm">Calculate PPM</button>
-      <button class="btn-back" onclick="backToVolumeStep()" data-i18n="back">← Back</button>
+      <button class="btn-calculate" @click="calculateFromWizardGrams()" data-i18n="calculatePpm">Calculate PPM</button>
+      <button class="btn-back" @click="backToVolumeStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
   <!-- Step: Target PPM Values (for PPM→Grams) -->
-  <div id="ppm-targets-step" class="wizard-input-step">
+  <div id="ppm-targets-step" class="wizard-input-step" :class="{ active: wizardStep === 'ppm-targets-step' }" @keydown.enter="wizardStep === 'ppm-targets-step' && proceedToFormulaFertilizerStep()">
     <div class="step-indicator" id="ppm-targets-step-indicator" data-i18n-key="stepOf">Step 4 of 5</div>
     <h3 data-i18n="enterTargetPpmValues">Enter Target PPM Values</h3>
     <p data-i18n="targetPpmDescription">Enter the nutrient concentrations you want to achieve. At least one value is required.</p>
@@ -273,13 +273,13 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-continue" onclick="proceedToFormulaFertilizerStep()" data-i18n="continue">Continue →</button>
-      <button class="btn-back" onclick="backToCalcModeStep()" data-i18n="back">← Back</button>
+      <button class="btn-continue" @click="proceedToFormulaFertilizerStep()" data-i18n="continue">Continue →</button>
+      <button class="btn-back" @click="backToCalcModeStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
   <!-- Step: NPK Ratios (for NPK Ratio→Grams) -->
-  <div id="npk-ratios-step" class="wizard-input-step">
+  <div id="npk-ratios-step" class="wizard-input-step" :class="{ active: wizardStep === 'npk-ratios-step' }" @keydown.enter="wizardStep === 'npk-ratios-step' && proceedToReverseFertilizerStep()">
     <div class="step-indicator" id="npk-ratios-step-indicator" data-i18n-key="stepOf">Step 5 of 6</div>
     <h3 data-i18n="enterNutrientRatios">Enter Nutrient Ratios</h3>
     <p data-i18n="nutrientRatiosDescription">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one must be greater than zero.</p>
@@ -316,13 +316,13 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-continue" onclick="proceedToReverseFertilizerStep()" data-i18n="continue">Continue →</button>
-      <button class="btn-back" onclick="backToECStep()" data-i18n="back">← Back</button>
+      <button class="btn-continue" @click="proceedToReverseFertilizerStep()" data-i18n="continue">Continue →</button>
+      <button class="btn-back" @click="backToECStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
   <!-- Step: Select Available Fertilizers (for PPM→Grams and NPK Ratio→Grams) -->
-  <div id="fertilizer-select-step" class="wizard-input-step">
+  <div id="fertilizer-select-step" class="wizard-input-step" :class="{ active: wizardStep === 'fertilizer-select-step' }" @keydown.enter="wizardStep === 'fertilizer-select-step' && !$event.target.classList.contains('wizard-fertilizer-search') && calculateFromWizardFertilizerSelect()">
     <div class="step-indicator" id="fertilizer-select-step-indicator" data-i18n-key="stepOf">Step 5 of 5</div>
     <h3 data-i18n="selectAvailableFertilizers">Select Available Fertilizers</h3>
     <p data-i18n="selectAvailableFertilizersDescription">Choose the fertilizers you have on hand. The calculator will use only these to build your formula.</p>
@@ -352,13 +352,13 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-calculate" id="fertilizer-select-calc-btn" onclick="calculateFromWizardFertilizerSelect()" data-i18n="calculate">Calculate</button>
-      <button class="btn-back" id="fertilizer-select-back-btn" onclick="backFromFertilizerSelectStep()" data-i18n="back">← Back</button>
+      <button class="btn-calculate" id="fertilizer-select-calc-btn" @click="calculateFromWizardFertilizerSelect()" data-i18n="calculate">Calculate</button>
+      <button class="btn-back" id="fertilizer-select-back-btn" @click="backFromFertilizerSelectStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
   <!-- Two-Tank Question Step (shown when incompatible fertilizers detected) -->
-  <div id="two-tank-question-step" class="wizard-input-step">
+  <div id="two-tank-question-step" class="wizard-input-step" :class="{ active: wizardStep === 'two-tank-question-step' }">
     <p class="step-indicator" id="two-tank-question-step-indicator">Step 6 of 6</p>
     <h3 data-i18n="twoTankQuestionTitle">Would you like to see a two-tank view?</h3>
     <div class="two-tank-explanation">
@@ -382,15 +382,15 @@ permalink: /fertilizer-calculator/
       </div>
     </div>
     <div class="wizard-step-buttons two-tank-buttons">
-      <button class="btn-continue btn-two-tank" onclick="showTwoTankView()" data-i18n="yesShowTwoTanks">Yes, show two-tank view</button>
-      <button class="btn-back" onclick="skipTwoTankView()" data-i18n="noShowRegularResults">No, show regular results</button>
+      <button class="btn-continue btn-two-tank" @click="showTwoTankView()" data-i18n="yesShowTwoTanks">Yes, show two-tank view</button>
+      <button class="btn-back" @click="skipTwoTankView()" data-i18n="noShowRegularResults">No, show regular results</button>
     </div>
   </div>
 
   <!-- Wizard Results View (shown after calculation from wizard) -->
-  <div id="wizard-results" class="wizard-results">
+  <div id="wizard-results" class="wizard-results" :class="{ active: wizardStep === 'wizard-results' }">
     <div class="wizard-header">
-      <button class="wizard-back-btn" onclick="backFromWizardResults()">
+      <button class="wizard-back-btn" @click="backFromWizardResults()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5"></path>
           <path d="M12 19l-7-7 7-7"></path>
@@ -405,9 +405,9 @@ permalink: /fertilizer-calculator/
   </div>
 
   <!-- Calculator Content (hidden in wizard flow, used for direct access) -->
-  <div id="calculator-content" class="calculator-content">
+  <div id="calculator-content" class="calculator-content" :class="{ active: wizardStep === 'calculator-content' }">
     <div class="wizard-header">
-      <button class="wizard-back-btn" onclick="backFromCalculator()">
+      <button class="wizard-back-btn" @click="backFromCalculator()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5"></path>
           <path d="M12 19l-7-7 7-7"></path>
@@ -418,13 +418,13 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-tab-target="ppm-calc" onclick="switchTab('ppm-calc', this)" data-i18n="tabGramsToPpm">Grams to PPM</button>
-      <button class="tab" data-tab-target="formula-builder" onclick="switchTab('formula-builder', this)" data-i18n="tabPpmToGrams">PPM to Grams</button>
-      <button class="tab" data-tab-target="reverse-calc" onclick="switchTab('reverse-calc', this)" data-i18n="tabNpkRatioToGrams">NPK Ratio to Grams</button>
+      <button class="tab" :class="{ active: currentTab === 'ppm-calc' }" @click="switchTab('ppm-calc')" data-i18n="tabGramsToPpm">Grams to PPM</button>
+      <button class="tab" :class="{ active: currentTab === 'formula-builder' }" @click="switchTab('formula-builder')" data-i18n="tabPpmToGrams">PPM to Grams</button>
+      <button class="tab" :class="{ active: currentTab === 'reverse-calc' }" @click="switchTab('reverse-calc')" data-i18n="tabNpkRatioToGrams">NPK Ratio to Grams</button>
     </div>
 
     <!-- PPM Calculator Tab -->
-  <div id="ppm-calc" class="tab-content active">
+  <div id="ppm-calc" class="tab-content" :class="{ active: currentTab === 'ppm-calc' }">
     <!-- Vue-powered Grams to PPM Calculator -->
     <div id="vue-grams-to-ppm">
       <div class="input-section">
@@ -494,7 +494,7 @@ permalink: /fertilizer-calculator/
     <div class="results-header">
       <h2>{{ i18n.t('selectedFertilizers') }}</h2>
       <div id="grams-to-ppm-header-buttons" style="display: flex; gap: 10px;">
-        <button class="copy-btn" onclick="copyGramsToPPMResults()" :title="i18n.t('copyToClipboard')">
+        <button class="copy-btn" @click="copyGramsToPPMResults()" :title="i18n.t('copyToClipboard')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           <span>{{ i18n.t('copyResults') }}</span>
         </button>
@@ -520,7 +520,7 @@ permalink: /fertilizer-calculator/
   <div class="results-section" id="results" v-if="gramsToPpmDisplayData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>
       <span>{{ i18n.t('resultsPpm') }}</span>
-      <span class="info-icon" onclick="openPPMExplanation()" :title="i18n.t('clickToLearnPpm')">?</span>
+      <span class="info-icon" @click="openPPMExplanation()" :title="i18n.t('clickToLearnPpm')">?</span>
     </h2>
     <div class="results-grid" id="results-grid">
       <div v-for="item in gramsToPpmDisplayData.displayOrder" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
@@ -539,7 +539,7 @@ permalink: /fertilizer-calculator/
   <div class="results-section" id="ion-balance-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ionBalance && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>
       <span>{{ i18n.t('ionBalance') }}</span>
-      <span class="info-icon" onclick="openIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+      <span class="info-icon" @click="openIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
     </h2>
     <div class="ion-balance-card" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
       <div class="ion-box" style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
@@ -860,7 +860,7 @@ permalink: /fertilizer-calculator/
   </div>
 
   <!-- Formula Builder Tab (Vue-powered) -->
-  <div id="formula-builder" class="tab-content">
+  <div id="formula-builder" class="tab-content" :class="{ active: currentTab === 'formula-builder' }">
     <div class="input-section">
       <h3>Target PPM Values</h3>
       <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient concentrations (at least one required). The calculator will find the best fertilizer combination to match your targets.</p>
@@ -954,7 +954,7 @@ permalink: /fertilizer-calculator/
       <div class="results-header" id="formula-results-header">
         <h2>{{ i18n.t('recommendedFormula') }}</h2>
         <div id="formula-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" onclick="copyPPMToGramsResults()" :title="i18n.t('copyToClipboard')">
+          <button class="copy-btn" @click="copyPPMToGramsResults()" :title="i18n.t('copyToClipboard')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             <span>{{ i18n.t('copyResults') }}</span>
           </button>
@@ -1027,7 +1027,7 @@ permalink: /fertilizer-calculator/
 
       <!-- Ion Balance Section -->
       <div v-if="formulaResultsData.ionBalance" class="ion-balance-section" style="margin-top: 20px;">
-        <h3>{{ i18n.t('ionBalance') }} <span class="info-icon" onclick="openFormulaIonBalanceExplanation()" title="Click to learn about ion balance">?</span></h3>
+        <h3>{{ i18n.t('ionBalance') }} <span class="info-icon" @click="openFormulaIonBalanceExplanation()" title="Click to learn about ion balance">?</span></h3>
         <div class="ion-balance-card" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
           <div class="ion-box" style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
             <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
@@ -1212,7 +1212,7 @@ permalink: /fertilizer-calculator/
   </div>
 
   <!-- Reverse Calculator Tab (Vue-powered) -->
-  <div id="reverse-calc" class="tab-content">
+  <div id="reverse-calc" class="tab-content" :class="{ active: currentTab === 'reverse-calc' }">
     <div class="input-section">
       <h3>Target Nutrient Ratios</h3>
       <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one nutrient must be greater than zero. The calculator will find fertilizer amounts that match these ratios.</p>
@@ -1338,7 +1338,7 @@ permalink: /fertilizer-calculator/
       <div class="results-header" id="reverse-results-header">
         <h2>{{ i18n.t('requiredFertilizers') }}</h2>
         <div id="reverse-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" onclick="copyNPKRatioResults()" :title="i18n.t('copyToClipboard')">
+          <button class="copy-btn" @click="copyNPKRatioResults()" :title="i18n.t('copyToClipboard')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             <span>{{ i18n.t('copyResults') }}</span>
           </button>
@@ -1377,7 +1377,7 @@ permalink: /fertilizer-calculator/
       </div>
 
       <!-- Comparison Table: Target vs Achieved -->
-      <h3>{{ i18n.t('targetVsAchievedRatios') }} <span class="info-icon" onclick="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>
+      <h3>{{ i18n.t('targetVsAchievedRatios') }} <span class="info-icon" @click="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>
       <div class="comparison-table-wrapper">
         <table class="comparison-table">
           <tr>
@@ -1429,7 +1429,7 @@ permalink: /fertilizer-calculator/
 
       <!-- Ion Balance Section -->
       <div v-if="reverseResultsData.ionBalance" class="ion-balance-section" style="margin-top: 20px;">
-        <h3>{{ i18n.t('ionBalance') }} <span class="info-icon" onclick="openReverseIonBalanceExplanation()" title="Click to learn about ion balance">?</span></h3>
+        <h3>{{ i18n.t('ionBalance') }} <span class="info-icon" @click="openReverseIonBalanceExplanation()" title="Click to learn about ion balance">?</span></h3>
         <div class="ion-balance-card" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
           <div class="ion-box" style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
             <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
@@ -2115,26 +2115,9 @@ const STEP_CONFIG = {
 function showWizardStep(stepId, options = {}) {
   const { updateIndicator = true, stepNumber = null, totalSteps = null, scroll = true } = options;
 
-  // Hide all wizard steps
-  WIZARD_STEPS.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      if (id === 'mode-selector') {
-        el.style.display = 'none';
-      } else {
-        el.classList.remove('active');
-      }
-    }
-  });
-
-  // Show the target step
-  const targetStep = document.getElementById(stepId);
-  if (targetStep) {
-    if (stepId === 'mode-selector') {
-      targetStep.style.display = '';
-    } else {
-      targetStep.classList.add('active');
-    }
+  // Update Vue reactive state - this controls visibility via :class bindings
+  if (window.vueApp) {
+    window.vueApp.wizardStep = stepId;
   }
 
   // Update step indicator if configured
@@ -2153,8 +2136,11 @@ function showWizardStep(stepId, options = {}) {
   }
 
   // Scroll wizard step into view
-  if (scroll && targetStep) {
-    targetStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (scroll) {
+    const targetStep = document.getElementById(stepId);
+    if (targetStep) {
+      targetStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 }
 
@@ -2166,13 +2152,12 @@ function selectMode(tabId) {
   // Store the selected mode
   selectedMode = tabId;
 
-  // Sync with Vue state if available
+  // Sync currentMode with Vue state
   if (window.vueApp) {
     window.vueApp.currentMode = tabId;
-    window.vueApp.wizardStep = 'volume-step';
   }
 
-  // Show volume step (indicator will be updated automatically)
+  // Show volume step (also updates wizardStep via Vue)
   showWizardStep('volume-step');
 
   // Focus on the volume input
@@ -2205,14 +2190,9 @@ function proceedFromVolumeStep() {
 function selectCalcMode(mode) {
   selectedCalcMode = mode;
 
-  // Update visual selection
-  document.querySelectorAll('.calc-mode-option').forEach(opt => {
-    opt.classList.remove('selected');
-  });
-  const selectedOption = document.querySelector(`input[name="wizard-calc-mode"][value="${mode}"]`);
-  if (selectedOption) {
-    selectedOption.checked = true;
-    selectedOption.closest('.calc-mode-option').classList.add('selected');
+  // Update Vue state - visual selection is handled by :class binding
+  if (window.vueApp) {
+    window.vueApp.wizardCalcMode = mode;
   }
 }
 
@@ -2221,8 +2201,7 @@ function proceedFromCalcModeStep() {
   if (MODES_WITH_EC.includes(selectedMode)) {
     showWizardStep('ec-step');
   } else if (selectedMode === 'formula-builder') {
-    // Update P and K labels based on calc mode
-    updateWizardPPMLabels();
+    // P and K labels are now handled by Vue computed properties (wizardPLabel, wizardKLabel)
     showWizardStep('ppm-targets-step');
   } else {
     // Skip to calculator (fallback)
@@ -2230,17 +2209,7 @@ function proceedFromCalcModeStep() {
   }
 }
 
-function updateWizardPPMLabels() {
-  const pLabel = document.getElementById('wizard-target-p-label');
-  const kLabel = document.getElementById('wizard-target-k-label');
-  if (selectedCalcMode === 'elemental') {
-    pLabel.textContent = i18n.t('phosphorusElemental');
-    kLabel.textContent = i18n.t('potassiumElemental');
-  } else {
-    pLabel.textContent = i18n.t('phosphorusOxide');
-    kLabel.textContent = i18n.t('potassiumOxide');
-  }
-}
+// updateWizardPPMLabels - removed, now handled by Vue computed properties (wizardPLabel, wizardKLabel)
 
 // updateECDescription - now handled by Vue computed property wizardECDescription
 
@@ -2355,7 +2324,7 @@ function goToModeSelector() {
   // Clear pending two-tank calculation
   pendingWizardCalculation = null;
 
-  // Show the mode selector
+  // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
 
   // Reset state
@@ -2366,7 +2335,6 @@ function goToModeSelector() {
   // Sync with Vue state if available
   if (window.vueApp) {
     window.vueApp.currentMode = null;
-    window.vueApp.wizardStep = 'mode-selector';
     window.vueApp.calculationMode = 'oxide';
   }
 
@@ -2391,7 +2359,7 @@ function backToModeSelector() {
   // Clear pending two-tank calculation
   pendingWizardCalculation = null;
 
-  // Show the mode selector
+  // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
 
   // Reset state (both legacy and Vue)
@@ -2401,6 +2369,7 @@ function backToModeSelector() {
 
   // Sync Vue state
   if (window.vueApp) {
+    window.vueApp.currentMode = null;
     window.vueApp.wizardCalcMode = 'oxide';
     window.vueApp.wizardSelectedEC = 'ec:1.2';
   }
@@ -2964,9 +2933,7 @@ window.refreshWizardResults = refreshWizardResults;
 // Initialize the page
 function init() {
   // Fertilizer lists are now rendered by Vue
-
-  // Add Enter key support for wizard steps
-  setupWizardKeyboardNavigation();
+  // Enter key support for wizard steps is now handled by Vue @keydown.enter directives
 
   // Initialize i18n (update UI with current language)
   i18n.updateUI();
@@ -2978,91 +2945,7 @@ function init() {
   }
 }
 
-// Setup Enter key navigation for all wizard steps
-function setupWizardKeyboardNavigation() {
-  // Volume step - Enter proceeds
-  const volumeStep = document.getElementById('volume-step');
-  if (volumeStep) {
-    volumeStep.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && volumeStep.classList.contains('active')) {
-        e.preventDefault();
-        proceedFromVolumeStep();
-      }
-    });
-  }
-
-  // Calc mode step - Enter proceeds
-  const calcModeStep = document.getElementById('calc-mode-step');
-  if (calcModeStep) {
-    calcModeStep.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && calcModeStep.classList.contains('active')) {
-        e.preventDefault();
-        proceedFromCalcModeStep();
-      }
-    });
-  }
-
-  // EC step - Enter proceeds
-  const ecStep = document.getElementById('ec-step');
-  if (ecStep) {
-    ecStep.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && ecStep.classList.contains('active')) {
-        e.preventDefault();
-        proceedFromECStep();
-      }
-    });
-  }
-
-  // Grams input step - Enter calculates
-  const gramsInputStep = document.getElementById('grams-input-step');
-  if (gramsInputStep) {
-    gramsInputStep.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && gramsInputStep.classList.contains('active')) {
-        // Don't trigger if focus is on search input
-        if (e.target.id !== 'wizard-grams-search') {
-          e.preventDefault();
-          calculateFromWizardGrams();
-        }
-      }
-    });
-  }
-
-  // PPM targets step - Enter proceeds
-  const ppmTargetsStep = document.getElementById('ppm-targets-step');
-  if (ppmTargetsStep) {
-    ppmTargetsStep.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && ppmTargetsStep.classList.contains('active')) {
-        e.preventDefault();
-        proceedToFormulaFertilizerStep();
-      }
-    });
-  }
-
-  // NPK ratios step - Enter proceeds
-  const npkRatiosStep = document.getElementById('npk-ratios-step');
-  if (npkRatiosStep) {
-    npkRatiosStep.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && npkRatiosStep.classList.contains('active')) {
-        e.preventDefault();
-        proceedToReverseFertilizerStep();
-      }
-    });
-  }
-
-  // Fertilizer select step - Enter calculates
-  const fertilizerSelectStep = document.getElementById('fertilizer-select-step');
-  if (fertilizerSelectStep) {
-    fertilizerSelectStep.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && fertilizerSelectStep.classList.contains('active')) {
-        // Don't trigger if focus is on search input
-        if (e.target.id !== 'wizard-available-search') {
-          e.preventDefault();
-          calculateFromWizardFertilizerSelect();
-        }
-      }
-    });
-  }
-}
+// setupWizardKeyboardNavigation - removed, now handled by Vue @keydown.enter directives on each step
 
 // Legacy DOM functions removed - now handled by Vue
 
@@ -3877,30 +3760,11 @@ function clearAll() {
   }
 }
 
-// Tab switching
-function switchTab(tabId, tabButton) {
-  // Hide all tabs
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
-  // Show selected tab
-  const targetTab = document.getElementById(tabId);
-  if (targetTab) {
-    targetTab.classList.add('active');
-  }
-
-  // Mark the clicked tab active (or fall back by data attribute)
-  if (tabButton instanceof HTMLElement) {
-    tabButton.classList.add('active');
-  } else {
-    const fallbackButton = document.querySelector(`.tab[data-tab-target="${tabId}"]`);
-    if (fallbackButton) {
-      fallbackButton.classList.add('active');
-    }
+// Tab switching - now uses Vue reactive state
+function switchTab(tabId) {
+  // Update Vue state - visibility is handled by :class bindings
+  if (window.vueApp) {
+    window.vueApp.currentTab = tabId;
   }
 
   // Update the mode indicator in wizard header
@@ -4590,6 +4454,7 @@ const FertilizerApp = {
     const volume = ref(10);
     const calculationMode = ref('oxide'); // 'oxide' or 'elemental'
     const language = ref(i18n?.currentLanguage || 'en');
+    const currentTab = ref('ppm-calc'); // 'ppm-calc', 'formula-builder', 'reverse-calc'
 
     // Watch language changes and sync with i18n
     watch(language, (newLang) => {
@@ -6111,6 +5976,7 @@ const FertilizerApp = {
       // Grams to PPM State
       currentMode,
       wizardStep,
+      currentTab,
       volume,
       calculationMode,
       language,
