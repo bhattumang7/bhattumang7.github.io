@@ -5,10 +5,11 @@ permalink: /fertilizer-calculator/
 ---
 
 <link rel="stylesheet" href="{{ '/assets/css/fertilizer-calculator.css' | relative_url }}">
+<style>[v-cloak] { display: none !important; }</style>
 
 {% raw %}
 <!-- Progress Bar Overlay (Vue-powered) -->
-<div class="progress-overlay" :class="{ active: progressState.show }">
+<div class="progress-overlay" v-cloak :class="{ active: progressState.show }">
   <div class="progress-container">
     <h3>{{ progressState.title }}</h3>
     <div class="progress-bar-wrapper">
@@ -19,9 +20,9 @@ permalink: /fertilizer-calculator/
   </div>
 </div>
 
-<div class="calculator-container">
+<div class="calculator-container" v-cloak>
   <!-- Vue-powered Unified Modal (placed at top for proper rendering) -->
-  <div v-if="activeModal" class="modal-overlay active" @click="closeModal">
+  <div v-if="activeModal" v-cloak class="modal-overlay" :class="{ active: activeModal }" style="display: none" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
         <h2>{{ modalTitle }}</h2>
@@ -762,10 +763,15 @@ permalink: /fertilizer-calculator/
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
-          <div class="ratio-grid">
-            <div v-for="ratio in gramsToPpmDisplayData.ratios" :key="ratio.label" class="ratio-item">
-              <span class="ratio-label">{{ ratio.label }}</span>
-              <span class="ratio-value" :class="ratio.statusClass">{{ ratio.display }}</span>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <div v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+              <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratio.name }}</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ ratio.ratio }}</div>
+              <div style="font-size: 0.85em; color: #666;">
+                <span v-for="(label, i) in ratio.labels" :key="i">
+                  {{ label }}: {{ (ratio.values[i] || 0).toFixed(1) }} {{ ratio.unit || 'ppm' }}<span v-if="i < ratio.labels.length - 1"> | </span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -783,10 +789,11 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
-        <div class="results-section warnings" v-if="gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0" style="margin-top: 20px;">
-          <h2>{{ i18n.t('warnings') }}</h2>
-          <div class="warnings-list">
-            <div v-for="(warning, idx) in gramsToPpmDisplayData.warnings" :key="idx" class="warning-item" :class="warning.type">{{ warning.message }}</div>
+        <div class="results-section" v-if="gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0" style="margin-top: 20px;">
+          <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
+          <div v-for="(warning, idx) in gramsToPpmDisplayData.warnings" :key="idx" :class="warning.level === 'warning' ? 'warning-box' : warning.level === 'error' ? 'error-box' : 'conversion-note'" style="margin-bottom: 10px;">
+            <strong>{{ warning.level === 'warning' ? '⚠️' : warning.level === 'error' ? '❌' : 'ℹ️' }} {{ warning.category }}</strong><br>
+            {{ warning.message }}
           </div>
         </div>
       </template>
