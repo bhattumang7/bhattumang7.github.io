@@ -143,39 +143,110 @@ window.FertilizerCore.estimateEC = function(ions_mmolL, options = {}) {
 };
 
 /**
+ * Atomic/molar masses for EC ion conversion
+ */
+window.FertilizerCore.EC_ION_MOLAR_MASSES = {
+  'NO3-': 14.007,   // Based on N atomic mass
+  'NH4+': 14.007,   // Based on N atomic mass
+  'H2PO4-': 30.974, // Based on P atomic mass
+  'K+': 39.098,
+  'Ca2+': 40.078,
+  'Mg2+': 24.305,
+  'SO4^2-': 32.065, // Based on S atomic mass
+  'Na+': 22.99,
+  'Cl-': 35.453,
+  'Fe2+': 55.845,
+  'Mn2+': 54.938,
+  'Zn2+': 65.38,
+  'Cu2+': 63.546
+};
+
+/**
+ * Mapping from PPM keys to ion symbols for EC calculations
+ */
+window.FertilizerCore.PPM_TO_ION_MAPPINGS = [
+  { ppmKey: 'N_NO3', ion: 'NO3-' },
+  { ppmKey: 'N_NH4', ion: 'NH4+' },
+  { ppmKey: 'P', ion: 'H2PO4-' },
+  { ppmKey: 'K', ion: 'K+' },
+  { ppmKey: 'Ca', ion: 'Ca2+' },
+  { ppmKey: 'Mg', ion: 'Mg2+' },
+  { ppmKey: 'S', ion: 'SO4^2-' },
+  { ppmKey: 'Na', ion: 'Na+' },
+  { ppmKey: 'Cl', ion: 'Cl-' },
+  { ppmKey: 'Fe', ion: 'Fe2+' },
+  { ppmKey: 'Mn', ion: 'Mn2+' },
+  { ppmKey: 'Zn', ion: 'Zn2+' },
+  { ppmKey: 'Cu', ion: 'Cu2+' }
+];
+
+/**
  * Convert PPM results to ion concentrations in mmol/L for EC estimation.
+ * Uses centralized molar mass lookup.
  * @param {Object} ppmResults - PPM values from the calculator
  * @returns {Object} Ion concentrations in mmol/L
  */
 window.FertilizerCore.ppmToIonsForEC = function(ppmResults) {
   const ions_mmolL = {};
+  const MOLAR_MASSES = window.FertilizerCore.EC_ION_MOLAR_MASSES;
+  const mappings = window.FertilizerCore.PPM_TO_ION_MAPPINGS;
 
-  if (ppmResults.N_NO3 > 0) ions_mmolL['NO3-'] = ppmResults.N_NO3 / 14.007;
-  if (ppmResults.N_NH4 > 0) ions_mmolL['NH4+'] = ppmResults.N_NH4 / 14.007;
-  if (ppmResults.P > 0) ions_mmolL['H2PO4-'] = ppmResults.P / 30.974;
-  if (ppmResults.K > 0) ions_mmolL['K+'] = ppmResults.K / 39.098;
-  if (ppmResults.Ca > 0) ions_mmolL['Ca2+'] = ppmResults.Ca / 40.078;
-  if (ppmResults.Mg > 0) ions_mmolL['Mg2+'] = ppmResults.Mg / 24.305;
-  if (ppmResults.S > 0) ions_mmolL['SO4^2-'] = ppmResults.S / 32.065;
-  if (ppmResults.Na > 0) ions_mmolL['Na+'] = ppmResults.Na / 22.99;
-  if (ppmResults.Cl > 0) ions_mmolL['Cl-'] = ppmResults.Cl / 35.453;
-  if (ppmResults.Fe > 0) ions_mmolL['Fe2+'] = ppmResults.Fe / 55.845;
-  if (ppmResults.Mn > 0) ions_mmolL['Mn2+'] = ppmResults.Mn / 54.938;
-  if (ppmResults.Zn > 0) ions_mmolL['Zn2+'] = ppmResults.Zn / 65.38;
-  if (ppmResults.Cu > 0) ions_mmolL['Cu2+'] = ppmResults.Cu / 63.546;
+  for (const { ppmKey, ion } of mappings) {
+    const ppm = ppmResults[ppmKey] || 0;
+    if (ppm > 0 && MOLAR_MASSES[ion]) {
+      ions_mmolL[ion] = ppm / MOLAR_MASSES[ion];
+    }
+  }
 
   return ions_mmolL;
+};
+
+/**
+ * Convert PPM results to ion data with full details for EC display
+ * Uses centralized molar mass lookup.
+ * @param {Object} ppmResults - PPM values from the calculator
+ * @returns {Object} Ion data with ppm, molarMass, and mmolL for each ion
+ */
+window.FertilizerCore.ppmToIonsWithDetails = function(ppmResults) {
+  const ionsData = {};
+  const MOLAR_MASSES = window.FertilizerCore.EC_ION_MOLAR_MASSES;
+  const mappings = window.FertilizerCore.PPM_TO_ION_MAPPINGS;
+
+  for (const { ppmKey, ion } of mappings) {
+    const ppm = ppmResults[ppmKey] || 0;
+    if (ppm > 0 && MOLAR_MASSES[ion]) {
+      const molarMass = MOLAR_MASSES[ion];
+      ionsData[ion] = {
+        ppm: ppm,
+        molarMass: molarMass,
+        mmolL: ppm / molarMass
+      };
+    }
+  }
+
+  return ionsData;
 };
 
 /**
  * Estimate EC from PPM results (convenience wrapper)
  * @param {Object} ppmResults - PPM values from the calculator
  * @param {Object} options - Options passed to estimateEC
- * @returns {Object} EC estimation results
+ * @returns {Object} EC estimation results with detailed ion data
  */
 window.FertilizerCore.estimateECFromPPM = function(ppmResults, options = {}) {
   const ions_mmolL = window.FertilizerCore.ppmToIonsForEC(ppmResults);
-  return window.FertilizerCore.estimateEC(ions_mmolL, options);
+  const ionsDetails = window.FertilizerCore.ppmToIonsWithDetails(ppmResults);
+  const result = window.FertilizerCore.estimateEC(ions_mmolL, options);
+
+  // Add ppm and molarMass to each contribution
+  for (const ion in result.contributions) {
+    if (ionsDetails[ion]) {
+      result.contributions[ion].ppm = ionsDetails[ion].ppm;
+      result.contributions[ion].molarMass = ionsDetails[ion].molarMass;
+    }
+  }
+
+  return result;
 };
 
 // =============================================================================

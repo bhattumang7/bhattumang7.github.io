@@ -320,6 +320,184 @@ permalink: /fertilizer-calculator/
           </template>
         </template>
 
+        <!-- EC EXPLANATION MODAL -->
+        <template v-if="activeModal === 'ec'">
+          <!-- What is EC explanation -->
+          <div class="explanation-section">
+            <h3>{{ i18n.t('whatIsEc') }}</h3>
+            <p v-html="i18n.t('ecModalDescription1')"></p>
+            <p v-html="i18n.t('ecModalDescription2')"></p>
+          </div>
+
+          <!-- The Formula -->
+          <div class="explanation-section" style="background: #f0f7ff; border-left-color: #2196f3;">
+            <h3 style="color: #1976d2;">{{ i18n.t('ecCalculationMethod') }}</h3>
+            <div class="formula-box" style="margin: 15px 0; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #bbdefb;">
+              <div class="formula" style="font-family: monospace; font-size: 1.1em;">{{ i18n.t('ecFormulaEquation') }}</div>
+              <div style="font-size: 0.9em; color: #666; margin-top: 8px;">{{ i18n.t('ecFormulaDescription') }}</div>
+            </div>
+            <p style="margin-top: 15px;" v-html="i18n.t('ecFormulaExplanation')"></p>
+          </div>
+
+          <!-- Lambda Reference Table -->
+          <div class="explanation-section" style="background: #e3f2fd; border-left-color: #1976d2;">
+            <h3 style="color: #1565c0;">{{ i18n.t('lambdaReferenceTable') }}</h3>
+            <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('lambdaTableDescription') }}</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <!-- Cations -->
+              <div>
+                <h4 style="color: #1976d2; margin: 0 0 10px 0;">{{ i18n.t('cations') }} (+)</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                  <thead>
+                    <tr style="background: #bbdefb;">
+                      <th style="text-align: left; padding: 6px;">{{ i18n.t('ionHeader') }}</th>
+                      <th style="text-align: right; padding: 6px;">{{ i18n.t('molarMassHeader') }}</th>
+                      <th style="text-align: right; padding: 6px;">λ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">K⁺ ({{ i18n.t('potassium') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(39.098) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(73.5) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">NH₄⁺ ({{ i18n.t('ammonium') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(14.007) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(73.5) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">Ca²⁺ ({{ i18n.t('calciumSimple') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(40.078) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(119.0) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">Mg²⁺ ({{ i18n.t('magnesiumSimple') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(24.305) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(106.0) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">Fe²⁺ ({{ i18n.t('ironII') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(55.845) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(108.0) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">Fe³⁺ ({{ i18n.t('ironIII') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(55.845) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(204.0) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">Mn²⁺ ({{ i18n.t('manganese') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(54.938) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(107.0) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #e3f2fd;"><td style="padding: 4px 6px;">Zn²⁺ ({{ i18n.t('zinc') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(65.38) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(105.6) }}</td></tr>
+                    <tr><td style="padding: 4px 6px;">Cu²⁺ ({{ i18n.t('copper') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(63.546) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(107.2) }}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <!-- Anions -->
+              <div>
+                <h4 style="color: #c2185b; margin: 0 0 10px 0;">{{ i18n.t('anions') }} (-)</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                  <thead>
+                    <tr style="background: #fce4ec;">
+                      <th style="text-align: left; padding: 6px;">{{ i18n.t('ionHeader') }}</th>
+                      <th style="text-align: right; padding: 6px;">{{ i18n.t('molarMassHeader') }}</th>
+                      <th style="text-align: right; padding: 6px;">λ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid #fce4ec;"><td style="padding: 4px 6px;">NO₃⁻ ({{ i18n.t('nitrate') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(14.007) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(71.5) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #fce4ec;"><td style="padding: 4px 6px;">Cl⁻ ({{ i18n.t('chloride') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(35.453) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(76.3) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #fce4ec;"><td style="padding: 4px 6px;">SO₄²⁻ ({{ i18n.t('sulfate') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(32.065) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(160.0) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #fce4ec;"><td style="padding: 4px 6px;">H₂PO₄⁻ ({{ i18n.t('dihydrogenPhosphate') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(30.974) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(33.5) }}</td></tr>
+                    <tr style="border-bottom: 1px solid #fce4ec;"><td style="padding: 4px 6px;">HPO₄²⁻ ({{ i18n.t('hydrogenPhosphate') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(30.974) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(114.0) }}</td></tr>
+                    <tr><td style="padding: 4px 6px;">HCO₃⁻ ({{ i18n.t('bicarbonate') }})</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(61.017) }}</td><td style="text-align: right; padding: 4px 6px;">{{ formatNumber(44.5) }}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p style="margin-top: 12px; font-size: 0.85em; color: #666;">{{ i18n.t('lambdaUnitsNote') }}</p>
+          </div>
+
+          <!-- EC Ranges -->
+          <div class="explanation-section" style="background: #fff3e0; border-left-color: #ff9800;">
+            <h3 style="color: #e65100;">{{ i18n.t('ecRangesTitle') }}</h3>
+            <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+              <li><strong>&lt; 1.0 mS/cm:</strong> {{ i18n.t('ecRangeLow') }}</li>
+              <li><strong>1.0 - 1.5 mS/cm:</strong> {{ i18n.t('ecRangeMild') }}</li>
+              <li><strong>1.5 - 2.5 mS/cm:</strong> {{ i18n.t('ecRangeOptimal') }}</li>
+              <li><strong>2.5 - 3.0 mS/cm:</strong> {{ i18n.t('ecRangeStrong') }}</li>
+              <li><strong>&gt; 3.0 mS/cm:</strong> {{ i18n.t('ecRangeHigh') }}</li>
+            </ul>
+          </div>
+
+          <!-- EC Breakdown Table -->
+          <template v-if="modalData.ecContributions && Object.keys(modalData.ecContributions).length > 0">
+            <div class="explanation-section" style="background: #e8f5e9; border-left-color: #4caf50;">
+              <h3 style="color: #2e7d32;">{{ i18n.t('ecBreakdownByIon') }}</h3>
+              <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('ecBreakdownDescription') }}</p>
+
+              <!-- Column explanations -->
+              <div style="background: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9em;">
+                <p style="margin: 0 0 8px 0;"><strong>{{ i18n.t('tableColumnsExplained') }}:</strong></p>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                  <li><strong>{{ i18n.t('ionHeader') }}</strong> - {{ i18n.t('ionColumnDesc') }}</li>
+                  <li><strong>{{ i18n.t('concMmolLHeader') }}</strong> - {{ i18n.t('concColumnDesc') }}</li>
+                  <li><strong>λ ({{ i18n.t('lambdaHeader') }})</strong> - {{ i18n.t('lambdaColumnDesc') }}</li>
+                  <li><strong>{{ i18n.t('ecContribHeader') }}</strong> - {{ i18n.t('contribColumnDesc') }}</li>
+                </ul>
+              </div>
+
+              <!-- How concentration is calculated -->
+              <div style="background: #fff8e1; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #ffc107;">
+                <p style="margin: 0 0 8px 0;"><strong>{{ i18n.t('howConcentrationCalculated') }}:</strong></p>
+                <div class="formula-box" style="padding: 10px; background: #fff; border-radius: 4px; font-family: monospace; font-size: 0.9em; margin-bottom: 10px;">
+                  {{ i18n.t('concentrationFormula') }}
+                </div>
+                <p style="margin: 0; font-size: 0.85em; color: #666;">{{ i18n.t('concentrationFormulaDesc') }}</p>
+                <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #1976d2;"><strong>{{ i18n.t('ppmLearnMoreNote') }}</strong></p>
+              </div>
+
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                  <thead>
+                    <tr style="background: #c8e6c9; border-bottom: 2px solid #4caf50;">
+                      <th style="text-align: left; padding: 8px;">{{ i18n.t('ionHeader') }}</th>
+                      <th style="text-align: right; padding: 8px;">PPM</th>
+                      <th style="text-align: center; padding: 8px;">{{ i18n.t('concentrationCalcHeader') }}</th>
+                      <th style="text-align: right; padding: 8px;">λ</th>
+                      <th style="text-align: right; padding: 8px;">{{ i18n.t('ecContribHeader') }}</th>
+                      <th style="text-align: right; padding: 8px;">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template v-for="(data, ion) in modalData.ecContributions" :key="ion">
+                      <tr style="border-bottom: 1px solid #c8e6c9;">
+                        <td style="padding: 8px;">{{ ion }}</td>
+                        <td style="text-align: right; padding: 8px;">{{ data.ppm ? i18n.formatNumber(data.ppm.toFixed(2)) : '-' }}</td>
+                        <td style="text-align: center; padding: 8px; font-family: monospace; font-size: 0.85em; color: #666;">
+                          <span v-if="data.ppm && data.molarMass">{{ i18n.formatNumber(data.ppm.toFixed(2)) }} ÷ {{ i18n.formatNumber(data.molarMass.toFixed(3)) }} = {{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</span>
+                          <span v-else>{{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</span>
+                        </td>
+                        <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.lambda) }}</td>
+                        <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
+                        <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber((data.contribution_mS_cm / modalData.rawEC * 100).toFixed(1)) }}%</td>
+                      </tr>
+                    </template>
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: #a5d6a7; font-weight: bold; border-top: 2px solid #4caf50;">
+                      <td style="padding: 8px;" colspan="4">{{ i18n.t('totalLabel') }}</td>
+                      <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(modalData.rawEC?.toFixed(4) || 0) }} mS/cm</td>
+                      <td style="text-align: right; padding: 8px;">{{ formatNumber(100) }}%</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Calculation explanation -->
+              <div style="margin-top: 15px; padding: 12px; background: #fff; border-radius: 6px;">
+                <p style="margin: 0 0 8px 0;"><strong>{{ i18n.t('howEachRowCalculated') }}:</strong></p>
+                <div class="formula-box" style="padding: 10px; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 0.9em;">
+                  {{ i18n.t('ecContribFormula') }}
+                </div>
+                <p style="margin: 10px 0 0 0; font-size: 0.85em; color: #666;">{{ i18n.t('ecContribFormulaDesc') }}</p>
+              </div>
+
+              <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 6px; border-left: 3px solid #ff9800;">
+                <p style="margin: 0;"><strong>{{ i18n.t('rawEcLabel') }}:</strong> {{ i18n.formatNumber(modalData.rawEC?.toFixed(3) || 0) }} mS/cm</p>
+                <p style="margin: 5px 0 0 0;"><strong>{{ i18n.t('ionicStrength') }}:</strong> {{ i18n.formatNumber(modalData.ionicStrength?.toFixed(4) || 0) }} mol/L</p>
+                <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #666;">{{ i18n.t('ionicStrengthCorrectionNote') }}</p>
+              </div>
+            </div>
+          </template>
+
+          <!-- Quick tips -->
+          <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
+            <h3 style="color: #28a745;">{{ i18n.t('ecTips') }}</h3>
+            <ul style="line-height: 1.8;">
+              <li>{{ i18n.t('ecTip1') }}</li>
+              <li>{{ i18n.t('ecTip2') }}</li>
+              <li>{{ i18n.t('ecTip3') }}</li>
+              <li>{{ i18n.t('ecTip4') }}</li>
+            </ul>
+          </div>
+        </template>
+
       </div>
     </div>
   </div>
@@ -784,7 +962,7 @@ permalink: /fertilizer-calculator/
           </div>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction && gramsToPpmDisplayData.ecPrediction.ec > 0" style="margin-top: 20px;">
-          <h2>{{ i18n.t('achievedEc') }}</h2>
+          <h2>{{ i18n.t('achievedEc') }} <span class="info-icon" @click="openEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
           <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
             <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: gramsToPpmDisplayData.ecPrediction.color + '22', borderLeft: '4px solid ' + gramsToPpmDisplayData.ecPrediction.color }">
               <div style="font-size: 2em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ec.toFixed(2)) }}</div>
@@ -796,36 +974,6 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 1.2em; font-weight: bold;">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ionicStrength.toFixed(4)) }} mol/L</div>
             </div>
           </div>
-          <!-- EC Breakdown by Ion -->
-          <details v-if="gramsToPpmDisplayData.ecPrediction.contributions" style="margin-top: 15px;">
-            <summary style="cursor: pointer; color: #007bff; font-weight: 500;">{{ i18n.t('showEcBreakdown') }}</summary>
-            <div style="margin-top: 10px; overflow-x: auto;">
-              <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-                <thead>
-                  <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                    <th style="text-align: left; padding: 8px;">{{ i18n.t('ion') }}</th>
-                    <th style="text-align: right; padding: 8px;">{{ i18n.t('concentrationMmolL') }}</th>
-                    <th style="text-align: right; padding: 8px;">λ (S·cm²/mol)</th>
-                    <th style="text-align: right; padding: 8px;">{{ i18n.t('contributionMsCm') }}</th>
-                    <th style="text-align: right; padding: 8px;">%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(data, ion) in sortedEcContributions" :key="ion" style="border-bottom: 1px solid #dee2e6;">
-                    <td style="padding: 8px;">{{ ion }}</td>
-                    <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</td>
-                    <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.lambda) }}</td>
-                    <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
-                    <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber((data.contribution_mS_cm / gramsToPpmDisplayData.ecPrediction.rawEC * 100).toFixed(1)) }}%</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
-                <strong>{{ i18n.t('ecBreakdownNote') }}</strong> {{ i18n.t('rawEcLabel') }} = {{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.rawEC.toFixed(3)) }} mS/cm.
-                {{ i18n.t('ionicStrengthCorrectionApplied', { factor: i18n.formatNumber((gramsToPpmDisplayData.ecPrediction.rawEC / gramsToPpmDisplayData.ecPrediction.ec).toFixed(3)) }) }}
-              </div>
-            </div>
-          </details>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0" style="margin-top: 20px;">
           <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
@@ -1258,7 +1406,7 @@ permalink: /fertilizer-calculator/
   </div>
 
   <div class="results-section" id="ec-tds-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ecPrediction && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
-    <h2>{{ i18n.t('achievedEc') }}</h2>
+    <h2>{{ i18n.t('achievedEc') }} <span class="info-icon" @click="openEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
     <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
       <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: gramsToPpmDisplayData.ecPrediction.color + '22', borderLeft: '4px solid ' + gramsToPpmDisplayData.ecPrediction.color }">
         <div style="font-size: 2em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ec.toFixed(2)) }}</div>
@@ -1270,36 +1418,6 @@ permalink: /fertilizer-calculator/
         <div style="font-size: 1.2em; font-weight: bold;">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ionicStrength.toFixed(4)) }} mol/L</div>
       </div>
     </div>
-    <!-- EC Breakdown by Ion -->
-    <details v-if="gramsToPpmDisplayData.ecPrediction.contributions" style="margin-top: 15px;">
-      <summary style="cursor: pointer; color: #007bff; font-weight: 500;">{{ i18n.t('showEcBreakdown') }}</summary>
-      <div style="margin-top: 10px; overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-          <thead>
-            <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-              <th style="text-align: left; padding: 8px;">{{ i18n.t('ion') }}</th>
-              <th style="text-align: right; padding: 8px;">{{ i18n.t('concentrationMmolL') }}</th>
-              <th style="text-align: right; padding: 8px;">λ (S·cm²/mol)</th>
-              <th style="text-align: right; padding: 8px;">{{ i18n.t('contributionMsCm') }}</th>
-              <th style="text-align: right; padding: 8px;">%</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(data, ion) in sortedEcContributions" :key="ion" style="border-bottom: 1px solid #dee2e6;">
-              <td style="padding: 8px;">{{ ion }}</td>
-              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</td>
-              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.lambda) }}</td>
-              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
-              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber((data.contribution_mS_cm / gramsToPpmDisplayData.ecPrediction.rawEC * 100).toFixed(1)) }}%</td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
-          <strong>{{ i18n.t('ecBreakdownNote') }}</strong> {{ i18n.t('rawEcLabel') }} = {{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.rawEC.toFixed(3)) }} mS/cm.
-          {{ i18n.t('ionicStrengthCorrectionApplied', { factor: i18n.formatNumber((gramsToPpmDisplayData.ecPrediction.rawEC / gramsToPpmDisplayData.ecPrediction.ec).toFixed(3)) }) }}
-        </div>
-      </div>
-    </details>
   </div>
 
   <div class="results-section" id="warnings-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
@@ -4078,7 +4196,12 @@ const FertilizerApp = {
       activeFertilizers: [],
       nutrientContributions: {},
       ionBalance: null,
-      calculationType: '' // 'grams-to-ppm', 'ppm-to-grams', 'ratio-to-grams'
+      calculationType: '', // 'grams-to-ppm', 'ppm-to-grams', 'ratio-to-grams'
+      // EC modal specific data
+      ecContributions: null,
+      rawEC: 0,
+      ionicStrength: 0,
+      ec: 0
     });
 
     // Oxide conversion data for templates
@@ -5461,7 +5584,12 @@ const FertilizerApp = {
         activeFertilizers: ferts,
         nutrientContributions: contributions,
         ionBalance: ionBalance,
-        calculationType: data.calculationType || 'grams-to-ppm'
+        calculationType: data.calculationType || 'grams-to-ppm',
+        // EC modal specific data
+        ecContributions: data.ecContributions || null,
+        rawEC: data.rawEC || 0,
+        ionicStrength: data.ionicStrength || 0,
+        ec: data.ec || 0
       });
 
       // Set modal type AFTER setting data to ensure everything is ready
@@ -5498,7 +5626,8 @@ const FertilizerApp = {
         'ion-balance': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
         'reverse-ppm': i18n.t('understandingPpmCalculations') || 'Understanding PPM Calculations',
         'reverse-ion': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
-        'formula-ion': i18n.t('understandingIonBalance') || 'Understanding Ion Balance'
+        'formula-ion': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
+        'ec': i18n.t('ecExplanationTitle') || 'EC Prediction Explained'
       };
       return titles[activeModal.value] || 'Explanation';
     });
@@ -5731,6 +5860,18 @@ const FertilizerApp = {
         calculationType: 'grams-to-ppm'
       } : {};
       openModal('ion-balance', data);
+    }
+
+    function openEcExplanation() {
+      // Get EC data from current display
+      const ecPrediction = gramsToPpmDisplayData.ecPrediction;
+      const data = {
+        ecContributions: ecPrediction?.contributions || {},
+        rawEC: ecPrediction?.rawEC || 0,
+        ionicStrength: ecPrediction?.ionicStrength || 0,
+        ec: ecPrediction?.ec || 0
+      };
+      openModal('ec', data);
     }
 
     function openReversePPMExplanation() {
@@ -6286,6 +6427,7 @@ const FertilizerApp = {
       switchTab,
       openPPMExplanation,
       openIonBalanceExplanation,
+      openEcExplanation,
       openReversePPMExplanation,
       openReverseIonBalanceExplanation,
       openFormulaIonBalanceExplanation,
