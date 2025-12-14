@@ -2731,9 +2731,8 @@ function refreshWizardResults() {
   const resultsContainer = document.getElementById('wizard-results-container');
   if (!resultsContainer) return;
 
-  // Check which type of results are currently showing
-  const wizardResultsStep = document.getElementById('wizard-results');
-  if (!wizardResultsStep || !wizardResultsStep.classList.contains('active')) return;
+  // Check if wizard results step is active via Vue state (not DOM classList)
+  if (window.vueApp?.wizardStep !== 'wizard-results') return;
 
   // Determine source based on current mode
   const mode = getSelectedMode();
