@@ -2492,7 +2492,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.0.9
+    v1.1.0
   </div>
 
 </div>
@@ -5079,8 +5079,11 @@ const FertilizerApp = {
         achievedRatios[k] = achievedPPM[k] > 0 ? achievedPPM[k] / minAchieved : 0;
       });
 
-      // Calculate target ratios
+      // Calculate target ratios - include Si in normalization if provided
       const targetNutrients = { N: targets.N, P: targets.P, K: targets.K, Ca: targets.Ca, Mg: targets.Mg, S: targets.S };
+      if (targets.Si > 0) {
+        targetNutrients.Si = targets.Si;
+      }
       const targetValues = Object.values(targetNutrients).filter(v => v > 0);
       const minTarget = targetValues.length > 0 ? Math.min(...targetValues) : 1;
       const targetRatios = {
@@ -5089,10 +5092,12 @@ const FertilizerApp = {
         K2O: targets.K > 0 ? targets.K / minTarget : 0,
         Ca: targets.Ca > 0 ? targets.Ca / minTarget : 0,
         Mg: targets.Mg > 0 ? targets.Mg / minTarget : 0,
-        S: targets.S > 0 ? targets.S / minTarget : 0
+        S: targets.S > 0 ? targets.S / minTarget : 0,
+        Si: targets.Si > 0 ? targets.Si / minTarget : 0
       };
 
-      // Build comparison data
+      // Build comparison data - Si is ratio-based when target is provided, PPM-based otherwise
+      const siIsRatioBased = targets.Si > 0;
       const displayNutrients = mode === 'elemental'
         ? [
             { key: 'N', label: i18n.t('nitrogen'), ratioKey: 'N', ppmKey: 'N_total', targetKey: 'N' },
@@ -5101,7 +5106,9 @@ const FertilizerApp = {
             { key: 'Ca', label: i18n.t('calcium'), ratioKey: 'Ca', ppmKey: 'Ca', targetKey: 'Ca' },
             { key: 'Mg', label: i18n.t('magnesium'), ratioKey: 'Mg', ppmKey: 'Mg', targetKey: 'Mg' },
             { key: 'S', label: i18n.t('sulfur'), ratioKey: 'S', ppmKey: 'S', targetKey: 'S' },
-            { key: 'Si', label: i18n.t('silicon'), isPPM: true }
+            siIsRatioBased
+              ? { key: 'Si', label: i18n.t('silicon'), ratioKey: 'Si', ppmKey: 'Si', targetKey: 'Si' }
+              : { key: 'Si', label: i18n.t('silicon'), isPPM: true }
           ]
         : [
             { key: 'N', label: i18n.t('nitrogen'), ratioKey: 'N', ppmKey: 'N_total', targetKey: 'N' },
@@ -5110,7 +5117,9 @@ const FertilizerApp = {
             { key: 'Ca', label: i18n.t('calcium'), ratioKey: 'Ca', ppmKey: 'Ca', targetKey: 'Ca' },
             { key: 'Mg', label: i18n.t('magnesium'), ratioKey: 'Mg', ppmKey: 'Mg', targetKey: 'Mg' },
             { key: 'S', label: i18n.t('sulfur'), ratioKey: 'S', ppmKey: 'S', targetKey: 'S' },
-            { key: 'Si', label: i18n.t('silicon'), isPPM: true }
+            siIsRatioBased
+              ? { key: 'Si', label: i18n.t('silicon'), ratioKey: 'Si', ppmKey: 'Si', targetKey: 'Si' }
+              : { key: 'Si', label: i18n.t('silicon'), isPPM: true }
           ];
 
       const comparison = [];
