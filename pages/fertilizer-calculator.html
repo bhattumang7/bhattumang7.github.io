@@ -108,7 +108,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Step 2: Volume Selection -->
   <div id="volume-step" class="volume-step" :class="{ active: wizardStep === 'volume-step' }" @keydown.enter="wizardStep === 'volume-step' && proceedFromVolumeStep()">
-    <div class="step-indicator" id="volume-step-indicator" data-i18n-key="stepOf">Step 2 of 2</div>
+    <div class="step-indicator">{{ getStepIndicator('volume-step') }}</div>
     <h3 data-i18n="howMuchSolution">How much solution are you making?</h3>
     <p data-i18n="volumeDescription">Enter the total volume of water you'll be mixing your fertilizers into.</p>
 
@@ -129,7 +129,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Step 3: Calculation Mode (only for PPM→Grams and NPK Ratio→Grams) -->
   <div id="calc-mode-step" class="calc-mode-step" :class="{ active: wizardStep === 'calc-mode-step' }" @keydown.enter="wizardStep === 'calc-mode-step' && proceedFromCalcModeStep()">
-    <div class="step-indicator" id="calc-mode-step-indicator" data-i18n-key="stepOf">Step 3 of 3</div>
+    <div class="step-indicator">{{ getStepIndicator('calc-mode-step') }}</div>
     <h3 data-i18n="howToEnterValues">How do you want to enter values?</h3>
     <p data-i18n="calcModeDescription">Choose between commercial fertilizer notation or pure elemental values.</p>
 
@@ -162,7 +162,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Step 4: Target EC (only for NPK Ratio→Grams) -->
   <div id="ec-step" class="ec-step" :class="{ active: wizardStep === 'ec-step' }" @keydown.enter="wizardStep === 'ec-step' && proceedFromECStep()">
-    <div class="step-indicator" id="ec-step-indicator" data-i18n-key="stepOf">Step 4 of 4</div>
+    <div class="step-indicator">{{ getStepIndicator('ec-step') }}</div>
     <h3 data-i18n="whatStrengthSolution">What strength solution do you want?</h3>
     <p data-i18n="ecDescription">Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we'll scale the fertilizer amounts to hit that strength for your batch.</p>
 
@@ -194,8 +194,8 @@ permalink: /fertilizer-calculator/
   </div>
 
   <!-- Step: Fertilizer Selection + Quantities (for Grams→PPM) -->
-  <div id="grams-input-step" class="wizard-input-step" :class="{ active: wizardStep === 'grams-input-step' }" @keydown.enter="wizardStep === 'grams-input-step' && !$event.target.classList.contains('wizard-fertilizer-search') && calculateFromWizardGrams()">
-    <div class="step-indicator" id="grams-input-step-indicator" data-i18n-key="stepOf">Step 3 of 3</div>
+  <div id="grams-input-step" class="wizard-input-step" :class="{ active: wizardStep === 'grams-input-step' }" @keydown.enter="handleGramsInputEnter($event)">
+    <div class="step-indicator">{{ getStepIndicator('grams-input-step') }}</div>
     <h3 data-i18n="selectFertilizersAndEnterAmounts">Select Fertilizers & Enter Amounts</h3>
     <p data-i18n="selectFertilizersDescription">Check the fertilizers you're using and enter how many grams of each you'll add to your solution.</p>
 
@@ -237,7 +237,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Step: Target PPM Values (for PPM→Grams) -->
   <div id="ppm-targets-step" class="wizard-input-step" :class="{ active: wizardStep === 'ppm-targets-step' }" @keydown.enter="wizardStep === 'ppm-targets-step' && proceedToFormulaFertilizerStep()">
-    <div class="step-indicator" id="ppm-targets-step-indicator" data-i18n-key="stepOf">Step 4 of 5</div>
+    <div class="step-indicator">{{ getStepIndicator('ppm-targets-step') }}</div>
     <h3 data-i18n="enterTargetPpmValues">Enter Target PPM Values</h3>
     <p data-i18n="targetPpmDescription">Enter the nutrient concentrations you want to achieve. At least one value is required.</p>
 
@@ -280,7 +280,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Step: NPK Ratios (for NPK Ratio→Grams) -->
   <div id="npk-ratios-step" class="wizard-input-step" :class="{ active: wizardStep === 'npk-ratios-step' }" @keydown.enter="wizardStep === 'npk-ratios-step' && proceedToReverseFertilizerStep()">
-    <div class="step-indicator" id="npk-ratios-step-indicator" data-i18n-key="stepOf">Step 5 of 6</div>
+    <div class="step-indicator">{{ getStepIndicator('npk-ratios-step') }}</div>
     <h3 data-i18n="enterNutrientRatios">Enter Nutrient Ratios</h3>
     <p data-i18n="nutrientRatiosDescription">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one must be greater than zero.</p>
 
@@ -322,8 +322,8 @@ permalink: /fertilizer-calculator/
   </div>
 
   <!-- Step: Select Available Fertilizers (for PPM→Grams and NPK Ratio→Grams) -->
-  <div id="fertilizer-select-step" class="wizard-input-step" :class="{ active: wizardStep === 'fertilizer-select-step' }" @keydown.enter="wizardStep === 'fertilizer-select-step' && !$event.target.classList.contains('wizard-fertilizer-search') && calculateFromWizardFertilizerSelect()">
-    <div class="step-indicator" id="fertilizer-select-step-indicator" data-i18n-key="stepOf">Step 5 of 5</div>
+  <div id="fertilizer-select-step" class="wizard-input-step" :class="{ active: wizardStep === 'fertilizer-select-step' }" @keydown.enter="handleFertilizerSelectEnter($event)">
+    <div class="step-indicator">{{ getStepIndicator('fertilizer-select-step') }}</div>
     <h3 data-i18n="selectAvailableFertilizers">Select Available Fertilizers</h3>
     <p data-i18n="selectAvailableFertilizersDescription">Choose the fertilizers you have on hand. The calculator will use only these to build your formula.</p>
 
@@ -359,7 +359,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Two-Tank Question Step (shown when incompatible fertilizers detected) -->
   <div id="two-tank-question-step" class="wizard-input-step" :class="{ active: wizardStep === 'two-tank-question-step' }">
-    <p class="step-indicator" id="two-tank-question-step-indicator">Step 6 of 6</p>
+    <p class="step-indicator">{{ getTwoTankStepIndicator() }}</p>
     <h3 data-i18n="twoTankQuestionTitle">Would you like to see a two-tank view?</h3>
     <div class="two-tank-explanation">
       <div class="incompatibility-warning">
@@ -2216,110 +2216,23 @@ function setSelectedEC(ec) {
   if (window.vueApp) window.vueApp.ratioTargetEC = ec;
 }
 
-function getStepCount(mode) {
-  // Grams → PPM: mode, volume, grams input = 3 steps
-  // PPM → Grams: mode, volume, calc-mode, ppm-targets, fertilizer-select = 5 steps
-  // NPK Ratio → Grams: mode, volume, calc-mode, ec, npk-ratios, fertilizer-select = 6 steps
-  if (mode === 'reverse-calc') return 6;
-  if (mode === 'formula-builder') return 5;
-  return 3; // ppm-calc
-}
+// getStepCount removed - step counts now in Vue computed (getStepIndicator, getTwoTankStepIndicator)
 
 // =============================================================================
 // CENTRALIZED WIZARD STEP MANAGEMENT
+// Step indicators now computed via Vue (getStepIndicator, getTwoTankStepIndicator)
 // =============================================================================
-
-// All wizard step IDs in order
-const WIZARD_STEPS = [
-  'mode-selector',
-  'volume-step',
-  'calc-mode-step',
-  'ec-step',
-  'grams-input-step',
-  'ppm-targets-step',
-  'npk-ratios-step',
-  'fertilizer-select-step',
-  'two-tank-question-step',
-  'wizard-results',
-  'calculator-content'
-];
-
-// Step configuration: maps step ID to its indicator ID and step number per mode
-const STEP_CONFIG = {
-  'volume-step': {
-    indicatorId: 'volume-step-indicator',
-    stepNumber: { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 }
-  },
-  'calc-mode-step': {
-    indicatorId: 'calc-mode-step-indicator',
-    stepNumber: { 'formula-builder': 3, 'reverse-calc': 3 }
-  },
-  'ec-step': {
-    indicatorId: 'ec-step-indicator',
-    stepNumber: { 'reverse-calc': 4 }
-  },
-  'grams-input-step': {
-    indicatorId: 'grams-input-step-indicator',
-    stepNumber: { 'ppm-calc': 3 }
-  },
-  'ppm-targets-step': {
-    indicatorId: 'ppm-targets-step-indicator',
-    stepNumber: { 'formula-builder': 4 }
-  },
-  'npk-ratios-step': {
-    indicatorId: 'npk-ratios-step-indicator',
-    stepNumber: { 'reverse-calc': 5 }
-  },
-  'fertilizer-select-step': {
-    indicatorId: 'fertilizer-select-step-indicator',
-    stepNumber: { 'formula-builder': 5, 'reverse-calc': 6 }
-  },
-  'two-tank-question-step': {
-    indicatorId: 'two-tank-question-step-indicator',
-    // Step number is dynamic (total + 1), handled specially
-    stepNumber: null
-  }
-};
 
 /**
  * Show a specific wizard step and hide all others
  * @param {string} stepId - The ID of the step to show
  * @param {Object} options - Optional configuration
- * @param {boolean} options.updateIndicator - Whether to update the step indicator (default: true)
- * @param {number} options.stepNumber - Override the step number (for dynamic steps like two-tank)
- * @param {number} options.totalSteps - Override the total steps (for dynamic steps)
  * @param {boolean} options.scroll - Whether to scroll to top (default: true)
  */
 function showWizardStep(stepId, options = {}) {
-  const { updateIndicator = true, stepNumber = null, totalSteps = null, scroll = true } = options;
-
-  // Update Vue reactive state - this controls visibility via :class bindings
-  if (window.vueApp) {
-    window.vueApp.wizardStep = stepId;
-  }
-
-  // Update step indicator if configured
-  const currentMode = getSelectedMode();
-  if (updateIndicator && currentMode) {
-    const config = STEP_CONFIG[stepId];
-    if (config && config.indicatorId) {
-      const indicator = document.getElementById(config.indicatorId);
-      if (indicator) {
-        const total = totalSteps || getStepCount(currentMode);
-        const current = stepNumber || (config.stepNumber && config.stepNumber[currentMode]);
-        if (current) {
-          indicator.textContent = i18n.t('stepOf', { current, total });
-        }
-      }
-    }
-  }
-
-  // Scroll wizard step into view
-  if (scroll) {
-    const targetStep = document.getElementById(stepId);
-    if (targetStep) {
-      targetStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  // Delegate to Vue method for proper reactivity
+  if (window.vueApp?.showWizardStepVue) {
+    window.vueApp.showWizardStepVue(stepId, options);
   }
 }
 
@@ -2597,9 +2510,8 @@ async function calculateFromWizardGrams() {
       };
     }
 
-    // Show two-tank question step with dynamic step number
-    const totalSteps = getStepCount(mode) + 1;
-    showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
+    // Show two-tank question step (step indicator computed by Vue getTwoTankStepIndicator)
+    showWizardStep('two-tank-question-step');
   } else {
     // No incompatibilities - show results directly
     if (window.vueApp) {
@@ -2821,9 +2733,8 @@ async function calculateFromWizardFertilizerSelect() {
       };
     }
 
-    // Show two-tank question step with dynamic step number
-    const totalSteps = getStepCount(mode) + 1;
-    showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
+    // Show two-tank question step (step indicator computed by Vue getTwoTankStepIndicator)
+    showWizardStep('two-tank-question-step');
   } else {
     // No incompatibilities - show results directly
     if (window.vueApp) {
@@ -3982,6 +3893,91 @@ const FertilizerApp = {
 
       return text;
     });
+
+    // Step indicator text computed from current step and mode
+    const stepIndicatorText = computed(() => {
+      const step = wizardStep.value;
+      const mode = currentMode.value;
+      if (!mode) return '';
+
+      // Step counts per mode
+      const STEP_COUNTS = {
+        'ppm-calc': 3,
+        'formula-builder': 5,
+        'reverse-calc': 6
+      };
+
+      // Step numbers per step and mode
+      const STEP_NUMBERS = {
+        'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 },
+        'calc-mode-step': { 'formula-builder': 3, 'reverse-calc': 3 },
+        'ec-step': { 'reverse-calc': 4 },
+        'grams-input-step': { 'ppm-calc': 3 },
+        'ppm-targets-step': { 'formula-builder': 4 },
+        'npk-ratios-step': { 'reverse-calc': 5 },
+        'fertilizer-select-step': { 'formula-builder': 5, 'reverse-calc': 6 },
+        'two-tank-question-step': null // Dynamic
+      };
+
+      const stepConfig = STEP_NUMBERS[step];
+      if (!stepConfig) return '';
+
+      const stepNumber = stepConfig[mode];
+      const totalSteps = STEP_COUNTS[mode];
+
+      if (stepNumber && totalSteps) {
+        return i18n.t('stepOf', { current: stepNumber, total: totalSteps });
+      }
+      return '';
+    });
+
+    // Get step indicator for a specific step (for template binding)
+    function getStepIndicator(stepId) {
+      const mode = currentMode.value;
+      if (!mode) return '';
+
+      const STEP_COUNTS = {
+        'ppm-calc': 3,
+        'formula-builder': 5,
+        'reverse-calc': 6
+      };
+
+      const STEP_NUMBERS = {
+        'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 },
+        'calc-mode-step': { 'formula-builder': 3, 'reverse-calc': 3 },
+        'ec-step': { 'reverse-calc': 4 },
+        'grams-input-step': { 'ppm-calc': 3 },
+        'ppm-targets-step': { 'formula-builder': 4 },
+        'npk-ratios-step': { 'reverse-calc': 5 },
+        'fertilizer-select-step': { 'formula-builder': 5, 'reverse-calc': 6 }
+      };
+
+      const stepConfig = STEP_NUMBERS[stepId];
+      if (!stepConfig) return '';
+
+      const stepNumber = stepConfig[mode];
+      const totalSteps = STEP_COUNTS[mode];
+
+      if (stepNumber && totalSteps) {
+        return i18n.t('stepOf', { current: stepNumber, total: totalSteps });
+      }
+      return '';
+    }
+
+    // Get two-tank question step indicator (dynamic - always total + 1)
+    function getTwoTankStepIndicator() {
+      const mode = currentMode.value;
+      if (!mode) return '';
+
+      const STEP_COUNTS = {
+        'ppm-calc': 3,
+        'formula-builder': 5,
+        'reverse-calc': 6
+      };
+
+      const totalSteps = STEP_COUNTS[mode] || 0;
+      return i18n.t('stepOf', { current: totalSteps + 1, total: totalSteps + 1 });
+    }
 
     // Filter fertilizers based on search
     const filteredFertilizers = computed(() => {
@@ -5313,6 +5309,44 @@ const FertilizerApp = {
       return true;
     }
 
+    // Scroll wizard step into view (Vue-powered replacement for getElementById scroll)
+    function scrollToWizardStep(stepId) {
+      Vue.nextTick(() => {
+        const step = document.getElementById(stepId);
+        if (step) {
+          step.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    // Check if event target is a search input (for @keydown.enter handlers)
+    function isSearchInput(event) {
+      return event?.target?.classList?.contains('wizard-fertilizer-search') || false;
+    }
+
+    // Handle keydown.enter for grams input step
+    function handleGramsInputEnter(event) {
+      if (wizardStep.value === 'grams-input-step' && !isSearchInput(event)) {
+        calculateFromWizardGrams();
+      }
+    }
+
+    // Handle keydown.enter for fertilizer select step
+    function handleFertilizerSelectEnter(event) {
+      if (wizardStep.value === 'fertilizer-select-step' && !isSearchInput(event)) {
+        calculateFromWizardFertilizerSelect();
+      }
+    }
+
+    // Show wizard step (Vue-powered replacement for window.vueApp.wizardStep = stepId)
+    function showWizardStepVue(stepId, options = {}) {
+      const { scroll = true } = options;
+      wizardStep.value = stepId;
+      if (scroll) {
+        scrollToWizardStep(stepId);
+      }
+    }
+
     // =========================================================================
     // COPY TO CLIPBOARD (Vue-powered)
     // =========================================================================
@@ -5564,6 +5598,16 @@ const FertilizerApp = {
       // Wizard Volume Helpers
       focusWizardVolume,
       validateWizardVolume,
+      scrollToWizardStep,
+      isSearchInput,
+      handleGramsInputEnter,
+      handleFertilizerSelectEnter,
+      showWizardStepVue,
+
+      // Step Indicator
+      stepIndicatorText,
+      getStepIndicator,
+      getTwoTankStepIndicator,
 
       // Wizard Methods
       initWizardGramsFertilizers,
