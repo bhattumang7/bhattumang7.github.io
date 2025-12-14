@@ -22,7 +22,7 @@ permalink: /fertilizer-calculator/
 
 <div class="calculator-container" v-cloak>
   <!-- Vue-powered Unified Modal (placed at top for proper rendering) -->
-  <div v-if="activeModal" v-cloak class="modal-overlay" :class="{ active: activeModal }" style="display: none" @click="closeModal">
+  <div v-if="activeModal" class="modal-overlay" :class="{ active: activeModal }" style="display: none" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
         <h2>{{ modalTitle }}</h2>
