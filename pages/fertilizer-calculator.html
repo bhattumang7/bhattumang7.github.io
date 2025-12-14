@@ -446,24 +446,24 @@ permalink: /fertilizer-calculator/
                   </thead>
                   <tbody>
                     <template v-for="(data, ion) in modalData.ecContributions" :key="ion">
-                      <tr style="border-bottom: 1px solid #c8e6c9;">
-                        <td data-label="Ion" style="padding: 8px;"><strong>{{ ion }}</strong></td>
-                        <td data-label="PPM" style="text-align: right; padding: 8px;">{{ data.ppm ? i18n.formatNumber(data.ppm.toFixed(2)) : '-' }}</td>
-                        <td data-label="Calculation" class="calc-column" style="text-align: center; padding: 8px; font-family: monospace; font-size: 0.85em; color: #666;">
+                      <tr>
+                        <td data-label="Ion"><strong>{{ ion }}</strong></td>
+                        <td data-label="PPM">{{ data.ppm ? i18n.formatNumber(data.ppm.toFixed(2)) : '-' }}</td>
+                        <td data-label="Concentration" class="calc-column">
                           <span v-if="data.ppm && data.molarMass">{{ i18n.formatNumber(data.ppm.toFixed(2)) }} ÷ {{ i18n.formatNumber(data.molarMass.toFixed(3)) }} = {{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</span>
                           <span v-else>{{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</span>
                         </td>
-                        <td data-label="λ" style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.lambda) }}</td>
-                        <td data-label="EC Contrib" style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
-                        <td data-label="%" style="text-align: right; padding: 8px;">{{ i18n.formatNumber((data.contribution_mS_cm / modalData.rawEC * 100).toFixed(1)) }}%</td>
+                        <td data-label="λ">{{ i18n.formatNumber(data.lambda) }}</td>
+                        <td data-label="EC Contrib">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
+                        <td data-label="%">{{ i18n.formatNumber((data.contribution_mS_cm / modalData.rawEC * 100).toFixed(1)) }}%</td>
                       </tr>
                     </template>
                   </tbody>
                   <tfoot>
-                    <tr style="background: #a5d6a7; font-weight: bold; border-top: 2px solid #4caf50;">
-                      <td style="padding: 8px;" colspan="4">{{ i18n.t('totalLabel') }}</td>
-                      <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(modalData.rawEC?.toFixed(4) || 0) }} mS/cm</td>
-                      <td style="text-align: right; padding: 8px;">{{ formatNumber(100) }}%</td>
+                    <tr>
+                      <td colspan="4">{{ i18n.t('totalLabel') }}</td>
+                      <td>{{ i18n.formatNumber(modalData.rawEC?.toFixed(4) || 0) }} mS/cm</td>
+                      <td>{{ formatNumber(100) }}%</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -2456,7 +2456,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.0.1
+    v1.0.2
   </div>
 
 </div>

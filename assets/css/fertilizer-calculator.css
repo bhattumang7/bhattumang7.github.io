@@ -1443,6 +1443,39 @@
   overflow-x: auto;
 }
 
+.ec-breakdown-table th,
+.ec-breakdown-table td {
+  padding: 8px;
+  text-align: right;
+}
+
+.ec-breakdown-table th:first-child,
+.ec-breakdown-table td:first-child {
+  text-align: left;
+}
+
+.ec-breakdown-table thead tr {
+  background: #c8e6c9;
+  border-bottom: 2px solid #4caf50;
+}
+
+.ec-breakdown-table tbody tr {
+  border-bottom: 1px solid #c8e6c9;
+}
+
+.ec-breakdown-table .calc-column {
+  text-align: center;
+  font-family: monospace;
+  font-size: 0.85em;
+  color: #666;
+}
+
+.ec-breakdown-table tfoot tr {
+  background: #a5d6a7;
+  font-weight: bold;
+  border-top: 2px solid #4caf50;
+}
+
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .calculator-container {
