@@ -6033,6 +6033,7 @@ const FertilizerApp = {
 
     // Proceed from EC step
     function proceedFromECStep() {
+      ratioTargetEC.value = wizardSelectedEC.value;
       showWizardStepVue('npk-ratios-step');
     }
 
