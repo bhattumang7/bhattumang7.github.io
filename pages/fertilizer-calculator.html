@@ -1138,6 +1138,22 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
+        <!-- EC Prediction Section -->
+        <div class="results-section" v-if="reverseResultsData.ecPrediction && reverseResultsData.ecPrediction.ec > 0" style="margin-top: 20px;">
+          <h2>{{ i18n.t('estimatedEC') }} <span class="info-icon" @click="openReverseEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
+          <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+            <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: reverseResultsData.ecPrediction.color + '22', borderLeft: '4px solid ' + reverseResultsData.ecPrediction.color }">
+              <div style="font-size: 2em; font-weight: bold;" :style="{ color: reverseResultsData.ecPrediction.color }">{{ i18n.formatNumber(reverseResultsData.ecPrediction.ec.toFixed(2)) }}</div>
+              <div style="font-size: 0.9em; color: #666;">mS/cm</div>
+              <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: reverseResultsData.ecPrediction.color }">{{ reverseResultsData.ecPrediction.text }}</div>
+            </div>
+            <div v-if="reverseResultsData.ecPrediction.targetEC" class="ec-target" style="padding: 15px; background: #f5f5f5; border-radius: 8px;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('targetEC') }}</div>
+              <div style="font-size: 1.5em; font-weight: bold;">{{ i18n.formatNumber(reverseResultsData.ecPrediction.targetEC) }} mS/cm</div>
+              <div v-if="reverseResultsData.ecPrediction.ecScaling" style="font-size: 0.85em; color: #28a745;">{{ i18n.t('scaledToMatch') }}</div>
+            </div>
+          </div>
+        </div>
         <!-- Nutritional Warnings -->
         <div v-if="reverseResultsData.nutritionalWarnings && reverseResultsData.nutritionalWarnings.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
@@ -5103,7 +5119,10 @@ const FertilizerApp = {
           color: ecStatusReverse.color,
           text: ecStatusReverse.text,
           targetEC: targetEC,
-          ecScaling: result.ecScaling
+          ecScaling: result.ecScaling,
+          contributions: rawEcDataReverse.contributions || {},
+          rawEC: rawEcDataReverse.rawEC || 0,
+          ionicStrength: rawEcDataReverse.ionicStrength || 0
         };
       } else {
         reverseResultsData.ecPrediction = { ec: 0, color: '#666', text: '', targetEC: targetEC, ecScaling: result.ecScaling };
@@ -5927,6 +5946,18 @@ const FertilizerApp = {
       openModal('ion-balance', data);
     }
 
+    function openReverseEcExplanation() {
+      // Get EC data from reverseResultsData
+      const ecPrediction = reverseResultsData.ecPrediction;
+      const data = {
+        ecContributions: ecPrediction?.contributions || {},
+        rawEC: ecPrediction?.rawEC || 0,
+        ionicStrength: ecPrediction?.ionicStrength || 0,
+        ec: ecPrediction?.ec || 0
+      };
+      openModal('ec', data);
+    }
+
     // Show wizard step (Vue-powered replacement for window.vueApp.wizardStep = stepId)
     function showWizardStepVue(stepId, options = {}) {
       const { scroll = true } = options;
@@ -6430,6 +6461,7 @@ const FertilizerApp = {
       openEcExplanation,
       openReversePPMExplanation,
       openReverseIonBalanceExplanation,
+      openReverseEcExplanation,
       openFormulaIonBalanceExplanation,
 
       // Step Indicator

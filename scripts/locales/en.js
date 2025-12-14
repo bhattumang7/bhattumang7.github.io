@@ -318,6 +318,7 @@ window.i18nLocales.en = {
   ecPrediction: 'EC Prediction',
   estimatedEC: 'Estimated EC',
   targetEC: 'Target EC',
+  scaledToMatch: 'Scaled to match',
   nutrientRatios: 'Nutrient Ratios',
   nutritionalConsiderations: 'Nutritional Considerations',
   predictedEc: 'Predicted EC',

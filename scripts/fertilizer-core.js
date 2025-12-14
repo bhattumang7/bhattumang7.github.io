@@ -772,6 +772,56 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
     }
 
     const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01 });
+
+    // Apply EC scaling if targetEC is specified
+    if (options.targetEC && options.targetEC > 0) {
+      const estimateECFromPPM = window.FertilizerCore.estimateECFromPPM;
+      if (typeof estimateECFromPPM === 'function') {
+        const originalEC = estimateECFromPPM(milpResult.achieved);
+        if (originalEC && originalEC.ec_mS_cm > 0) {
+          // Iterative scaling to handle non-linear ionic strength correction
+          let scaleFactor = options.targetEC / originalEC.ec_mS_cm;
+          let scaledFormula = {};
+          let scaledAchieved = {};
+          let finalEC = originalEC.ec_mS_cm;
+
+          // Iterate up to 5 times to converge on target EC
+          for (let i = 0; i < 5; i++) {
+            // Scale formula
+            scaledFormula = {};
+            Object.entries(milpResult.formula).forEach(([fertId, grams]) => {
+              scaledFormula[fertId] = grams * scaleFactor;
+            });
+
+            // Scale achieved PPM
+            scaledAchieved = {};
+            Object.entries(milpResult.achieved).forEach(([key, value]) => {
+              scaledAchieved[key] = value * scaleFactor;
+            });
+
+            // Check actual EC after scaling
+            const newEC = estimateECFromPPM(scaledAchieved);
+            finalEC = newEC.ec_mS_cm;
+
+            // If within 1% of target, we're done
+            const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
+            if (error < 0.01) break;
+
+            // Adjust scale factor based on error
+            scaleFactor = scaleFactor * (options.targetEC / finalEC);
+          }
+
+          return {
+            formula: scaledFormula,
+            achieved: scaledAchieved,
+            targetRatios,
+            targetPPM: ppmTargets,
+            ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC: options.targetEC, achievedEC: finalEC }
+          };
+        }
+      }
+    }
+
     return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
   }
 
@@ -994,6 +1044,55 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
         addFertilizer(availableFertilizers[index], grams);
       }
     });
+  }
+
+  // Apply EC scaling if targetEC is specified (fallback path)
+  if (options.targetEC && options.targetEC > 0) {
+    const estimateECFromPPM = window.FertilizerCore.estimateECFromPPM;
+    if (typeof estimateECFromPPM === 'function') {
+      const originalEC = estimateECFromPPM(achieved);
+      if (originalEC && originalEC.ec_mS_cm > 0) {
+        // Iterative scaling to handle non-linear ionic strength correction
+        let scaleFactor = options.targetEC / originalEC.ec_mS_cm;
+        let finalEC = originalEC.ec_mS_cm;
+
+        // Store original values for scaling
+        const originalFormula = { ...formula };
+        const originalAchieved = { ...achieved };
+
+        // Iterate up to 5 times to converge on target EC
+        for (let i = 0; i < 5; i++) {
+          // Scale formula
+          Object.keys(formula).forEach(fertId => {
+            formula[fertId] = originalFormula[fertId] * scaleFactor;
+          });
+
+          // Scale achieved PPM
+          Object.keys(achieved).forEach(key => {
+            achieved[key] = originalAchieved[key] * scaleFactor;
+          });
+
+          // Check actual EC after scaling
+          const newEC = estimateECFromPPM(achieved);
+          finalEC = newEC.ec_mS_cm;
+
+          // If within 1% of target, we're done
+          const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
+          if (error < 0.01) break;
+
+          // Adjust scale factor based on error
+          scaleFactor = scaleFactor * (options.targetEC / finalEC);
+        }
+
+        return {
+          formula,
+          achieved,
+          targetRatios,
+          targetPPM: targetPPM_Commercial,
+          ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC: options.targetEC, achievedEC: finalEC }
+        };
+      }
+    }
   }
 
   return { formula, achieved, targetRatios, targetPPM: targetPPM_Commercial };
