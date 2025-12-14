@@ -517,9 +517,10 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   });
   nutrients.forEach(n => {
     const isTargeted = (targets[n] || 0) > 0;
-    // Si gets higher penalty because it's an absolute PPM target (not ratio-normalized)
+    // Si gets much higher penalty because it's an absolute PPM target (not ratio-normalized)
     // and Potassium Silicate also contributes K2O, so solver may under-use it otherwise
-    const slackPenalty = isTargeted ? (n === 'Si' ? 500 : 100) : 50;
+    // Using 10000 to strongly prioritize Si over ratio precision
+    const slackPenalty = isTargeted ? (n === 'Si' ? 10000 : 100) : 50;
     objective.push([slackPenalty, slackPlus[n]]);
     objective.push([slackPenalty, slackMinus[n]]);
   });
@@ -938,9 +939,10 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 
   nutrientKeys.forEach(key => {
     const isTargeted = (targetPPM_Commercial[key] || 0) > 0;
-    // Si gets higher weight because it's an absolute PPM target (not ratio-normalized)
+    // Si gets much higher weight because it's an absolute PPM target (not ratio-normalized)
     // and silicon fertilizers often contribute other nutrients (e.g., K2O from Potassium Silicate)
-    const weight = isTargeted ? (key === 'Si' ? 5 : 1) : softWeight;
+    // Using 100 to strongly prioritize Si over ratio precision
+    const weight = isTargeted ? (key === 'Si' ? 100 : 1) : softWeight;
     weights.push(weight);
     targetVector.push(targetPPM_Commercial[key] || 0);
   });
