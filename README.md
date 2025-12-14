@@ -85,3 +85,9 @@ The site configuration is managed in `_config.yml`. To exclude pages from the na
 ## Deployment
 
 This site is hosted on GitHub Pages and automatically deploys when changes are pushed to the master branch.
+
+## Fertilizer Calculator Version
+
+**Current Version: 1.0.0**
+
+Version history is tracked with each release.
