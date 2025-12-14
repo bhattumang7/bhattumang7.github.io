@@ -861,6 +861,32 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
+        <!-- Nutritional Warnings -->
+        <div v-if="formulaResultsData.nutritionalWarnings && formulaResultsData.nutritionalWarnings.length > 0" class="results-section" style="margin-top: 20px;">
+          <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
+          <div class="warning-box">
+            <strong>{{ i18n.t('nutritionalConsiderations') }}</strong>
+            <ul>
+              <li v-for="(warning, idx) in formulaResultsData.nutritionalWarnings" :key="idx" :class="warning.level">
+                <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- Target Deviation Warnings -->
+        <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
+          <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
+          <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+        </div>
+        <div v-else-if="formulaResultsData.warnings && formulaResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+          <strong>{{ i18n.t('note') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
+        </div>
       </template>
 
       <!-- Reverse Calculator Results (when wizardResultsSource === 'reverse-calc') -->
@@ -925,6 +951,32 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 0.85em;" :style="{ color: reverseResultsData.ionBalance.statusColor }">{{ reverseResultsData.ionBalance.statusText }}</div>
             </div>
           </div>
+        </div>
+        <!-- Nutritional Warnings -->
+        <div v-if="reverseResultsData.nutritionalWarnings && reverseResultsData.nutritionalWarnings.length > 0" class="results-section" style="margin-top: 20px;">
+          <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
+          <div class="warning-box">
+            <strong>{{ i18n.t('nutritionalConsiderations') }}</strong>
+            <ul>
+              <li v-for="(warning, idx) in reverseResultsData.nutritionalWarnings" :key="idx" :class="warning.level">
+                <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- Target Deviation Warnings -->
+        <div v-if="!reverseResultsData.allGood" class="error-box" style="margin-top: 15px;">
+          <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
+          <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+        </div>
+        <div v-else-if="reverseResultsData.warnings && reverseResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+          <strong>{{ i18n.t('note') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
         </div>
       </template>
 
