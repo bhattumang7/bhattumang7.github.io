@@ -109,8 +109,14 @@
       if (this.translations[langCode]) {
         this.currentLanguage = langCode;
         localStorage.setItem('fertCalcLanguage', langCode);
-        this.updateUI();
-        this.refreshDynamicContent();
+        try {
+          this.updateUI();
+          alert('updateUI completed, now calling refreshDynamicContent');
+          this.refreshDynamicContent();
+          alert('refreshDynamicContent completed');
+        } catch (e) {
+          alert('Error: ' + e.message);
+        }
 
         // Sync with Vue state if available
         if (window.vueApp && window.vueApp.language !== langCode) {
