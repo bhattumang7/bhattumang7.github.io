@@ -561,6 +561,8 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
         achieved.Si += ppm * 0.46744;
       } else if (nutrient === 'SiOH4') {
         achieved.Si += ppm * 0.2922;
+      } else if (nutrient === 'Si') {
+        achieved.Si += ppm;
       } else if (achieved[nutrient] !== undefined) {
         achieved[nutrient] += ppm;
       }

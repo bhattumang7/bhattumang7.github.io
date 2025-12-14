@@ -211,6 +211,7 @@
       { key: 'Ca', labelKey: 'Ca' },
       { key: 'Mg', labelKey: 'Mg' },
       { key: 'S', labelKey: 'S' },
+      { key: 'Si', labelKey: 'Si' },
       { key: 'Fe', labelKey: 'Fe' },
       { key: 'Mn', labelKey: 'Mn' },
       { key: 'Zn', labelKey: 'Zn' },
@@ -313,7 +314,8 @@
           { key: 'K', label: 'K' },
           { key: 'Ca', label: 'Ca' },
           { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' }
+          { key: 'S', label: 'S' },
+          { key: 'Si', label: 'Si' }
         ]
       : [
           { key: 'N_total', label: 'N' },
@@ -321,7 +323,8 @@
           { key: 'K2O', label: 'K₂O' },
           { key: 'Ca', label: 'Ca' },
           { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' }
+          { key: 'S', label: 'S' },
+          { key: 'Si', label: 'Si' }
         ];
 
     achievedOrder.forEach(item => {
@@ -403,7 +406,8 @@
           { key: 'K', label: 'K' },
           { key: 'Ca', label: 'Ca' },
           { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' }
+          { key: 'S', label: 'S' },
+          { key: 'Si', label: 'Si' }
         ]
       : [
           { key: 'N_total', label: 'N' },
@@ -411,7 +415,8 @@
           { key: 'K2O', label: 'K₂O' },
           { key: 'Ca', label: 'Ca' },
           { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' }
+          { key: 'S', label: 'S' },
+          { key: 'Si', label: 'Si' }
         ];
 
     achievedOrder.forEach(item => {
