@@ -22,6 +22,15 @@ permalink: /fertilizer-calculator/
 <div class="calculator-container">
   <h1 onclick="goToModeSelector()" style="cursor: pointer;" title="Return to calculator selection">Fertilizer Calculator</h1>
 
+  <!-- Experimental Warning Banner -->
+  <div class="experimental-warning" style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 24px;">⚠️</span>
+    <div>
+      <strong style="color: #856404; font-size: 1.1em;">Experimental Changes in Progress</strong>
+      <p style="margin: 5px 0 0 0; color: #856404; font-size: 0.95em;">This calculator is currently undergoing experimental changes and is not producing correct results. Please wait untill this warning is removed to start using the tool again.</p>
+    </div>
+  </div>
+
   <!-- Global Language Selector (visible on all wizard steps) -->
   <div class="language-selector" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
     <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
@@ -581,7 +590,41 @@ permalink: /fertilizer-calculator/
         <div style="font-size: 0.9em; color: #666;">mS/cm</div>
         <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ gramsToPpmDisplayData.ecPrediction.text }}</div>
       </div>
+      <div v-if="gramsToPpmDisplayData.ecPrediction.ionicStrength" class="ionic-strength-card" style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <div style="font-size: 0.85em; color: #666;">{{ i18n.t('ionicStrength') }}</div>
+        <div style="font-size: 1.2em; font-weight: bold;">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ionicStrength.toFixed(4)) }} mol/L</div>
+      </div>
     </div>
+    <!-- EC Breakdown by Ion -->
+    <details v-if="gramsToPpmDisplayData.ecPrediction.contributions" style="margin-top: 15px;">
+      <summary style="cursor: pointer; color: #007bff; font-weight: 500;">{{ i18n.t('showEcBreakdown') }}</summary>
+      <div style="margin-top: 10px; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+          <thead>
+            <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+              <th style="text-align: left; padding: 8px;">{{ i18n.t('ion') }}</th>
+              <th style="text-align: right; padding: 8px;">{{ i18n.t('concentrationMmolL') }}</th>
+              <th style="text-align: right; padding: 8px;">λ (S·cm²/mol)</th>
+              <th style="text-align: right; padding: 8px;">{{ i18n.t('contributionMsCm') }}</th>
+              <th style="text-align: right; padding: 8px;">%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(data, ion) in sortedEcContributions" :key="ion" style="border-bottom: 1px solid #dee2e6;">
+              <td style="padding: 8px;">{{ ion }}</td>
+              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.concentration_mmolL.toFixed(3)) }}</td>
+              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.lambda) }}</td>
+              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber(data.contribution_mS_cm.toFixed(4)) }}</td>
+              <td style="text-align: right; padding: 8px;">{{ i18n.formatNumber((data.contribution_mS_cm / gramsToPpmDisplayData.ecPrediction.rawEC * 100).toFixed(1)) }}%</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+          <strong>{{ i18n.t('ecBreakdownNote') }}</strong> {{ i18n.t('rawEcLabel') }} = {{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.rawEC.toFixed(3)) }} mS/cm.
+          {{ i18n.t('ionicStrengthCorrectionApplied', { factor: i18n.formatNumber((gramsToPpmDisplayData.ecPrediction.rawEC / gramsToPpmDisplayData.ecPrediction.ec).toFixed(3)) }) }}
+        </div>
+      </div>
+    </details>
   </div>
 
   <div class="results-section" id="warnings-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
@@ -4832,6 +4875,18 @@ const FertilizerApp = {
       }));
     });
 
+    // Sorted EC contributions for breakdown table
+    const sortedEcContributions = computed(() => {
+      const contributions = gramsToPpmDisplayData.ecPrediction?.contributions;
+      if (!contributions) return [];
+      return Object.entries(contributions)
+        .sort((a, b) => b[1].contribution_mS_cm - a[1].contribution_mS_cm)
+        .reduce((obj, [key, value]) => {
+          obj[key] = value;
+          return obj;
+        }, {});
+    });
+
     // Wizard: Get selected available fertilizers
     const selectedWizardAvailFertilizers = computed(() => {
       return FERTILIZERS.filter(f => wizardAvailFertilizers[f.id]);
@@ -5679,13 +5734,17 @@ const FertilizerApp = {
         : defaultIonBalance;
 
       // EC prediction - transform raw ecData (with ec_mS_cm) to display format (with ec, color, text)
-      const defaultEcPrediction = { ec: 0, color: '#666', text: '' };
+      // Also preserve contributions for breakdown display
+      const defaultEcPrediction = { ec: 0, color: '#666', text: '', contributions: null, rawEC: 0, ionicStrength: 0 };
       if (ecData && typeof ecData === 'object' && ecData.ec_mS_cm !== undefined) {
         const ecStatus = getEcStatus(ecData.ec_mS_cm);
         gramsToPpmDisplayData.ecPrediction = {
           ec: ecData.ec_mS_cm,
           color: ecStatus.color,
-          text: ecStatus.text
+          text: ecStatus.text,
+          contributions: ecData.contributions || null,
+          rawEC: ecData.rawEC || ecData.ec_mS_cm,
+          ionicStrength: ecData.ionicStrength || 0
         };
       } else {
         gramsToPpmDisplayData.ecPrediction = defaultEcPrediction;
@@ -6106,6 +6165,7 @@ const FertilizerApp = {
       filteredWizardAvailFertilizers,
       activeWizardGramsFertilizers,
       selectedWizardAvailFertilizers,
+      sortedEcContributions,
 
       // Grams to PPM Methods
       toggleFertilizer,
