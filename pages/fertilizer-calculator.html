@@ -2853,16 +2853,7 @@ function showTwoTankView() {
   showWizardStep('wizard-results', { updateIndicator: false });
 }
 
-// Back button handler for two-tank question step
-function backFromTwoTankQuestion() {
-  const previousStep = pendingWizardCalculation?.previousStep;
-
-  // Clear pending calculation
-  pendingWizardCalculation = null;
-
-  // Show previous step or fallback to fertilizer select
-  showWizardStep(previousStep || 'fertilizer-select-step');
-}
+// backFromTwoTankQuestion - removed, was unused
 
 // Refresh wizard results display after language change
 // This re-copies the Vue-rendered HTML to the wizard container
@@ -4156,22 +4147,13 @@ let lastReverseCalculation = null;
 // displayReverseResults removed - now handled by Vue template with setReverseResults
 
 // PPM Explanation Modal Functions - Now uses Vue modal
-let calculationData = null; // Store calculation data for the modal
-
 function openPPMExplanation() {
   if (window.vueApp && window.vueApp.openModal) {
     window.vueApp.openModal('ppm');
   }
 }
 
-function closePPMExplanation(event) {
-  if (event && event.target !== event.currentTarget) return;
-  if (window.vueApp && window.vueApp.closeModal) {
-    window.vueApp.closeModal();
-  }
-}
-
-// generateExplanationContent removed - now handled by Vue modal
+// closePPMExplanation - removed, modal closing is handled by Vue
 
 // Ion Balance Explanation Modal Functions - Now uses Vue modal
 function openIonBalanceExplanation() {
@@ -4180,12 +4162,7 @@ function openIonBalanceExplanation() {
   }
 }
 
-function closeIonBalanceExplanation(event) {
-  if (event && event.target !== event.currentTarget) return;
-  if (window.vueApp && window.vueApp.closeModal) {
-    window.vueApp.closeModal();
-  }
-}
+// closeIonBalanceExplanation - removed, modal closing is handled by Vue
 
 // generateIonBalanceExplanation removed - now handled by Vue modal
 
