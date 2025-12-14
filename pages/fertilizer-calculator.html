@@ -494,7 +494,7 @@ permalink: /fertilizer-calculator/
     <div class="results-header">
       <h2>{{ i18n.t('selectedFertilizers') }}</h2>
       <div id="grams-to-ppm-header-buttons" style="display: flex; gap: 10px;">
-        <button class="copy-btn" @click="copyGramsToPPMResults()" :title="i18n.t('copyToClipboard')">
+        <button class="copy-btn" @click="copyGramsToPPMResults($event)" :title="i18n.t('copyToClipboard')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           <span>{{ i18n.t('copyResults') }}</span>
         </button>
@@ -641,7 +641,7 @@ permalink: /fertilizer-calculator/
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
       <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
       <div style="display: flex; gap: 10px;">
-        <button class="copy-btn" @click="copyTwoTankResults()" :title="i18n.t('copyToClipboard')">
+        <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           {{ i18n.t('copyResults') }}
         </button>
@@ -954,7 +954,7 @@ permalink: /fertilizer-calculator/
       <div class="results-header" id="formula-results-header">
         <h2>{{ i18n.t('recommendedFormula') }}</h2>
         <div id="formula-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyPPMToGramsResults()" :title="i18n.t('copyToClipboard')">
+          <button class="copy-btn" @click="copyPPMToGramsResults($event)" :title="i18n.t('copyToClipboard')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             <span>{{ i18n.t('copyResults') }}</span>
           </button>
@@ -1105,7 +1105,7 @@ permalink: /fertilizer-calculator/
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
         <div style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyTwoTankResults()" :title="i18n.t('copyToClipboard')">
+          <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             {{ i18n.t('copyResults') }}
           </button>
@@ -1338,7 +1338,7 @@ permalink: /fertilizer-calculator/
       <div class="results-header" id="reverse-results-header">
         <h2>{{ i18n.t('requiredFertilizers') }}</h2>
         <div id="reverse-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyNPKRatioResults()" :title="i18n.t('copyToClipboard')">
+          <button class="copy-btn" @click="copyNPKRatioResults($event)" :title="i18n.t('copyToClipboard')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             <span>{{ i18n.t('copyResults') }}</span>
           </button>
@@ -1521,7 +1521,7 @@ permalink: /fertilizer-calculator/
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
         <div style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyTwoTankResults()" :title="i18n.t('copyToClipboard')">
+          <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             {{ i18n.t('copyResults') }}
           </button>
@@ -3440,7 +3440,7 @@ function getI18nFormatter() {
 }
 
 // Copy two-tank results to clipboard (thin wrapper using FertilizerCore)
-function copyTwoTankResults() {
+function copyTwoTankResults(event) {
   const twoTankData = window.vueApp?.currentTwoTankData;
   if (!twoTankData) {
     alert(i18n.t('alertNoTwoTankData'));
@@ -3449,7 +3449,7 @@ function copyTwoTankResults() {
 
   const text = FertilizerCore.buildTwoTankCopyText(twoTankData, FERTILIZERS, getI18nFormatter());
 
-  const btn = event.target.closest('button');
+  const btn = event?.target?.closest('button');
   copyToClipboard(text, btn);
 }
 
@@ -3459,22 +3459,10 @@ function copyTwoTankResults() {
 
 // Legacy DOM functions removed - now handled by Vue
 
-// Update input labels for formula builder based on calculation mode
-// (kept for wizard compatibility - main tabs use Vue now)
+// Update calculation mode for formula builder - syncs DOM select to Vue state
+// Labels are now handled by Vue template expressions ({{ formulaCalcMode === 'oxide' ? ... }})
 function updateFormulaCalculationMode() {
   const mode = document.getElementById('formula-calculation-mode')?.value;
-  const pLabel = document.getElementById('target-p-label');
-  const kLabel = document.getElementById('target-k-label');
-
-  // Update DOM labels if they exist (legacy support)
-  if (pLabel) {
-    pLabel.textContent = mode === 'elemental' ? i18n.t('phosphorusElemental') + ' *' : i18n.t('phosphorusOxide') + ' *';
-  }
-  if (kLabel) {
-    kLabel.textContent = mode === 'elemental' ? i18n.t('potassiumElemental') + ' *' : i18n.t('potassiumOxide') + ' *';
-  }
-
-  // Sync with Vue state if available
   if (window.vueApp && mode) {
     window.vueApp.formulaCalcMode = mode;
   }
@@ -3622,7 +3610,7 @@ async function copyToClipboard(text, button) {
 }
 
 // Copy Grams to PPM results (Tab 1) - thin wrapper using FertilizerCore
-function copyGramsToPPMResults() {
+function copyGramsToPPMResults(event) {
   const lastCalc = window.vueApp?.lastGramsToPPMCalculation;
   if (!lastCalc) {
     alert(i18n.t('alertRunCalculationFirst'));
@@ -3631,12 +3619,12 @@ function copyGramsToPPMResults() {
 
   const text = FertilizerCore.buildGramsToPpmCopyText(lastCalc, getI18nFormatter());
 
-  const button = event.target.closest('.copy-btn');
+  const button = event?.target?.closest('.copy-btn');
   copyToClipboard(text, button);
 }
 
 // Copy PPM to Grams results (Tab 2 - Formula Builder) - thin wrapper using FertilizerCore
-function copyPPMToGramsResults() {
+function copyPPMToGramsResults(event) {
   const lastCalc = window.vueApp?.lastFormulaCalculation;
   if (!lastCalc) {
     alert(i18n.t('alertRunCalculationFirst'));
@@ -3656,12 +3644,12 @@ function copyPPMToGramsResults() {
 
   const text = FertilizerCore.buildFormulaCopyText(lastCalc, FERTILIZERS, ionBalance, getI18nFormatter());
 
-  const button = event.target.closest('.copy-btn');
+  const button = event?.target?.closest('.copy-btn');
   copyToClipboard(text, button);
 }
 
 // Copy NPK Ratio to Grams results (Tab 3 - Reverse Calculator) - thin wrapper using FertilizerCore
-function copyNPKRatioResults() {
+function copyNPKRatioResults(event) {
   const lastCalc = window.vueApp?.lastReverseCalculation;
   if (!lastCalc) {
     alert(i18n.t('alertRunCalculationFirst'));
@@ -3669,7 +3657,8 @@ function copyNPKRatioResults() {
   }
 
   const { result, targets, volume } = lastCalc;
-  const calculationMode = document.getElementById('reverse-calculation-mode')?.value || 'oxide';
+  // Get calculation mode from Vue state instead of DOM
+  const calculationMode = window.vueApp?.ratioCalcMode || 'oxide';
 
   // Calculate ion balance for the formula
   const ionBalance = calculateIonBalanceForFormula(
@@ -3685,7 +3674,7 @@ function copyNPKRatioResults() {
 
   const text = FertilizerCore.buildReverseCopyText(data, FERTILIZERS, ionBalance, getI18nFormatter());
 
-  const button = event.target.closest('.copy-btn');
+  const button = event?.target?.closest('.copy-btn');
   copyToClipboard(text, button);
 }
 
