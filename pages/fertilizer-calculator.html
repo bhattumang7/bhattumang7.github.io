@@ -733,7 +733,7 @@ permalink: /fertilizer-calculator/
           <div class="results-grid">
             <div v-for="item in gramsToPpmDisplayData.displayOrder" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
               <div class="result-label">{{ item.label }}</div>
-              <div class="result-value">{{ (item.value || 0).toFixed(2) }}</div>
+              <div class="result-value">{{ i18n.formatNumber((item.value || 0).toFixed(2)) }}</div>
             </div>
           </div>
         </div>
@@ -832,8 +832,8 @@ permalink: /fertilizer-calculator/
           <div class="results-grid">
             <div v-for="item in formulaResultsData.comparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : item.className === 'miss' ? '#dc3545' : '#ddd') }">
               <div class="result-label">{{ item.label }}</div>
-              <div class="result-value">{{ (item.achieved || 0).toFixed(2) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
-              <div v-if="item.target" class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('targetLabel') || 'Target:' }} {{ item.target.toFixed(2) }}</div>
+              <div class="result-value">{{ i18n.formatNumber((item.achieved || 0).toFixed(2)) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
+              <div v-if="item.target" class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('targetLabel') || 'Target:' }} {{ i18n.formatNumber(item.target.toFixed(2)) }}</div>
             </div>
           </div>
         </div>
@@ -923,8 +923,8 @@ permalink: /fertilizer-calculator/
           <div class="results-grid">
             <div v-for="item in reverseResultsData.comparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : item.className === 'miss' ? '#dc3545' : '#ddd') }">
               <div class="result-label">{{ item.label }}</div>
-              <div class="result-value">{{ (item.achievedPPM || 0).toFixed(2) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
-              <div class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('ratioLabel') || 'Ratio:' }} {{ item.userInput }} → {{ (item.achievedRatio || 0).toFixed(2) }}</div>
+              <div class="result-value">{{ i18n.formatNumber((item.achievedPPM || 0).toFixed(2)) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
+              <div class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('ratioLabel') || 'Ratio:' }} {{ item.userInput }} → {{ i18n.formatNumber((item.achievedRatio || 0).toFixed(2)) }}</div>
             </div>
           </div>
         </div>
@@ -1019,7 +1019,7 @@ permalink: /fertilizer-calculator/
                   <div class="tank-nutrient-grid">
                     <div v-for="item in tank.ppmData" :key="item.label" class="tank-nutrient-item">
                       <span class="nutrient-label">{{ item.label }}</span>
-                      <span class="nutrient-value">{{ item.value.toFixed(2) }}</span>
+                      <span class="nutrient-value">{{ i18n.formatNumber(item.value.toFixed(2)) }}</span>
                     </div>
                   </div>
                 </div>
@@ -1031,7 +1031,7 @@ permalink: /fertilizer-calculator/
             <div class="results-grid">
               <div v-for="item in twoTankDisplayData.combinedPpm" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
                 <div class="result-label">{{ item.label }}</div>
-                <div class="result-value">{{ (item.value || 0).toFixed(2) }}</div>
+                <div class="result-value">{{ i18n.formatNumber((item.value || 0).toFixed(2)) }}</div>
               </div>
             </div>
           </div>
@@ -1163,7 +1163,7 @@ permalink: /fertilizer-calculator/
       <div v-for="item in gramsToPpmDisplayData.displayOrder" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
         <div class="result-label">{{ item.label }}</div>
         <div class="result-value">
-          {{ (item.value || 0).toFixed(2) }}
+          {{ i18n.formatNumber((item.value || 0).toFixed(2)) }}
           <span class="result-unit">ppm</span>
         </div>
       </div>
