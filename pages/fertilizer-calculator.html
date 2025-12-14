@@ -5186,7 +5186,6 @@ const FertilizerApp = {
       progressBar.update(10, i18n.t('validatingInputs'));
 
       try {
-        await new Promise(resolve => setTimeout(resolve, 50));
         if (progressBar.isCancelled()) return;
 
         progressBar.update(50, i18n.t('runningSolver'));
@@ -5342,7 +5341,6 @@ const FertilizerApp = {
       progressBar.update(10, i18n.t('validatingInputs'));
 
       try {
-        await new Promise(resolve => setTimeout(resolve, 50));
         if (progressBar.isCancelled()) return;
 
         progressBar.update(50, i18n.t('runningSolver'));
