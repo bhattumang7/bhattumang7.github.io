@@ -105,6 +105,7 @@
 
     // Set the current language and update UI
     setLanguage(langCode) {
+      alert('setLanguage called with: ' + langCode + ', has translation: ' + !!this.translations[langCode]);
       if (this.translations[langCode]) {
         this.currentLanguage = langCode;
         localStorage.setItem('fertCalcLanguage', langCode);
