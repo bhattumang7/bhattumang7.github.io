@@ -1113,6 +1113,11 @@ permalink: /fertilizer-calculator/
               </div>
               <div class="selected-fertilizer-amount">{{ i18n.formatNumber(reverseResultsData.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
             </div>
+            <!-- Total g/L summary -->
+            <div v-if="reverseResultsData.fertilizers.length > 0 && reverseResultsData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
+              <strong>{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume).toFixed(3)) }} g/L</strong>
+              <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+            </div>
           </div>
         </div>
         <div class="results-section" style="margin-top: 20px;">
@@ -2467,7 +2472,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.0.5
+    v1.0.6
   </div>
 
 </div>
