@@ -909,6 +909,11 @@ permalink: /fertilizer-calculator/
               </div>
               <div class="selected-fertilizer-amount">{{ i18n.formatNumber(gramsToPpmDisplayData.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
             </div>
+            <!-- Total g/L summary -->
+            <div v-if="gramsToPpmDisplayData.fertilizers.length > 0 && gramsToPpmDisplayData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
+              <strong>{{ i18n.formatNumber((gramsToPpmDisplayData.totalGrams / gramsToPpmDisplayData.volume).toFixed(3)) }} g/L</strong>
+              <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+            </div>
           </div>
         </div>
         <div class="results-section" style="margin-top: 20px;">
@@ -1368,6 +1373,11 @@ permalink: /fertilizer-calculator/
           <div class="selected-fertilizer-name">{{ i18n.t('totalFertilizers', { count: i18n.formatNumber(gramsToPpmDisplayData.fertilizers.length) }) }}</div>
         </div>
         <div class="selected-fertilizer-amount">{{ i18n.formatNumber(gramsToPpmDisplayData.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</div>
+      </div>
+      <!-- Total g/L summary -->
+      <div v-if="gramsToPpmDisplayData.fertilizers.length > 0 && gramsToPpmDisplayData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
+        <strong>{{ i18n.formatNumber((gramsToPpmDisplayData.totalGrams / gramsToPpmDisplayData.volume).toFixed(3)) }} g/L</strong>
+        <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
       </div>
     </div>
   </div>
@@ -2472,7 +2482,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.0.6
+    v1.0.7
   </div>
 
 </div>
