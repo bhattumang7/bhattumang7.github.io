@@ -94,6 +94,7 @@ window.i18nLocales.gu = {
   targetVsAchievedRatios: 'લક્ષ્ય vs પ્રાપ્ત અનુપાત',
   yourInput: 'તમારું ઇનપુટ',
   achievedRatio: 'પ્રાપ્ત અનુપાત',
+  ratioLabel: 'અનુપાત:',
   ppmAchieved: 'PPM પ્રાપ્ત',
   elementalModeLabel: 'તત્ત્વીય મોડ:',
   elementalModeNote: 'બતાવેલ મૂલ્યો શુદ્ધ તત્ત્વીય રૂપ છે (P, K).',

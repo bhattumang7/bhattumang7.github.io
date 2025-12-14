@@ -1047,6 +1047,17 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
+        <!-- EC Prediction Section -->
+        <div class="results-section" v-if="formulaResultsData.ecPrediction && formulaResultsData.ecPrediction.ec > 0" style="margin-top: 20px;">
+          <h2>{{ i18n.t('predictedEc') }} <span class="info-icon" @click="openFormulaEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
+          <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+            <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: formulaResultsData.ecPrediction.color + '22', borderLeft: '4px solid ' + formulaResultsData.ecPrediction.color }">
+              <div style="font-size: 2em; font-weight: bold;" :style="{ color: formulaResultsData.ecPrediction.color }">{{ i18n.formatNumber(formulaResultsData.ecPrediction.ec.toFixed(2)) }}</div>
+              <div style="font-size: 0.9em; color: #666;">mS/cm</div>
+              <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: formulaResultsData.ecPrediction.color }">{{ formulaResultsData.ecPrediction.text }}</div>
+            </div>
+          </div>
+        </div>
         <!-- Nutritional Warnings -->
         <div v-if="formulaResultsData.nutritionalWarnings && formulaResultsData.nutritionalWarnings.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
@@ -5235,10 +5246,13 @@ const FertilizerApp = {
         formulaResultsData.ecPrediction = {
           ec: rawEcData.ec_mS_cm,
           color: ecStatus.color,
-          text: ecStatus.text
+          text: ecStatus.text,
+          contributions: rawEcData.contributions || {},
+          rawEC: rawEcData.rawEC || 0,
+          ionicStrength: rawEcData.ionicStrength || 0
         };
       } else {
-        formulaResultsData.ecPrediction = { ec: 0, color: '#666', text: '' };
+        formulaResultsData.ecPrediction = { ec: 0, color: '#666', text: '', contributions: {}, rawEC: 0, ionicStrength: 0 };
       }
 
       // Nutrient ratios
@@ -5958,6 +5972,18 @@ const FertilizerApp = {
       openModal('ec', data);
     }
 
+    function openFormulaEcExplanation() {
+      // Get EC data from formulaResultsData
+      const ecPrediction = formulaResultsData.ecPrediction;
+      const data = {
+        ecContributions: ecPrediction?.contributions || {},
+        rawEC: ecPrediction?.rawEC || 0,
+        ionicStrength: ecPrediction?.ionicStrength || 0,
+        ec: ecPrediction?.ec || 0
+      };
+      openModal('ec', data);
+    }
+
     // Show wizard step (Vue-powered replacement for window.vueApp.wizardStep = stepId)
     function showWizardStepVue(stepId, options = {}) {
       const { scroll = true } = options;
@@ -6462,6 +6488,7 @@ const FertilizerApp = {
       openReversePPMExplanation,
       openReverseIonBalanceExplanation,
       openReverseEcExplanation,
+      openFormulaEcExplanation,
       openFormulaIonBalanceExplanation,
 
       // Step Indicator
