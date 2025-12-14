@@ -105,6 +105,7 @@ window.i18nLocales.en = {
   yourInput: 'Your Input',
   achievedRatio: 'Achieved Ratio',
   ratioLabel: 'Ratio:',
+  targetLabel: 'Target:',
   ppmAchieved: 'PPM Achieved',
   elementalModeLabel: 'Elemental Mode:',
   elementalModeNote: 'Values shown are pure elemental forms (P, K).',
