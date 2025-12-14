@@ -790,6 +790,9 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
           let scaledAchieved = {};
           let finalEC = originalEC.ec_mS_cm;
 
+          // Si is an absolute PPM target (not ratio-based), so we need to handle it specially
+          const targetSi = targetRatios.Si || 0;
+
           // Iterate up to 5 times to converge on target EC
           for (let i = 0; i < 5; i++) {
             // Scale formula
@@ -814,6 +817,49 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 
             // Adjust scale factor based on error
             scaleFactor = scaleFactor * (options.targetEC / finalEC);
+          }
+
+          // For Si: if user specified an absolute Si target, we need to ensure the formula
+          // achieves that target AFTER scaling. Re-run with adjusted Si target.
+          if (targetSi > 0 && scaleFactor < 1) {
+            // Si needs to be higher before scaling so it hits target after scaling
+            const adjustedSiTarget = targetSi / scaleFactor;
+            const adjustedPpmTargets = { ...ppmTargets, Si: adjustedSiTarget };
+
+            // Re-run solver with adjusted Si target
+            const adjustedResult = await solveMilpBrowser({
+              fertilizers: availableFertilizers,
+              targets: adjustedPpmTargets,
+              volume,
+              tolerance: 0.01
+            });
+
+            // Re-apply EC scaling to the adjusted result
+            const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
+            if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
+              let adjScaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
+
+              for (let i = 0; i < 5; i++) {
+                scaledFormula = {};
+                Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
+                  scaledFormula[fertId] = grams * adjScaleFactor;
+                });
+
+                scaledAchieved = {};
+                Object.entries(adjustedResult.achieved).forEach(([key, value]) => {
+                  scaledAchieved[key] = value * adjScaleFactor;
+                });
+
+                const newEC = estimateECFromPPM(scaledAchieved);
+                finalEC = newEC.ec_mS_cm;
+
+                const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
+                if (error < 0.01) break;
+
+                adjScaleFactor = adjScaleFactor * (options.targetEC / finalEC);
+              }
+              scaleFactor = adjScaleFactor;
+            }
           }
 
           return {
