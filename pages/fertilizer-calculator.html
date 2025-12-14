@@ -21,7 +21,7 @@ permalink: /fertilizer-calculator/
 
 <div class="calculator-container">
   <!-- Vue-powered Unified Modal (placed at top for proper rendering) -->
-  <div v-if="activeModal" class="modal-overlay active" @click="closeModal" style="display: flex !important;">
+  <div v-if="activeModal" class="modal-overlay active" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
         <h2>{{ modalTitle }}</h2>
@@ -31,35 +31,108 @@ permalink: /fertilizer-calculator/
 
         <!-- PPM EXPLANATION MODAL -->
         <template v-if="activeModal === 'ppm'">
+          <!-- What is PPM explanation -->
           <div class="explanation-section">
             <h3>{{ i18n.t('whatIsPpm') }}</h3>
-            <p>{{ i18n.t('ppmStandsFor') }} {{ i18n.t('thinkOfItLikeThis') }}</p>
+            <p v-html="i18n.t('ppmModalDescription1')"></p>
+            <p v-html="i18n.t('ppmModalDescription2')"></p>
           </div>
-          <div class="explanation-section">
-            <h3>{{ i18n.t('theBasicFormula') }}</h3>
-            <div class="formula-box">
-              <div class="formula">{{ i18n.t('ppmFormulaEquation') }}</div>
+
+          <!-- The Formula -->
+          <div class="explanation-section" style="background: #f0f7ff; border-left-color: #2196f3;">
+            <h3 style="color: #1976d2;">{{ i18n.t('theBasicFormula') }}</h3>
+            <div class="formula-box" style="margin: 15px 0; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #bbdefb;">
+              <div class="formula" style="font-family: monospace; font-size: 1.1em;">{{ i18n.t('ppmFormulaEquation') }}</div>
+              <div style="font-size: 0.9em; color: #666; margin-top: 8px;">{{ i18n.t('ppmFormulaDescription') }}</div>
             </div>
+            <p style="margin-top: 15px;">{{ i18n.t('breakDownEachPart') }}</p>
+            <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+              <li v-html="i18n.t('formulaPartGrams')"></li>
+              <li v-html="i18n.t('formulaPart1000')"></li>
+              <li v-html="i18n.t('formulaPartPercentage')"></li>
+              <li v-html="i18n.t('formulaPartLiters')"></li>
+            </ul>
           </div>
+
           <div v-if="modalData.activeFertilizers.length === 0" class="explanation-section" style="background: #fff3cd; border-left-color: #ffc107;">
             <h3 style="color: #856404;">{{ i18n.t('noCalculationYet') }}</h3>
             <p>{{ i18n.t('addFertilizersToSeeBreakdown') }}</p>
+            <p style="color: #856404; margin-top: 10px;">{{ i18n.t('calculatorShowsStepByStep') }}</p>
           </div>
           <template v-else>
+            <!-- Current solution info -->
             <div class="explanation-section" style="background: #e8f4f8; border-left-color: #17a2b8;">
               <h3 style="color: #17a2b8;">{{ i18n.t('yourCurrentCalculation') }}</h3>
               <p><strong>{{ i18n.t('solutionVolumeLabel') }}</strong> {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }}</p>
               <p><strong>{{ i18n.t('fertilizersUsedLabel') }}</strong> {{ modalData.activeFertilizers.length }}</p>
             </div>
+
+            <!-- Step-by-step per-fertilizer PPM breakdown -->
             <div class="explanation-section">
               <h3>{{ i18n.t('stepByStepBreakdown') }}</h3>
-              <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step">
-                <h4 style="margin-top: 0; color: #007bff;">
-                  <span class="step-number">{{ index + 1 }}</span>
+              <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('howEachFertilizerContributesToPpm') }}</p>
+
+              <div v-for="(fert, index) in modalData.activeFertilizers" :key="fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                <h4 style="margin: 0 0 15px 0; color: #007bff; display: flex; align-items: center; gap: 10px;">
+                  <span class="step-number" style="background: #007bff; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
                   {{ i18n.getFertilizerName(fert) }}
                 </h4>
-                <p style="margin: 10px 0 10px 38px;"><strong>{{ i18n.t('amountUsedLabel') }}</strong> {{ formatNumber(fert.grams) }} {{ i18n.t('gramsUnit') }}</p>
+
+                <!-- Basic info -->
+                <div style="margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 6px;">
+                  <p style="margin: 0;"><strong>{{ i18n.t('amountUsedLabel') }}</strong> {{ formatNumber(fert.grams) }} {{ i18n.t('gramsUnit') }}</p>
+                </div>
+
+                <!-- Nutrient contributions with detailed calculations -->
+                <div v-if="getNutrientContributions(fert).length > 0" style="margin-top: 10px;">
+                  <p style="font-weight: bold; margin-bottom: 10px; color: #555;">{{ i18n.t('nutrientPpmValues') }}:</p>
+                  <div style="display: grid; gap: 10px;">
+                    <div v-for="nutrient in getNutrientContributions(fert)" :key="nutrient.key"
+                         style="background: #e8f5e9; padding: 12px 15px; border-radius: 8px; border-left: 3px solid #4caf50;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: bold; font-size: 1.1em; color: #2e7d32;">{{ nutrient.name }}</span>
+                        <span style="font-weight: bold; font-size: 1.2em; color: #2e7d32;">{{ formatNumber(nutrient.ppm, 2) }} ppm</span>
+                      </div>
+                      <div style="font-family: monospace; font-size: 0.85em; color: #666; background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
+                        {{ formatNumber(fert.grams) }} g × 1000 × ({{ formatNumber(nutrient.percent, 2) }}% ÷ 100) ÷ {{ formatNumber(modalData.volume) }} L = {{ formatNumber(nutrient.ppm, 2) }} ppm
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <!-- Oxide conversions info -->
+            <div v-if="hasAnyOxides()" class="explanation-section" style="background: #fff3e0; border-left-color: #ff9800;">
+              <h3 style="color: #e65100;">{{ i18n.t('aboutOxideConversions') }}</h3>
+              <p v-html="i18n.t('oxideConversionsExplanation')"></p>
+              <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #ffe0b2;">
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ff9800;">{{ i18n.t('oxideFormHeader') }}</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ff9800;">{{ i18n.t('elementalFormHeader') }}</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ff9800;">{{ i18n.t('conversionFactorHeader') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="conv in oxideConversions" :key="conv.key" v-if="hasOxide(conv.key)" style="border-bottom: 1px solid #ffe0b2;">
+                    <td style="padding: 10px;">{{ conv.oxide }}</td>
+                    <td style="padding: 10px;">{{ conv.elemental }}</td>
+                    <td style="padding: 10px; font-family: monospace;">× {{ conv.factor }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Quick tips -->
+            <div class="explanation-section" style="background: #d4edda; border-left-color: #28a745;">
+              <h3 style="color: #28a745;">{{ i18n.t('quickTips') }}</h3>
+              <ul style="line-height: 1.8;">
+                <li>{{ i18n.t('tip1PpmEquals') }}</li>
+                <li>{{ i18n.t('tip2StartLower') }}</li>
+                <li>{{ i18n.t('tip3DifferentPlants') }}</li>
+                <li>{{ i18n.t('tip4BalanceIsKey') }}</li>
+              </ul>
             </div>
           </template>
         </template>
@@ -696,12 +769,18 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
-        <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction" style="margin-top: 20px;">
-          <h2>{{ i18n.t('estimatedEcTds') }}</h2>
-          <div class="ec-result">
-            <div class="ec-row"><span class="ec-label">{{ i18n.t('estimatedEc') }}</span><span class="ec-value">{{ gramsToPpmDisplayData.ecPrediction.ec.toFixed(2) }} mS/cm</span></div>
-            <div class="ec-row"><span class="ec-label">{{ i18n.t('estimatedTds') }}</span><span class="ec-value">{{ gramsToPpmDisplayData.ecPrediction.tds }} ppm</span></div>
-            <div class="ec-row"><span class="ec-label">{{ i18n.t('concentrationLevel') }}</span><span class="ec-value" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ gramsToPpmDisplayData.ecPrediction.description }}</span></div>
+        <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction && gramsToPpmDisplayData.ecPrediction.ec > 0" style="margin-top: 20px;">
+          <h2>{{ i18n.t('achievedEc') }}</h2>
+          <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+            <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: gramsToPpmDisplayData.ecPrediction.color + '22', borderLeft: '4px solid ' + gramsToPpmDisplayData.ecPrediction.color }">
+              <div style="font-size: 2em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ec.toFixed(2)) }}</div>
+              <div style="font-size: 0.9em; color: #666;">mS/cm</div>
+              <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ gramsToPpmDisplayData.ecPrediction.text }}</div>
+            </div>
+            <div v-if="gramsToPpmDisplayData.ecPrediction.ionicStrength" class="ionic-strength-card" style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+              <div style="font-size: 0.85em; color: #666;">{{ i18n.t('ionicStrength') }}</div>
+              <div style="font-size: 1.2em; font-weight: bold;">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ionicStrength.toFixed(4)) }} mol/L</div>
+            </div>
           </div>
         </div>
         <div class="results-section warnings" v-if="gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0" style="margin-top: 20px;">
