@@ -2196,13 +2196,12 @@ function proceedToCalculator() {
   }
 
   // Apply calculation mode if applicable via Vue state
-  if (MODES_WITH_CALC_MODE.includes(mode)) {
-    if (mode === 'formula-builder' && window.vueApp) {
+  // v-model on selects and Vue template expressions for labels handle DOM sync automatically
+  if (MODES_WITH_CALC_MODE.includes(mode) && window.vueApp) {
+    if (mode === 'formula-builder') {
       window.vueApp.formulaCalcMode = calcMode;
-      updateFormulaCalculationMode();
-    } else if (mode === 'reverse-calc' && window.vueApp) {
+    } else if (mode === 'reverse-calc') {
       window.vueApp.ratioCalcMode = calcMode;
-      updateReverseCalculationMode();
     }
   }
 
@@ -2530,13 +2529,11 @@ async function calculateFromWizardFertilizerSelect() {
     }
 
     // Sync volume and calculation mode to Vue state
+    // v-model on selects and Vue template expressions for labels handle DOM sync automatically
     if (window.vueApp) {
       window.vueApp.formulaVolume = wizardVolume;
       window.vueApp.formulaCalcMode = calcMode;
     }
-
-    // Apply calculation mode (updates labels)
-    updateFormulaCalculationMode();
 
     // Transfer fertilizer selections to main calculator Vue state
     if (window.vueApp && window.vueApp.availableFertilizers) {
@@ -2578,14 +2575,12 @@ async function calculateFromWizardFertilizerSelect() {
     }
 
     // Sync volume, EC, and calculation mode to Vue state
+    // v-model on selects and Vue template expressions for labels handle DOM sync automatically
     if (window.vueApp) {
       window.vueApp.ratioVolume = wizardVolume;
       window.vueApp.ratioTargetEC = ec;
       window.vueApp.ratioCalcMode = calcMode;
     }
-
-    // Apply calculation mode (updates labels)
-    updateReverseCalculationMode();
 
     // Transfer fertilizer selections to main calculator Vue state
     if (window.vueApp && window.vueApp.reverseFertilizers) {
@@ -3458,26 +3453,8 @@ function copyTwoTankResults(event) {
 // ============================================================================
 
 // Legacy DOM functions removed - now handled by Vue
-
-// Update calculation mode for formula builder - syncs DOM select to Vue state
-// Labels are now handled by Vue template expressions ({{ formulaCalcMode === 'oxide' ? ... }})
-function updateFormulaCalculationMode() {
-  const mode = document.getElementById('formula-calculation-mode')?.value;
-  if (window.vueApp && mode) {
-    window.vueApp.formulaCalcMode = mode;
-  }
-}
-
-// Update calculation mode for reverse calculator (legacy support)
-function updateReverseCalculationMode() {
-  const mode = document.getElementById('reverse-calculation-mode')?.value;
-
-  // Sync with Vue state if available
-  if (window.vueApp && mode) {
-    window.vueApp.ratioCalcMode = mode;
-  }
-}
-
+// updateFormulaCalculationMode - removed, v-model and Vue template expressions handle sync
+// updateReverseCalculationMode - removed, v-model and Vue template expressions handle sync
 // clearReverseCalculator - removed, use clearReverseVue directly
 
 // Main reverse calculator function
