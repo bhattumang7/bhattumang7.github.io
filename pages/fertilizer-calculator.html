@@ -97,7 +97,7 @@ permalink: /fertilizer-calculator/
                         <span style="font-weight: bold; font-size: 1.2em; color: #2e7d32;">{{ formatNumber(nutrient.ppm, 2) }} ppm</span>
                       </div>
                       <div style="font-family: monospace; font-size: 0.85em; color: #666; background: rgba(255,255,255,0.7); padding: 8px; border-radius: 4px;">
-                        {{ formatNumber(fert.grams) }} g × 1000 × ({{ formatNumber(nutrient.percent, 2) }}% ÷ 100) ÷ {{ formatNumber(modalData.volume) }} L = {{ formatNumber(nutrient.ppm, 2) }} ppm
+                        {{ formatNumber(fert.grams) }} g × {{ formatNumber(1000) }} × ({{ formatNumber(nutrient.percent, 2) }}% ÷ {{ formatNumber(100) }}) ÷ {{ formatNumber(modalData.volume) }} {{ i18n.t('litersUnit') }} = {{ formatNumber(nutrient.ppm, 2) }} ppm
                       </div>
                     </div>
                     </template>
