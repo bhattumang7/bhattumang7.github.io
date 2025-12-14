@@ -7,15 +7,15 @@ permalink: /fertilizer-calculator/
 <link rel="stylesheet" href="{{ '/assets/css/fertilizer-calculator.css' | relative_url }}">
 
 {% raw %}
-<!-- Progress Bar Overlay -->
-<div id="progress-overlay" class="progress-overlay">
+<!-- Progress Bar Overlay (Vue-powered) -->
+<div class="progress-overlay" :class="{ active: progressState.show }">
   <div class="progress-container">
-    <h3 id="progress-title" data-i18n="calculating">Calculating...</h3>
+    <h3>{{ progressState.title }}</h3>
     <div class="progress-bar-wrapper">
-      <div id="progress-bar" class="progress-bar"></div>
+      <div class="progress-bar" :class="{ indeterminate: progressState.indeterminate }" :style="{ width: progressState.percent + '%' }"></div>
     </div>
-    <p id="progress-text" class="progress-text" data-i18n="initializingSolver">Initializing solver...</p>
-    <button id="progress-cancel-btn" class="progress-cancel-btn" @click="progressBar.cancel()" data-i18n="cancel">Cancel</button>
+    <p class="progress-text">{{ progressState.message }}</p>
+    <button class="progress-cancel-btn" @click="progressBar.cancel()">{{ i18n.t('cancel') }}</button>
   </div>
 </div>
 
@@ -34,7 +34,7 @@ permalink: /fertilizer-calculator/
   <!-- Global Language Selector (visible on all wizard steps) -->
   <div class="language-selector" style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
     <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
-    <select id="language-select" @change="i18n.setLanguage($event.target.value)" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
+    <select id="language-select" v-model="language" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
       <option value="en">English</option>
       <option value="gu">ગુજરાતી</option>
     </select>
@@ -113,7 +113,7 @@ permalink: /fertilizer-calculator/
     <p data-i18n="volumeDescription">Enter the total volume of water you'll be mixing your fertilizers into.</p>
 
     <div class="volume-step-input">
-      <input type="number" id="wizard-volume" v-model.number="wizardVolume" min="0.1" step="0.1" required @keydown.enter="proceedFromVolumeStep()">
+      <input type="number" id="wizard-volume" ref="wizardVolumeInput" v-model.number="wizardVolume" min="0.1" step="0.1" required @keydown.enter="proceedFromVolumeStep()">
       <span data-i18n="liters">liters</span>
     </div>
 
@@ -406,9 +406,10 @@ permalink: /fertilizer-calculator/
           <div class="results-header">
             <h2>{{ i18n.t('selectedFertilizers') }}</h2>
             <div style="display: flex; gap: 10px;">
-              <button class="copy-btn" @click="copyGramsToPPMResults($event)" :title="i18n.t('copyToClipboard')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>{{ i18n.t('copyResults') }}</span>
+              <button class="copy-btn" :class="{ copied: copiedButtonId === 'grams-to-ppm' }" @click="copyGramsToPPMResultsVue()" :title="i18n.t('copyToClipboard')">
+                <svg v-if="copiedButtonId !== 'grams-to-ppm'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>{{ copiedButtonId === 'grams-to-ppm' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
               </button>
             </div>
           </div>
@@ -482,9 +483,10 @@ permalink: /fertilizer-calculator/
           <div class="results-header">
             <h2>{{ i18n.t('recommendedFormula') }}</h2>
             <div style="display: flex; gap: 10px;">
-              <button class="copy-btn" @click="copyPPMToGramsResults($event)" :title="i18n.t('copyToClipboard')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>{{ i18n.t('copyResults') }}</span>
+              <button class="copy-btn" :class="{ copied: copiedButtonId === 'ppm-to-grams' }" @click="copyPPMToGramsResultsVue()" :title="i18n.t('copyToClipboard')">
+                <svg v-if="copiedButtonId !== 'ppm-to-grams'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>{{ copiedButtonId === 'ppm-to-grams' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
               </button>
             </div>
           </div>
@@ -533,9 +535,10 @@ permalink: /fertilizer-calculator/
           <div class="results-header">
             <h2>{{ i18n.t('requiredFertilizers') }}</h2>
             <div style="display: flex; gap: 10px;">
-              <button class="copy-btn" @click="copyNPKRatioResults($event)" :title="i18n.t('copyToClipboard')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>{{ i18n.t('copyResults') }}</span>
+              <button class="copy-btn" :class="{ copied: copiedButtonId === 'npk-ratio' }" @click="copyNPKRatioResultsVue()" :title="i18n.t('copyToClipboard')">
+                <svg v-if="copiedButtonId !== 'npk-ratio'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>{{ copiedButtonId === 'npk-ratio' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
               </button>
             </div>
           </div>
@@ -584,9 +587,10 @@ permalink: /fertilizer-calculator/
           <div class="results-header">
             <h2>{{ i18n.t('twoTankSolution') }}</h2>
             <div style="display: flex; gap: 10px;">
-              <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span>{{ i18n.t('copyResults') }}</span>
+              <button class="copy-btn" :class="{ copied: copiedButtonId === 'two-tank' }" @click="copyTwoTankResultsVue()" :title="i18n.t('copyToClipboard')">
+                <svg v-if="copiedButtonId !== 'two-tank'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>{{ copiedButtonId === 'two-tank' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
               </button>
               <button class="secondary-btn" @click="hideTwoTankView()">{{ i18n.t('backToSingleTank') }}</button>
             </div>
@@ -727,9 +731,10 @@ permalink: /fertilizer-calculator/
     <div class="results-header">
       <h2>{{ i18n.t('selectedFertilizers') }}</h2>
       <div id="grams-to-ppm-header-buttons" style="display: flex; gap: 10px;">
-        <button class="copy-btn" @click="copyGramsToPPMResults($event)" :title="i18n.t('copyToClipboard')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          <span>{{ i18n.t('copyResults') }}</span>
+        <button class="copy-btn" :class="{ copied: copiedButtonId === 'grams-to-ppm' }" @click="copyGramsToPPMResultsVue()" :title="i18n.t('copyToClipboard')">
+          <svg v-if="copiedButtonId !== 'grams-to-ppm'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>{{ copiedButtonId === 'grams-to-ppm' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
         </button>
       </div>
     </div>
@@ -874,9 +879,10 @@ permalink: /fertilizer-calculator/
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
       <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
       <div style="display: flex; gap: 10px;">
-        <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          {{ i18n.t('copyResults') }}
+        <button class="copy-btn" :class="{ copied: copiedButtonId === 'two-tank' }" @click="copyTwoTankResultsVue()" :title="i18n.t('copyToClipboard')">
+          <svg v-if="copiedButtonId !== 'two-tank'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          {{ copiedButtonId === 'two-tank' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}
         </button>
         <button class="btn-secondary" @click="hideTwoTankView()" style="padding: 8px 16px;">
           {{ i18n.t('backToNormalView') || 'Back to Normal View' }}
@@ -1187,9 +1193,10 @@ permalink: /fertilizer-calculator/
       <div class="results-header" id="formula-results-header">
         <h2>{{ i18n.t('recommendedFormula') }}</h2>
         <div id="formula-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyPPMToGramsResults($event)" :title="i18n.t('copyToClipboard')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>{{ i18n.t('copyResults') }}</span>
+          <button class="copy-btn" :class="{ copied: copiedButtonId === 'ppm-to-grams' }" @click="copyPPMToGramsResultsVue()" :title="i18n.t('copyToClipboard')">
+            <svg v-if="copiedButtonId !== 'ppm-to-grams'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>{{ copiedButtonId === 'ppm-to-grams' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
           </button>
         </div>
       </div>
@@ -1338,9 +1345,10 @@ permalink: /fertilizer-calculator/
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
         <div style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            {{ i18n.t('copyResults') }}
+          <button class="copy-btn" :class="{ copied: copiedButtonId === 'two-tank' }" @click="copyTwoTankResultsVue()" :title="i18n.t('copyToClipboard')">
+            <svg v-if="copiedButtonId !== 'two-tank'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            {{ copiedButtonId === 'two-tank' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}
           </button>
           <button class="btn-secondary" @click="hideTwoTankView()" style="padding: 8px 16px;">
             {{ i18n.t('backToNormalView') || 'Back to Normal View' }}
@@ -1571,9 +1579,10 @@ permalink: /fertilizer-calculator/
       <div class="results-header" id="reverse-results-header">
         <h2>{{ i18n.t('requiredFertilizers') }}</h2>
         <div id="reverse-header-buttons" style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyNPKRatioResults($event)" :title="i18n.t('copyToClipboard')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>{{ i18n.t('copyResults') }}</span>
+          <button class="copy-btn" :class="{ copied: copiedButtonId === 'npk-ratio' }" @click="copyNPKRatioResultsVue()" :title="i18n.t('copyToClipboard')">
+            <svg v-if="copiedButtonId !== 'npk-ratio'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>{{ copiedButtonId === 'npk-ratio' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
           </button>
         </div>
       </div>
@@ -1754,9 +1763,10 @@ permalink: /fertilizer-calculator/
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
         <div style="display: flex; gap: 10px;">
-          <button class="copy-btn" @click="copyTwoTankResults($event)" :title="i18n.t('copyToClipboard')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            {{ i18n.t('copyResults') }}
+          <button class="copy-btn" :class="{ copied: copiedButtonId === 'two-tank' }" @click="copyTwoTankResultsVue()" :title="i18n.t('copyToClipboard')">
+            <svg v-if="copiedButtonId !== 'two-tank'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            {{ copiedButtonId === 'two-tank' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}
           </button>
           <button class="btn-secondary" @click="hideTwoTankView()" style="padding: 8px 16px;">
             {{ i18n.t('backToNormalView') || 'Back to Normal View' }}
@@ -2115,61 +2125,29 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
 }
 
 // Progress bar helper functions
+// progressBar is now Vue-powered - access via window.vueApp.progressBar
+// This getter provides backwards compatibility for existing code
 const progressBar = {
-  overlay: null,
-  bar: null,
-  title: null,
-  text: null,
-  cancelled: false,
-  onCancel: null,
-
-  init() {
-    this.overlay = document.getElementById('progress-overlay');
-    this.bar = document.getElementById('progress-bar');
-    this.title = document.getElementById('progress-title');
-    this.text = document.getElementById('progress-text');
+  get _vueProgressBar() {
+    return window.vueApp?.progressBar;
   },
-
-  show(title = 'Calculating...') {
-    if (!this.overlay) this.init();
-    this.cancelled = false;
-    this.onCancel = null;
-    this.title.textContent = title;
-    this.bar.style.width = '0%';
-    this.bar.classList.remove('indeterminate');
-    this.text.textContent = 'Initializing...';
-    this.overlay.classList.add('active');
+  show(title) {
+    this._vueProgressBar?.show(title);
   },
-
   update(percent, message) {
-    if (!this.bar) this.init();
-    this.bar.classList.remove('indeterminate');
-    this.bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
-    if (message) this.text.textContent = message;
+    this._vueProgressBar?.update(percent, message);
   },
-
   setIndeterminate(message) {
-    if (!this.bar) this.init();
-    this.bar.classList.add('indeterminate');
-    if (message) this.text.textContent = message;
+    this._vueProgressBar?.setIndeterminate(message);
   },
-
   hide() {
-    if (!this.overlay) this.init();
-    this.overlay.classList.remove('active');
-    this.onCancel = null;
+    this._vueProgressBar?.hide();
   },
-
   cancel() {
-    this.cancelled = true;
-    if (this.onCancel) {
-      this.onCancel();
-    }
-    this.hide();
+    this._vueProgressBar?.cancel();
   },
-
   isCancelled() {
-    return this.cancelled;
+    return this._vueProgressBar?.isCancelled() ?? false;
   }
 };
 
@@ -2356,18 +2334,15 @@ function selectMode(tabId) {
   // Show volume step (also updates wizardStep via Vue)
   showWizardStep('volume-step');
 
-  // Focus on the volume input
-  document.getElementById('wizard-volume').focus();
-  document.getElementById('wizard-volume').select();
+  // Focus on the volume input via Vue
+  if (window.vueApp?.focusWizardVolume) {
+    window.vueApp.focusWizardVolume();
+  }
 }
 
 function proceedFromVolumeStep() {
-  // Validate volume is a positive number
-  const volumeInput = document.getElementById('wizard-volume');
-  const volume = parseFloat(volumeInput.value);
-  if (isNaN(volume) || volume <= 0) {
-    volumeInput.focus();
-    volumeInput.reportValidity();
+  // Validate volume via Vue
+  if (window.vueApp?.validateWizardVolume && !window.vueApp.validateWizardVolume()) {
     return;
   }
 
@@ -2413,8 +2388,8 @@ function proceedFromECStep() {
 }
 
 function proceedToCalculator() {
-  // Get the volume from Vue state (with fallback to DOM for compatibility)
-  const wizardVolumeValue = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
+  // Get the volume from Vue state
+  const wizardVolumeValue = window.vueApp?.wizardVolume || 10;
 
   // Get current mode and calc mode from Vue state
   const mode = getSelectedMode();
@@ -2707,8 +2682,8 @@ function backFromFertilizerSelectStep() {
 }
 
 async function calculateFromWizardFertilizerSelect() {
-  // Get the volume from Vue state (with fallback)
-  const wizardVolume = window.vueApp?.wizardVolume || parseFloat(document.getElementById('wizard-volume')?.value) || 10;
+  // Get the volume from Vue state
+  const wizardVolume = window.vueApp?.wizardVolume || 10;
 
   // Get current mode, calc mode, and EC from Vue state
   const mode = getSelectedMode();
@@ -2943,11 +2918,7 @@ function init() {
   // Initialize i18n (update UI with current language)
   i18n.updateUI();
 
-  // Set language selector to current language
-  const langSelect = document.getElementById('language-select');
-  if (langSelect) {
-    langSelect.value = i18n.currentLanguage;
-  }
+  // Language selector is now initialized via Vue v-model binding to language ref
 }
 
 // setupWizardKeyboardNavigation - removed, now handled by Vue @keydown.enter directives on each step
@@ -3597,18 +3568,7 @@ function getI18nFormatter() {
 }
 
 // Copy two-tank results to clipboard (thin wrapper using FertilizerCore)
-function copyTwoTankResults(event) {
-  const twoTankData = window.vueApp?.currentTwoTankData;
-  if (!twoTankData) {
-    alert(i18n.t('alertNoTwoTankData'));
-    return;
-  }
-
-  const text = FertilizerCore.buildTwoTankCopyText(twoTankData, FERTILIZERS, getI18nFormatter());
-
-  const btn = event?.target?.closest('button');
-  copyToClipboard(text, btn);
-}
+// copyTwoTankResults removed - now handled by Vue (copyTwoTankResultsVue)
 
 // ============================================================================
 // REVERSE CALCULATOR FUNCTIONS
@@ -3721,101 +3681,7 @@ function openFormulaIonBalanceExplanation() {
 
 // generateFormulaIonBalanceExplanation removed - now handled by Vue modal
 
-// ==========================================
-// Copy Results Functions (WhatsApp Friendly)
-// ==========================================
-
-// Helper function to copy text to clipboard and show feedback
-async function copyToClipboard(text, button) {
-  try {
-    await navigator.clipboard.writeText(text);
-
-    // Show feedback
-    const originalText = button.innerHTML;
-    button.classList.add('copied');
-    button.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      Copied!
-    `;
-
-    setTimeout(() => {
-      button.classList.remove('copied');
-      button.innerHTML = originalText;
-    }, 2000);
-  } catch (err) {
-    console.error('Failed to copy:', err);
-    alert(i18n.t('alertCopyFailedTryAgain'));
-  }
-}
-
-// Copy Grams to PPM results (Tab 1) - thin wrapper using FertilizerCore
-function copyGramsToPPMResults(event) {
-  const lastCalc = window.vueApp?.lastGramsToPPMCalculation;
-  if (!lastCalc) {
-    alert(i18n.t('alertRunCalculationFirst'));
-    return;
-  }
-
-  const text = FertilizerCore.buildGramsToPpmCopyText(lastCalc, getI18nFormatter());
-
-  const button = event?.target?.closest('.copy-btn');
-  copyToClipboard(text, button);
-}
-
-// Copy PPM to Grams results (Tab 2 - Formula Builder) - thin wrapper using FertilizerCore
-function copyPPMToGramsResults(event) {
-  const lastCalc = window.vueApp?.lastFormulaCalculation;
-  if (!lastCalc) {
-    alert(i18n.t('alertRunCalculationFirst'));
-    return;
-  }
-
-  const { result, volume } = lastCalc;
-
-  // Calculate ion balance for the formula
-  const ionBalance = calculateIonBalanceForFormula(
-    Object.entries(result.formula).map(([fertId, grams]) => {
-      const fert = FERTILIZERS.find(f => f.id === fertId);
-      return { ...fert, grams };
-    }),
-    volume
-  );
-
-  const text = FertilizerCore.buildFormulaCopyText(lastCalc, FERTILIZERS, ionBalance, getI18nFormatter());
-
-  const button = event?.target?.closest('.copy-btn');
-  copyToClipboard(text, button);
-}
-
-// Copy NPK Ratio to Grams results (Tab 3 - Reverse Calculator) - thin wrapper using FertilizerCore
-function copyNPKRatioResults(event) {
-  const lastCalc = window.vueApp?.lastReverseCalculation;
-  if (!lastCalc) {
-    alert(i18n.t('alertRunCalculationFirst'));
-    return;
-  }
-
-  const { result, targets, volume } = lastCalc;
-  // Get calculation mode from Vue state instead of DOM
-  const calculationMode = window.vueApp?.ratioCalcMode || 'oxide';
-
-  // Calculate ion balance for the formula
-  const ionBalance = calculateIonBalanceForFormula(
-    Object.entries(result.formula).map(([fertId, grams]) => {
-      const fert = FERTILIZERS.find(f => f.id === fertId);
-      return { ...fert, grams };
-    }),
-    volume
-  );
-
-  // Build data object with calculationMode
-  const data = { result, targets, volume, calculationMode };
-
-  const text = FertilizerCore.buildReverseCopyText(data, FERTILIZERS, ionBalance, getI18nFormatter());
-
-  const button = event?.target?.closest('.copy-btn');
-  copyToClipboard(text, button);
-}
+// Copy functions removed - now handled by Vue (copyGramsToPPMResultsVue, copyPPMToGramsResultsVue, etc.)
 
 // Initialize when page loads
 if (document.readyState === 'loading') {
@@ -3844,6 +3710,23 @@ const FertilizerApp = {
     const wizardVolume = ref(10);
     const wizardSelectedEC = ref('ec:1.2');
     const wizardCalcMode = ref('oxide');
+
+    // Template refs
+    const wizardVolumeInput = ref(null);
+
+    // Progress bar state (Vue-powered)
+    const progressState = reactive({
+      show: false,
+      title: 'Calculating...',
+      message: 'Initializing...',
+      percent: 0,
+      indeterminate: false,
+      cancelled: false,
+      onCancel: null
+    });
+
+    // Copy button feedback state (Vue-powered)
+    const copiedButtonId = ref(null); // Which copy button is showing "Copied!" feedback
 
     // Wizard PPM target inputs (for PPM → Grams mode)
     const wizardTargets = reactive({
@@ -3876,6 +3759,11 @@ const FertilizerApp = {
       if (i18n && i18n.setLanguage) {
         i18n.setLanguage(newLang);
       }
+    });
+
+    // Watch for modal/progress overlay and control body scroll
+    watch([activeModal, () => progressState.show], ([modal, progress]) => {
+      document.body.style.overflow = (modal || progress) ? 'hidden' : '';
     });
 
     // Grams to PPM state
@@ -5323,14 +5211,13 @@ const FertilizerApp = {
         ionBalance: ionBalance,
         calculationType: data.calculationType || 'grams-to-ppm'
       });
-
-      document.body.style.overflow = 'hidden';
+      // Body overflow is handled by watcher on activeModal
     }
 
     // Close modal
     function closeModal() {
       activeModal.value = null;
-      document.body.style.overflow = '';
+      // Body overflow is handled by watcher on activeModal
     }
 
     // Check if nutrients have specific oxide
@@ -5401,6 +5288,152 @@ const FertilizerApp = {
 
       return null;
     }
+
+    // =========================================================================
+    // WIZARD VOLUME HELPERS (Vue-powered)
+    // =========================================================================
+    function focusWizardVolume() {
+      Vue.nextTick(() => {
+        if (wizardVolumeInput.value) {
+          wizardVolumeInput.value.focus();
+          wizardVolumeInput.value.select();
+        }
+      });
+    }
+
+    function validateWizardVolume() {
+      const volume = wizardVolume.value;
+      if (isNaN(volume) || volume <= 0) {
+        if (wizardVolumeInput.value) {
+          wizardVolumeInput.value.focus();
+          wizardVolumeInput.value.reportValidity();
+        }
+        return false;
+      }
+      return true;
+    }
+
+    // =========================================================================
+    // COPY TO CLIPBOARD (Vue-powered)
+    // =========================================================================
+    async function copyToClipboardVue(text, buttonId) {
+      try {
+        await navigator.clipboard.writeText(text);
+        // Show feedback via Vue state
+        copiedButtonId.value = buttonId;
+        setTimeout(() => {
+          if (copiedButtonId.value === buttonId) {
+            copiedButtonId.value = null;
+          }
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        alert(i18n.t('alertCopyFailedTryAgain'));
+      }
+    }
+
+    // Copy functions using Vue state for feedback
+    function copyGramsToPPMResultsVue() {
+      const lastCalc = lastGramsToPPMCalculation.value;
+      if (!lastCalc) {
+        alert(i18n.t('alertRunCalculationFirst'));
+        return;
+      }
+      const text = FertilizerCore.buildGramsToPpmCopyText(lastCalc, getI18nFormatter());
+      copyToClipboardVue(text, 'grams-to-ppm');
+    }
+
+    function copyPPMToGramsResultsVue() {
+      const lastCalc = lastFormulaCalculation.value;
+      if (!lastCalc) {
+        alert(i18n.t('alertRunCalculationFirst'));
+        return;
+      }
+      const { result, targets, volume } = lastCalc;
+      const calculationMode = formulaCalcMode.value;
+      const ionBalance = calculateIonBalanceForFormula(
+        Object.entries(result.formula).map(([fertId, grams]) => {
+          const fert = FERTILIZERS.find(f => f.id === fertId);
+          return { ...fert, grams };
+        }),
+        volume
+      );
+      const text = FertilizerCore.buildFormulaCopyText(lastCalc, FERTILIZERS, ionBalance, getI18nFormatter());
+      copyToClipboardVue(text, 'ppm-to-grams');
+    }
+
+    function copyNPKRatioResultsVue() {
+      const lastCalc = lastReverseCalculation.value;
+      if (!lastCalc) {
+        alert(i18n.t('alertRunCalculationFirst'));
+        return;
+      }
+      const { result, targets, volume } = lastCalc;
+      const calcMode = ratioCalcMode.value;
+      const ionBalance = calculateIonBalanceForFormula(
+        Object.entries(result.formula).map(([fertId, grams]) => {
+          const fert = FERTILIZERS.find(f => f.id === fertId);
+          return { ...fert, grams };
+        }),
+        volume
+      );
+      const data = { result, targets, volume, calculationMode: calcMode };
+      const text = FertilizerCore.buildReverseCopyText(data, FERTILIZERS, ionBalance, getI18nFormatter());
+      copyToClipboardVue(text, 'npk-ratio');
+    }
+
+    function copyTwoTankResultsVue() {
+      const twoTankData = currentTwoTankData.value;
+      if (!twoTankData) {
+        alert(i18n.t('alertNoTwoTankData'));
+        return;
+      }
+      const text = FertilizerCore.buildTwoTankCopyText(twoTankData, FERTILIZERS, getI18nFormatter());
+      copyToClipboardVue(text, 'two-tank');
+    }
+
+    // =========================================================================
+    // PROGRESS BAR METHODS (Vue-powered)
+    // =========================================================================
+    const progressBar = {
+      show(title = 'Calculating...') {
+        progressState.cancelled = false;
+        progressState.onCancel = null;
+        progressState.title = title;
+        progressState.percent = 0;
+        progressState.indeterminate = false;
+        progressState.message = i18n.t('initializingSolver') || 'Initializing...';
+        progressState.show = true;
+      },
+
+      update(percent, message) {
+        progressState.indeterminate = false;
+        progressState.percent = Math.min(100, Math.max(0, percent));
+        if (message) progressState.message = message;
+      },
+
+      setIndeterminate(message) {
+        progressState.indeterminate = true;
+        if (message) progressState.message = message;
+      },
+
+      hide() {
+        progressState.show = false;
+        progressState.onCancel = null;
+      },
+
+      cancel() {
+        progressState.cancelled = true;
+        if (progressState.onCancel) {
+          progressState.onCancel();
+        }
+        this.hide();
+      },
+
+      isCancelled() {
+        return progressState.cancelled;
+      }
+    };
 
     // Initialize on mount
     onMounted(() => {
@@ -5526,6 +5559,11 @@ const FertilizerApp = {
       // Wizard State
       wizardStep,
       wizardVolume,
+      wizardVolumeInput,
+
+      // Wizard Volume Helpers
+      focusWizardVolume,
+      validateWizardVolume,
 
       // Wizard Methods
       initWizardGramsFertilizers,
@@ -5552,6 +5590,17 @@ const FertilizerApp = {
       formatNumber,
       getNutrientContributions,
       calculateIonBalanceForModal,
+
+      // Progress Bar State & Methods (Vue-powered)
+      progressState,
+      progressBar,
+
+      // Copy Button Feedback (Vue-powered)
+      copiedButtonId,
+      copyGramsToPPMResultsVue,
+      copyPPMToGramsResultsVue,
+      copyNPKRatioResultsVue,
+      copyTwoTankResultsVue,
 
       // Data references (for template access)
       FERTILIZERS,
