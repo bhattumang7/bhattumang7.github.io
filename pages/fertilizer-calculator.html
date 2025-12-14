@@ -397,7 +397,7 @@ permalink: /fertilizer-calculator/
         </svg>
         <span data-i18n="changeSettings">Change Settings</span>
       </button>
-      <span class="wizard-current-mode" id="wizard-results-mode"></span>
+      <span class="wizard-current-mode" id="wizard-results-mode" v-html="wizardResultsModeText"></span>
     </div>
     <div id="wizard-results-container">
       <!-- Results will be rendered here -->
@@ -414,7 +414,7 @@ permalink: /fertilizer-calculator/
         </svg>
         <span data-i18n="changeSettings">Change Settings</span>
       </button>
-      <span class="wizard-current-mode" id="wizard-current-mode"></span>
+      <span class="wizard-current-mode" id="wizard-current-mode" v-html="modeIndicatorText"></span>
     </div>
 
     <div class="tabs">
@@ -2169,57 +2169,34 @@ function proceedToCalculator() {
   selectedCalcMode = window.vueApp?.wizardCalcMode || selectedCalcMode;
   selectedEC = window.vueApp?.wizardSelectedEC || selectedEC;
 
-  // Update volume inputs in all calculator tabs
-  const volumeInput = document.getElementById('volume');
-  if (volumeInput) volumeInput.value = wizardVolumeValue;
+  // Update volume in all calculator tabs via Vue state (v-model handles DOM sync)
+  if (window.vueApp) {
+    window.vueApp.volume = wizardVolumeValue;
+    window.vueApp.formulaVolume = wizardVolumeValue;
+    window.vueApp.ratioVolume = wizardVolumeValue;
+  }
 
-  const formulaVolumeInput = document.getElementById('formula-volume');
-  if (formulaVolumeInput) formulaVolumeInput.value = wizardVolumeValue;
-
-  const reverseVolumeInput = document.getElementById('reverse-volume');
-  if (reverseVolumeInput) reverseVolumeInput.value = wizardVolumeValue;
-
-  // Apply calculation mode if applicable
+  // Apply calculation mode if applicable via Vue state
   if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
-    if (selectedMode === 'formula-builder') {
-      const formulaModeSelect = document.getElementById('formula-calculation-mode');
-      if (formulaModeSelect) {
-        formulaModeSelect.value = selectedCalcMode;
-        updateFormulaCalculationMode();
-      }
-    } else if (selectedMode === 'reverse-calc') {
-      const reverseModeSelect = document.getElementById('reverse-calculation-mode');
-      if (reverseModeSelect) {
-        reverseModeSelect.value = selectedCalcMode;
-        updateReverseCalculationMode();
-      }
+    if (selectedMode === 'formula-builder' && window.vueApp) {
+      window.vueApp.formulaCalcMode = selectedCalcMode;
+      updateFormulaCalculationMode();
+    } else if (selectedMode === 'reverse-calc' && window.vueApp) {
+      window.vueApp.ratioCalcMode = selectedCalcMode;
+      updateReverseCalculationMode();
     }
   }
 
-  // Apply EC setting if applicable
-  if (MODES_WITH_EC.includes(selectedMode)) {
-    const reverseConcentration = document.getElementById('reverse-concentration');
-    if (reverseConcentration) {
-      reverseConcentration.value = selectedEC;
-    }
+  // Apply EC setting if applicable via Vue state
+  if (MODES_WITH_EC.includes(selectedMode) && window.vueApp) {
+    window.vueApp.ratioTargetEC = selectedEC;
   }
 
   // Show the calculator content (hides all wizard steps)
   showWizardStep('calculator-content', { updateIndicator: false });
 
-  // Build mode indicator text
-  let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(selectedMode) + '</strong> · ' + wizardVolumeValue + i18n.t('litersShort');
-  if (MODES_WITH_CALC_MODE.includes(selectedMode)) {
-    indicatorText += ' · ' + (selectedCalcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
-  }
-  if (MODES_WITH_EC.includes(selectedMode)) {
-    const ecValue = selectedEC.replace('ec:', '');
-    indicatorText += ' · ' + ecValue + ' mS/cm';
-  }
-
-  // Update the current mode indicator
-  const modeIndicator = document.getElementById('wizard-current-mode');
-  modeIndicator.innerHTML = indicatorText;
+  // Mode indicator is now updated via Vue computed property (modeIndicatorText)
+  // which reacts to currentMode, wizardVolume, formulaCalcMode/ratioCalcMode, ratioTargetEC
 
   // Switch to the selected tab
   switchTab(selectedMode);
@@ -2276,19 +2253,17 @@ function goToModeSelector() {
   selectedEC = 'ec:1.2';
 
   // Sync with Vue state - calc mode UI is now handled by Vue :class bindings
+  // Hide results sections by resetting Vue state (visibility controlled via v-if)
   if (window.vueApp) {
     window.vueApp.currentMode = null;
     window.vueApp.calculationMode = 'oxide';
     window.vueApp.wizardCalcMode = 'oxide';
+    // Reset results display state (controls v-if visibility)
+    window.vueApp.gramsToPpmDisplayData.show = false;
+    window.vueApp.formulaResultsData.show = false;
+    window.vueApp.reverseResultsData.show = false;
+    window.vueApp.twoTankDisplayData.show = false;
   }
-
-  // Hide results sections that might be visible
-  ['results', 'selected-fertilizers-section', 'ion-balance-section',
-   'ratio-analysis-section', 'ec-tds-section', 'warnings-section',
-   'formula-results', 'reverse-results', 'wizard-results-container'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
 }
 
 function backToModeSelector() {
@@ -2427,7 +2402,9 @@ async function calculateFromWizardGrams() {
     showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
   } else {
     // No incompatibilities - show results directly
-    document.getElementById('wizard-results-mode').innerHTML = indicatorText;
+    if (window.vueApp) {
+      window.vueApp.wizardResultsModeText = indicatorText;
+    }
     showWizardStep('wizard-results', { updateIndicator: false });
   }
 }
@@ -2710,7 +2687,9 @@ async function calculateFromWizardFertilizerSelect() {
     showWizardStep('two-tank-question-step', { stepNumber: totalSteps, totalSteps: totalSteps });
   } else {
     // No incompatibilities - show results directly
-    document.getElementById('wizard-results-mode').innerHTML = indicatorText;
+    if (window.vueApp) {
+      window.vueApp.wizardResultsModeText = indicatorText;
+    }
     showWizardStep('wizard-results', { updateIndicator: false });
   }
 }
@@ -2720,8 +2699,8 @@ async function calculateFromWizardFertilizerSelect() {
 // Skip two-tank view and show regular results
 function skipTwoTankView() {
   // Update the mode indicator in wizard results
-  if (pendingWizardCalculation) {
-    document.getElementById('wizard-results-mode').innerHTML = pendingWizardCalculation.indicatorText;
+  if (pendingWizardCalculation && window.vueApp) {
+    window.vueApp.wizardResultsModeText = pendingWizardCalculation.indicatorText;
 
     // Re-copy all results to wizard container (in case they were modified)
     if (pendingWizardCalculation.type === 'grams-to-ppm') {
@@ -2786,8 +2765,10 @@ function showTwoTankView() {
     resultsContainer.innerHTML = sourceResults.outerHTML;
   }
 
-  // Update the mode indicator in wizard results
-  document.getElementById('wizard-results-mode').innerHTML = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
+  // Update the mode indicator in wizard results via Vue state
+  if (window.vueApp) {
+    window.vueApp.wizardResultsModeText = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
+  }
 
   // Clear pending calculation
   pendingWizardCalculation = null;
@@ -3229,16 +3210,10 @@ function clearAll() {
 // Tab switching - now uses Vue reactive state
 function switchTab(tabId) {
   // Update Vue state - visibility is handled by :class bindings
+  // Mode indicator is updated via Vue computed property (modeIndicatorText)
   if (window.vueApp) {
     window.vueApp.currentTab = tabId;
-  }
-
-  // Update the mode indicator in wizard header
-  const modeIndicator = document.getElementById('wizard-current-mode');
-  if (modeIndicator && MODE_NAMES[tabId]) {
-    const wizardVolume = document.getElementById('wizard-volume');
-    const volumeStr = wizardVolume ? wizardVolume.value + 'L' : '';
-    modeIndicator.innerHTML = 'Current: <strong>' + MODE_NAMES[tabId] + '</strong>' + (volumeStr ? ' · ' + volumeStr : '');
+    window.vueApp.currentMode = tabId;
   }
 }
 
@@ -3447,11 +3422,8 @@ function displayTwoTankFormulaResults() {
   const { result, targets, volume, mode } = lastFormulaCalculation;
   const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
 
-  // Hide header buttons
-  const headerButtons = document.getElementById('formula-header-buttons');
-  if (headerButtons) {
-    headerButtons.style.display = 'none';
-  }
+  // Header buttons visibility is now handled by Vue v-if on parent container
+  // (hides when twoTankDisplayData.show && twoTankDisplayData.sourceType === 'formula')
 
   // Use Vue-powered display
   if (window.vueApp && window.vueApp.setTwoTankResults) {
@@ -3469,11 +3441,8 @@ function displayTwoTankReverseResults() {
   const { result, targets, volume, mode } = lastReverseCalculation;
   const { tankA, tankB } = splitIntoTwoTanks(result.formula, volume);
 
-  // Hide header buttons
-  const headerButtons = document.getElementById('reverse-header-buttons');
-  if (headerButtons) {
-    headerButtons.style.display = 'none';
-  }
+  // Header buttons visibility is now handled by Vue v-if on parent container
+  // (hides when twoTankDisplayData.show && twoTankDisplayData.sourceType === 'reverse')
 
   // Use Vue-powered display
   if (window.vueApp && window.vueApp.setTwoTankResults) {
@@ -3498,11 +3467,8 @@ function displayTwoTankGramsToPPMResults() {
 
   const { tankA, tankB } = splitIntoTwoTanks(formula, volume);
 
-  // Hide header buttons
-  const headerButtons = document.getElementById('grams-to-ppm-header-buttons');
-  if (headerButtons) {
-    headerButtons.style.display = 'none';
-  }
+  // Header buttons visibility is now handled by Vue v-if on parent container
+  // (hides when twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')
 
   // Use Vue-powered display
   // For Grams to PPM, we use elemental mode and no specific targets
@@ -3818,6 +3784,7 @@ const FertilizerApp = {
     const calculationMode = ref('oxide'); // 'oxide' or 'elemental'
     const language = ref(i18n?.currentLanguage || 'en');
     const currentTab = ref('ppm-calc'); // 'ppm-calc', 'formula-builder', 'reverse-calc'
+    const wizardResultsModeText = ref(''); // Dynamic text for wizard results mode indicator
 
     // Watch language changes and sync with i18n
     watch(language, (newLang) => {
@@ -4003,6 +3970,35 @@ const FertilizerApp = {
 
     const wizardKLabel = computed(() => {
       return wizardCalcMode.value === 'elemental' ? i18n.t('potassiumElemental') : i18n.t('potassiumOxide');
+    });
+
+    // Mode indicator text for wizard header (computed from Vue state)
+    const modeIndicatorText = computed(() => {
+      if (!currentMode.value) return '';
+
+      const modeKeys = {
+        'ppm-calc': 'gramsToPpm',
+        'formula-builder': 'ppmToGrams',
+        'reverse-calc': 'npkRatioToGrams'
+      };
+      const modeName = i18n.t(modeKeys[currentMode.value]) || currentMode.value;
+
+      let text = i18n.t('currentLabel') + ' <strong>' + modeName + '</strong>';
+      text += ' · ' + wizardVolume.value + i18n.t('litersShort');
+
+      // Add calc mode for formula-builder and reverse-calc
+      if (currentMode.value === 'formula-builder' || currentMode.value === 'reverse-calc') {
+        const calcMode = currentMode.value === 'formula-builder' ? formulaCalcMode.value : ratioCalcMode.value;
+        text += ' · ' + (calcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
+      }
+
+      // Add EC for reverse-calc
+      if (currentMode.value === 'reverse-calc') {
+        const ecValue = ratioTargetEC.value.replace('ec:', '');
+        text += ' · ' + ecValue + ' mS/cm';
+      }
+
+      return text;
     });
 
     // Filter fertilizers based on search
@@ -5187,22 +5183,9 @@ const FertilizerApp = {
 
     // Hide two-tank view and restore normal results
     function hideTwoTankView() {
+      // Header buttons visibility is handled by Vue v-if on parent container
+      // (shows when twoTankDisplayData.show becomes false)
       twoTankDisplayData.show = false;
-
-      // Show the header buttons again
-      const sourceType = twoTankDisplayData.sourceType;
-      let headerButtonsId;
-      if (sourceType === 'formula') {
-        headerButtonsId = 'formula-header-buttons';
-      } else if (sourceType === 'reverse') {
-        headerButtonsId = 'reverse-header-buttons';
-      } else if (sourceType === 'grams-to-ppm') {
-        headerButtonsId = 'grams-to-ppm-header-buttons';
-      }
-      const headerButtons = document.getElementById(headerButtonsId);
-      if (headerButtons) {
-        headerButtons.style.display = 'flex';
-      }
     }
 
     // =========================================================================
@@ -5361,6 +5344,8 @@ const FertilizerApp = {
       wizardECDescription,
       wizardPLabel,
       wizardKLabel,
+      modeIndicatorText,
+      wizardResultsModeText,
 
       // PPM to Grams (Formula Builder) State
       formulaTargets,
