@@ -1425,6 +1425,24 @@
   margin-right: 5px;
 }
 
+/* Lambda reference tables grid (cation/anion side by side) */
+.lambda-tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* EC breakdown table base styles */
+.ec-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+
+.ec-breakdown-table-wrapper {
+  overflow-x: auto;
+}
+
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .calculator-container {
