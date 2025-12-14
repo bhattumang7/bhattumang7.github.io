@@ -2279,7 +2279,7 @@ function proceedToCalculator() {
   modeIndicator.innerHTML = indicatorText;
 
   // Switch to the selected tab
-  switchTab(selectedMode, document.querySelector(`[data-tab-target="${selectedMode}"]`));
+  switchTab(selectedMode);
 
   // Scroll to top smoothly
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2332,18 +2332,11 @@ function goToModeSelector() {
   selectedCalcMode = 'oxide';
   selectedEC = 'ec:1.2';
 
-  // Sync with Vue state if available
+  // Sync with Vue state - calc mode UI is now handled by Vue :class bindings
   if (window.vueApp) {
     window.vueApp.currentMode = null;
     window.vueApp.calculationMode = 'oxide';
-  }
-
-  // Reset calc mode selection UI
-  document.querySelectorAll('.calc-mode-option').forEach(opt => opt.classList.remove('selected'));
-  const oxideOption = document.querySelector('input[name="wizard-calc-mode"][value="oxide"]');
-  if (oxideOption) {
-    oxideOption.checked = true;
-    oxideOption.closest('.calc-mode-option').classList.add('selected');
+    window.vueApp.wizardCalcMode = 'oxide';
   }
 
   // Hide results sections that might be visible
@@ -2367,22 +2360,12 @@ function backToModeSelector() {
   selectedCalcMode = 'oxide';
   selectedEC = 'ec:1.2';
 
-  // Sync Vue state
+  // Sync Vue state - calc mode UI is now handled by Vue :class bindings
   if (window.vueApp) {
     window.vueApp.currentMode = null;
     window.vueApp.wizardCalcMode = 'oxide';
     window.vueApp.wizardSelectedEC = 'ec:1.2';
   }
-
-  // Reset calc mode selection UI
-  document.querySelectorAll('.calc-mode-option').forEach(opt => opt.classList.remove('selected'));
-  const oxideOption = document.querySelector('input[name="wizard-calc-mode"][value="oxide"]');
-  if (oxideOption) {
-    oxideOption.checked = true;
-    oxideOption.closest('.calc-mode-option').classList.add('selected');
-  }
-
-  // EC selection is now handled by Vue v-model, no need to update DOM
 
   // Reset wizard inputs
   if (window.vueApp && window.vueApp.clearWizardGramsSelectionsVue) {
