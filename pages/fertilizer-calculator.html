@@ -50,6 +50,34 @@ permalink: /fertilizer-calculator/
           <span class="lang-native">தமிழ்</span>
           <span class="lang-english">(Tamil)</span>
         </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('ml')">
+          <span class="lang-native">മലയാളം</span>
+          <span class="lang-english">(Malayalam)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('pa')">
+          <span class="lang-native">ਪੰਜਾਬੀ</span>
+          <span class="lang-english">(Punjabi)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('or')">
+          <span class="lang-native">ଓଡ଼ିଆ</span>
+          <span class="lang-english">(Odia)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('as')">
+          <span class="lang-native">অসমীয়া</span>
+          <span class="lang-english">(Assamese)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('bho')">
+          <span class="lang-native">भोजपुरी</span>
+          <span class="lang-english">(Bhojpuri)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('mai')">
+          <span class="lang-native">मैथिली</span>
+          <span class="lang-english">(Maithili)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('awa')">
+          <span class="lang-native">अवधी</span>
+          <span class="lang-english">(Awadhi)</span>
+        </button>
       </div>
     </div>
   </div>
@@ -561,6 +589,13 @@ permalink: /fertilizer-calculator/
       <option value="bn-sadhu">বাংলা - সাধু (Bengali Sadhu)</option>
       <option value="bn">বাংলা - চলিত (Bengali Cholito)</option>
       <option value="ta">தமிழ் (Tamil)</option>
+      <option value="ml">മലയാളം (Malayalam)</option>
+      <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+      <option value="or">ଓଡ଼ିଆ (Odia)</option>
+      <option value="as">অসমীয়া (Assamese)</option>
+      <option value="bho">भोजपुरी (Bhojpuri)</option>
+      <option value="mai">मैथिली (Maithili)</option>
+      <option value="awa">अवधी (Awadhi)</option>
     </select>
   </div>
 
@@ -2574,7 +2609,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.1.13
+    v1.1.15
   </div>
 
 </div>
@@ -2602,6 +2637,13 @@ permalink: /fertilizer-calculator/
 <script src="/scripts/locales/bn-sadhu.js"></script>
 <script src="/scripts/locales/bn.js"></script>
 <script src="/scripts/locales/ta.js"></script>
+<script src="/scripts/locales/ml.js"></script>
+<script src="/scripts/locales/pa.js"></script>
+<script src="/scripts/locales/or.js"></script>
+<script src="/scripts/locales/as.js"></script>
+<script src="/scripts/locales/bho.js"></script>
+<script src="/scripts/locales/mai.js"></script>
+<script src="/scripts/locales/awa.js"></script>
 <script src="/scripts/i18n.js"></script>
 
 <!-- Vue 3 CDN (using dev build for better error messages - switch back to .prod.js for production) -->

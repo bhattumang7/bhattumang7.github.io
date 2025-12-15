@@ -701,16 +701,8 @@ window.i18nLocales.gu = {
   fert_haifa_17_10_27: 'હાઇફા ૧૭:૧૦:૨૭ (૧૭% N, ૧૦% P₂O₅, ૨૭% K₂O)',
 
   // Additional missing translations
-  backToNormalView: 'સામાન્ય દૃશ્ય પર પાછા જાઓ',
-  copyToClipboard: 'ક્લિપબોર્ડમાં કોપી કરો',
   estimatedEC: 'અંદાજિત EC',
   formulaPart1000: '<strong>૧૦૦૦</strong> = ગ્રામને મિલિગ્રામ (mg) માં રૂપાંતરિત કરે છે',
-  hideDetails: 'વિગતો છુપાવો',
-  showDetails: 'વિગતો બતાવો',
-  imbalanceLabel: 'અસંતુલન',
-  ionBalanceExplanation1: 'ખાતર પાણીમાં ઓગળીને ધન અને ઋણ ચાર્જવાળા આયનો બનાવે છે.',
-  ionBalanceExplanation2: 'સ્વસ્થ દ્રાવણ માટે કુલ ધન ચાર્જ કુલ ઋણ ચાર્જની લગભગ બરાબર હોવો જોઈએ.',
-  ionBalanceResults: 'આયન સંતુલન પરિણામો',
   noFertilizersInTank: 'આ ટાંકીમાં કોઈ ખાતર નથી',
   nutrientRatios: 'પોષક તત્ત્વોના અનુપાત',
   nutritionalConsiderations: 'પોષક વિચારણાઓ',
@@ -721,7 +713,11 @@ window.i18nLocales.gu = {
   tip3DifferentPlants: 'જુદા જુદા છોડને જુદા જુદા પોષક સ્તરની જરૂર હોય છે',
   tip4BalanceIsKey: 'વધુ ખાતર = વધુ સારી વૃદ્ધિ નહીં; સંતુલન મહત્વનું છે',
   tip5CheckWater: 'જો શક્ય હોય તો તમારા પાણીમાં હાલના પોષક તત્ત્વો તપાસો',
-  total: 'કુલ',
-  understandingIonBalance: 'આયન સંતુલન સમજવું',
-  understandingPpmCalculations: 'PPM ગણતરીઓ સમજવી'
+  copyToClipboard: 'Copy to Clipboard',
+  total: 'Total',
+  backToNormalView: 'Back to Normal View',
+  hideDetails: 'Hide Details',
+  showDetails: 'Show Details',
+  understandingPpmCalculations: 'Understanding PPM Calculations',
+  understandingIonBalance: 'Understanding Ion Balance',
 };

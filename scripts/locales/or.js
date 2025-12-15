@@ -1,74 +1,222 @@
 /**
- * English (en) translations for Fertilizer Calculator
+ * Odia (or) translations for Fertilizer Calculator
  */
 
 window.i18nLocales = window.i18nLocales || {};
 
-window.i18nLocales.en = {
+window.i18nLocales.or = {
   // Page title
-  pageTitle: 'Fertilizer Calculator',
+  pageTitle: 'ସାର କ୍ୟାଲକୁଲେଟର',
 
   // Mode selector (Step 1)
-  whatWouldYouLikeToDo: 'What would you like to do?',
-  chooseModeDescription: 'Choose a calculator mode based on what information you have.',
+  whatWouldYouLikeToDo: 'ଆପଣ କ\'ଣ କରିବାକୁ ଚାହାଁନ୍ତି?',
+  chooseModeDescription: 'ଆପଣଙ୍କ ପାଖରେ ଥିବା ସୂଚନା ଆଧାରରେ ଏକ କ୍ୟାଲକୁଲେଟର ମୋଡ୍ ବାଛନ୍ତୁ।',
 
   // Mode cards
-  gramsToPpm: 'Grams → PPM',
-  gramsToPpmDescription: 'Calculate what nutrient concentrations (PPM) you\'ll get from specific amounts of fertilizers.',
-  ppmToGrams: 'PPM → Grams',
-  ppmToGramsDescription: 'Enter your target PPM values and get the exact fertilizer amounts needed to achieve them.',
-  npkRatioToGrams: 'NPK Ratio → Grams',
-  npkRatioToGramsDescription: 'Enter nutrient ratios (like 3-1-2) and a target EC to get fertilizer amounts that match your desired balance.',
-  bestFor: 'Best for:',
-  gramsToPpmUseCase: 'You have fertilizers weighed out and want to know the resulting nutrient levels in your solution.',
-  ppmToGramsUseCase: 'You have specific PPM targets (e.g., from a recipe or plant requirements) and need to know how much of each fertilizer to use.',
-  npkRatioUseCase: 'You know the nutrient ratio you want (e.g., for a specific growth stage) and want to scale it to your desired EC/strength.',
+  gramsToPpm: 'ଗ୍ରାମ → PPM',
+  gramsToPpmDescription: 'ନିର୍ଦ୍ଦିଷ୍ଟ ପରିମାଣର ସାରରୁ ଆପଣ କେତେ ପୋଷକ ସାନ୍ଦ୍ରତା (PPM) ପାଇବେ ତାହା ଗଣନା କରନ୍ତୁ।',
+  ppmToGrams: 'PPM → ଗ୍ରାମ',
+  ppmToGramsDescription: 'ଆପଣଙ୍କ ଲକ୍ଷ୍ୟ PPM ମୂଲ୍ୟ ପ୍ରବେଶ କରନ୍ତୁ ଏବଂ ସେଗୁଡ଼ିକ ହାସଲ କରିବାକୁ ଆବଶ୍ୟକ ସଠିକ୍ ସାର ପରିମାଣ ପାଆନ୍ତୁ।',
+  npkRatioToGrams: 'NPK ଅନୁପାତ → ଗ୍ରାମ',
+  npkRatioToGramsDescription: 'ପୋଷକ ଅନୁପାତ (ଯେପରି 3-1-2) ଏବଂ ଏକ ଲକ୍ଷ୍ୟ EC ପ୍ରବେଶ କରନ୍ତୁ ଏବଂ ଆପଣଙ୍କ ଇଚ୍ଛିତ ସନ୍ତୁଳନ ସହିତ ମେଳ ଖାଉଥିବା ସାର ପରିମାଣ ପାଆନ୍ତୁ।',
+  bestFor: 'ସର୍ବୋତ୍ତମ:',
+  gramsToPpmUseCase: 'ଆପଣ ସାର ତୋଳି ରଖିଛନ୍ତି ଏବଂ ଆପଣଙ୍କ ଦ୍ରବଣରେ ଫଳାଫଳ ପୋଷକ ସ୍ତର ଜାଣିବାକୁ ଚାହୁଁଛନ୍ତି।',
+  ppmToGramsUseCase: 'ଆପଣଙ୍କ ପାଖରେ ନିର୍ଦ୍ଦିଷ୍ଟ PPM ଲକ୍ଷ୍ୟ ଅଛି (ଯଥା ଏକ ରେସିପି ବା ଗଛ ଆବଶ୍ୟକତାରୁ) ଏବଂ ପ୍ରତ୍ୟେକ ସାର କେତେ ବ୍ୟବହାର କରିବେ ଜାଣିବାକୁ ଚାହୁଁଛନ୍ତି।',
+  npkRatioUseCase: 'ଆପଣ ଜାଣନ୍ତି କେଉଁ ପୋଷକ ଅନୁପାତ ଆପଣ ଚାହୁଁଛନ୍ତି (ଯଥା ଏକ ନିର୍ଦ୍ଦିଷ୍ଟ ବୃଦ୍ଧି ପର୍ଯ୍ୟାୟ ପାଇଁ) ଏବଂ ଏହାକୁ ଆପଣଙ୍କ ଇଚ୍ଛିତ EC/ଶକ୍ତିକୁ ସ୍କେଲ୍ କରିବାକୁ ଚାହୁଁଛନ୍ତି।',
 
   // Volume step (Step 2)
-  howMuchSolution: 'How much solution are you making?',
-  volumeDescription: 'Enter the total volume of water you\'ll be mixing your fertilizers into.',
-  liters: 'liters',
-  grams: 'grams',
+  howMuchSolution: 'ଆପଣ କେତେ ଦ୍ରବଣ ତିଆରି କରୁଛନ୍ତି?',
+  volumeDescription: 'ଆପଣ ସାର ମିଶାଇବାକୁ ଯାଉଥିବା ପାଣିର ମୋଟ ଆୟତନ ପ୍ରବେଶ କରନ୍ତୁ।',
+  liters: 'ଲିଟର',
+  grams: 'ଗ୍ରାମ',
 
   // Calc mode step (Step 3)
-  howToEnterValues: 'How do you want to enter values?',
-  calcModeDescription: 'Choose between commercial fertilizer notation or pure elemental values.',
-  oxideForms: 'Oxide Forms (P₂O₅, K₂O)',
-  oxideFormsDescription: 'Commercial standard - matches fertilizer bag labels',
-  elementalForms: 'Elemental Forms (P, K)',
-  elementalFormsDescription: 'Pure elements - for scientific calculations',
+  howToEnterValues: 'ଆପଣ ମୂଲ୍ୟ କିପରି ପ୍ରବେଶ କରିବାକୁ ଚାହାଁନ୍ତି?',
+  calcModeDescription: 'ବ୍ୟବସାୟିକ ସାର ନୋଟେସନ୍ ବା ଶୁଦ୍ଧ ମୌଳିକ ମୂଲ୍ୟ ମଧ୍ୟରେ ବାଛନ୍ତୁ।',
+  oxideForms: 'ଅକ୍ସାଇଡ୍ ରୂପ (P₂O₅, K₂O)',
+  oxideFormsDescription: 'ବ୍ୟବସାୟିକ ମାନକ - ସାର ବ୍ୟାଗ୍ ଲେବଲ୍ ସହ ମେଳ ଖାଏ',
+  elementalForms: 'ମୌଳିକ ରୂପ (P, K)',
+  elementalFormsDescription: 'ଶୁଦ୍ଧ ମୌଳିକ - ବୈଜ୍ଞାନିକ ଗଣନା ପାଇଁ',
 
   // EC step (Step 4)
-  whatStrengthSolution: 'What strength solution do you want?',
-  ecDescription: 'Choose the EC (electrical conductivity) you want the mix to reach. It tells us how concentrated the nutrients should be, and we\'ll scale the fertilizer amounts to hit that strength for your batch.',
+  whatStrengthSolution: 'ଆପଣ କେତେ ଶକ୍ତିର ଦ୍ରବଣ ଚାହାଁନ୍ତି?',
+  ecDescription: 'ମିଶ୍ରଣ ପହଞ୍ଚିବାକୁ ଆପଣ ଚାହୁଁଥିବା EC (ବିଦ୍ୟୁତ୍ ପରିବାହିତା) ବାଛନ୍ତୁ।',
 
   // EC options
-  ecPlainWater: 'Plain Water Supplement',
-  ecRecoveryFlush: 'Recovery/Flush',
-  ecFreshClones: 'Fresh Clones/Cuttings',
-  ecRootedCuttings: 'Rooted Cuttings',
-  ecSeedlings: 'Seedlings/Young Plants',
-  ecGeneralPurpose: 'General Purpose',
-  ecVegetativeGrowth: 'Vegetative Growth',
-  ecActiveGrowth: 'Active Growth',
-  ecHeavyFeeders: 'Heavy Feeders',
-  ecFloweringFruiting: 'Flowering/Fruiting',
-  ecMaximum: 'Maximum (experienced growers)',
+  ecPlainWater: 'ସାଧା ପାଣି ପରିପୂରକ',
+  ecRecoveryFlush: 'ପୁନରୁଦ୍ଧାର/ଫ୍ଲସ୍',
+  ecFreshClones: 'ତାଜା କ୍ଲୋନ୍/କଟିଂ',
+  ecRootedCuttings: 'ମୂଳ ଧରିଥିବା କଟିଂ',
+  ecSeedlings: 'ବିହନ/ଯୁବ ଗଛ',
+  ecGeneralPurpose: 'ସାଧାରଣ ଉଦ୍ଦେଶ୍ୟ',
+  ecVegetativeGrowth: 'ପତ୍ର ବୃଦ୍ଧି',
+  ecActiveGrowth: 'ସକ୍ରିୟ ବୃଦ୍ଧି',
+  ecHeavyFeeders: 'ଭାରୀ ଫିଡର',
+  ecFloweringFruiting: 'ଫୁଲ/ଫଳ',
+  ecMaximum: 'ସର୍ବାଧିକ (ଅଭିଜ୍ଞ ଚାଷୀମାନଙ୍କ ପାଇଁ)',
 
   // EC descriptions
-  ecDesc02: 'Very light feeding - for supplementing plain water.',
-  ecDesc04: 'Recovery feeding - gentle nutrition after stress.',
-  ecDesc06: 'For fresh cuttings and newly rooted clones.',
-  ecDesc08: 'For established clones ready for growth.',
-  ecDesc10: 'For seedlings and young plants starting to grow.',
-  ecDesc12: 'Good starting point for most plants in active growth.',
-  ecDesc15: 'Standard vegetative growth feeding.',
-  ecDesc18: 'For plants in active, vigorous growth.',
-  ecDesc20: 'For heavy-feeding plants with high nutrient demands.',
-  ecDesc25: 'Strong feeding for flowering/fruiting stages.',
-  ecDesc30: 'Maximum strength - only for experienced growers.',
+  ecDesc02: 'ବହୁତ ହାଲୁକା ଖାଦ୍ୟ - ସାଧା ପାଣି ପରିପୂରକ ପାଇଁ।',
+  ecDesc04: 'ପୁନରୁଦ୍ଧାର ଖାଦ୍ୟ - ଚାପ ପରେ ମୃଦୁ ପୋଷଣ।',
+  ecDesc06: 'ତାଜା କଟିଂ ଏବଂ ନୂତନ ମୂଳ ଧରିଥିବା କ୍ଲୋନ୍ ପାଇଁ।',
+  ecDesc08: 'ବୃଦ୍ଧି ପାଇଁ ପ୍ରସ୍ତୁତ ପ୍ରତିଷ୍ଠିତ କ୍ଲୋନ୍ ପାଇଁ।',
+  ecDesc10: 'ବଢ଼ିବା ଆରମ୍ଭ କରୁଥିବା ବିହନ ଏବଂ ଯୁବ ଗଛ ପାଇଁ।',
+  ecDesc12: 'ସକ୍ରିୟ ବୃଦ୍ଧିରେ ଅଧିକାଂଶ ଗଛ ପାଇଁ ଭଲ ଆରମ୍ଭ ପଏଣ୍ଟ।',
+  ecDesc15: 'ମାନକ ପତ୍ର ବୃଦ୍ଧି ଖାଦ୍ୟ।',
+  ecDesc18: 'ସକ୍ରିୟ, ଜୋରଦାର ବୃଦ୍ଧିରେ ଗଛ ପାଇଁ।',
+  ecDesc20: 'ଉଚ୍ଚ ପୋଷକ ଆବଶ୍ୟକତା ସହ ଭାରୀ-ଖାଦ୍ୟ ଗଛ ପାଇଁ।',
+  ecDesc25: 'ଫୁଲ/ଫଳ ପର୍ଯ୍ୟାୟ ପାଇଁ ଶକ୍ତିଶାଳୀ ଖାଦ୍ୟ।',
+  ecDesc30: 'ସର୍ବାଧିକ ଶକ୍ତି - କେବଳ ଅଭିଜ୍ଞ ଚାଷୀମାନଙ୍କ ପାଇଁ।',
 
-  // EC option full text (for dropdown)
+  // Results indicator text
+  currentLabel: 'ବର୍ତ୍ତମାନ:',
+  litersShort: 'L',
+  oxideShort: 'ଅକ୍ସାଇଡ୍',
+  elementalShort: 'ମୌଳିକ',
+  twoTankView: 'ଦୁଇ-ଟ୍ୟାଙ୍କ ଦୃଶ୍ୟ',
+  twoTankSolution: 'ଦୁଇ-ଟ୍ୟାଙ୍କ ଦ୍ରବଣ',
+  backToSingleTank: 'ଏକକ ଟ୍ୟାଙ୍କକୁ ଫେରନ୍ତୁ',
+  combinedResult: 'ମିଶ୍ରିତ ଫଳାଫଳ',
+  fertilizersToAddPer: 'ଯୋଡ଼ିବାକୁ ସାର (ପ୍ରତି {volume}{unit})',
+  gramsShort: 'g',
+  gramsPerLiter: 'g/L',
+  totalConcentration: 'ମୋଟ ସାନ୍ଦ୍ରତା',
+  totalFertilizers: 'ମୋଟ ({count} ସାର)',
+  targetVsAchieved: 'ଲକ୍ଷ୍ୟ vs ହାସଲ',
+  nutrient: 'ପୋଷକ',
+  targetPpmHeader: 'ଲକ୍ଷ୍ୟ (ppm)',
+  achievedPpmHeader: 'ହାସଲ (ppm)',
+  difference: 'ଅନ୍ତର',
+  yourInput: 'ଆପଣଙ୍କ ଇନପୁଟ୍',
+  achievedRatio: 'ହାସଲ ଅନୁପାତ',
+  ratioLabel: 'ଅନୁପାତ:',
+  targetLabel: 'ଲକ୍ଷ୍ୟ:',
+  ppmAchieved: 'ହାସଲ PPM',
+  nitrogenFormLabel: 'ନାଇଟ୍ରୋଜେନ୍ ରୂପ:',
+  nitrogenFormsLabel: 'ନାଇଟ୍ରୋଜେନ୍ ରୂପ:',
+  ofTotalN: 'ମୋଟ N ର',
+  meqPerLiter: 'meq/L',
+  cations: 'କ୍ୟାଟାୟନ',
+  anions: 'ଆନାୟନ',
+  imbalance: 'ଅସନ୍ତୁଳନ',
+  balanced: 'ସନ୍ତୁଳିତ',
+  balancedCheck: 'ସନ୍ତୁଳିତ ✓',
+  caution: 'ସାବଧାନ',
+  cautionWarning: 'ସାବଧାନ ⚠',
+  imbalanced: 'ଅସନ୍ତୁଳିତ',
+  imbalancedX: 'ଅସନ୍ତୁଳିତ ✗',
+  ppmUnit: 'ppm',
+  ppmLabel: '(PPM)',
+  ionBalanceDetails: 'ଆୟନ ସନ୍ତୁଳନ ବିବରଣୀ',
+  totalCations: 'ମୋଟ କ୍ୟାଟାୟନ',
+  totalAnions: 'ମୋଟ ଆନାୟନ',
+  whatIsIonBalance: 'ଆୟନ ସନ୍ତୁଳନ କ\'ଣ?',
+
+  // Input steps
+  selectFertilizersAndEnterAmounts: 'ସାର ବାଛନ୍ତୁ ଏବଂ ପରିମାଣ ପ୍ରବେଶ କରନ୍ତୁ',
+  selectFertilizersDescription: 'ଆପଣ ବ୍ୟବହାର କରୁଥିବା ସାର ଚେକ୍ କରନ୍ତୁ ଏବଂ ପ୍ରତ୍ୟେକର କେତେ ଗ୍ରାମ ଆପଣଙ୍କ ଦ୍ରବଣରେ ଯୋଡ଼ିବେ ପ୍ରବେଶ କରନ୍ତୁ।',
+  enterTargetPpmValues: 'ଲକ୍ଷ୍ୟ PPM ମୂଲ୍ୟ ପ୍ରବେଶ କରନ୍ତୁ',
+  targetPpmDescription: 'ଆପଣ ହାସଲ କରିବାକୁ ଚାହୁଁଥିବା ପୋଷକ ସାନ୍ଦ୍ରତା ପ୍ରବେଶ କରନ୍ତୁ। ଅତିକମରେ ଏକ ମୂଲ୍ୟ ଆବଶ୍ୟକ।',
+  enterNutrientRatios: 'ପୋଷକ ଅନୁପାତ ପ୍ରବେଶ କରନ୍ତୁ',
+  nutrientRatiosDescription: 'ଆପଣଙ୍କ ଇଚ୍ଛିତ ପୋଷକ ଅନୁପାତ ପ୍ରବେଶ କରନ୍ତୁ (ଯଥା N:P:K = 3:1:2)। ଅତିକମରେ ଗୋଟିଏ ଶୂନ୍ୟରୁ ଅଧିକ ହେବା ଆବଶ୍ୟକ।',
+  selectAvailableFertilizers: 'ଉପಲବ୍ଧ ସାର ବାଛନ୍ତୁ',
+  selectAvailableFertilizersDescription: 'ଆପଣଙ୍କ ହାତରେ ଥିବା ସାର ବାଛନ୍ତୁ। କ୍ୟାଲକୁଲେଟର ଆପଣଙ୍କ ଫର୍ମୁଲା ତିଆରି କରିବାକୁ କେବଳ ଏଗୁଡ଼ିକ ବ୍ୟବହାର କରିବ।',
+
+  // Buttons
+  back: '← ପଛକୁ',
+  continue: 'ଜାରି ରଖନ୍ତୁ →',
+  cancel: 'ବାତିଲ',
+  calculate: 'ଗଣନା କରନ୍ତୁ',
+  calculatePpm: 'PPM ଗଣନା କରନ୍ତୁ',
+  calculateFertilizers: 'ସାର ଗଣନା କରନ୍ତୁ',
+  buildFormula: 'ଫର୍ମୁଲା ତିଆରି କରନ୍ତୁ',
+  clear: 'ସଫା',
+  clearAll: 'ସବୁ ସଫା କରନ୍ତୁ',
+  selectAll: 'ସବୁ ବାଛନ୍ତୁ',
+  deselectAll: 'ସବୁ ହଟାନ୍ତୁ',
+  commonOnly: 'କେବଳ ସାଧାରଣ',
+  changeSettings: 'ସେଟିଂ ବଦଳାନ୍ତୁ',
+  copyResults: 'ଫଳାଫଳ କପି କରନ୍ତୁ',
+  twoTanks: 'ଦୁଇ ଟ୍ୟାଙ୍କ',
+
+  // Nutrient labels
+  nitrogen: 'ନାଇଟ୍ରୋଜେନ୍ (N)',
+  totalNitrogenN: 'ମୋଟ ନାଇଟ୍ରୋଜେନ୍ (N)',
+  nitrateN: 'ନାଇଟ୍ରେଟ-N (NO₃-N)',
+  ammoniumN: 'ଆମୋନିୟମ-N (NH₄-N)',
+  phosphorusOxide: 'ଫସଫରସ୍ (P₂O₅)',
+  phosphorusElemental: 'ଫସଫରସ୍ (P)',
+  potassiumOxide: 'ପୋଟାସିୟମ୍ (K₂O)',
+  potassiumElemental: 'ପୋଟାସିୟମ୍ (K)',
+  calcium: 'କ୍ୟାଲସିୟମ୍ (Ca)',
+  magnesium: 'ମ୍ୟାଗ୍ନେସିୟମ୍ (Mg)',
+  sulfur: 'ସଲଫର (S)',
+  silicon: 'ସିଲିକନ୍ (Si)',
+
+  // Placeholders
+  searchFertilizers: 'ସାର ଖୋଜନ୍ତୁ...',
+  egValue: 'ଯଥା',
+  optional: 'ବୈକ୍ପିକ',
+  targetPpm: 'ଲକ୍ଷ୍ୟ PPM',
+
+  // Alert messages
+  alertSelectFertilizerAndAmount: 'ଦୟାକରି ଅତିକମରେ ଗୋଟିଏ ସାର ବାଛନ୍ତୁ ଏବଂ ପରିମାଣ ପ୍ରବେଶ କରନ୍ତୁ।',
+  alertEnterTargetPpm: 'ଦୟାକରି ଅତିକମରେ ଗୋଟିଏ ଲକ୍ଷ୍ୟ PPM ମୂଲ୍ୟ ପ୍ରବେଶ କରନ୍ତୁ।',
+  alertSelectFertilizer: 'ଦୟାକରି ଅତିକମରେ ଗୋଟିଏ ସାର ବାଛନ୍ତୁ।',
+  alertNoCalculationData: 'କୌଣସି ଗଣନା ତଥ୍ୟ ଉପଲବ୍ଧ ନାହିଁ।',
+  alertEnterValidVolume: 'ଦୟାକରି 0 ରୁ ଅଧିକ ବୈଧ ଆୟତନ ପ୍ରବେଶ କରନ୍ତୁ',
+  alertCalculationError: 'ଗଣନା ସମୟରେ ତ୍ରୁଟି ଘଟିଲା। ଦୟାକରି ପୁନଃଚେଷ୍ଟା କରନ୍ତୁ।',
+
+  // Warnings section
+  warningsAndRecommendations: 'ଚେତାବନୀ ଏବଂ ସୁପାରିଶ',
+  cannotAchieveExactTargets: 'ସଠିକ୍ ଲକ୍ଷ୍ୟ ହାସଲ କରିପାରୁ ନାହଁନ୍ତି',
+  targetsSuccessfullyAchieved: 'ଲକ୍ଷ୍ୟ ସଫଳତାର ସହ ହାସଲ ହେଲା!',
+  allNutrientValuesWithinRange: 'ସମସ୍ତ ପୋଷକ ମୂଲ୍ୟ ଗ୍ରହଣୀୟ ସୀମା ମଧ୍ୟରେ ଅଛି।',
+  note: 'ଟିପ୍ପଣୀ:',
+
+  // Warning categories
+  warningCategoryCaSulfate: 'ଷ୍ଟକ୍ ସୋଲ୍ୟୁସନ: Ca + ସଲଫେଟ',
+  warningCategoryHighAmmonium: 'ଉଚ୍ଚ ଆମୋନିୟମ',
+  warningCategoryLowCalcium: 'କମ୍ କ୍ୟାଲସିୟମ୍',
+  warningCategoryHighEC: 'ଉଚ୍ଚ EC',
+  warningCategoryLowEC: 'କମ୍ EC',
+
+  // Results sections
+  selectedFertilizers: 'ବାଛିଥିବା ସାର',
+  resultsPpm: 'ଫଳାଫଳ (PPM)',
+  ionBalance: 'ଆୟନ ସନ୍ତୁଳନ',
+  nutrientRatioAnalysis: 'ପୋଷକ ଅନୁପାତ ବିଶ୍ଳେଷଣ',
+  ecPrediction: 'EC ପୂର୍ବାନୁମାନ',
+  estimatedEC: 'ଆକଳିତ EC',
+  targetEC: 'ଲକ୍ଷ୍ୟ EC',
+  nutrientRatios: 'ପୋଷକ ଅନୁପାତ',
+
+  // Step indicators
+  stepOf: 'ଷ୍ଟେପ୍ {current} / {total}',
+
+  // Progress bar
+  calculating: 'ଗଣନା କରୁଛି...',
+  complete: 'ସମ୍ପୂର୍ଣ୍ଣ!',
+
+  // Language selector
+  language: 'ଭାଷା',
+
+  // Fertilizer names
+  fert_calcium_nitrate_calcinit_typical: 'କ୍ୟାଲସିୟମ୍ ନାଇଟ୍ରେଟ - କ୍ୟାଲସିନିଟ୍ ପ୍ରକାର (15.5% N, 19% Ca)',
+  fert_potassium_nitrate_typical: 'ପୋଟାସିୟମ୍ ନାଇଟ୍ରେଟ',
+  fert_map_typical: 'ମୋନୋ ଆମୋନିୟମ ଫସଫେଟ (MAP)',
+  fert_mkp_typical: 'ମୋନୋ ପୋଟାସିୟମ୍ ଫସଫେଟ (MKP)',
+  fert_dap_common: 'ଡାଏ ଆମୋନିୟମ ଫସଫେଟ (DAP)',
+  fert_urea_common: 'ୟୁରିଆ',
+  fert_ammonium_sulfate_common: 'ଆମୋନିୟମ ସଲଫେଟ',
+  fert_magnesium_sulfate_heptahydrate_common: 'ମ୍ୟାଗ୍ନେସିୟମ୍ ସଲଫେଟ / ଏପ୍ସମ୍ ଲୁଣ (9.86% Mg)',
+  fert_potassium_sulfate_common: 'ପୋଟାସିୟମ୍ ସଲଫେଟ (SOP)',
+  fert_potassium_chloride_common: 'ପୋଟାସିୟମ୍ କ୍ଲୋରାଇଡ୍ (MOP)',
+  fert_potassium_schoenite: 'ପୋଟାସିୟମ୍ ଶୋନାଇଟ / SOPM (23% K2O, 11% MgO)',
+  fert_boric_acid_common: 'ବୋରିକ୍ ଏସିଡ୍',
+  fert_borax: 'ବୋରାକ୍ସ',
+
+  // Additional keys (English fallback)
   ecOption02: '0.2 mS/cm - Plain Water Supplement',
   ecOption04: '0.4 mS/cm - Recovery/Flush',
   ecOption06: '0.6 mS/cm - Fresh Clones/Cuttings',
@@ -80,94 +228,21 @@ window.i18nLocales.en = {
   ecOption20: '2.0 mS/cm - Heavy Feeders',
   ecOption25: '2.5 mS/cm - Flowering/Fruiting',
   ecOption30: '3.0 mS/cm - Maximum (experienced growers)',
-
-  // Results indicator text
-  currentLabel: 'Current:',
-  litersShort: 'L',
-  oxideShort: 'Oxide',
-  elementalShort: 'Elemental',
-  twoTankView: 'Two-Tank View',
-  twoTankSolution: 'Two-Tank Solution',
-  backToSingleTank: 'Back to Single Tank',
-  combinedResult: 'Combined Result',
   twoTankStockSolutionSystem: 'Two-Tank Stock Solution System',
   twoTankSeparationNote: 'Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.',
-  fertilizersToAddPer: 'Fertilizers to Add (per {volume}{unit})',
-  gramsShort: 'g',
-  gramsPerLiter: 'g/L',
-  totalConcentration: 'total concentration',
-  totalFertilizers: 'TOTAL ({count} fertilizers)',
-  targetVsAchieved: 'Target vs Achieved',
-  nutrient: 'Nutrient',
-  targetPpmHeader: 'Target (ppm)',
-  achievedPpmHeader: 'Achieved (ppm)',
-  difference: 'Difference',
   targetVsAchievedRatios: 'Target vs Achieved Ratios',
-  yourInput: 'Your Input',
-  achievedRatio: 'Achieved Ratio',
-  ratioLabel: 'Ratio:',
-  targetLabel: 'Target:',
-  ppmAchieved: 'PPM Achieved',
   elementalModeLabel: 'Elemental Mode:',
   elementalModeNote: 'Values shown are pure elemental forms (P, K).',
   elementalToOxideConversion: 'To convert to oxide forms: P₂O₅ = P × 2.29, K₂O = K × 1.20',
   oxideModeLabel: 'Oxide Mode:',
   oxideModeNote: 'Values shown are commercial oxide forms (P₂O₅, K₂O).',
   oxideToElementalConversion: 'To convert to elements: P = P₂O₅ × 0.436, K = K₂O × 0.830',
-  nitrogenFormLabel: 'Nitrogen Form:',
-  nitrogenFormsLabel: 'Nitrogen Forms:',
-  ofTotalN: 'of total N',
   clickToLearnIonBalance: 'Click to learn how we calculate Ion Balance',
-  meqPerLiter: 'meq/L',
-  cations: 'Cations',
-  anions: 'Anions',
-  imbalance: 'Imbalance',
-  balanced: 'Balanced',
-  balancedCheck: 'Balanced ✓',
-  caution: 'Caution',
-  cautionWarning: 'Caution ⚠',
-  imbalanced: 'Imbalanced',
-  imbalancedX: 'Imbalanced ✗',
   ratioOffTarget: '{nutrient} ratio is {percent}% off target',
   ratioOffTargetAcceptable: '{nutrient} ratio is {percent}% off target (acceptable range)',
-  ppmUnit: 'ppm',
-  ppmLabel: '(PPM)',
-  ionBalanceDetails: 'Ion Balance Details',
-  totalCations: 'Total Cations',
-  totalAnions: 'Total Anions',
-  whatIsIonBalance: 'What is ion balance?',
-  ionBalanceExplanation: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). Imbalance ≤10% is good; higher values may cause pH swings.',
-
-  // Input steps
-  selectFertilizersAndEnterAmounts: 'Select Fertilizers & Enter Amounts',
-  selectFertilizersDescription: 'Check the fertilizers you\'re using and enter how many grams of each you\'ll add to your solution.',
-  enterTargetPpmValues: 'Enter Target PPM Values',
-  targetPpmDescription: 'Enter the nutrient concentrations you want to achieve. At least one value is required.',
-  enterNutrientRatios: 'Enter Nutrient Ratios',
-  nutrientRatiosDescription: 'Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one must be greater than zero.',
-  selectAvailableFertilizers: 'Select Available Fertilizers',
-  selectAvailableFertilizersDescription: 'Choose the fertilizers you have on hand. The calculator will use only these to build your formula.',
-
-  // Buttons
-  back: '← Back',
-  continue: 'Continue →',
-  cancel: 'Cancel',
-  calculate: 'Calculate',
-  calculatePpm: 'Calculate PPM',
-  calculateFertilizers: 'Calculate Fertilizers',
-  buildFormula: 'Build Formula',
-  clear: 'Clear',
-  clearAll: 'Clear All',
-  selectAll: 'Select All',
-  deselectAll: 'Deselect All',
-  commonOnly: 'Common Only',
-  changeSettings: 'Change Settings',
-  copyResults: 'Copy Results',
+  ionBalanceExplanation: 'When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:',
   copyResultsToClipboard: 'Copy results to clipboard',
-  twoTanks: 'Two Tanks',
   twoTanksForStockSolutions: 'Split into two tanks for stock solutions',
-
-  // Two-Tank Question Step
   twoTankQuestionTitle: 'Would you like to see a two-tank view?',
   incompatibleFertilizersDetected: 'Incompatible fertilizers detected in your selection',
   twoTankExplanation: 'Your formula contains fertilizers that can react with each other when mixed at high concentrations (stock solutions). Specifically, calcium sources can precipitate when combined with sulfates, phosphates, or silicates at the wrong pH.',
@@ -181,27 +256,7 @@ window.i18nLocales.en = {
   twoTankMixingNote: 'Each tank is diluted separately, then combined in the final reservoir at working strength where the diluted concentrations are safe.',
   noShowRegularResults: 'No, show regular results',
   yesShowTwoTanks: 'Yes, show two-tank view',
-
-  // Nutrient labels
-  nitrogen: 'Nitrogen (N)',
-  totalNitrogenN: 'Total Nitrogen (N)',
-  nitrateN: 'Nitrate-N (NO₃-N)',
-  ammoniumN: 'Ammonium-N (NH₄-N)',
-  phosphorusOxide: 'Phosphorus (P₂O₅)',
-  phosphorusElemental: 'Phosphorus (P)',
-  potassiumOxide: 'Potassium (K₂O)',
-  potassiumElemental: 'Potassium (K)',
-  calcium: 'Calcium (Ca)',
-  magnesium: 'Magnesium (Mg)',
-  sulfur: 'Sulfur (S)',
-  silicon: 'Silicon (Si)',
   siliconPpm: 'Silicon (Si) PPM',
-
-  // Placeholders
-  searchFertilizers: 'Search fertilizers...',
-  egValue: 'e.g.,',
-  optional: 'Optional',
-  targetPpm: 'Target PPM',
   exampleN: 'e.g., 150',
   exampleP: 'e.g., 50',
   exampleK: 'e.g., 200',
@@ -212,20 +267,12 @@ window.i18nLocales.en = {
   exampleRatioK: 'e.g., 2',
   optionalZeroOrMore: 'Optional (0 or more)',
   targetPpmNotRatio: 'Target PPM (not ratio)',
-
-  // Alert messages
-  alertSelectFertilizerAndAmount: 'Please select at least one fertilizer and enter an amount.',
-  alertEnterTargetPpm: 'Please enter at least one target PPM value.',
   alertEnterRatioValue: 'Please enter at least one ratio value greater than zero.',
-  alertSelectFertilizer: 'Please select at least one fertilizer.',
-  alertNoCalculationData: 'No calculation data available.',
-  alertEnterValidVolume: 'Please enter a valid volume greater than 0',
   alertFixInvalidInputs: 'Please fix the invalid input values (highlighted in red)',
   alertSelectFertilizerWithAmount: 'Please select at least one fertilizer with an amount greater than 0',
   alertEnterValidSolutionVolume: 'Please enter a valid solution volume greater than 0',
   alertEnterPositiveNutrientTarget: 'Please enter a positive value for at least one nutrient target',
   alertSelectAvailableFertilizer: 'Please select at least one available fertilizer',
-  alertCalculationError: 'An error occurred during calculation. Please try again.',
   alertNoFormulaResults: 'No formula results to split. Please build a formula first.',
   alertNoCalculationResults: 'No calculation results to split. Please calculate fertilizers first.',
   alertNoCalculationResultsPpm: 'No calculation results to split. Please calculate PPM values first.',
@@ -238,29 +285,17 @@ window.i18nLocales.en = {
   alertRunCalculationFirst: 'Please run a calculation first.',
   nutrientOffTarget: '{nutrient} is {percent}% off target',
   nutrientOffTargetAcceptable: '{nutrient} is {percent}% off target (acceptable range)',
-
-  // Warnings section
-  warningsAndRecommendations: 'Warnings & Recommendations',
-  cannotAchieveExactTargets: 'Cannot achieve exact targets',
   cannotAchieveExactTargetsDescription: 'This is the closest formula achievable with available fertilizers. Consider adjusting your targets or accepting the shown deviations.',
   cannotAchieveExactTargetsConsider: 'This is the closest formula achievable with selected fertilizers. Consider:',
   considerSelectingAdditionalFertilizers: 'Selecting additional fertilizers',
   considerAdjustingTargetValues: 'Adjusting your target values',
   considerAcceptingDeviations: 'Accepting the shown deviations',
-  targetsSuccessfullyAchieved: 'Targets Successfully Achieved!',
-  allNutrientValuesWithinRange: 'All nutrient values are within acceptable ranges.',
   targetRatioLabel: 'Target ({ratio})',
   thisTankRatioLabel: 'This Tank ({ratio})',
-  note: 'Note:',
-
-  // Warning categories
-  warningCategoryCaSulfate: 'Stock Solution: Ca + Sulfate',
   warningCategoryCaPhosphate: 'Stock Solution: Ca + Phosphate',
   warningCategoryCaSilicate: 'Stock Solution: Ca + Silicate',
-  warningCategoryHighAmmonium: 'High Ammonium',
   warningCategoryZeroAmmonium: 'Zero Ammonium',
   warningCategoryVeryLowAmmonium: 'Very Low Ammonium',
-  warningCategoryLowCalcium: 'Low Calcium',
   warningCategoryLowMagnesium: 'Low Magnesium',
   warningCategoryMissingMicronutrients: 'Missing Micronutrients',
   warningCategoryCaMgRatio: 'Ca:Mg Ratio',
@@ -271,15 +306,11 @@ window.i18nLocales.en = {
   warningCategoryKMgRatio: 'K:Mg Ratio',
   warningCategoryCaMgKBalance: '(Ca+Mg):K Balance',
   warningCategoryNKRatio: 'N:K Ratio',
-  warningCategoryHighEC: 'High EC',
-  warningCategoryLowEC: 'Low EC',
   warningCategoryHighBoron: 'High Boron',
   warningCategoryHighCopper: 'High Copper',
   warningCategoryHighZinc: 'High Zinc',
   warningCategoryHighManganese: 'High Manganese',
   warningCategoryChargeBalance: 'Charge Balance',
-
-  // Warning messages
   warningMsgCaSulfate: 'Calcium and sulfate are both present. When making STOCK SOLUTIONS, keep calcium sources ({caFertilizers}) separate from sulfate sources ({sFertilizers}) to prevent calcium sulfate precipitation (gypsum). This warning doesn\'t apply to the final diluted nutrient solution.',
   warningMsgCaPhosphate: 'Calcium ({ca} ppm) and phosphate ({p} ppm P) are both present. When making STOCK SOLUTIONS, keep calcium sources ({caFertilizers}) in Tank A and phosphate sources ({pFertilizers}) in Tank B to prevent calcium phosphate precipitation.',
   warningMsgCaSilicate: 'Calcium ({ca} ppm) and silicate ({si} ppm Si) are both present. When making STOCK SOLUTIONS, keep calcium and potassium silicate in separate concentrates to prevent calcium silicate gel/scale formation. Often silicate needs its own tank or sequential dosing.',
@@ -314,19 +345,9 @@ window.i18nLocales.en = {
   calciumFertilizers: 'calcium fertilizers',
   sulfateFertilizers: 'sulfate fertilizers',
   phosphateFertilizers: 'phosphate fertilizers',
-
-  // Results sections
   combinedSolutionWhenMixed: 'Combined Solution (when mixed)',
   combinedSolutionDescription: 'When both tanks are diluted and combined in the final reservoir, you will achieve:',
-  selectedFertilizers: 'Selected Fertilizers',
-  resultsPpm: 'Results (PPM)',
-  ionBalance: 'Ion Balance',
-  nutrientRatioAnalysis: 'Nutrient Ratio Analysis',
-  ecPrediction: 'EC Prediction',
-  estimatedEC: 'Estimated EC',
-  targetEC: 'Target EC',
   scaledToMatch: 'Scaled to match',
-  nutrientRatios: 'Nutrient Ratios',
   nutritionalConsiderations: 'Nutritional Considerations',
   predictedEc: 'Predicted EC',
   electricalConductivity25C: 'Electrical Conductivity (25°C)',
@@ -380,9 +401,6 @@ window.i18nLocales.en = {
   conversionFactorHeader: 'Conversion Factor',
   conversionTableCaption: 'Oxide to Elemental Nutrient Conversion Factors',
   phosphateOxide: 'P₂O₅ (Phosphate)',
-  phosphorusElemental: 'P (Phosphorus)',
-  potassiumOxide: 'K₂O (Potash)',
-  potassiumElemental: 'K (Potassium)',
   magnesiumOxide: 'MgO (Magnesium Oxide)',
   magnesiumElemental: 'Mg (Magnesium)',
   calciumOxide: 'CaO (Calcium Oxide)',
@@ -397,8 +415,6 @@ window.i18nLocales.en = {
   tip4BalanceIsKey: 'More fertilizer ≠ better growth; balance is key',
   tip5CheckWater: 'Check your water\'s existing nutrient content if possible',
   quickTips: 'Quick Tips',
-  whatIsIonBalance: 'What is Ion Balance?',
-  ionBalanceExplanation: 'When fertilizers dissolve in water, they break apart into <strong>charged particles called ions</strong>:',
   cationsDescription: '<strong>Cations (+)</strong> - Positively charged ions like K⁺, Ca²⁺, Mg²⁺, NH₄⁺',
   anionsDescription: '<strong>Anions (-)</strong> - Negatively charged ions like NO₃⁻, SO₄²⁻, H₂PO₄⁻',
   ionBalanceImportance: 'For a <span class="highlight">healthy nutrient solution</span>, the total positive charges should roughly equal the total negative charges. This keeps the pH stable and prevents nutrient lockout.',
@@ -459,8 +475,6 @@ window.i18nLocales.en = {
   ecScalingApplied: 'EC Scaling Applied:',
   ecScalingDescription: 'Fertilizer amounts scaled by {scaleFactor}x to achieve target EC.',
   ecScalingAccuracy: 'Accuracy: {accuracy}% of target',
-
-  // EC Modal
   whatIsEc: 'What is EC (Electrical Conductivity)?',
   ecModalDescription1: '<strong>EC (Electrical Conductivity)</strong> measures how well your nutrient solution conducts electricity. Since dissolved fertilizer salts create charged ions, higher EC means more nutrients in the water.',
   ecModalDescription2: 'EC is measured in <strong>mS/cm</strong> (milliSiemens per centimeter) and is the most reliable way to gauge nutrient concentration. Unlike PPM, EC is a direct measurement that doesn\'t require conversion factors.',
@@ -497,8 +511,6 @@ window.i18nLocales.en = {
   ecTip3: 'If plants show tip burn or salt buildup, reduce EC or flush with plain water',
   ecTip4: 'EC meters should be calibrated regularly with reference solutions',
   ecExplanationTitle: 'EC Prediction Explained',
-
-  // Lambda reference table
   lambdaReferenceTable: 'Ionic Conductivity Reference (λ values)',
   lambdaTableDescription: 'These are scientific constants - the molar masses and limiting molar conductivity values (λ⁰) measured in laboratories. Each ion has a unique conductivity based on its size, charge, and mobility in water.',
   lambdaUnitsNote: 'Units: S·cm²/mol (Siemens × cm² per mole)',
@@ -519,24 +531,17 @@ window.i18nLocales.en = {
   dihydrogenPhosphate: 'Dihydrogen Phosphate',
   hydrogenPhosphate: 'Hydrogen Phosphate',
   bicarbonate: 'Bicarbonate',
-
   warningsRecommendations: 'Warnings & Recommendations',
   recommendedFormula: 'Recommended Formula',
   requiredFertilizers: 'Required Fertilizers',
-
-  // Tabs
   tabGramsToPpm: 'Grams to PPM',
   tabPpmToGrams: 'PPM to Grams',
   tabNpkRatioToGrams: 'NPK Ratio to Grams',
-
-  // Input mode
   inputMode: 'Input Mode',
   oxideFormsCommercial: 'Oxide Forms (P₂O₅, K₂O) - Commercial Standard',
   elementalFormsPure: 'Elemental Forms (P, K) - Pure Elements',
   oxideModeTip: 'Enter P₂O₅ and K₂O values (matches fertilizer labels and NPK Ratio to Grams output)',
   elementalModeTip: 'Enter pure P and K values (scientific calculations)',
-
-  // Reverse calculator specific
   targetNutrientRatios: 'Target Nutrient Ratios',
   targetNutrientRatiosDescription: 'Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one nutrient must be greater than zero. The calculator will find fertilizer amounts that match these ratios.',
   calculationMode: 'Calculation Mode',
@@ -546,32 +551,14 @@ window.i18nLocales.en = {
   selectFertilizersToUse: 'Select Fertilizers to Use',
   selectFertilizersToUseDescription: 'Choose which fertilizers you want to use. The calculator will find the best combination from your selection.',
   priorityDescription: 'Lower values (1-10) = more preferred. The solver will try to use higher-priority fertilizers first.',
-
-  // Volume label
   solutionVolume: 'Solution Volume:',
-
-  // Available fertilizers
   availableFertilizers: 'Available Fertilizers',
   availableFertilizersDescription: 'Select the fertilizers you have available. The calculator will use only these to build your formula.',
-
-  // Notes
-  noteLabel: 'Note:',
   oxideConversionNote: 'Oxide values (P₂O₅, K₂O, etc.) are automatically converted to elemental forms (P, K, etc.) using standard conversion factors.',
   whatIsIonBalanceQuestion: 'What is ion balance?',
   ionBalanceExplanationFull: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). A balanced feed has approximately equal positive and negative charges. Imbalance ≤10% is acceptable; higher values may cause pH swings and nutrient lockouts.',
-  clickToLearnPpm: 'Click to learn how we calculate PPM',
-  clickToLearnIonBalance: 'Click to learn how we calculate Ion Balance',
-  nutrientRatioAnalysis: 'Nutrient Ratio Analysis',
   whatAreNutrientRatios: 'What are nutrient ratios?',
   nutrientRatioExplanationFull: 'These ratios show the relative proportions of key nutrients. For example, "1 : 0.5 : 2" for N:P:K means for every 1 part nitrogen, you have 0.5 parts phosphorus and 2 parts potassium. These ratios help compare different fertilizer formulations and match specific crop requirements.',
-  ecPrediction: 'EC Prediction',
-  warningsAndRecommendations: 'Warnings & Recommendations',
-
-  // Step indicators
-  stepOf: 'Step {current} of {total}',
-
-  // Progress bar
-  calculating: 'Calculating...',
   initializing: 'Initializing...',
   initializingSolver: 'Initializing solver...',
   buildingFormula: 'Building Formula',
@@ -582,30 +569,16 @@ window.i18nLocales.en = {
   optimizingCombination: 'Optimizing fertilizer combination...',
   scalingToTargetEc: 'Scaling to target EC...',
   preparingResults: 'Preparing results...',
-  complete: 'Complete!',
-
-  // Language selector
-  language: 'Language',
-
-  // Priority
   priority: 'Priority',
-
-  // Hydration water info
   hydrationWaterTitle: '💧 About Hydration Water:',
   hydrationWaterExplanation: 'The water molecules (like ·7H₂O) in this formula add to the molar mass but do NOT contribute to the ion balance. They\'re just water trapped in the crystal structure.',
-
-  // Urea info
   ureaInfoTitle: 'ℹ️ About Urea:',
   ureaInfoExplanation: 'Urea does NOT form charged ions like nitrate (NO₃⁻) or ammonium (NH₄⁺). Therefore, it is NOT counted in ion balance calculations. However, its nitrogen content IS still counted when calculating nutrient PPM values.',
-
-  // Ion table
   cationType: 'Cation (+)',
   anionType: 'Anion (-)',
   ionBreakdownByType: 'Ion Breakdown by Type',
   percentOfTotalCations: '{percentage}% of total cations',
   percentOfTotalAnions: '{percentage}% of total anions',
-
-  // Interpretation guide
   interpretingResults: 'Interpreting Your Results',
   imbalanceLessThan10: '≤10% Imbalance:',
   imbalanceLessThan10Desc: 'Balanced ✓ - Excellent! Your solution has good charge balance',
@@ -615,25 +588,15 @@ window.i18nLocales.en = {
   imbalanceOver20Desc: 'Imbalanced ✗ - May cause pH swings and nutrient lockouts',
   whyDoesThisMatter: 'Why does this matter?',
   whyDoesThisMatterExplanation: 'Charge imbalance can cause pH to drift up or down, which may lock out certain nutrients even if they\'re present in your solution.',
-  noCalculationYet: 'No Calculation Yet',
   pleaseRunCalculation: 'Please run a calculation first to see the explanation.',
-
-  // Oxide conversions
   understandingOxideConversions: 'Understanding Oxide Conversions',
   oxideConversionsExplanation: 'Many fertilizers list nutrients in their <strong>oxide form</strong> (like P₂O₅ for phosphorus or K₂O for potassium), but plants actually use the <strong>elemental form</strong>. The calculator handles this automatically!',
-
-  // No fertilizers in formula
   noFertilizersInFormula: 'No Fertilizers in Formula',
   noValidFormulaLong: 'The calculation did not produce a valid formula. Try adjusting your target values or selecting different fertilizers.',
   noValidFormulaShort: 'The calculation did not produce a valid formula.',
-
-  // Ion table headers
-  ionHeader: 'Ion',
   typeHeader: 'Type',
   countTimesChargeHeader: 'Count × Charge',
   meqLHeader: 'meq/L',
-
-  // Final results section
   finalResults: 'Final Results',
   finalIonBalanceResults: 'Final Ion Balance Results',
   totalCationsPlus: 'Total Cations (+)',
@@ -642,16 +605,12 @@ window.i18nLocales.en = {
   anionsMinus: 'Anions (-)',
   imbalancePercentage: 'Imbalance Percentage',
   howWeCalculatedImbalance: 'How we calculated imbalance:',
-
-  // Share/export text
   shareTitle: '🌱 Fertilizer Calculator Results',
   shareFertilizersUsed: '📦 Fertilizers Used',
   shareSolutionVolume: '({volume}L solution)',
   shareNutrientConcentrations: '📊 Nutrient Concentrations (PPM)',
   shareKeyRatios: '📐 Key Ratios',
   shareGeneratedBy: 'Generated by https://umangbhatt.in/fertilizer-calculator/',
-
-  // Formula Builder share text
   shareFormulaBuilderTitle: '🌱 Formula Builder Results',
   shareTargetPpmValues: '🎯 Target PPM Values',
   shareLabelValuePpm: '• {label}: *{value} ppm*',
@@ -664,8 +623,6 @@ window.i18nLocales.en = {
   shareCationsValue: '• Cations: *{value} meq/L*',
   shareAnionsValue: '• Anions: *{value} meq/L*',
   shareImbalanceValue: '• Imbalance: *{value}%* ({status})',
-
-  // NPK Ratio Calculator share text
   shareNpkRatioTitle: '🌱 NPK Ratio Calculator Results',
   shareTargetRatios: '🎯 Target Ratios',
   shareRatioValue: '• Ratio: *{ratio}*',
@@ -673,30 +630,16 @@ window.i18nLocales.en = {
   shareNo3N: '• NO₃-N: *{value} ppm*',
   shareNh4N: '• NH₄-N: *{value} ppm*',
   shareNh4Ratio: '• NH₄ ratio: *{value}%*',
-
-  // Fertilizer names
-  fert_calcium_nitrate_calcinit_typical: 'Calcium Nitrate - Calcinit type (15.5% N, 19% Ca)',
-  fert_potassium_nitrate_typical: 'Potassium Nitrate',
-  fert_map_typical: 'Mono Ammonium Phosphate (MAP)',
-  fert_mkp_typical: 'Mono Potassium Phosphate (MKP)',
-  fert_dap_common: 'Di Ammonium Phosphate (DAP)',
   fert_ssp_common: 'Single Super Phosphate (SSP)',
-  fert_urea_common: 'Urea',
-  fert_ammonium_sulfate_common: 'Ammonium Sulfate',
   fert_ammonium_nitrate_common: 'Ammonium Nitrate - Solid (34% N)',
-  fert_magnesium_sulfate_heptahydrate_common: 'Magnesium Sulfate - Heptahydrate / Epsom Salt (9.86% Mg)',
   fert_magnesium_sulfate_16mgo: 'Magnesium Sulfate (16% MgO) (~9.6% Mg, ~13% S)',
   fert_magnesium_nitrate_hexahydrate_typical: 'Magnesium Nitrate - Hexahydrate (10.9% N, 9.5% Mg)',
-  fert_potassium_sulfate_common: 'Potassium Sulfate (SOP)',
-  fert_potassium_chloride_common: 'Potassium Chloride (MOP)',
   fert_calcium_chloride_dihydrate_common: 'Calcium Chloride - Dihydrate (27.2% Ca)',
   fert_langbeinite_common: 'Langbeinite / Sul-Po-Mag',
-  fert_potassium_schoenite: 'Potassium Schoenite / SOPM (23% K2O, 11% MgO)',
   fert_uan32_solution_typical: 'UAN Solution (example: 32-0-0)',
   fert_ammonium_thiosulfate_common: 'Ammonium Thiosulfate (ATS)',
   fert_potassium_thiosulfate_common: 'Potassium Thiosulfate (KTS)',
   fert_fe_edta_13: 'Iron Chelate - EDTA (13% Fe)',
-  fert_boric_acid_common: 'Boric Acid',
   fert_zinc_sulfate_heptahydrate_common: 'Zinc Sulfate - Heptahydrate (22.7% Zn)',
   fert_nitric_acid_38: 'Nitric Acid 38%',
   fert_nitric_acid_60: 'Nitric Acid 60%',
@@ -721,7 +664,6 @@ window.i18nLocales.en = {
   fert_cu_edta_15: 'Copper Chelate - EDTA (15% Cu)',
   fert_manganese_sulfate: 'Manganese Sulfate',
   fert_zinc_sulfate_mono: 'Zinc Sulfate - Monohydrate (36% Zn)',
-  fert_borax: 'Borax',
   fert_copper_sulfate: 'Copper Sulfate',
   fert_sodium_molybdate: 'Sodium Molybdate',
   fert_ammonium_molybdate: 'Ammonium Molybdate',

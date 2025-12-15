@@ -35,7 +35,28 @@
       bn: window.i18nLocales?.bn || {},
 
       // Tamil translations - loaded from /scripts/locales/ta.js
-      ta: window.i18nLocales?.ta || {}
+      ta: window.i18nLocales?.ta || {},
+
+      // Malayalam translations - loaded from /scripts/locales/ml.js
+      ml: window.i18nLocales?.ml || {},
+
+      // Punjabi (Gurmukhi) translations - loaded from /scripts/locales/pa.js
+      pa: window.i18nLocales?.pa || {},
+
+      // Odia translations - loaded from /scripts/locales/or.js
+      or: window.i18nLocales?.or || {},
+
+      // Assamese translations - loaded from /scripts/locales/as.js
+      as: window.i18nLocales?.as || {},
+
+      // Bhojpuri translations - loaded from /scripts/locales/bho.js
+      bho: window.i18nLocales?.bho || {},
+
+      // Maithili translations - loaded from /scripts/locales/mai.js
+      mai: window.i18nLocales?.mai || {},
+
+      // Awadhi translations - loaded from /scripts/locales/awa.js
+      awa: window.i18nLocales?.awa || {}
     },
 
     // Format a number according to the current language
@@ -252,7 +273,14 @@
         mr: 'मराठी',
         'bn-sadhu': 'বাংলা (সাধু)',
         bn: 'বাংলা (চলিত)',
-        ta: 'தமிழ்'
+        ta: 'தமிழ்',
+        ml: 'മലയാളം',
+        pa: 'ਪੰਜਾਬੀ',
+        or: 'ଓଡ଼ିଆ',
+        as: 'অসমীয়া',
+        bho: 'भोजपुरी',
+        mai: 'मैथिली',
+        awa: 'अवधी'
       };
       return names[code] || code.toUpperCase();
     }

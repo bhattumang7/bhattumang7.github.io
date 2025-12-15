@@ -98,43 +98,31 @@ window.i18nLocales.ta = {
   totalConcentration: 'மொத்த செறிவு',
   totalFertilizers: 'மொத்தம் ({count} உரங்கள்)',
   targetVsAchieved: 'இலக்கு எதிர் அடைந்தது',
-  target: 'இலக்கு',
-  achieved: 'அடைந்தது',
   difference: 'வேறுபாடு',
-  nutrientConcentrations: 'ஊட்டச்சத்து செறிவுகள்',
-  ionBalanceResults: 'அயனி சமநிலை முடிவுகள்',
-  predicted: 'கணிக்கப்பட்டது',
+  nutrient: 'Nutrient',
   cations: 'நேர்மின் அயனிகள்',
   anions: 'எதிர்மின் அயனிகள்',
   imbalance: 'சமநிலையின்மை',
-  ratiosAndBalance: 'விகிதங்கள் & சமநிலை',
 
   // Nutrient names
   nitrogen: 'நைட்ரஜன்',
-  phosphorus: 'பாஸ்பரஸ்',
   potassium: 'பொட்டாசியம்',
   calcium: 'கால்சியம்',
   magnesium: 'மெக்னீசியம்',
   sulfur: 'கந்தகம்',
-  iron: 'இரும்பு',
   manganese: 'மாங்கனீசு',
   zinc: 'துத்தநாகம்',
   copper: 'செப்பு',
-  boron: 'போரான்',
-  molybdenum: 'மாலிப்டினம்',
   chloride: 'குளோரைடு',
   silicon: 'சிலிக்கான்',
-  sodium: 'சோடியம்',
 
   // Ion names
   nitrate: 'நைட்ரேட்',
   ammonium: 'அம்மோனியம்',
-  phosphate: 'பாஸ்பேட்',
   sulfate: 'சல்பேட்',
   bicarbonate: 'பைகார்பனேட்',
 
   // UI elements
-  selectFertilizers: 'உரங்களைத் தேர்ந்தெடுக்கவும்',
   selectFertilizersAndEnterAmounts: 'உரங்களைத் தேர்ந்தெடுத்து அளவுகளை உள்ளிடவும்',
   selectFertilizersDescription: 'நீங்கள் பயன்படுத்தும் உரங்களைச் சரிபார்த்து, ஒவ்வொன்றிலும் எத்தனை கிராம் சேர்ப்பீர்கள் என்பதை உள்ளிடவும்.',
   enterTargetPpmValues: 'இலக்கு PPM மதிப்புகளை உள்ளிடவும்',
@@ -163,11 +151,6 @@ window.i18nLocales.ta = {
   language: 'மொழி',
 
   // Results
-  results: 'முடிவுகள்',
-  ppmResults: 'PPM முடிவுகள்',
-  formulaResults: 'சூத்திர முடிவுகள்',
-  reverseResults: 'தலைகீழ் முடிவுகள்',
-  noResults: 'முடிவுகள் இல்லை',
   noCalculationYet: 'இன்னும் கணக்கீடு இல்லை',
   pleaseRunCalculation: 'முடிவுகளைக் காண முதலில் கணக்கீடு செய்யவும்',
   copyResults: 'முடிவுகளை நகலெடு',
@@ -176,11 +159,8 @@ window.i18nLocales.ta = {
   finalIonBalanceResults: 'இறுதி அயனி சமநிலை முடிவுகள்',
 
   // Warnings
-  warning: 'எச்சரிக்கை',
-  warnings: 'எச்சரிக்கைகள்',
   warningsAndRecommendations: 'எச்சரிக்கைகள் மற்றும் பரிந்துரைகள்',
   warningsRecommendations: 'எச்சரிக்கைகள் & பரிந்துரைகள்',
-  noWarnings: 'எச்சரிக்கைகள் இல்லை',
 
   // Two tank
   twoTanks: 'இரண்டு தொட்டிகள்',
@@ -194,7 +174,6 @@ window.i18nLocales.ta = {
   twoTankExplanation: 'கால்சியம் சல்பேட் (ஜிப்சம்) படிவை தடுக்க, கால்சியம் மற்றும் சல்பேட்/பாஸ்பேட் உரங்களை தனித்தனி தொட்டிகளில் வைக்க வேண்டும்.',
   twoTankMixingNote: 'ஸ்டாக் கரைசல்களை தனித்தனியாக நீர்க்கவும், பின்னர் இறுதி கரைசலில் இணைக்கவும்.',
   yesShowTwoTanks: 'ஆம், இரு-தொட்டி முறை காட்டு',
-  skipTwoTankView: 'இல்லை, ஒற்றை தொட்டி காட்சியை வைத்திரு',
   twoTankQuestionTitle: 'இரு-தொட்டி முறை தேவையா?',
 
   // Ion balance
@@ -223,16 +202,13 @@ window.i18nLocales.ta = {
   howWeCalculatedImbalance: 'சமநிலையின்மையை எவ்வாறு கணக்கிட்டோம்:',
 
   // EC related
-  ecValue: 'EC மதிப்பு',
   ecLabel: 'EC',
   targetEc: 'இலக்கு EC',
   targetEcDescription: 'உங்கள் கரைசலுக்கான இலக்கு மின்கடத்துத்திறனை உள்ளிடவும்',
   predictedEc: 'கணிக்கப்பட்ட EC',
-  estimatedEc: 'மதிப்பிடப்பட்ட EC',
   ecPrediction: 'EC கணிப்பு',
   whatIsEc: 'EC என்றால் என்ன?',
   ecExplanationTitle: 'EC பற்றி',
-  electricalConductivity: 'மின்கடத்துத்திறன்',
   electricalConductivity25C: 'மின்கடத்துத்திறன் (25°C)',
   ecFormulaEquation: 'EC = Σ(செறிவு × λ)',
   ecFormulaDescription: 'ஒவ்வொரு அயனியின் செறிவு அதன் மோலார் கடத்துத்திறனால் பெருக்கப்படுகிறது',
@@ -258,8 +234,6 @@ window.i18nLocales.ta = {
   ecScalingAccuracy: 'துல்லியம்: இலக்கின் {accuracy}%',
 
   // PPM related
-  ppm: 'PPM',
-  ppmValue: 'PPM மதிப்பு',
   targetPpm: 'இலக்கு PPM',
   targetPpmNotRatio: 'இது PPM மதிப்புகளைப் பற்றியது, விகிதங்கள் அல்ல',
   whatIsPpm: 'PPM என்றால் என்ன?',
@@ -277,7 +251,6 @@ window.i18nLocales.ta = {
 
   // Nutrient ratios
   nutrientRatios: 'ஊட்டச்சத்து விகிதங்கள்',
-  nutrientRatio: 'ஊட்டச்சத்து விகிதம்',
   nutrientRatioAnalysis: 'ஊட்டச்சத்து விகித பகுப்பாய்வு',
   nutrientRatioExplanationFull: 'ஊட்டச்சத்து விகிதங்கள் உங்கள் கரைசலில் உள்ள பல்வேறு ஊட்டச்சத்துகளின் ஒப்பீட்டு அளவுகளைக் காட்டுகின்றன.',
   whatAreNutrientRatios: 'ஊட்டச்சத்து விகிதங்கள் என்றால் என்ன?',
@@ -286,7 +259,6 @@ window.i18nLocales.ta = {
   targetNutrientRatiosDescription: 'உங்கள் கரைசலுக்கான விரும்பிய ஊட்டச்சத்து விகிதங்களை உள்ளிடவும்',
 
   // Oxide/Elemental conversions
-  oxideConversions: 'ஆக்சைடு மாற்றங்கள்',
   oxideConversionNote: 'வணிக உரங்கள் ஊட்டச்சத்துக்களை ஆக்சைடு வடிவங்களில் (P₂O₅, K₂O) பட்டியலிடுகின்றன',
   oxideConversionsExplanation: 'வணிக உரங்கள் பாஸ்பரஸ் மற்றும் பொட்டாசியத்தை ஆக்சைடு வடிவங்களில் (P₂O₅, K₂O) பட்டியலிடுகின்றன. தூய தனிம மதிப்புகளுக்கு மாற்றுவதற்கு மாற்ற காரணிகளைப் பயன்படுத்துகிறோம்.',
   understandingOxideConversions: 'ஆக்சைடு மாற்றங்களைப் புரிந்துகொள்ளுதல்',
@@ -296,7 +268,6 @@ window.i18nLocales.ta = {
   elementalModeTip: 'அறிவியல் ஆய்வுகள் அல்லது குறிப்பு அட்டவணைகளுக்கு தனிம முறையைப் பயன்படுத்தவும்.',
 
   // Concentration
-  concentration: 'செறிவு',
   concentrationCalcHeader: 'செறிவு கணக்கீடு',
   concentrationFormula: 'செறிவு சூத்திரம்',
   concentrationFormulaDesc: 'செறிவு = (நிறை × சதவீதம்) / கன அளவு',
@@ -323,11 +294,9 @@ window.i18nLocales.ta = {
   howConcentrationCalculated: 'செறிவு எவ்வாறு கணக்கிடப்படுகிறது',
 
   // N forms
-  nitrogenForms: 'நைட்ரஜன் வடிவங்கள்',
   nitrateN: 'நைட்ரேட்-N',
   ammoniumN: 'அம்மோனியம்-N',
   totalNitrogenN: 'மொத்த நைட்ரஜன் (N)',
-  nh4No3Ratio: 'NH₄:NO₃ விகிதம்',
 
   // Phosphorus forms
   phosphorusOxide: 'பாஸ்பரஸ் (P₂O₅)',
@@ -432,11 +401,8 @@ window.i18nLocales.ta = {
 
   // Volume
   solutionVolume: 'கரைசல் கன அளவு',
-  volumeUnit: 'கன அளவு அலகு',
 
   // Close
-  close: 'மூடு',
-  closeModal: 'மாடலை மூடு',
 
   // Change settings
   changeSettings: 'அமைப்புகளை மாற்று',
@@ -798,5 +764,12 @@ window.i18nLocales.ta = {
   elementalModeNote: 'தூய தனிமங்கள் - அறிவியல் கணக்கீடுகளுக்கு',
   oxideToElementalConversion: 'ஆக்சைடு முதல் தனிம மாற்றம்',
   elementalToOxideConversion: 'தனிம முதல் ஆக்சைடு மாற்றம்',
-  meqPerLiter: 'லிட்டருக்கு meq'
+  meqPerLiter: 'லிட்டருக்கு meq',
+  copyToClipboard: 'Copy to Clipboard',
+  total: 'Total',
+  backToNormalView: 'Back to Normal View',
+  hideDetails: 'Hide Details',
+  showDetails: 'Show Details',
+  understandingPpmCalculations: 'Understanding PPM Calculations',
+  understandingIonBalance: 'Understanding Ion Balance',
 };
