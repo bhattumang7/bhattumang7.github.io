@@ -691,6 +691,7 @@ window.i18nLocales.kn = {
   fert_potassium_chloride_common: 'Potassium Chloride (MOP)',
   fert_calcium_chloride_dihydrate_common: 'Calcium Chloride - Dihydrate (27.2% Ca)',
   fert_langbeinite_common: 'Langbeinite / Sul-Po-Mag',
+  fert_potassium_schoenite: 'Potassium Schoenite / SOPM (23% K2O, 11% MgO)',
   fert_uan32_solution_typical: 'UAN Solution (example: 32-0-0)',
   fert_ammonium_thiosulfate_common: 'Ammonium Thiosulfate (ATS)',
   fert_potassium_thiosulfate_common: 'Potassium Thiosulfate (KTS)',
