@@ -1067,6 +1067,21 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
+        <!-- Nutrient Ratio Analysis -->
+        <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
+          <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <div v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+              <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
+              <div style="font-size: 0.85em; color: #666;">
+                <span v-for="(label, i) in ratioObj.labels" :key="i">
+                  {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
         <!-- Nutritional Warnings -->
         <div v-if="formulaResultsData.nutritionalWarnings && formulaResultsData.nutritionalWarnings.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('warningsAndRecommendations') }}</h2>
@@ -1176,6 +1191,21 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 0.85em; color: #666;">{{ i18n.t('targetEC') }}</div>
               <div style="font-size: 1.5em; font-weight: bold;">{{ i18n.formatNumber(reverseResultsData.ecPrediction.targetEC) }} mS/cm</div>
               <div v-if="reverseResultsData.ecPrediction.ecScaling" style="font-size: 0.85em; color: #28a745;">{{ i18n.t('scaledToMatch') }}</div>
+            </div>
+          </div>
+        </div>
+        <!-- Nutrient Ratio Analysis -->
+        <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
+          <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <div v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+              <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
+              <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
+              <div style="font-size: 0.85em; color: #666;">
+                <span v-for="(label, i) in ratioObj.labels" :key="i">
+                  {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
