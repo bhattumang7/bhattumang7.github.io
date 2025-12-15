@@ -117,6 +117,12 @@
       pct: { K2O: 22.0, Mg: 11.0, S: 22.0 }
     },
     {
+      id: "potassium_schoenite",
+      name: "Potassium Schoenite / SOPM (23% K2O, 11% MgO)",
+      aliases: ["Schoenite", "Potassium Magnesium Sulfate", "SOPM", "K2SO4·MgSO4·6H2O"],
+      pct: { K2O: 23.0, MgO: 11.0, S: 15.9 }
+    },
+    {
       id: "uan32_solution_typical",
       name: "UAN Solution (example: 32-0-0)",
       aliases: ["UAN-32"],
@@ -658,6 +664,15 @@
         {ion: 'SO₄²⁻', charge: 2, count: 3, type: 'anion'}
       ]
     },
+    potassium_schoenite: {
+      formula: 'K₂SO₄·MgSO₄·6H₂O',
+      molarMass: 402.71,
+      ions: [
+        {ion: 'K⁺', charge: 1, count: 2, type: 'cation'},
+        {ion: 'Mg²⁺', charge: 2, count: 1, type: 'cation'},
+        {ion: 'SO₄²⁻', charge: 2, count: 2, type: 'anion'}
+      ]
+    },
     ammonium_thiosulfate_common: {
       formula: '(NH₄)₂S₂O₃',
       molarMass: 148.2,
@@ -786,6 +801,7 @@
       'potassium_sulfate_common',
       'ammonium_sulfate_common',
       'langbeinite_common',
+      'potassium_schoenite',
       'ammonium_thiosulfate_common',
       'potassium_thiosulfate_common',
       'manganese_sulfate',

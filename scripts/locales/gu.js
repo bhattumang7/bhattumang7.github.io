@@ -661,6 +661,7 @@ window.i18nLocales.gu = {
   fert_potassium_chloride_common: 'પોટેશિયમ ક્લોરાઇડ (MOP)',
   fert_calcium_chloride_dihydrate_common: 'કેલ્શિયમ ક્લોરાઇડ - ડાયહાઇડ્રેટ (૨૭.૨% Ca)',
   fert_langbeinite_common: 'લેંગબીનાઇટ / સલ-પો-મેગ',
+  fert_potassium_schoenite: 'પોટેશિયમ શોનાઇટ / SOPM (૨૩% K2O, ૧૧% MgO)',
   fert_uan32_solution_typical: 'UAN સોલ્યુશન (ઉદાહરણ: ૩૨-૦-૦)',
   fert_ammonium_thiosulfate_common: 'એમોનિયમ થાયોસલ્ફેટ (ATS)',
   fert_potassium_thiosulfate_common: 'પોટેશિયમ થાયોસલ્ફેટ (KTS)',
