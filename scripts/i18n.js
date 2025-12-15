@@ -32,7 +32,10 @@
       'bn-sadhu': window.i18nLocales?.['bn-sadhu'] || {},
 
       // Bengali (Cholito Bhasha) translations - loaded from /scripts/locales/bn.js
-      bn: window.i18nLocales?.bn || {}
+      bn: window.i18nLocales?.bn || {},
+
+      // Tamil translations - loaded from /scripts/locales/ta.js
+      ta: window.i18nLocales?.ta || {}
     },
 
     // Format a number according to the current language
@@ -248,7 +251,8 @@
         te: 'తెలుగు',
         mr: 'मराठी',
         'bn-sadhu': 'বাংলা (সাধু)',
-        bn: 'বাংলা (চলিত)'
+        bn: 'বাংলা (চলিত)',
+        ta: 'தமிழ்'
       };
       return names[code] || code.toUpperCase();
     }
