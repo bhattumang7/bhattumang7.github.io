@@ -14,7 +14,25 @@
       en: window.i18nLocales?.en || {},
 
       // Gujarati translations - loaded from /scripts/locales/gu.js
-      gu: window.i18nLocales?.gu || {}
+      gu: window.i18nLocales?.gu || {},
+
+      // Hindi translations - loaded from /scripts/locales/hi.js
+      hi: window.i18nLocales?.hi || {},
+
+      // Kannada translations - loaded from /scripts/locales/kn.js
+      kn: window.i18nLocales?.kn || {},
+
+      // Telugu translations - loaded from /scripts/locales/te.js
+      te: window.i18nLocales?.te || {},
+
+      // Marathi translations - loaded from /scripts/locales/mr.js
+      mr: window.i18nLocales?.mr || {},
+
+      // Bengali (Sadhu Bhasha) translations - loaded from /scripts/locales/bn-sadhu.js
+      'bn-sadhu': window.i18nLocales?.['bn-sadhu'] || {},
+
+      // Bengali (Cholito Bhasha) translations - loaded from /scripts/locales/bn.js
+      bn: window.i18nLocales?.bn || {}
     },
 
     // Format a number according to the current language
@@ -225,7 +243,12 @@
         ja: '日本語',
         ko: '한국어',
         hi: 'हिन्दी',
-        gu: 'ગુજરાતી'
+        gu: 'ગુજરાતી',
+        kn: 'ಕನ್ನಡ',
+        te: 'తెలుగు',
+        mr: 'मराठी',
+        'bn-sadhu': 'বাংলা (সাধু)',
+        bn: 'বাংলা (চলিত)'
       };
       return names[code] || code.toUpperCase();
     }
