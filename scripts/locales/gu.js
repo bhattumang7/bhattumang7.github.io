@@ -88,6 +88,7 @@ window.i18nLocales.gu = {
   fertilizersToAddPer: 'ઉમેરવાના ખાતર (દર {volume}{unit})',
   gramsShort: 'ગ્રા',
   gramsPerLiter: 'ગ્રા/લિ',
+  totalConcentration: 'કુલ સાંદ્રતા',
   totalFertilizers: 'કુલ ({count} ખાતર)',
   targetVsAchieved: 'લક્ષ્ય vs પ્રાપ્ત',
   nutrient: 'પોષક',

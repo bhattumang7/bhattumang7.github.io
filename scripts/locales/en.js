@@ -95,6 +95,7 @@ window.i18nLocales.en = {
   fertilizersToAddPer: 'Fertilizers to Add (per {volume}{unit})',
   gramsShort: 'g',
   gramsPerLiter: 'g/L',
+  totalConcentration: 'total concentration',
   totalFertilizers: 'TOTAL ({count} fertilizers)',
   targetVsAchieved: 'Target vs Achieved',
   nutrient: 'Nutrient',

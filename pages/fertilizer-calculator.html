@@ -910,8 +910,8 @@ permalink: /fertilizer-calculator/
             </div>
             <!-- Total g/L summary -->
             <div v-if="gramsToPpmDisplayData.fertilizers.length > 0 && gramsToPpmDisplayData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
-              <strong>{{ i18n.formatNumber((gramsToPpmDisplayData.totalGrams / gramsToPpmDisplayData.volume).toFixed(3)) }} g/L</strong>
-              <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+              <strong>{{ i18n.formatNumber((gramsToPpmDisplayData.totalGrams / gramsToPpmDisplayData.volume).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</strong>
+              <span style="color: #666; font-size: 0.9em;"> ({{ i18n.t('totalConcentration') }})</span>
             </div>
           </div>
         </div>
@@ -1017,8 +1017,8 @@ permalink: /fertilizer-calculator/
             </div>
             <!-- Total g/L summary -->
             <div v-if="formulaResultsData.fertilizers.length > 0 && formulaResultsData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
-              <strong>{{ i18n.formatNumber((formulaResultsData.totalGrams / formulaResultsData.volume).toFixed(3)) }} g/L</strong>
-              <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+              <strong>{{ i18n.formatNumber((formulaResultsData.totalGrams / formulaResultsData.volume).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</strong>
+              <span style="color: #666; font-size: 0.9em;"> ({{ i18n.t('totalConcentration') }})</span>
             </div>
           </div>
         </div>
@@ -1124,8 +1124,8 @@ permalink: /fertilizer-calculator/
             </div>
             <!-- Total g/L summary -->
             <div v-if="reverseResultsData.fertilizers.length > 0 && reverseResultsData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
-              <strong>{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume).toFixed(3)) }} g/L</strong>
-              <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+              <strong>{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</strong>
+              <span style="color: #666; font-size: 0.9em;"> ({{ i18n.t('totalConcentration') }})</span>
             </div>
           </div>
         </div>
@@ -1380,8 +1380,8 @@ permalink: /fertilizer-calculator/
       </div>
       <!-- Total g/L summary -->
       <div v-if="gramsToPpmDisplayData.fertilizers.length > 0 && gramsToPpmDisplayData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
-        <strong>{{ i18n.formatNumber((gramsToPpmDisplayData.totalGrams / gramsToPpmDisplayData.volume).toFixed(3)) }} g/L</strong>
-        <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+        <strong>{{ i18n.formatNumber((gramsToPpmDisplayData.totalGrams / gramsToPpmDisplayData.volume).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</strong>
+        <span style="color: #666; font-size: 0.9em;"> ({{ i18n.t('totalConcentration') }})</span>
       </div>
     </div>
   </div>
@@ -1824,8 +1824,8 @@ permalink: /fertilizer-calculator/
         </div>
         <!-- Total g/L summary -->
         <div v-if="formulaResultsData.fertilizers.length > 0 && formulaResultsData.volume > 0" style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
-          <strong>{{ i18n.formatNumber((formulaResultsData.totalGrams / formulaResultsData.volume).toFixed(3)) }} g/L</strong>
-          <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+          <strong>{{ i18n.formatNumber((formulaResultsData.totalGrams / formulaResultsData.volume).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</strong>
+          <span style="color: #666; font-size: 0.9em;"> ({{ i18n.t('totalConcentration') }})</span>
         </div>
       </div>
 
@@ -2219,18 +2219,18 @@ permalink: /fertilizer-calculator/
           <div v-if="reverseResultsData.fertilizers.length > 1" class="formula-fertilizer" style="border-top: 2px solid #007bff; margin-top: 10px; padding-top: 10px; background: #e3f2fd;">
             <div class="formula-fertilizer-info">
               <div class="formula-fertilizer-name" style="color: #007bff;"><strong>{{ i18n.t('totalFertilizers', { count: i18n.formatNumber(reverseResultsData.fertilizers.length) }) }}</strong></div>
-              <div class="formula-fertilizer-composition">{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume).toFixed(3)) }} g/L</div>
+              <div class="formula-fertilizer-composition">{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</div>
             </div>
             <div class="formula-fertilizer-amount" style="color: #007bff; font-size: 1.2em;"><strong>{{ i18n.formatNumber(reverseResultsData.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong></div>
           </div>
           <!-- Average g/L per fertilizer (only for 2+) -->
           <div v-if="reverseResultsData.fertilizers.length > 1" style="text-align: center; margin-top: 10px; padding: 8px; background: #f5f5f5; border-radius: 6px; font-size: 0.9em; color: #666;">
-            {{ i18n.t('averagePerFertilizer') || 'Average per fertilizer' }}: <strong>{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume / reverseResultsData.fertilizers.length).toFixed(3)) }} g/L</strong>
+            {{ i18n.t('averagePerFertilizer') || 'Average per fertilizer' }}: <strong>{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume / reverseResultsData.fertilizers.length).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</strong>
           </div>
           <!-- Total g/L summary (always shown) -->
           <div style="text-align: center; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 6px; border: 1px solid #c8e6c9;">
-            <strong>{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume).toFixed(3)) }} g/L</strong>
-            <span style="color: #666; font-size: 0.9em;"> {{ i18n.t('totalConcentration') || 'total concentration' }}</span>
+            <strong>{{ i18n.formatNumber((reverseResultsData.totalGrams / reverseResultsData.volume).toFixed(3)) }} {{ i18n.t('gramsPerLiter') }}</strong>
+            <span style="color: #666; font-size: 0.9em;"> ({{ i18n.t('totalConcentration') }})</span>
           </div>
         </template>
       </div>
@@ -6256,6 +6256,20 @@ const FertilizerApp = {
 
       // Calculate totals
       results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0);
+
+      // Convert oxides to elemental forms
+      if (results.P2O5) {
+        results.P = (results.P || 0) + (results.P2O5 * OXIDE_CONVERSIONS.P2O5_to_P);
+      }
+      if (results.K2O) {
+        results.K = (results.K || 0) + (results.K2O * OXIDE_CONVERSIONS.K2O_to_K);
+      }
+      if (results.CaO) {
+        results.Ca = (results.Ca || 0) + (results.CaO * OXIDE_CONVERSIONS.CaO_to_Ca);
+      }
+      if (results.MgO) {
+        results.Mg = (results.Mg || 0) + (results.MgO * OXIDE_CONVERSIONS.MgO_to_Mg);
+      }
 
       // EC and ion balance
       const ecData = estimateECFromPPM(results);
