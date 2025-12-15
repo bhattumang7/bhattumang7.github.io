@@ -821,7 +821,8 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 
           // For Si: if user specified an absolute Si target, we need to iteratively adjust
           // the Si target so that after EC scaling it reaches the desired value.
-          if (targetSi > 0 && scaleFactor < 1) {
+          // Always adjust Si after EC scaling (scale up or down) because Si is an absolute PPM target
+          if (targetSi > 0) {
             let currentSiTarget = targetSi;
             let bestSiError = Math.abs((scaledAchieved.Si || 0) - targetSi);
             let bestFormula = { ...scaledFormula };
