@@ -9,6 +9,23 @@ permalink: /fertilizer-calculator/
 
 {% raw %}
 <div class="calculator-container" v-cloak>
+  <!-- Language Selection Splash (shown on first visit) -->
+  <div class="language-splash-overlay" :class="{ active: showLanguageSplash }">
+    <div class="language-splash-modal">
+      <h2>Select Your Language</h2>
+      <p>Choose your preferred language</p>
+      <div class="language-splash-options">
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('en')">
+          <span class="lang-native">English</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('gu')">
+          <span class="lang-native">ગુજરાતી</span>
+          <span class="lang-english">(Gujarati)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Progress Bar Overlay (Vue-powered) - must be inside Vue mount container -->
   <div class="progress-overlay" :class="{ active: progressState.show }">
     <div class="progress-container">
@@ -4136,6 +4153,9 @@ const FertilizerApp = {
     const wizardResultsModeText = ref(''); // Dynamic text for wizard results mode indicator
     const wizardResultsSource = ref(null); // 'ppm-calc', 'formula-builder', 'reverse-calc', or null - controls which results show in wizard
 
+    // Language splash for first-time visitors
+    const showLanguageSplash = ref(!localStorage.getItem('fertCalcLanguage'));
+
     // Watch language changes and sync with i18n
     watch(language, (newLang) => {
       if (i18n && i18n.setLanguage) {
@@ -5977,6 +5997,14 @@ const FertilizerApp = {
       currentMode.value = tabId;
     }
 
+    // Language selection from splash screen
+    function selectLanguageFromSplash(langCode) {
+      // Hide splash
+      showLanguageSplash.value = false;
+      // Set the language (this also saves to localStorage via the watcher)
+      language.value = langCode;
+    }
+
     // Modal opening functions (wrappers that use openModal)
     function openPPMExplanation() {
       // Get data from the last calculation
@@ -6466,6 +6494,7 @@ const FertilizerApp = {
       volume,
       calculationMode,
       language,
+      showLanguageSplash,
       fertilizerAmounts,
       searchTerm,
       gramsToPpmResults,
@@ -6603,6 +6632,7 @@ const FertilizerApp = {
       showTwoTankView,
       skipTwoTankView,
       switchTab,
+      selectLanguageFromSplash,
       openPPMExplanation,
       openIonBalanceExplanation,
       openEcExplanation,
