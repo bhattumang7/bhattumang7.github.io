@@ -4464,22 +4464,29 @@ const FertilizerApp = {
     // =========================================================================
 
     // EC description based on selected EC level
+    // Note: language.value is included to trigger recomputation on language change
     const wizardECDescription = computed(() => {
+      const _lang = language.value; // Reactive dependency on language
       const descKey = EC_DESCRIPTIONS[wizardSelectedEC.value];
       return descKey ? i18n.t(descKey) : '';
     });
 
     // P and K labels based on calculation mode
+    // Note: language.value is included to trigger recomputation on language change
     const wizardPLabel = computed(() => {
+      const _lang = language.value; // Reactive dependency on language
       return wizardCalcMode.value === 'elemental' ? i18n.t('phosphorusElemental') : i18n.t('phosphorusOxide');
     });
 
     const wizardKLabel = computed(() => {
+      const _lang = language.value; // Reactive dependency on language
       return wizardCalcMode.value === 'elemental' ? i18n.t('potassiumElemental') : i18n.t('potassiumOxide');
     });
 
     // Mode indicator text for wizard header (computed from Vue state)
+    // Note: language.value is included to trigger recomputation on language change
     const modeIndicatorText = computed(() => {
+      const _lang = language.value; // Reactive dependency on language
       if (!currentMode.value) return '';
 
       const modeKeys = {
@@ -4508,7 +4515,9 @@ const FertilizerApp = {
     });
 
     // Step indicator text computed from current step and mode
+    // Note: language.value is included to trigger recomputation on language change
     const stepIndicatorText = computed(() => {
+      const _lang = language.value; // Reactive dependency on language
       const step = wizardStep.value;
       const mode = currentMode.value;
       if (!mode) return '';
@@ -5894,7 +5903,9 @@ const FertilizerApp = {
     }
 
     // Get modal title based on type
+    // Note: language.value is included to trigger recomputation on language change
     const modalTitle = computed(() => {
+      const _lang = language.value; // Reactive dependency on language
       const titles = {
         'ppm': i18n.t('understandingPpmCalculations') || 'Understanding PPM Calculations',
         'ion-balance': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
