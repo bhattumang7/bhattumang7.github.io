@@ -2267,3 +2267,61 @@
   color: #888;
   font-size: 0.85em;
 }
+
+/* Mobile styles for language splash */
+@media (max-width: 768px) {
+  .language-splash-overlay {
+    padding: 10px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .language-splash-modal {
+    padding: 20px;
+    margin: 10px auto;
+    max-height: none;
+    width: calc(100% - 20px);
+    max-width: 100%;
+  }
+
+  .language-splash-modal h2 {
+    font-size: 1.25em;
+    margin-bottom: 5px;
+  }
+
+  .language-splash-modal p {
+    margin-bottom: 15px;
+    font-size: 0.9em;
+  }
+
+  .language-splash-options {
+    gap: 8px;
+  }
+
+  .language-splash-btn {
+    padding: 12px 16px;
+    font-size: 1em;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .language-splash-modal {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  .language-splash-modal h2 {
+    font-size: 1.1em;
+  }
+
+  .language-splash-options {
+    gap: 6px;
+  }
+
+  .language-splash-btn {
+    padding: 10px 12px;
+    font-size: 0.95em;
+    border-radius: 8px;
+  }
+}
