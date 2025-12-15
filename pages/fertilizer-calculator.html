@@ -8,19 +8,18 @@ permalink: /fertilizer-calculator/
 <style>[v-cloak] { display: none !important; }</style>
 
 {% raw %}
-<!-- Progress Bar Overlay (Vue-powered) -->
-<div class="progress-overlay" v-cloak :class="{ active: progressState.show }">
-  <div class="progress-container">
-    <h3>{{ progressState.title }}</h3>
-    <div class="progress-bar-wrapper">
-      <div class="progress-bar" :class="{ indeterminate: progressState.indeterminate }" :style="{ width: progressState.percent + '%' }"></div>
-    </div>
-    <p class="progress-text">{{ progressState.message }}</p>
-    <button class="progress-cancel-btn" @click="progressBar.cancel()">{{ i18n.t('cancel') }}</button>
-  </div>
-</div>
-
 <div class="calculator-container" v-cloak>
+  <!-- Progress Bar Overlay (Vue-powered) - must be inside Vue mount container -->
+  <div class="progress-overlay" :class="{ active: progressState.show }">
+    <div class="progress-container">
+      <h3>{{ progressState.title }}</h3>
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar" :class="{ indeterminate: progressState.indeterminate }" :style="{ width: progressState.percent + '%' }"></div>
+      </div>
+      <p class="progress-text">{{ progressState.message }}</p>
+      <button class="progress-cancel-btn" @click="progressBar.cancel()">{{ i18n.t('cancel') }}</button>
+    </div>
+  </div>
   <!-- Vue-powered Unified Modal (placed at top for proper rendering) -->
   <div v-if="activeModal" class="modal-overlay active" style="display: flex !important;" @click="closeModal">
     <div class="modal-content" @click.stop>
@@ -2492,7 +2491,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.1.7
+    v1.1.8
   </div>
 
 </div>
