@@ -22,6 +22,30 @@ permalink: /fertilizer-calculator/
           <span class="lang-native">ગુજરાતી</span>
           <span class="lang-english">(Gujarati)</span>
         </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('hi')">
+          <span class="lang-native">हिन्दी</span>
+          <span class="lang-english">(Hindi)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('kn')">
+          <span class="lang-native">ಕನ್ನಡ</span>
+          <span class="lang-english">(Kannada)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('te')">
+          <span class="lang-native">తెలుగు</span>
+          <span class="lang-english">(Telugu)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('mr')">
+          <span class="lang-native">मराठी</span>
+          <span class="lang-english">(Marathi)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('bn-sadhu')">
+          <span class="lang-native">বাংলা - সাধু</span>
+          <span class="lang-english">(Bengali Sadhu)</span>
+        </button>
+        <button class="language-splash-btn" @click="selectLanguageFromSplash('bn')">
+          <span class="lang-native">বাংলা - চলিত</span>
+          <span class="lang-english">(Bengali Cholito)</span>
+        </button>
       </div>
     </div>
   </div>
@@ -525,7 +549,13 @@ permalink: /fertilizer-calculator/
     <label for="language-select" style="font-size: 0.85em; color: #666; margin-right: 8px; display: flex; align-items: center;" data-i18n="language">Language</label>
     <select id="language-select" v-model="language" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; cursor: pointer;">
       <option value="en">English</option>
-      <option value="gu">ગુજરાતી</option>
+      <option value="gu">ગુજરાતી (Gujarati)</option>
+      <option value="hi">हिन्दी (Hindi)</option>
+      <option value="kn">ಕನ್ನಡ (Kannada)</option>
+      <option value="te">తెలుగు (Telugu)</option>
+      <option value="mr">मराठी (Marathi)</option>
+      <option value="bn-sadhu">বাংলা - সাধু (Bengali Sadhu)</option>
+      <option value="bn">বাংলা - চলিত (Bengali Cholito)</option>
     </select>
   </div>
 
@@ -2560,6 +2590,12 @@ permalink: /fertilizer-calculator/
 <!-- Localization files -->
 <script src="/scripts/locales/en.js"></script>
 <script src="/scripts/locales/gu.js"></script>
+<script src="/scripts/locales/hi.js"></script>
+<script src="/scripts/locales/kn.js"></script>
+<script src="/scripts/locales/te.js"></script>
+<script src="/scripts/locales/mr.js"></script>
+<script src="/scripts/locales/bn-sadhu.js"></script>
+<script src="/scripts/locales/bn.js"></script>
 <script src="/scripts/i18n.js"></script>
 
 <!-- Vue 3 CDN (using dev build for better error messages - switch back to .prod.js for production) -->
