@@ -2491,7 +2491,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.1.8
+    v1.1.9
   </div>
 
 </div>
@@ -4649,7 +4649,7 @@ const FertilizerApp = {
     }
 
     // Calculate PPM from grams
-    function calculatePPM() {
+    async function calculatePPM() {
       if (volume.value <= 0) {
         alert(i18n.t('alertEnterValidVolume'));
         return;
@@ -4660,85 +4660,115 @@ const FertilizerApp = {
         return;
       }
 
-      // Calculate PPM for each nutrient using the pct structure
-      const ppmResults = {};
+      // Show progress bar
+      progressBar.show(i18n.t('calculatingPPM') || 'Calculating PPM...');
+      progressBar.update(10, i18n.t('validatingInputs'));
 
-      activeFertilizers.value.forEach(fert => {
-        if (!fert.pct) return;
+      try {
+        // Allow UI to update before calculation
+        await new Promise(resolve => setTimeout(resolve, 50));
 
-        Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
-          // ppm = (grams × 1000 × (pct/100)) / liters
-          const ppm = (fert.grams * 1000 * (percentage / 100)) / volume.value;
+        if (progressBar.isCancelled()) return;
 
-          if (!ppmResults[nutrient]) {
-            ppmResults[nutrient] = 0;
-          }
+        progressBar.update(30, i18n.t('calculatingNutrients') || 'Calculating nutrients...');
 
-          // Handle nitrogen forms properly to avoid double counting
-          if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
-            ppmResults[nutrient] += ppm;
-            // Also add to N_total
-            if (!ppmResults.N_total) ppmResults.N_total = 0;
-            ppmResults.N_total += ppm;
-          } else if (nutrient === 'N_total') {
-            // Only use N_total if there are no specific nitrogen forms
-            if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
+        // Calculate PPM for each nutrient using the pct structure
+        const ppmResults = {};
+
+        activeFertilizers.value.forEach(fert => {
+          if (!fert.pct) return;
+
+          Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
+            // ppm = (grams × 1000 × (pct/100)) / liters
+            const ppm = (fert.grams * 1000 * (percentage / 100)) / volume.value;
+
+            if (!ppmResults[nutrient]) {
+              ppmResults[nutrient] = 0;
+            }
+
+            // Handle nitrogen forms properly to avoid double counting
+            if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+              ppmResults[nutrient] += ppm;
+              // Also add to N_total
+              if (!ppmResults.N_total) ppmResults.N_total = 0;
+              ppmResults.N_total += ppm;
+            } else if (nutrient === 'N_total') {
+              // Only use N_total if there are no specific nitrogen forms
+              if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
+                ppmResults[nutrient] += ppm;
+              }
+            } else {
               ppmResults[nutrient] += ppm;
             }
-          } else {
-            ppmResults[nutrient] += ppm;
-          }
+          });
         });
-      });
 
-      // Convert oxides to elements
-      const finalResults = { ...ppmResults };
+        if (progressBar.isCancelled()) return;
 
-      // P from P2O5
-      if (ppmResults.P2O5) {
-        finalResults.P = (finalResults.P || 0) + (ppmResults.P2O5 * OXIDE_CONVERSIONS.P2O5_to_P);
+        progressBar.update(60, i18n.t('convertingOxides') || 'Converting oxides...');
+
+        // Convert oxides to elements
+        const finalResults = { ...ppmResults };
+
+        // P from P2O5
+        if (ppmResults.P2O5) {
+          finalResults.P = (finalResults.P || 0) + (ppmResults.P2O5 * OXIDE_CONVERSIONS.P2O5_to_P);
+        }
+
+        // K from K2O
+        if (ppmResults.K2O) {
+          finalResults.K = (finalResults.K || 0) + (ppmResults.K2O * OXIDE_CONVERSIONS.K2O_to_K);
+        }
+
+        // Ca from CaO
+        if (ppmResults.CaO) {
+          finalResults.Ca = (finalResults.Ca || 0) + (ppmResults.CaO * OXIDE_CONVERSIONS.CaO_to_Ca);
+        }
+
+        // Mg from MgO
+        if (ppmResults.MgO) {
+          finalResults.Mg = (finalResults.Mg || 0) + (ppmResults.MgO * OXIDE_CONVERSIONS.MgO_to_Mg);
+        }
+
+        if (progressBar.isCancelled()) return;
+
+        progressBar.update(80, i18n.t('calculatingDerivedData') || 'Calculating derived data...');
+
+        gramsToPpmResults.value = finalResults;
+        showResults.value = true;
+
+        // Calculate derived data
+        const oldStyleFerts = activeFertilizers.value;
+        const vol = volume.value;
+        const ecData = estimateECFromPPM(finalResults);
+        const ionBalance = calculateIonBalance(oldStyleFerts, vol);
+        const warnings = checkWarnings(finalResults, oldStyleFerts, ionBalance);
+        const ratios = calculateNutrientRatios(finalResults);
+
+        if (progressBar.isCancelled()) return;
+
+        progressBar.update(100, i18n.t('complete'));
+
+        // Display using Vue-powered function
+        setGramsToPpmResults(oldStyleFerts, vol, finalResults, ecData, ionBalance, ratios, warnings);
+
+        // lastGramsToPPMCalculation is set inside setGramsToPpmResults
+        // Legacy reference for copy function
+        lastGramsToPPMCalculation.value = {
+          activeFertilizers: oldStyleFerts,
+          volume: vol,
+          results: finalResults,
+          ecData,
+          ionBalance,
+          ratios,
+          warnings
+        };
+      } catch (error) {
+        console.error('PPM calculation error:', error);
+        alert(i18n.t('alertCalculationError'));
+      } finally {
+        progressBar.hide();
       }
-
-      // K from K2O
-      if (ppmResults.K2O) {
-        finalResults.K = (finalResults.K || 0) + (ppmResults.K2O * OXIDE_CONVERSIONS.K2O_to_K);
-      }
-
-      // Ca from CaO
-      if (ppmResults.CaO) {
-        finalResults.Ca = (finalResults.Ca || 0) + (ppmResults.CaO * OXIDE_CONVERSIONS.CaO_to_Ca);
-      }
-
-      // Mg from MgO
-      if (ppmResults.MgO) {
-        finalResults.Mg = (finalResults.Mg || 0) + (ppmResults.MgO * OXIDE_CONVERSIONS.MgO_to_Mg);
-      }
-
-      gramsToPpmResults.value = finalResults;
-      showResults.value = true;
-
-      // Calculate derived data
-      const oldStyleFerts = activeFertilizers.value;
-      const vol = volume.value;
-      const ecData = estimateECFromPPM(finalResults);
-      const ionBalance = calculateIonBalance(oldStyleFerts, vol);
-      const warnings = checkWarnings(finalResults, oldStyleFerts, ionBalance);
-      const ratios = calculateNutrientRatios(finalResults);
-
-      // Display using Vue-powered function
-      setGramsToPpmResults(oldStyleFerts, vol, finalResults, ecData, ionBalance, ratios, warnings);
-
-      // lastGramsToPPMCalculation is set inside setGramsToPpmResults
-      // Legacy reference for copy function
-      lastGramsToPPMCalculation.value = {
-        activeFertilizers: oldStyleFerts,
-        volume: vol,
-        results: finalResults,
-        ecData,
-        ionBalance,
-        ratios,
-        warnings
-      };
     }
 
     // Clear all inputs
