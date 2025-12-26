@@ -6121,16 +6121,30 @@ const FertilizerApp = {
         if (progressBar.isCancelled()) return;
 
         progressBar.update(50, i18n.t('runningSolver'));
-        progressBar.setIndeterminate(i18n.t('optimizingCombination'));
 
-        // Run optimization
+        // Show download message if solver not yet loaded
+        if (!window.FertilizerCore.isHighsLoaded()) {
+          progressBar.setIndeterminate(i18n.t('downloadingSolver'));
+        } else {
+          progressBar.setIndeterminate(i18n.t('optimizingCombination'));
+        }
+
+        // Run optimization with progress callback
         const result = await optimizeFormula(
           targets,
           formulaVolume.value,
           selected,
           75,
           formulaCalcMode.value,
-          { useAbsoluteTargets: true, useMilp: true }
+          {
+            useAbsoluteTargets: true,
+            useMilp: true,
+            onProgress: (status) => {
+              if (status === 'ready') {
+                progressBar.setIndeterminate(i18n.t('optimizingCombination'));
+              }
+            }
+          }
         );
 
         if (progressBar.isCancelled()) return;
@@ -6276,16 +6290,30 @@ const FertilizerApp = {
         if (progressBar.isCancelled()) return;
 
         progressBar.update(50, i18n.t('runningSolver'));
-        progressBar.setIndeterminate(i18n.t('optimizingCombination'));
 
-        // Run optimization
+        // Show download message if solver not yet loaded
+        if (!window.FertilizerCore.isHighsLoaded()) {
+          progressBar.setIndeterminate(i18n.t('downloadingSolver'));
+        } else {
+          progressBar.setIndeterminate(i18n.t('optimizingCombination'));
+        }
+
+        // Run optimization with progress callback
         const result = await optimizeFormula(
           targets,
           volume,
           selected,
           concentration,
           ratioCalcMode.value,
-          { targetEC, useMilp: true }
+          {
+            targetEC,
+            useMilp: true,
+            onProgress: (status) => {
+              if (status === 'ready') {
+                progressBar.setIndeterminate(i18n.t('optimizingCombination'));
+              }
+            }
+          }
         );
 
         if (progressBar.isCancelled()) return;

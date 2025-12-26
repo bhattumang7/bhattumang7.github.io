@@ -575,6 +575,7 @@ window.i18nLocales.en = {
   calculating: 'Calculating...',
   initializing: 'Initializing...',
   initializingSolver: 'Initializing solver...',
+  downloadingSolver: 'Downloading optimization library (first time only)...',
   buildingFormula: 'Building Formula',
   calculatingFertilizers: 'Calculating Fertilizers',
   validatingInputs: 'Validating inputs...',

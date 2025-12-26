@@ -13,6 +13,81 @@
 window.FertilizerCore = window.FertilizerCore || {};
 
 // =============================================================================
+// CACHED HIGHS SOLVER INSTANCE
+// =============================================================================
+// Cache the HiGHS solver instance to avoid re-downloading the WASM file on every calculation
+let _cachedHighsInstance = null;
+let _highsLoadingPromise = null;
+
+/**
+ * Get or initialize the HiGHS solver instance (with caching)
+ * @param {Function} onProgress - Optional callback for progress updates: (status: string) => void
+ * @returns {Promise<Object>} The HiGHS solver instance
+ */
+window.FertilizerCore.getHighsInstance = async function(onProgress) {
+  // Return cached instance if available
+  if (_cachedHighsInstance) {
+    return _cachedHighsInstance;
+  }
+
+  // If already loading, wait for that promise
+  if (_highsLoadingPromise) {
+    return _highsLoadingPromise;
+  }
+
+  // Start loading
+  const highsFactory = window.highs || window.Module;
+  if (typeof highsFactory !== 'function') {
+    throw new Error('HiGHS solver not available');
+  }
+
+  // Notify that we're downloading the solver
+  if (onProgress) {
+    onProgress('downloading');
+  }
+
+  _highsLoadingPromise = highsFactory({
+    locateFile: (f) => `/assets/vendor/highs/${f}`
+  }).then(instance => {
+    _cachedHighsInstance = instance;
+    _highsLoadingPromise = null;
+    if (onProgress) {
+      onProgress('ready');
+    }
+    return instance;
+  }).catch(err => {
+    _highsLoadingPromise = null;
+    throw err;
+  });
+
+  return _highsLoadingPromise;
+};
+
+/**
+ * Check if HiGHS solver is already loaded (cached)
+ * @returns {boolean}
+ */
+window.FertilizerCore.isHighsLoaded = function() {
+  return _cachedHighsInstance !== null;
+};
+
+/**
+ * Pre-load the HiGHS solver in the background
+ * @param {Function} onProgress - Optional callback for progress updates
+ * @returns {Promise<void>}
+ */
+window.FertilizerCore.preloadHighsSolver = async function(onProgress) {
+  if (_cachedHighsInstance || _highsLoadingPromise) {
+    return; // Already loaded or loading
+  }
+  try {
+    await window.FertilizerCore.getHighsInstance(onProgress);
+  } catch (e) {
+    console.warn('Failed to preload HiGHS solver:', e);
+  }
+};
+
+// =============================================================================
 // DATA (loaded from fertilizer-data.js)
 // =============================================================================
 // The following data structures are defined in fertilizer-data.js:
@@ -437,19 +512,19 @@ window.FertilizerCore.calculateNutrientRatios = function(results) {
 
 /**
  * MILP solver helper using highs.js + lp-model
- * @param {Object} params - {fertilizers, targets, volume, tolerance}
+ * @param {Object} params - {fertilizers, targets, volume, tolerance, onProgress}
+ * @param {Function} params.onProgress - Optional callback for progress updates: (status: string) => void
  * @returns {Object} {formula, achieved}
  */
-window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01 }) {
-  const highsFactory = window.highs || window.Module;
-  if (!window.LPModel || typeof highsFactory !== 'function') {
+window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress }) {
+  if (!window.LPModel) {
     throw new Error('MILP dependencies not loaded');
   }
 
   const { Model } = window.LPModel;
-  const highs = await highsFactory({
-    locateFile: (f) => `/assets/vendor/highs/${f}`
-  });
+
+  // Use cached HiGHS instance (downloads WASM only on first call)
+  const highs = await window.FertilizerCore.getHighsInstance(onProgress);
 
   const nutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S', 'Si'];
   const tPlus = {}, tMinus = {};
@@ -723,10 +798,12 @@ window.FertilizerCore.pruneSolution = function(matrix, targetVector, weights, ba
 
 /**
  * Optimization algorithm - finds best fertilizer combination
+ * @param {Object} options.onProgress - Optional callback for progress updates (e.g., WASM download)
  */
 window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide', options = {}) {
   const OXIDE_CONVERSIONS = window.FertilizerCore.OXIDE_CONVERSIONS;
   const solveMilpBrowser = window.FertilizerCore.solveMilpBrowser;
+  const onProgress = options.onProgress;
   const solveNNLS = window.FertilizerCore.solveNonNegativeLeastSquares;
   const pruneSolution = window.FertilizerCore.pruneSolution;
 
@@ -776,7 +853,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
       };
     }
 
-    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01 });
+    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress });
 
     // Apply EC scaling if targetEC is specified
     if (options.targetEC && options.targetEC > 0) {
@@ -860,7 +937,8 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                 fertilizers: availableFertilizers,
                 targets: adjustedPpmTargets,
                 volume,
-                tolerance: 0.01
+                tolerance: 0.01,
+                onProgress
               });
 
               // Re-apply EC scaling to the adjusted result
