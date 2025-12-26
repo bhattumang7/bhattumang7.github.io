@@ -2468,78 +2468,8 @@ permalink: /fertilizer-calculator/
       <span class="wizard-current-mode" id="wizard-current-mode" v-html="modeIndicatorText"></span>
     </div>
 
-    <div class="tabs">
-      <button class="tab" :class="{ active: currentTab === 'ppm-calc' }" @click="switchTab('ppm-calc')" data-i18n="tabGramsToPpm">Grams to PPM</button>
-      <button class="tab" :class="{ active: currentTab === 'formula-builder' }" @click="switchTab('formula-builder')" data-i18n="tabPpmToGrams">PPM to Grams</button>
-      <button class="tab" :class="{ active: currentTab === 'reverse-calc' }" @click="switchTab('reverse-calc')" data-i18n="tabNpkRatioToGrams">NPK Ratio to Grams</button>
-    </div>
-
-    <!-- PPM Calculator Tab -->
+    <!-- PPM Calculator Tab (Results Only) -->
   <div id="ppm-calc" class="tab-content" :class="{ active: currentTab === 'ppm-calc' }">
-    <!-- Vue-powered Grams to PPM Calculator -->
-    <div id="vue-grams-to-ppm">
-      <div class="input-section">
-        <div class="volume-control-row">
-          <div class="volume-field">
-            <label for="volume">Solution Volume:</label>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <input type="number" id="volume" v-model.number="volume" min="0.1" step="0.1">
-              <span>liters</span>
-            </div>
-          </div>
-          <div class="button-group">
-            <button @click="calculatePPM" class="btn btn-primary">
-              Calculate PPM
-            </button>
-            <button @click="clearAll" class="btn btn-danger">
-              Clear All
-            </button>
-          </div>
-        </div>
-
-        <div class="fertilizer-selector">
-          <h3>Select Fertilizers and Enter Amounts</h3>
-          <div class="search-box">
-            <input type="text"
-                   v-model="searchTerm"
-                   data-i18n-placeholder="searchFertilizers"
-                   placeholder="Search fertilizers...">
-          </div>
-
-          <!-- Vue-rendered fertilizer list -->
-          <div id="fertilizer-list">
-            <div v-for="fert in filteredFertilizers"
-                 :key="fert.id"
-                 class="fertilizer-item"
-                 :class="{ active: fertilizerAmounts[fert.id]?.checked }">
-              <div class="fertilizer-checkbox">
-                <input type="checkbox"
-                       :id="'check-' + fert.id"
-                       :checked="fertilizerAmounts[fert.id]?.checked"
-                       @change="toggleFertilizer(fert.id)">
-              </div>
-              <div class="fertilizer-info">
-                <div class="fertilizer-name">
-                  <label :for="'check-' + fert.id">{{ i18n.getFertilizerName(fert) }}</label>
-                </div>
-                <div class="fertilizer-composition">{{ formatComposition(fert) }}</div>
-              </div>
-              <div class="fertilizer-input">
-                <input type="number"
-                       :id="'grams-' + fert.id"
-                       :value="fertilizerAmounts[fert.id]?.grams || 0"
-                       @input="updateGrams(fert.id, $event.target.value)"
-                       min="0"
-                       step="0.1"
-                       placeholder="0">
-                <label :for="'grams-' + fert.id">g</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
   <!-- Vue-powered Grams to PPM Results Sections -->
   <div class="results-section" id="selected-fertilizers-section" v-if="gramsToPpmDisplayData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')">
     <div class="results-header">
@@ -2904,96 +2834,8 @@ permalink: /fertilizer-calculator/
   </div>
   </div>
 
-  <!-- Formula Builder Tab (Vue-powered) -->
+  <!-- Formula Builder Tab (Vue-powered) - Results Only -->
   <div id="formula-builder" class="tab-content" :class="{ active: currentTab === 'formula-builder' }">
-    <div class="input-section">
-      <h3>Target PPM Values</h3>
-      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient concentrations (at least one required). The calculator will find the best fertilizer combination to match your targets.</p>
-
-      <div style="margin-bottom: 20px;">
-        <label for="formula-calculation-mode" style="display: block; margin-bottom: 8px; font-weight: bold;">Input Mode</label>
-        <select id="formula-calculation-mode" v-model="formulaCalcMode" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
-          <option value="oxide">Oxide Forms (P₂O₅, K₂O) - Commercial Standard</option>
-          <option value="elemental">Elemental Forms (P, K) - Pure Elements</option>
-        </select>
-        <p style="margin-top: 5px; margin-bottom: 15px; color: #666; font-size: 0.85em;">
-          <strong>Oxide mode:</strong> Enter P₂O₅ and K₂O values (matches fertilizer labels and NPK Ratio to Grams output)<br>
-          <strong>Elemental mode:</strong> Enter pure P and K values (scientific calculations)
-        </p>
-      </div>
-
-      <div class="target-input-grid">
-        <div class="target-input-field">
-          <label for="target-n">Nitrogen (N)</label>
-          <input type="number" id="target-n" v-model="formulaTargets.N" min="0" step="1" placeholder="e.g., 150">
-        </div>
-        <div class="target-input-field">
-          <label for="target-p">{{ formulaCalcMode === 'oxide' ? 'Phosphorus (P₂O₅)' : 'Phosphorus (P)' }}</label>
-          <input type="number" id="target-p" v-model="formulaTargets.P" min="0" step="1" placeholder="e.g., 50">
-        </div>
-        <div class="target-input-field">
-          <label for="target-k">{{ formulaCalcMode === 'oxide' ? 'Potassium (K₂O)' : 'Potassium (K)' }}</label>
-          <input type="number" id="target-k" v-model="formulaTargets.K" min="0" step="1" placeholder="e.g., 200">
-        </div>
-        <div class="target-input-field">
-          <label for="target-ca">Calcium (Ca)</label>
-          <input type="number" id="target-ca" v-model="formulaTargets.Ca" min="0" step="1" placeholder="e.g., 150">
-        </div>
-        <div class="target-input-field">
-          <label for="target-mg">Magnesium (Mg)</label>
-          <input type="number" id="target-mg" v-model="formulaTargets.Mg" min="0" step="1" placeholder="e.g., 50">
-        </div>
-        <div class="target-input-field">
-          <label for="target-s">Sulfur (S)</label>
-          <input type="number" id="target-s" v-model="formulaTargets.S" min="0" step="1" placeholder="Optional">
-        </div>
-        <div class="target-input-field">
-          <label for="target-si">Silicon (Si) <small style="color:#666">PPM</small></label>
-          <input type="number" id="target-si" v-model="formulaTargets.Si" min="0" step="1" placeholder="Target PPM">
-        </div>
-      </div>
-
-      <div class="fertilizer-selection">
-        <h4>Available Fertilizers</h4>
-        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Select the fertilizers you have available. The calculator will use only these to build your formula.</p>
-        <div class="fertilizer-search">
-          <input type="text" v-model="formulaSearchTerm" placeholder="Search fertilizers...">
-        </div>
-        <div class="selection-controls">
-          <button @click="selectAllAvailable">Select All</button>
-          <button @click="deselectAllAvailable">Deselect All</button>
-          <button @click="selectCommonAvailable">Select Common Only</button>
-        </div>
-        <div class="fertilizer-grid">
-          <div v-for="fert in filteredAvailableFertilizers" :key="fert.id" class="fertilizer-checkbox-item">
-            <input type="checkbox"
-                   :id="'available-' + fert.id"
-                   :checked="availableFertilizers[fert.id]"
-                   @change="toggleAvailableFertilizer(fert.id)">
-            <label :for="'available-' + fert.id">
-              <span class="fertilizer-label-name">{{ i18n.getFertilizerName(fert) }}</span>
-              <span v-if="fert.aliases && fert.aliases.length" class="fertilizer-label-aliases">{{ i18n.getFertilizerAliases(fert) }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="volume-input">
-        <label for="formula-volume">Solution Volume:</label>
-        <input type="number" id="formula-volume" v-model.number="formulaVolume" min="0.1" step="0.1">
-        <span>liters</span>
-      </div>
-
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button @click="buildFormulaVue" :disabled="formulaIsCalculating" style="padding: 10px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          {{ formulaIsCalculating ? 'Calculating...' : 'Build Formula' }}
-        </button>
-        <button @click="clearFormulaBuilderVue" style="padding: 10px 20px; font-size: 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          Clear
-        </button>
-      </div>
-    </div>
-
     <!-- Vue-powered Formula Builder Results Section -->
     <div class="results-section" id="formula-results" v-if="formulaResultsData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'formula')">
       <div class="results-header" id="formula-results-header">
@@ -3286,128 +3128,8 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <!-- Reverse Calculator Tab (Vue-powered) -->
+  <!-- Reverse Calculator Tab (Vue-powered) - Results Only -->
   <div id="reverse-calc" class="tab-content" :class="{ active: currentTab === 'reverse-calc' }">
-    <div class="input-section">
-      <h3>Target Nutrient Ratios</h3>
-      <p style="margin-bottom: 15px; color: #666;">Enter your desired nutrient ratios (e.g., N:P:K = 3:1:2). At least one nutrient must be greater than zero. The calculator will find fertilizer amounts that match these ratios.</p>
-
-      <div class="target-input-grid">
-        <div class="target-input-field">
-          <label for="reverse-n">Nitrogen (N)</label>
-          <input type="number" id="reverse-n" v-model="ratioTargets.N" min="0" step="1" placeholder="Optional (0 or more)">
-        </div>
-        <div class="target-input-field">
-          <label for="reverse-p">Phosphorus (P)</label>
-          <input type="number" id="reverse-p" v-model="ratioTargets.P" min="0" step="1" placeholder="Optional (0 or more)">
-        </div>
-        <div class="target-input-field">
-          <label for="reverse-k">Potassium (K)</label>
-          <input type="number" id="reverse-k" v-model="ratioTargets.K" min="0" step="1" placeholder="Optional (0 or more)">
-        </div>
-        <div class="target-input-field">
-          <label for="reverse-ca">Calcium (Ca)</label>
-          <input type="number" id="reverse-ca" v-model="ratioTargets.Ca" min="0" step="1" placeholder="Optional (0 or more)">
-        </div>
-        <div class="target-input-field">
-          <label for="reverse-mg">Magnesium (Mg)</label>
-          <input type="number" id="reverse-mg" v-model="ratioTargets.Mg" min="0" step="1" placeholder="Optional (0 or more)">
-        </div>
-        <div class="target-input-field">
-          <label for="reverse-s">Sulfur (S)</label>
-          <input type="number" id="reverse-s" v-model="ratioTargets.S" min="0" step="1" placeholder="Optional (0 or more)">
-        </div>
-        <div class="target-input-field">
-          <label for="reverse-si">Silicon (Si) <small style="color:#666">PPM</small></label>
-          <input type="number" id="reverse-si" v-model="ratioTargets.Si" min="0" step="1" placeholder="Target PPM (not ratio)">
-        </div>
-      </div>
-
-      <div style="margin-top: 20px; margin-bottom: 20px;">
-        <label for="reverse-calculation-mode" style="display: block; margin-bottom: 8px; font-weight: bold;">Calculation Mode</label>
-        <select id="reverse-calculation-mode" v-model="ratioCalcMode" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
-          <option value="oxide">Oxide Forms (P₂O₅, K₂O) - Commercial Standard</option>
-          <option value="elemental">Elemental Forms (P, K) - Pure Elements</option>
-        </select>
-        <p style="margin-top: 5px; margin-bottom: 15px; color: #666; font-size: 0.85em;">
-          <strong>Oxide mode:</strong> Uses P₂O₅ and K₂O (standard fertilizer labels)<br>
-          <strong>Elemental mode:</strong> Uses pure P and K (scientific calculations)
-        </p>
-      </div>
-
-      <div style="margin-top: 20px; margin-bottom: 20px;">
-        <label for="reverse-concentration" style="display: block; margin-bottom: 8px; font-weight: bold;">Target EC (mS/cm)</label>
-        <select id="reverse-concentration" v-model="ratioTargetEC" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;">
-          <option value="ec:0.2">0.2 mS/cm - Plain Water Supplement</option>
-          <option value="ec:0.4">0.4 mS/cm - Recovery/Flush</option>
-          <option value="ec:0.6">0.6 mS/cm - Fresh Clones/Cuttings</option>
-          <option value="ec:0.8">0.8 mS/cm - Rooted Cuttings</option>
-          <option value="ec:1.0">1.0 mS/cm - Seedlings/Young Plants</option>
-          <option value="ec:1.2">1.2 mS/cm - General Purpose</option>
-          <option value="ec:1.5">1.5 mS/cm - Vegetative Growth</option>
-          <option value="ec:1.8">1.8 mS/cm - Active Growth</option>
-          <option value="ec:2.0">2.0 mS/cm - Heavy Feeders</option>
-          <option value="ec:2.5">2.5 mS/cm - Flowering/Fruiting</option>
-          <option value="ec:3.0">3.0 mS/cm - Maximum (experienced growers)</option>
-        </select>
-        <p style="margin-top: 5px; color: #666; font-size: 0.85em;">
-          Select your target EC. Fertilizer amounts will be scaled to achieve this conductivity.<br>
-          <strong>Ratios are preserved</strong> while adjusting overall concentration.
-        </p>
-      </div>
-
-      <div class="fertilizer-selection">
-        <h4>Select Fertilizers to Use</h4>
-        <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">Choose which fertilizers you want to use. The calculator will find the best combination from your selection.<br>
-        <strong>Priority:</strong> Lower values (1-10) = more preferred. The solver will try to use higher-priority fertilizers first.</p>
-        <div class="fertilizer-search">
-          <input type="text" v-model="ratioSearchTerm" placeholder="Search fertilizers...">
-        </div>
-        <div class="selection-controls">
-          <button @click="selectAllReverse">Select All</button>
-          <button @click="deselectAllReverse">Deselect All</button>
-          <button @click="selectCommonReverse">Select Common Only</button>
-        </div>
-        <div class="fertilizer-grid">
-          <div v-for="fert in filteredReverseFertilizers" :key="fert.id" class="fertilizer-checkbox-item">
-            <input type="checkbox"
-                   :id="'reverse-' + fert.id"
-                   :checked="reverseFertilizers[fert.id]?.checked"
-                   @change="toggleReverseFertilizer(fert.id)">
-            <label :for="'reverse-' + fert.id">
-              <span class="fertilizer-label-name">{{ i18n.getFertilizerName(fert) }}</span>
-              <span v-if="fert.aliases && fert.aliases.length" class="fertilizer-label-aliases">{{ i18n.getFertilizerAliases(fert) }}</span>
-            </label>
-            <div class="fertilizer-priority">
-              <input type="number"
-                     :id="'priority-' + fert.id"
-                     :value="reverseFertilizers[fert.id]?.priority || 5"
-                     @change="updateReversePriority(fert.id, $event.target.value)"
-                     min="1"
-                     max="100"
-                     title="Priority (1-100, lower = more preferred)">
-              <label :for="'priority-' + fert.id" title="Lower value = higher priority (more preferred)">priority</label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="volume-input">
-        <label for="reverse-volume">Solution Volume:</label>
-        <input type="number" id="reverse-volume" v-model.number="ratioVolume" min="0.1" step="0.1">
-        <span>liters</span>
-      </div>
-
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button @click="calculateReverseVue" :disabled="ratioIsCalculating" style="padding: 10px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          {{ ratioIsCalculating ? 'Calculating...' : 'Calculate Fertilizers' }}
-        </button>
-        <button @click="clearReverseVue" style="padding: 10px 20px; font-size: 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
-          Clear
-        </button>
-      </div>
-    </div>
-
     <!-- Vue-powered Reverse Results Section -->
     <div class="results-section" id="reverse-results" v-if="reverseResultsData.show && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'reverse')">
       <div class="results-header" id="reverse-results-header">
@@ -3964,7 +3686,8 @@ function getModeName(mode) {
 }
 
 // Modes that need the calculation mode step (step 3)
-const MODES_WITH_CALC_MODE = ['formula-builder', 'reverse-calc'];
+// formula-builder always uses elemental, so no selection needed
+const MODES_WITH_CALC_MODE = ['reverse-calc'];
 
 // Modes that need the EC step (step 4)
 const MODES_WITH_EC = ['reverse-calc'];
@@ -4187,7 +3910,7 @@ function goToModeSelector() {
   if (window.vueApp) {
     window.vueApp.currentMode.value = null;
     window.vueApp.calculationMode.value = 'oxide';
-    window.vueApp.wizardCalcMode.value = 'oxide';
+    window.vueApp.wizardCalcMode.value = 'elemental';
     window.vueApp.ratioTargetEC.value = 'ec:1.2';
     // Clear pending two-tank calculation
     window.vueApp.pendingWizardCalculation.value = null;
@@ -4212,7 +3935,7 @@ function backToModeSelector() {
   // Use .value for refs
   if (window.vueApp) {
     window.vueApp.currentMode.value = null;
-    window.vueApp.wizardCalcMode.value = 'oxide';
+    window.vueApp.wizardCalcMode.value = 'elemental';
     window.vueApp.ratioTargetEC.value = 'ec:1.2';
     // Clear wizard results source
     window.vueApp.wizardResultsSource.value = null;
@@ -5916,7 +5639,7 @@ const FertilizerApp = {
     const wizardStep = ref('mode-selector');
     const wizardVolume = ref(10);
     const wizardSelectedEC = ref('ec:1.2');
-    const wizardCalcMode = ref('oxide');
+    const wizardCalcMode = ref('elemental');
 
     // Template refs
     const wizardVolumeInput = ref(null);
@@ -6024,7 +5747,7 @@ const FertilizerApp = {
       N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0'
     });
     const formulaVolume = ref(10);
-    const formulaCalcMode = ref('oxide'); // 'oxide' or 'elemental'
+    const formulaCalcMode = ref('elemental'); // PPM to Grams always uses elemental
     const availableFertilizers = reactive({}); // { fertilizer_id: checked }
     const formulaSearchTerm = ref('');
     const formulaResults = ref(null);
@@ -8274,7 +7997,7 @@ const FertilizerApp = {
       // Reset state
       currentMode.value = null;
       calculationMode.value = 'oxide';
-      wizardCalcMode.value = 'oxide';
+      wizardCalcMode.value = 'elemental';
       ratioTargetEC.value = 'ec:1.2';
       pendingWizardCalculation.value = null;
       gramsToPpmDisplayData.show = false;
