@@ -1138,6 +1138,84 @@ permalink: /fertilizer-calculator/
           </div>
         </template>
 
+        <!-- BORON LEVEL EXPLANATION MODAL -->
+        <template v-if="activeModal === 'boron-level'">
+          <!-- What is boron monitoring -->
+          <div class="explanation-section">
+            <h3>{{ i18n.t('whatIsBoronLevel') }}</h3>
+            <p v-html="i18n.t('boronExplanation')"></p>
+          </div>
+
+          <!-- Your current level -->
+          <div v-if="typeof modalData.boronPpm === 'number'" class="explanation-section" :style="{ background: modalData.boronStatus?.color + '22', borderLeftColor: modalData.boronStatus?.color }">
+            <h3 :style="{ color: modalData.boronStatus?.color }">{{ i18n.t('boronYourCurrentLevel') }}</h3>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <div style="font-size: 2em; font-weight: bold;" :style="{ color: modalData.boronStatus?.color }">
+                {{ i18n.formatNumber(modalData.boronPpm?.toFixed(2) || '0') }} ppm
+              </div>
+              <div v-if="modalData.boronStatus?.text" style="padding: 6px 12px; border-radius: 20px; font-weight: 500;" :style="{ background: modalData.boronStatus?.color, color: 'white' }">
+                {{ modalData.boronStatus.text }}
+              </div>
+            </div>
+            <p style="margin-top: 10px; color: #666;">{{ i18n.t('boronTargetRange') }}</p>
+          </div>
+
+          <!-- Level guidelines -->
+          <div class="explanation-section" style="background: #e8f5e9; border-left-color: #4caf50;">
+            <h3 style="color: #2e7d32;">{{ i18n.t('boronThresholdsTitle') }}</h3>
+            <ul style="margin: 5px 0 0 20px; line-height: 2;">
+              <li><span style="color: #28a745; font-weight: bold;">{{ i18n.t('boronThreshold1') }}</span></li>
+              <li><span style="color: #ffc107; font-weight: bold;">{{ i18n.t('boronThreshold2') }}</span></li>
+              <li><span style="color: #fd7e14; font-weight: bold;">{{ i18n.t('boronThreshold3') }}</span></li>
+              <li><span style="color: #dc3545; font-weight: bold;">{{ i18n.t('boronThreshold4') }}</span></li>
+            </ul>
+          </div>
+
+          <!-- Toxicity symptoms -->
+          <div class="explanation-section" style="background: #ffebee; border-left-color: #f44336;">
+            <h3 style="color: #c62828;">{{ i18n.t('boronToxicityTitle') }}</h3>
+            <ul style="margin: 5px 0 0 20px; line-height: 1.8;">
+              <li>{{ i18n.t('boronToxicitySymptom1') }}</li>
+              <li>{{ i18n.t('boronToxicitySymptom2') }}</li>
+              <li>{{ i18n.t('boronToxicitySymptom3') }}</li>
+              <li>{{ i18n.t('boronToxicitySymptom4') }}</li>
+            </ul>
+          </div>
+
+          <!-- Common causes -->
+          <div class="explanation-section" style="background: #fff3e0; border-left-color: #ff9800;">
+            <h3 style="color: #e65100;">{{ i18n.t('boronCausesTitle') }}</h3>
+            <ul style="margin: 5px 0 0 20px; line-height: 1.8;">
+              <li>{{ i18n.t('boronCause1') }}</li>
+              <li>{{ i18n.t('boronCause2') }}</li>
+              <li>{{ i18n.t('boronCause3') }}</li>
+              <li>{{ i18n.t('boronCause4') }}</li>
+            </ul>
+          </div>
+
+          <!-- Fixes -->
+          <div class="explanation-section" style="background: #e3f2fd; border-left-color: #2196f3;">
+            <h3 style="color: #1565c0;">{{ i18n.t('boronFixesTitle') }}</h3>
+            <ul style="margin: 5px 0 0 20px; line-height: 1.8;">
+              <li>{{ i18n.t('boronFix1') }}</li>
+              <li>{{ i18n.t('boronFix2') }}</li>
+              <li>{{ i18n.t('boronFix3') }}</li>
+              <li>{{ i18n.t('boronFix4') }}</li>
+            </ul>
+          </div>
+
+          <!-- Recirculating systems note -->
+          <div class="explanation-section" style="background: #f3e5f5; border-left-color: #9c27b0;">
+            <h3 style="color: #7b1fa2;">{{ i18n.t('boronRecirculatingTitle') }}</h3>
+            <p>{{ i18n.t('boronRecirculatingText') }}</p>
+          </div>
+
+          <!-- Research note -->
+          <div class="explanation-section" style="background: #f5f5f5; border-left-color: #9e9e9e;">
+            <p style="font-style: italic; color: #666; margin: 0;">{{ i18n.t('boronResearchNote') }}</p>
+          </div>
+        </template>
+
       </div>
     </div>
   </div>
@@ -1601,6 +1679,13 @@ permalink: /fertilizer-calculator/
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
             <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+            <!-- Boron Level Card -->
+            <div v-if="gramsToPpmDisplayData.boronWarning && gramsToPpmDisplayData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: gramsToPpmDisplayData.boronWarning.color + '15', borderLeft: '4px solid ' + gramsToPpmDisplayData.boronWarning.color }">
+              <span class="info-icon" @click="openBoronExplanation(gramsToPpmDisplayData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+              <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+              <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.boronWarning.color }">{{ i18n.formatNumber(gramsToPpmDisplayData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+              <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: gramsToPpmDisplayData.boronWarning.color + '22', color: gramsToPpmDisplayData.boronWarning.color }">{{ gramsToPpmDisplayData.boronWarning.text }}</div>
+            </div>
           </div>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction && gramsToPpmDisplayData.ecPrediction.ec > 0" style="margin-top: 20px;">
@@ -1724,6 +1809,13 @@ permalink: /fertilizer-calculator/
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
             <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+            <!-- Boron Level Card -->
+            <div v-if="formulaResultsData.boronWarning && formulaResultsData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: formulaResultsData.boronWarning.color + '15', borderLeft: '4px solid ' + formulaResultsData.boronWarning.color }">
+              <span class="info-icon" @click="openBoronExplanation(formulaResultsData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+              <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+              <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: formulaResultsData.boronWarning.color }">{{ i18n.formatNumber(formulaResultsData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+              <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: formulaResultsData.boronWarning.color + '22', color: formulaResultsData.boronWarning.color }">{{ formulaResultsData.boronWarning.text }}</div>
+            </div>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -1854,6 +1946,13 @@ permalink: /fertilizer-calculator/
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
             <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+            <!-- Boron Level Card -->
+            <div v-if="reverseResultsData.boronWarning && reverseResultsData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: reverseResultsData.boronWarning.color + '15', borderLeft: '4px solid ' + reverseResultsData.boronWarning.color }">
+              <span class="info-icon" @click="openBoronExplanation(reverseResultsData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+              <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+              <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: reverseResultsData.boronWarning.color }">{{ i18n.formatNumber(reverseResultsData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+              <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: reverseResultsData.boronWarning.color + '22', color: reverseResultsData.boronWarning.color }">{{ reverseResultsData.boronWarning.text }}</div>
+            </div>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -2261,6 +2360,13 @@ permalink: /fertilizer-calculator/
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
                 <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+                <!-- Boron Level Card -->
+                <div v-if="formulaResultsData.boronWarning && formulaResultsData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: formulaResultsData.boronWarning.color + '15', borderLeft: '4px solid ' + formulaResultsData.boronWarning.color }">
+                  <span class="info-icon" @click="openBoronExplanation(formulaResultsData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+                  <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+                  <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: formulaResultsData.boronWarning.color }">{{ i18n.formatNumber(formulaResultsData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+                  <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: formulaResultsData.boronWarning.color + '22', color: formulaResultsData.boronWarning.color }">{{ formulaResultsData.boronWarning.text }}</div>
+                </div>
               </div>
             </div>
           </template>
@@ -2269,6 +2375,13 @@ permalink: /fertilizer-calculator/
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
                 <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+                <!-- Boron Level Card -->
+                <div v-if="reverseResultsData.boronWarning && reverseResultsData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: reverseResultsData.boronWarning.color + '15', borderLeft: '4px solid ' + reverseResultsData.boronWarning.color }">
+                  <span class="info-icon" @click="openBoronExplanation(reverseResultsData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+                  <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+                  <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: reverseResultsData.boronWarning.color }">{{ i18n.formatNumber(reverseResultsData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+                  <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: reverseResultsData.boronWarning.color + '22', color: reverseResultsData.boronWarning.color }">{{ reverseResultsData.boronWarning.text }}</div>
+                </div>
               </div>
             </div>
           </template>
@@ -2277,6 +2390,13 @@ permalink: /fertilizer-calculator/
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
                 <ratio-card v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+                <!-- Boron Level Card -->
+                <div v-if="gramsToPpmDisplayData.boronWarning && gramsToPpmDisplayData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: gramsToPpmDisplayData.boronWarning.color + '15', borderLeft: '4px solid ' + gramsToPpmDisplayData.boronWarning.color }">
+                  <span class="info-icon" @click="openBoronExplanation(gramsToPpmDisplayData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+                  <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+                  <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.boronWarning.color }">{{ i18n.formatNumber(gramsToPpmDisplayData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+                  <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: gramsToPpmDisplayData.boronWarning.color + '22', color: gramsToPpmDisplayData.boronWarning.color }">{{ gramsToPpmDisplayData.boronWarning.text }}</div>
+                </div>
               </div>
             </div>
           </template>
@@ -2505,6 +2625,13 @@ permalink: /fertilizer-calculator/
     <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
       <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+      <!-- Boron Level Card -->
+      <div v-if="gramsToPpmDisplayData.boronWarning && gramsToPpmDisplayData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: gramsToPpmDisplayData.boronWarning.color + '15', borderLeft: '4px solid ' + gramsToPpmDisplayData.boronWarning.color }">
+        <span class="info-icon" @click="openBoronExplanation(gramsToPpmDisplayData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+        <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+        <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.boronWarning.color }">{{ i18n.formatNumber(gramsToPpmDisplayData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+        <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: gramsToPpmDisplayData.boronWarning.color + '22', color: gramsToPpmDisplayData.boronWarning.color }">{{ gramsToPpmDisplayData.boronWarning.text }}</div>
+      </div>
     </div>
     <div class="conversion-note" style="margin-top: 15px;">
       <strong>{{ i18n.t('whatAreNutrientRatios') }}</strong> {{ i18n.t('nutrientRatioExplanationFull') }}
@@ -3004,6 +3131,13 @@ permalink: /fertilizer-calculator/
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
           <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+          <!-- Boron Level Card -->
+          <div v-if="formulaResultsData.boronWarning && formulaResultsData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: formulaResultsData.boronWarning.color + '15', borderLeft: '4px solid ' + formulaResultsData.boronWarning.color }">
+            <span class="info-icon" @click="openBoronExplanation(formulaResultsData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+            <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+            <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: formulaResultsData.boronWarning.color }">{{ i18n.formatNumber(formulaResultsData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+            <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: formulaResultsData.boronWarning.color + '22', color: formulaResultsData.boronWarning.color }">{{ formulaResultsData.boronWarning.text }}</div>
+          </div>
         </div>
       </div>
 
@@ -3449,6 +3583,13 @@ permalink: /fertilizer-calculator/
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
           <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
+          <!-- Boron Level Card -->
+          <div v-if="reverseResultsData.boronWarning && reverseResultsData.boronWarning.ppm > 0" class="ratio-card" style="padding: 15px; border-radius: 8px; position: relative;" :style="{ background: reverseResultsData.boronWarning.color + '15', borderLeft: '4px solid ' + reverseResultsData.boronWarning.color }">
+            <span class="info-icon" @click="openBoronExplanation(reverseResultsData.boronWarning)" :title="i18n.t('clickToLearnBoron')" style="position: absolute; top: 8px; right: 10px;">?</span>
+            <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">{{ i18n.t('boronWarningTitle') }}</div>
+            <div style="font-size: 1.5em; font-weight: bold;" :style="{ color: reverseResultsData.boronWarning.color }">{{ i18n.formatNumber(reverseResultsData.boronWarning.ppm.toFixed(2)) }} <span style="font-size: 0.6em; font-weight: normal;">ppm</span></div>
+            <div style="font-size: 0.9em; margin-top: 5px; padding: 4px 10px; border-radius: 12px; display: inline-block;" :style="{ background: reverseResultsData.boronWarning.color + '22', color: reverseResultsData.boronWarning.color }">{{ reverseResultsData.boronWarning.text }}</div>
+          </div>
         </div>
       </div>
 
@@ -4589,6 +4730,61 @@ function getEcStatus(ecValue) {
   } else {
     return { color: '#dc3545', text: i18n.t('ecVeryHigh') };
   }
+}
+
+/**
+ * Determines boron warning status based on B ppm in the final solution
+ * Thresholds based on rose/hydroponic research:
+ * - ≤ 0.5 ppm: OK/Target range (0.2-0.5 ppm typical)
+ * - > 0.5 to ≤ 0.8 ppm: Caution (above typical, toxicity risk rises)
+ * - > 0.8 to < 1.0 ppm: Too High (exceeds common upper limit)
+ * - ≥ 1.0 ppm: Critical (toxicity likely for sensitive crops)
+ * @param {number} boronPpm - Boron concentration in ppm (mg/L)
+ * @returns {Object} {color, text, description, level, showWarning} - Status info
+ */
+function getBoronWarningStatus(boronPpm) {
+  if (boronPpm === null || boronPpm === undefined || isNaN(boronPpm)) {
+    return { color: '#6c757d', text: '', description: '', level: 'unknown', showWarning: false };
+  }
+
+  // OK: Target range (0.2-0.5 ppm)
+  if (boronPpm <= 0.5) {
+    return {
+      color: '#28a745',
+      text: i18n.t('boronStatusOk'),
+      description: i18n.t('boronOkDescription'),
+      level: 'ok',
+      showWarning: false
+    };
+  }
+  // Caution: Above target but below upper limit (>0.5 to ≤0.8 ppm)
+  if (boronPpm <= 0.8) {
+    return {
+      color: '#ffc107',
+      text: i18n.t('boronStatusCaution'),
+      description: i18n.t('boronCautionDescription'),
+      level: 'caution',
+      showWarning: true
+    };
+  }
+  // Too High: Exceeds upper limit (>0.8 to <1.0 ppm)
+  if (boronPpm < 1.0) {
+    return {
+      color: '#fd7e14',
+      text: i18n.t('boronStatusHigh'),
+      description: i18n.t('boronHighDescription'),
+      level: 'high',
+      showWarning: true
+    };
+  }
+  // Critical: Toxicity likely (≥1.0 ppm)
+  return {
+    color: '#dc3545',
+    text: i18n.t('boronStatusCritical'),
+    description: i18n.t('boronCriticalDescription'),
+    level: 'critical',
+    showWarning: true
+  };
 }
 
 /**
@@ -6965,6 +7161,14 @@ const FertilizerApp = {
         reverseResultsData.ecPrediction = { ec: 0, color: '#666', text: '', targetEC: targetEC, ecScaling: result.ecScaling };
       }
 
+      // Boron warning - check B ppm level for toxicity risk
+      const reverseBoronPpm = result.achieved?.B || 0;
+      const reverseBoronStatus = getBoronWarningStatus(reverseBoronPpm);
+      reverseResultsData.boronWarning = {
+        ppm: reverseBoronPpm,
+        ...reverseBoronStatus
+      };
+
       // Nutrient ratios
       reverseResultsData.ratios = calculateNutrientRatios(result.achieved);
 
@@ -7081,6 +7285,14 @@ const FertilizerApp = {
         formulaResultsData.ecPrediction = { ec: 0, color: '#666', text: '', contributions: {}, rawEC: 0, ionicStrength: 0 };
       }
 
+      // Boron warning - check B ppm level for toxicity risk
+      const formulaBoronPpm = result.achieved?.B || 0;
+      const formulaBoronStatus = getBoronWarningStatus(formulaBoronPpm);
+      formulaResultsData.boronWarning = {
+        ppm: formulaBoronPpm,
+        ...formulaBoronStatus
+      };
+
       // Nutrient ratios
       formulaResultsData.ratios = calculateNutrientRatios(result.achieved);
 
@@ -7183,6 +7395,14 @@ const FertilizerApp = {
       } else {
         gramsToPpmDisplayData.ecPrediction = defaultEcPrediction;
       }
+
+      // Boron warning - check B ppm level for toxicity risk
+      const boronPpm = results?.B || 0;
+      const boronStatus = getBoronWarningStatus(boronPpm);
+      gramsToPpmDisplayData.boronWarning = {
+        ppm: boronPpm,
+        ...boronStatus
+      };
 
       // Nutrient ratios (array format)
       gramsToPpmDisplayData.ratios = ratioData || [];
@@ -7495,7 +7715,8 @@ const FertilizerApp = {
         'k-ca-ratio': i18n.t('understandingKCaRatio') || 'Understanding K:Ca Ratio',
         'no3-nh4-ratio': i18n.t('understandingNo3Nh4Ratio') || 'Understanding NO₃:NH₄ Ratio',
         'n-k-ratio': i18n.t('understandingNKRatio') || 'Understanding N:K Ratio',
-        'ca-mg-ratio': i18n.t('understandingCaMgRatio') || 'Understanding Ca:Mg Ratio'
+        'ca-mg-ratio': i18n.t('understandingCaMgRatio') || 'Understanding Ca:Mg Ratio',
+        'boron-level': i18n.t('understandingBoronLevels') || 'Understanding Boron Levels'
       };
       return titles[activeModal.value] || 'Explanation';
     });
@@ -7790,6 +8011,16 @@ const FertilizerApp = {
       openModal('ca-mg-ratio', {
         caMgRatio: ratio,
         caMgStatus: status
+      });
+    }
+
+    // Open Boron level explanation modal with current ppm data
+    function openBoronExplanation(boronData) {
+      const ppm = boronData?.ppm !== undefined ? boronData.ppm : null;
+      const status = boronData || (ppm !== null ? getBoronWarningStatus(ppm) : null);
+      openModal('boron-level', {
+        boronPpm: ppm,
+        boronStatus: status
       });
     }
 
@@ -8402,6 +8633,8 @@ const FertilizerApp = {
       getNKWarningStatus,
       openCaMgExplanation,
       getCaMgWarningStatus,
+      openBoronExplanation,
+      getBoronWarningStatus,
       openReversePPMExplanation,
       openReverseIonBalanceExplanation,
       openReverseEcExplanation,

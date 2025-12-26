@@ -1081,4 +1081,65 @@ window.i18nLocales.en = {
 
   // One-liner summary
   caMgOneLiner: 'Ca and Mg compete at the roots. Ca:Mg is considered skewed above ~6:1 (Mg may get blocked) or below ~2:1 (Ca may get blocked). Ca issues show on new growth; Mg issues show first on older leaves.',
+
+  // =====================
+  // BORON WARNING
+  // =====================
+
+  // Status labels
+  boronStatusOk: 'OK',
+  boronStatusCaution: 'Caution',
+  boronStatusHigh: 'Too High',
+  boronStatusCritical: 'Critical',
+
+  // Warning section
+  boronWarningTitle: 'Boron Level',
+  boronPpm: 'B',
+  boronOkDescription: 'Within target range (0.2–0.5 ppm). Adequate for most crops.',
+  boronCautionDescription: 'Above typical target band. Toxicity risk rises with repeated applications.',
+  boronHighDescription: 'Exceeds recommended upper limit (0.8 ppm). Risk of toxicity, especially for sensitive crops.',
+  boronCriticalDescription: 'Critical level. Toxicity likely for many crops. Reduce boron immediately.',
+  boronRecirculatingNote: 'Recirculating systems: B accumulates over time—monitor closely.',
+  boronTooltip: 'Boron doesn\'t precipitate like Ca/P; it can accumulate if you keep topping up.',
+  clickToLearnBoron: 'Click to learn about boron levels',
+
+  // Modal content
+  understandingBoronLevels: 'Understanding Boron Levels',
+  whatIsBoronLevel: 'Why monitor boron?',
+  boronExplanation: 'Boron (B) is an essential micronutrient, but the margin between deficiency and toxicity is narrower than for most other nutrients. Unlike calcium or phosphorus, <strong>boron doesn\'t precipitate out of solution</strong>—it can accumulate over time, especially in recirculating systems.',
+  boronYourCurrentLevel: 'Your current boron level',
+  boronTargetRange: 'Target range: 0.2–0.5 ppm B for most crops.',
+
+  // Thresholds
+  boronThresholdsTitle: 'Boron level guidelines',
+  boronThreshold1: '0.2–0.5 ppm — Target range (adequate for most crops)',
+  boronThreshold2: '>0.5–0.8 ppm — Caution (above typical, toxicity risk rises)',
+  boronThreshold3: '>0.8–1.0 ppm — Too High (exceeds recommended upper limit)',
+  boronThreshold4: '≥1.0 ppm — Critical (toxicity likely for sensitive crops)',
+
+  // Toxicity symptoms
+  boronToxicityTitle: 'Boron toxicity symptoms',
+  boronToxicitySymptom1: 'Leaf tip and margin burn (necrosis), often starting on older leaves',
+  boronToxicitySymptom2: 'Yellowing (chlorosis) between veins',
+  boronToxicitySymptom3: 'Reduced growth and stunting',
+  boronToxicitySymptom4: 'In severe cases, leaf drop and plant death',
+
+  // Common causes
+  boronCausesTitle: 'Common causes of high boron',
+  boronCause1: 'Boron-containing fertilizers (borax, boric acid, Solubor)',
+  boronCause2: 'High-boron source water (some well water, certain regions)',
+  boronCause3: 'Accumulation in recirculating hydroponic systems',
+  boronCause4: 'Over-application of micronutrient mixes',
+
+  // Fixes
+  boronFixesTitle: 'How to reduce boron',
+  boronFix1: 'Dilute with low-boron water or use RO water',
+  boronFix2: 'Reduce or eliminate boron-containing fertilizers',
+  boronFix3: 'In recirculating systems: partial solution replacement',
+  boronFix4: 'Check source water boron content',
+
+  // Notes
+  boronRecirculatingTitle: 'Note for recirculating systems',
+  boronRecirculatingText: 'Boron accumulates because it doesn\'t precipitate like Ca/P. If you keep topping up, B concentration can creep upward. Monitor regularly and consider shifting warning thresholds earlier.',
+  boronResearchNote: 'Research note: A pot-rose study induced toxicity at 10× the standard formula\'s boron (45 µM ≈ 0.49 ppm). Don\'t let levels drift upward casually.',
 };
