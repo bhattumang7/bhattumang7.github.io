@@ -1554,6 +1554,209 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
 
+          <!-- Target vs Achieved Section -->
+          <template v-if="wizardResultsSource === 'formula-builder' && formulaResultsData.comparison && formulaResultsData.comparison.length > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('targetVsAchieved') || 'Target vs Achieved' }}</h2>
+              <div class="results-grid">
+                <div v-for="item in formulaResultsData.comparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : item.className === 'miss' ? '#dc3545' : '#ddd') }">
+                  <div class="result-label">{{ item.label }}</div>
+                  <div class="result-value">{{ i18n.formatNumber((item.achieved || 0).toFixed(2)) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
+                  <div v-if="item.target" class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('targetLabel') || 'Target:' }} {{ i18n.formatNumber(item.target.toFixed(2)) }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="wizardResultsSource === 'reverse-calc' && reverseResultsData.comparison && reverseResultsData.comparison.length > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('targetVsAchievedRatios') || 'Achieved PPM' }} <span class="info-icon" @click="openReversePPMExplanation()" :title="i18n.t('clickToLearnPpm')">?</span></h2>
+              <div class="results-grid">
+                <div v-for="item in reverseResultsData.comparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : item.className === 'miss' ? '#dc3545' : '#ddd') }">
+                  <div class="result-label">{{ item.label }}</div>
+                  <div class="result-value">{{ i18n.formatNumber((item.achieved || 0).toFixed(2)) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
+                  <div v-if="item.target" class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('targetLabel') || 'Target:' }} {{ i18n.formatNumber(item.target.toFixed(2)) }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Ion Balance Section -->
+          <template v-if="wizardResultsSource === 'formula-builder' && formulaResultsData.ionBalance">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>
+                <span>{{ i18n.t('ionBalance') }}</span>
+                <span class="info-icon" @click="openFormulaIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+              </h2>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ i18n.formatNumber(formulaResultsData.ionBalance.totalCations.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="font-size: 1.5em; color: #666;">vs</div>
+                <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('anions') }} (-)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ i18n.formatNumber(formulaResultsData.ionBalance.totalAnions.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: formulaResultsData.ionBalance.statusColor + '22', borderLeft: '4px solid ' + formulaResultsData.ionBalance.statusColor }">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalance') }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: formulaResultsData.ionBalance.statusColor }">{{ i18n.formatNumber(formulaResultsData.ionBalance.imbalance.toFixed(1)) }}%</div>
+                  <div style="font-size: 0.85em;" :style="{ color: formulaResultsData.ionBalance.statusColor }">{{ formulaResultsData.ionBalance.statusText }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="wizardResultsSource === 'reverse-calc' && reverseResultsData.ionBalance">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>
+                <span>{{ i18n.t('ionBalance') }}</span>
+                <span class="info-icon" @click="openFormulaIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+              </h2>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ i18n.formatNumber(reverseResultsData.ionBalance.totalCations.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="font-size: 1.5em; color: #666;">vs</div>
+                <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('anions') }} (-)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ i18n.formatNumber(reverseResultsData.ionBalance.totalAnions.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: reverseResultsData.ionBalance.statusColor + '22', borderLeft: '4px solid ' + reverseResultsData.ionBalance.statusColor }">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalance') }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: reverseResultsData.ionBalance.statusColor }">{{ i18n.formatNumber(reverseResultsData.ionBalance.imbalance.toFixed(1)) }}%</div>
+                  <div style="font-size: 0.85em;" :style="{ color: reverseResultsData.ionBalance.statusColor }">{{ reverseResultsData.ionBalance.statusText }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="wizardResultsSource === 'ppm-calc' && gramsToPpmDisplayData.ionBalance">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>
+                <span>{{ i18n.t('ionBalance') }}</span>
+                <span class="info-icon" @click="openFormulaIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+              </h2>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ i18n.formatNumber(gramsToPpmDisplayData.ionBalance.totalCations.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="font-size: 1.5em; color: #666;">vs</div>
+                <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('anions') }} (-)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ i18n.formatNumber(gramsToPpmDisplayData.ionBalance.totalAnions.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: gramsToPpmDisplayData.ionBalance.statusColor + '22', borderLeft: '4px solid ' + gramsToPpmDisplayData.ionBalance.statusColor }">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalance') }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.ionBalance.statusColor }">{{ i18n.formatNumber(gramsToPpmDisplayData.ionBalance.imbalance.toFixed(1)) }}%</div>
+                  <div style="font-size: 0.85em;" :style="{ color: gramsToPpmDisplayData.ionBalance.statusColor }">{{ gramsToPpmDisplayData.ionBalance.statusText }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- EC Prediction Section -->
+          <template v-if="wizardResultsSource === 'formula-builder' && formulaResultsData.ecPrediction && formulaResultsData.ecPrediction.ec > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('predictedEc') }} <span class="info-icon" @click="openFormulaEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
+              <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: formulaResultsData.ecPrediction.color + '22', borderLeft: '4px solid ' + formulaResultsData.ecPrediction.color }">
+                  <div style="font-size: 2em; font-weight: bold;" :style="{ color: formulaResultsData.ecPrediction.color }">{{ i18n.formatNumber(formulaResultsData.ecPrediction.ec.toFixed(2)) }}</div>
+                  <div style="font-size: 0.9em; color: #666;">mS/cm</div>
+                  <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: formulaResultsData.ecPrediction.color }">{{ formulaResultsData.ecPrediction.text }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="wizardResultsSource === 'reverse-calc' && reverseResultsData.ecPrediction && reverseResultsData.ecPrediction.ec > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('predictedEc') }} <span class="info-icon" @click="openFormulaEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
+              <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: reverseResultsData.ecPrediction.color + '22', borderLeft: '4px solid ' + reverseResultsData.ecPrediction.color }">
+                  <div style="font-size: 2em; font-weight: bold;" :style="{ color: reverseResultsData.ecPrediction.color }">{{ i18n.formatNumber(reverseResultsData.ecPrediction.ec.toFixed(2)) }}</div>
+                  <div style="font-size: 0.9em; color: #666;">mS/cm</div>
+                  <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: reverseResultsData.ecPrediction.color }">{{ reverseResultsData.ecPrediction.text }}</div>
+                </div>
+                <div v-if="reverseResultsData.ecPrediction.targetEC" class="ec-target" style="padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('targetEcLabel') }}</div>
+                  <div style="font-size: 1.5em; font-weight: bold;">{{ i18n.formatNumber(reverseResultsData.ecPrediction.targetEC) }} mS/cm</div>
+                  <div v-if="reverseResultsData.ecPrediction.ecScaling" style="font-size: 0.85em; color: #28a745;">{{ i18n.t('scaledToMatch') }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="wizardResultsSource === 'ppm-calc' && gramsToPpmDisplayData.ecPrediction && gramsToPpmDisplayData.ecPrediction.ec > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('predictedEc') }} <span class="info-icon" @click="openFormulaEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
+              <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: gramsToPpmDisplayData.ecPrediction.color + '22', borderLeft: '4px solid ' + gramsToPpmDisplayData.ecPrediction.color }">
+                  <div style="font-size: 2em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ec.toFixed(2)) }}</div>
+                  <div style="font-size: 0.9em; color: #666;">mS/cm</div>
+                  <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: gramsToPpmDisplayData.ecPrediction.color }">{{ gramsToPpmDisplayData.ecPrediction.text }}</div>
+                </div>
+                <div v-if="gramsToPpmDisplayData.ecPrediction.ionicStrength" class="ionic-strength-card" style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('ionicStrength') }}</div>
+                  <div style="font-size: 1.2em; font-weight: bold;">{{ i18n.formatNumber(gramsToPpmDisplayData.ecPrediction.ionicStrength.toFixed(4)) }} mol/L</div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Nutrient Ratio Analysis Section -->
+          <template v-if="wizardResultsSource === 'formula-builder' && formulaResultsData.ratios && formulaResultsData.ratios.length > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                <div v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+                  <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
+                  <div style="font-size: 0.85em; color: #666;">
+                    <span v-for="(label, i) in ratioObj.labels" :key="i">
+                      {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="wizardResultsSource === 'reverse-calc' && reverseResultsData.ratios && reverseResultsData.ratios.length > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                <div v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+                  <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
+                  <div style="font-size: 0.85em; color: #666;">
+                    <span v-for="(label, i) in ratioObj.labels" :key="i">
+                      {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="wizardResultsSource === 'ppm-calc' && gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0">
+            <div class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                <div v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
+                  <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
+                  <div style="font-size: 0.85em; color: #666;">
+                    <span v-for="(label, i) in ratioObj.labels" :key="i">
+                      {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
           <!-- Target Deviation Warnings (for formula-builder) -->
           <template v-if="wizardResultsSource === 'formula-builder'">
             <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
