@@ -1321,57 +1321,225 @@ permalink: /fertilizer-calculator/
 
       <!-- Two-Tank Results (shown in wizard when twoTankDisplayData.show is true) -->
       <template v-if="wizardResultsSource && twoTankDisplayData.show">
-        <div class="results-section two-tank-results">
-          <div class="results-header">
-            <h2>{{ i18n.t('twoTankSolution') }}</h2>
+        <div class="results-section two-tank-results" style="margin-top: 20px;">
+          <!-- Header with copy button and back button -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #007bff;">{{ i18n.t('twoTankStockSolutionSystem') }}</h3>
             <div style="display: flex; gap: 10px;">
               <button class="copy-btn" :class="{ copied: copiedButtonId === 'two-tank' }" @click="copyTwoTankResultsVue()" :title="i18n.t('copyToClipboard')">
                 <svg v-if="copiedButtonId !== 'two-tank'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>{{ copiedButtonId === 'two-tank' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
+                {{ copiedButtonId === 'two-tank' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}
               </button>
-              <button class="secondary-btn" @click="hideTwoTankView()">{{ i18n.t('backToSingleTank') }}</button>
+              <button class="btn-secondary" @click="hideTwoTankView()" style="padding: 8px 16px;">
+                {{ i18n.t('backToNormalView') || 'Back to Normal View' }}
+              </button>
             </div>
           </div>
-          <p class="two-tank-explanation">{{ i18n.t('twoTankExplanation') }}</p>
-          <div class="tanks-container">
-            <div class="tank" v-for="(tank, index) in [twoTankDisplayData.tankA, twoTankDisplayData.tankB]" :key="tank.name">
-              <div class="tank-header" @click="toggleTankDetailsVue(index === 0 ? 'A' : 'B')">
-                <h3>{{ tank.name }}</h3>
-                <span class="tank-toggle">{{ tank.detailsExpanded ? '▼' : '▶' }}</span>
+
+          <p style="margin-bottom: 20px; color: #666;">{{ i18n.t('twoTankSeparationNote') }}</p>
+
+          <!-- Tank A Section -->
+          <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #007bff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <h4 style="margin: 0; color: #007bff;">{{ twoTankDisplayData.tankA.name }}</h4>
+              <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                {{ twoTankDisplayData.tankA.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
+              </button>
+            </div>
+            <p style="margin-bottom: 15px; color: #666; font-size: 0.9em;">{{ twoTankDisplayData.tankA.description }}</p>
+
+            <!-- Fertilizers list -->
+            <div v-if="twoTankDisplayData.tankA.fertilizers.length === 0" style="color: #999; font-style: italic;">
+              {{ i18n.t('noFertilizersInTank') || 'No fertilizers in this tank' }}
+            </div>
+            <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
+              <div v-for="fert in twoTankDisplayData.tankA.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
+                <span>{{ fert.name }}</span>
+                <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
               </div>
-              <p class="tank-description">{{ tank.description }}</p>
-              <div class="tank-details" v-show="tank.detailsExpanded">
-                <div class="tank-fertilizers">
-                  <h4>{{ i18n.t('fertilizers') }}</h4>
-                  <div v-for="fert in tank.fertilizers" :key="fert.id" class="tank-fertilizer-item">
-                    <span>{{ fert.name }}</span>
-                    <span>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</span>
-                  </div>
-                  <div class="tank-fertilizer-total">
-                    <span>{{ i18n.t('total') }}</span>
-                    <span>{{ i18n.formatNumber(tank.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</span>
-                  </div>
+              <div v-if="twoTankDisplayData.tankA.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #007bff20; border-radius: 4px; border-top: 2px solid #007bff; margin-top: 5px;">
+                <span style="color: #007bff;"><strong>{{ i18n.t('totalFertilizers', { count: i18n.formatNumber(twoTankDisplayData.tankA.fertilizers.length) }) }}</strong></span>
+                <strong style="color: #007bff; font-size: 1.1em;">{{ i18n.formatNumber(twoTankDisplayData.tankA.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
+              </div>
+            </div>
+
+            <!-- Quick summary badges -->
+            <div v-if="twoTankDisplayData.tankA.fertilizers.length > 0" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+              <span v-if="twoTankDisplayData.tankA.nutrients.N_total > 0.1" class="tank-nutrient-badge"><strong>N:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.N_total.toFixed(1)) }}</span>
+              <span v-if="(twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankA.nutrients.P : twoTankDisplayData.tankA.nutrients.P2O5) > 0.1" class="tank-nutrient-badge"><strong>{{ twoTankDisplayData.nutrientLabels.P }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankA.nutrients.P : twoTankDisplayData.tankA.nutrients.P2O5).toFixed(1)) }}</span>
+              <span v-if="(twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankA.nutrients.K : twoTankDisplayData.tankA.nutrients.K2O) > 0.1" class="tank-nutrient-badge"><strong>{{ twoTankDisplayData.nutrientLabels.K }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankA.nutrients.K : twoTankDisplayData.tankA.nutrients.K2O).toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankA.nutrients.Ca > 0.1" class="tank-nutrient-badge"><strong>Ca:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.Ca.toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankA.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.Mg.toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankA.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.S.toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankA.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankA.ionBalance.statusColor }">
+                <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">{{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
+              </span>
+              <span v-if="twoTankDisplayData.tankA.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankA.ecPrediction.color }">
+                <strong :style="{ color: twoTankDisplayData.tankA.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ecPrediction.ec.toFixed(2)) }}</strong>
+              </span>
+            </div>
+
+            <!-- Collapsible Details -->
+            <div v-if="twoTankDisplayData.tankA.detailsExpanded && twoTankDisplayData.tankA.fertilizers.length > 0" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #007bff;">
+              <!-- PPM Table -->
+              <h5 style="margin-bottom: 10px; color: #333;">{{ i18n.t('nutrientPpmValues') }}</h5>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.9em;">
+                <tr style="background: white;">
+                  <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">{{ i18n.t('nutrientHeader') }}</th>
+                  <th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">{{ i18n.t('ppmHeader') }}</th>
+                </tr>
+                <tr v-for="item in twoTankDisplayData.tankA.ppmData" :key="item.label" style="background: white;">
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ item.label }}</td>
+                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">{{ i18n.formatNumber((item.value || 0).toFixed(2)) }}</td>
+                </tr>
+              </table>
+
+              <!-- Nitrogen forms -->
+              <div v-if="twoTankDisplayData.tankA.nutrients.N_total > 0.1" style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px;">
+                <strong style="font-size: 0.9em;">{{ i18n.t('nitrogenFormsLabel') }}</strong><br>
+                <span style="font-size: 0.85em;">NH₄-N: {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.N_NH4.toFixed(2)) }} {{ i18n.t('ppmUnit') }} ({{ i18n.formatNumber(twoTankDisplayData.tankA.nh4Percent.toFixed(1)) }}%) | NO₃-N: {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.N_NO3.toFixed(2)) }} {{ i18n.t('ppmUnit') }} ({{ i18n.formatNumber(twoTankDisplayData.tankA.no3Percent.toFixed(1)) }}%)</span>
+              </div>
+
+              <!-- Ratios -->
+              <h5 style="margin-bottom: 10px; color: #333;">{{ i18n.t('nutrientRatiosRelative') }}</h5>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                <div v-if="twoTankDisplayData.tankA.ratios.target" style="padding: 10px 15px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #2e7d32;">{{ i18n.t('targetRatioLabel', { ratio: twoTankDisplayData.tankA.ratios.target.label }) }}</div>
+                  <div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">{{ twoTankDisplayData.tankA.ratios.target.values }}</div>
                 </div>
-                <div class="tank-nutrients">
-                  <h4>{{ i18n.t('nutrientsPpm') }}</h4>
-                  <div class="tank-nutrient-grid">
-                    <div v-for="item in tank.ppmData" :key="item.label" class="tank-nutrient-item">
-                      <span class="nutrient-label">{{ item.label }}</span>
-                      <span class="nutrient-value">{{ i18n.formatNumber(item.value.toFixed(2)) }}</span>
-                    </div>
-                  </div>
+                <div v-if="twoTankDisplayData.tankA.ratios.contribution" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">{{ i18n.t('thisTankRatioLabel', { ratio: twoTankDisplayData.tankA.ratios.contribution.label }) }}</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ twoTankDisplayData.tankA.ratios.contribution.values }}</div>
+                </div>
+                <div v-if="twoTankDisplayData.tankA.ratios.caMg" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">Ca:Mg</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.caMg.ratio) }} : 1</div>
+                </div>
+                <div v-if="twoTankDisplayData.tankA.ratios.nCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">N:Ca</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.nCa.ratio) }} : 1</div>
+                </div>
+                <div v-if="twoTankDisplayData.tankA.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankA.ratios.kCa.kLabel }}:Ca</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.kCa.ratio) }} : 1</div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="combined-results" style="margin-top: 20px;">
-            <h3>{{ i18n.t('combinedResult') }}</h3>
-            <div class="results-grid">
-              <div v-for="item in twoTankDisplayData.combinedPpm" :key="item.key" class="result-card" :class="{ zero: item.isZero }">
-                <div class="result-label">{{ item.label }}</div>
-                <div class="result-value">{{ i18n.formatNumber((item.value || 0).toFixed(2)) }}</div>
+
+          <!-- Tank B Section -->
+          <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #fff7f0; border-radius: 8px; border-left: 4px solid #fd7e14;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <h4 style="margin: 0; color: #fd7e14;">{{ twoTankDisplayData.tankB.name }}</h4>
+              <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #fd7e14; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                {{ twoTankDisplayData.tankB.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
+              </button>
+            </div>
+            <p style="margin-bottom: 15px; color: #666; font-size: 0.9em;">{{ twoTankDisplayData.tankB.description }}</p>
+
+            <!-- Fertilizers list -->
+            <div v-if="twoTankDisplayData.tankB.fertilizers.length === 0" style="color: #999; font-style: italic;">
+              {{ i18n.t('noFertilizersInTank') || 'No fertilizers in this tank' }}
+            </div>
+            <div v-else class="tank-fertilizers" style="margin-bottom: 15px;">
+              <div v-for="fert in twoTankDisplayData.tankB.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: white; border-radius: 4px; margin-bottom: 5px;">
+                <span>{{ fert.name }}</span>
+                <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
               </div>
+              <div v-if="twoTankDisplayData.tankB.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #fd7e1420; border-radius: 4px; border-top: 2px solid #fd7e14; margin-top: 5px;">
+                <span style="color: #fd7e14;"><strong>{{ i18n.t('totalFertilizers', { count: i18n.formatNumber(twoTankDisplayData.tankB.fertilizers.length) }) }}</strong></span>
+                <strong style="color: #fd7e14; font-size: 1.1em;">{{ i18n.formatNumber(twoTankDisplayData.tankB.totalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
+              </div>
+            </div>
+
+            <!-- Quick summary badges -->
+            <div v-if="twoTankDisplayData.tankB.fertilizers.length > 0" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+              <span v-if="twoTankDisplayData.tankB.nutrients.N_total > 0.1" class="tank-nutrient-badge"><strong>N:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.N_total.toFixed(1)) }}</span>
+              <span v-if="(twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankB.nutrients.P : twoTankDisplayData.tankB.nutrients.P2O5) > 0.1" class="tank-nutrient-badge"><strong>{{ twoTankDisplayData.nutrientLabels.P }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankB.nutrients.P : twoTankDisplayData.tankB.nutrients.P2O5).toFixed(1)) }}</span>
+              <span v-if="(twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankB.nutrients.K : twoTankDisplayData.tankB.nutrients.K2O) > 0.1" class="tank-nutrient-badge"><strong>{{ twoTankDisplayData.nutrientLabels.K }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.tankB.nutrients.K : twoTankDisplayData.tankB.nutrients.K2O).toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankB.nutrients.Ca > 0.1" class="tank-nutrient-badge"><strong>Ca:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.Ca.toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankB.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.Mg.toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankB.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.S.toFixed(1)) }}</span>
+              <span v-if="twoTankDisplayData.tankB.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankB.ionBalance.statusColor }">
+                <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">{{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
+              </span>
+              <span v-if="twoTankDisplayData.tankB.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankB.ecPrediction.color }">
+                <strong :style="{ color: twoTankDisplayData.tankB.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ecPrediction.ec.toFixed(2)) }}</strong>
+              </span>
+            </div>
+
+            <!-- Collapsible Details -->
+            <div v-if="twoTankDisplayData.tankB.detailsExpanded && twoTankDisplayData.tankB.fertilizers.length > 0" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #fd7e14;">
+              <!-- PPM Table -->
+              <h5 style="margin-bottom: 10px; color: #333;">{{ i18n.t('nutrientPpmValues') }}</h5>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.9em;">
+                <tr style="background: white;">
+                  <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">{{ i18n.t('nutrientHeader') }}</th>
+                  <th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">{{ i18n.t('ppmHeader') }}</th>
+                </tr>
+                <tr v-for="item in twoTankDisplayData.tankB.ppmData" :key="item.label" style="background: white;">
+                  <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ item.label }}</td>
+                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">{{ i18n.formatNumber((item.value || 0).toFixed(2)) }}</td>
+                </tr>
+              </table>
+
+              <!-- Nitrogen forms -->
+              <div v-if="twoTankDisplayData.tankB.nutrients.N_total > 0.1" style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px;">
+                <strong style="font-size: 0.9em;">{{ i18n.t('nitrogenFormsLabel') }}</strong><br>
+                <span style="font-size: 0.85em;">NH₄-N: {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.N_NH4.toFixed(2)) }} {{ i18n.t('ppmUnit') }} ({{ i18n.formatNumber(twoTankDisplayData.tankB.nh4Percent.toFixed(1)) }}%) | NO₃-N: {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.N_NO3.toFixed(2)) }} {{ i18n.t('ppmUnit') }} ({{ i18n.formatNumber(twoTankDisplayData.tankB.no3Percent.toFixed(1)) }}%)</span>
+              </div>
+
+              <!-- Ratios -->
+              <h5 style="margin-bottom: 10px; color: #333;">{{ i18n.t('nutrientRatiosRelative') }}</h5>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                <div v-if="twoTankDisplayData.tankB.ratios.target" style="padding: 10px 15px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #2e7d32;">{{ i18n.t('targetRatioLabel', { ratio: twoTankDisplayData.tankB.ratios.target.label }) }}</div>
+                  <div style="font-size: 1.1em; font-weight: bold; color: #2e7d32;">{{ twoTankDisplayData.tankB.ratios.target.values }}</div>
+                </div>
+                <div v-if="twoTankDisplayData.tankB.ratios.contribution" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">{{ i18n.t('thisTankRatioLabel', { ratio: twoTankDisplayData.tankB.ratios.contribution.label }) }}</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ twoTankDisplayData.tankB.ratios.contribution.values }}</div>
+                </div>
+                <div v-if="twoTankDisplayData.tankB.ratios.caMg" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">Ca:Mg</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.caMg.ratio) }} : 1</div>
+                </div>
+                <div v-if="twoTankDisplayData.tankB.ratios.nCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">N:Ca</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.nCa.ratio) }} : 1</div>
+                </div>
+                <div v-if="twoTankDisplayData.tankB.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
+                  <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankB.ratios.kCa.kLabel }}:Ca</div>
+                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.kCa.ratio) }} : 1</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Combined Solution Section -->
+          <div v-if="twoTankDisplayData.combinedNutrients" class="combined-note" style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #007bff;">
+            <h4 style="margin-bottom: 10px;">{{ i18n.t('combinedSolutionWhenMixed') }}</h4>
+            <p style="margin-bottom: 10px; color: #666; font-size: 0.9em;">{{ i18n.t('combinedSolutionDescription') }}</p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+              <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.N }}:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.N_total.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+              <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.P }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.combinedNutrients.P : twoTankDisplayData.combinedNutrients.P2O5).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+              <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.K }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.combinedNutrients.K : twoTankDisplayData.combinedNutrients.K2O).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+              <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Ca:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.Ca.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+              <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.Mg.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+              <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.S.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+            </div>
+
+            <!-- EC and Totals row -->
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 10px; border-top: 1px dashed #007bff;">
+              <span v-if="twoTankDisplayData.combinedEc" style="padding: 5px 10px; border-radius: 4px;" :style="{ background: twoTankDisplayData.combinedEc.color + '15', border: '1px solid ' + twoTankDisplayData.combinedEc.color }">
+                <strong :style="{ color: twoTankDisplayData.combinedEc.color }">{{ i18n.t('combinedEcLabel') }} {{ i18n.formatNumber(twoTankDisplayData.combinedEc.ec.toFixed(2)) }} {{ i18n.t('mScmUnit') }} ({{ twoTankDisplayData.combinedEc.text }})</strong>
+              </span>
+              <span style="padding: 5px 10px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px;">
+                <strong style="color: #2e7d32;">{{ i18n.t('total') || 'Total' }}: {{ i18n.formatNumber(twoTankDisplayData.grandTotalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
+                <span style="color: #666; font-size: 0.85em;"> (Tank A: {{ i18n.formatNumber(twoTankDisplayData.tankA.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }} + Tank B: {{ i18n.formatNumber(twoTankDisplayData.tankB.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }})</span>
+              </span>
             </div>
           </div>
         </div>
