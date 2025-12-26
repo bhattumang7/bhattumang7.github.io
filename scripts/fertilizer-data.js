@@ -349,6 +349,42 @@
       name: "WSF 13:40:13 (13% N, 40% P₂O₅, 13% K₂O)",
       aliases: ["WSF 13:40:13", "13:40:13", "13-40-13", "WSF 13-40-13"],
       pct: { N_total: 13.0, N_NO3: 4.4, N_NH4: 8.6, P2O5: 40.0, K2O: 13.0 }
+    },
+    {
+      id: "wsf_12_6_22_12cao",
+      name: "WSF 12:6:22 + 12CaO (12% N, 6% P₂O₅, 22% K₂O, 12% CaO)",
+      aliases: [
+        "ICL 12:6:22+12CaO",
+        "ICL 12-6-22+12CaO",
+        "Fertiflow 12:6:22+12CaO",
+        "Fertiflow 12-6-22+12CaO",
+        "WSF 12:6:22+12CaO",
+        "12:6:22+12CaO",
+        "12-6-22+12CaO"
+      ],
+      pct: {
+        N_total: 12.0,
+        N_NO3: 12.0,
+        N_NH4: 0.0,
+        P2O5: 6.0,
+        K2O: 22.0,
+        CaO: 12.0,
+        P: 2.62,
+        K: 18.26,
+        Ca: 8.58
+      }
+    },
+    {
+      id: "disodium_octaborate_tetrahydrate_20b",
+      name: "Disodium Octaborate Tetrahydrate (Boron 20% as B)",
+      aliases: [
+        "Disodium Octaborate Tetrahydrate",
+        "Disodium octaborate tetrahydrate",
+        "DOT",
+        "Sodium octaborate tetrahydrate",
+        "Na2B8O13·4H2O"
+      ],
+      pct: { B: 20.0 }
     }
   ];
 
@@ -773,6 +809,14 @@
       ions: [
         {ion: 'K⁺', charge: 1, count: 2, type: 'cation'},
         {ion: 'SiO₃²⁻', charge: 2, count: 1, type: 'anion'}
+      ]
+    },
+    disodium_octaborate_tetrahydrate_20b: {
+      formula: 'Na₂B₈O₁₃·4H₂O',
+      molarMass: 412.52,
+      ions: [
+        {ion: 'Na⁺', charge: 1, count: 2, type: 'cation'},
+        {ion: 'B₈O₁₃²⁻', charge: 2, count: 1, type: 'anion'}
       ]
     }
   };
