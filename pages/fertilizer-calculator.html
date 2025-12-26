@@ -1335,13 +1335,13 @@ permalink: /fertilizer-calculator/
           </div>
           <p class="two-tank-explanation">{{ i18n.t('twoTankExplanation') }}</p>
           <div class="tanks-container">
-            <div class="tank" v-for="tank in [twoTankDisplayData.tankA, twoTankDisplayData.tankB]" :key="tank.name">
-              <div class="tank-header" @click="toggleTankDetailsVue(tank.name)">
+            <div class="tank" v-for="(tank, index) in [twoTankDisplayData.tankA, twoTankDisplayData.tankB]" :key="tank.name">
+              <div class="tank-header" @click="toggleTankDetailsVue(index === 0 ? 'A' : 'B')">
                 <h3>{{ tank.name }}</h3>
-                <span class="tank-toggle">{{ tank.expanded ? '▼' : '▶' }}</span>
+                <span class="tank-toggle">{{ tank.detailsExpanded ? '▼' : '▶' }}</span>
               </div>
               <p class="tank-description">{{ tank.description }}</p>
-              <div class="tank-details" v-show="tank.expanded">
+              <div class="tank-details" v-show="tank.detailsExpanded">
                 <div class="tank-fertilizers">
                   <h4>{{ i18n.t('fertilizers') }}</h4>
                   <div v-for="fert in tank.fertilizers" :key="fert.id" class="tank-fertilizer-item">
