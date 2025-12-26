@@ -1339,18 +1339,18 @@ permalink: /fertilizer-calculator/
     <p data-i18n="calcModeDescription">Choose between commercial fertilizer notation or pure elemental values.</p>
 
     <div class="calc-mode-options">
-      <label class="calc-mode-option" :class="{ selected: wizardCalcMode === 'oxide' }" @click="selectCalcMode('oxide')">
-        <input type="radio" name="wizard-calc-mode" value="oxide" :checked="wizardCalcMode === 'oxide'">
-        <div class="calc-mode-option-content">
-          <strong data-i18n="oxideForms">Oxide Forms (P₂O₅, K₂O)</strong>
-          <span data-i18n="oxideFormsDescription">Commercial standard - matches fertilizer bag labels</span>
-        </div>
-      </label>
       <label class="calc-mode-option" :class="{ selected: wizardCalcMode === 'elemental' }" @click="selectCalcMode('elemental')">
         <input type="radio" name="wizard-calc-mode" value="elemental" :checked="wizardCalcMode === 'elemental'">
         <div class="calc-mode-option-content">
           <strong data-i18n="elementalForms">Elemental Forms (P, K)</strong>
           <span data-i18n="elementalFormsDescription">Pure elements - for scientific calculations</span>
+        </div>
+      </label>
+      <label class="calc-mode-option" :class="{ selected: wizardCalcMode === 'oxide' }" @click="selectCalcMode('oxide')">
+        <input type="radio" name="wizard-calc-mode" value="oxide" :checked="wizardCalcMode === 'oxide'">
+        <div class="calc-mode-option-content">
+          <strong data-i18n="oxideForms">Oxide Forms (P₂O₅, K₂O)</strong>
+          <span data-i18n="oxideFormsDescription">Commercial standard - matches fertilizer bag labels</span>
         </div>
       </label>
     </div>
@@ -3576,7 +3576,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.4.0
+    v1.5.0
   </div>
 
 </div>
