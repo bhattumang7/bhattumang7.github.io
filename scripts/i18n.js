@@ -1,62 +1,176 @@
 /**
  * Internationalization (i18n) Module
  * Handles translations, number formatting, and language switching
+ * Supports lazy loading of locale files - only loads English + selected language
  */
 
 (function() {
   'use strict';
 
+  // List of supported language codes
+  const SUPPORTED_LANGUAGES = [
+    'en', 'gu', 'hi', 'kn', 'te', 'mr', 'bn-sadhu', 'bn',
+    'ta', 'ml', 'pa', 'or', 'as', 'bho', 'mai', 'awa'
+  ];
+
   const i18n = {
     currentLanguage: 'en',
+    isReady: false,
+    _readyCallbacks: [],
 
-    translations: {
-      // English translations - loaded from /scripts/locales/en.js
-      en: window.i18nLocales?.en || {},
+    // Translations object - populated dynamically via lazy loading
+    translations: {},
 
-      // Gujarati translations - loaded from /scripts/locales/gu.js
-      gu: window.i18nLocales?.gu || {},
+    // Track which locales are currently being loaded (to prevent duplicate loads)
+    _loadingLocales: {},
 
-      // Hindi translations - loaded from /scripts/locales/hi.js
-      hi: window.i18nLocales?.hi || {},
+    // Loading modal element reference
+    _loadingModal: null,
 
-      // Kannada translations - loaded from /scripts/locales/kn.js
-      kn: window.i18nLocales?.kn || {},
+    /**
+     * Show loading modal when switching languages
+     */
+    showLoadingModal() {
+      if (this._loadingModal) {
+        this._loadingModal.style.display = 'flex';
+        return;
+      }
 
-      // Telugu translations - loaded from /scripts/locales/te.js
-      te: window.i18nLocales?.te || {},
+      // Create loading modal
+      const modal = document.createElement('div');
+      modal.id = 'i18n-loading-modal';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+        transition: opacity 0.2s ease;
+      `;
 
-      // Marathi translations - loaded from /scripts/locales/mr.js
-      mr: window.i18nLocales?.mr || {},
+      modal.innerHTML = `
+        <div style="text-align: center;">
+          <div style="
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: i18n-spin 1s linear infinite;
+            margin: 0 auto 20px;
+          "></div>
+          <div style="font-size: 18px; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            Loading language...
+          </div>
+          <div style="font-size: 14px; color: #666; margin-top: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            भाषा लोड हो रही है • ভাষা লোড হচ্ছে • ભાષા લોડ થઈ રહી છે
+          </div>
+        </div>
+      `;
 
-      // Bengali (Sadhu Bhasha) translations - loaded from /scripts/locales/bn-sadhu.js
-      'bn-sadhu': window.i18nLocales?.['bn-sadhu'] || {},
+      // Add animation keyframes
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes i18n-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
 
-      // Bengali (Cholito Bhasha) translations - loaded from /scripts/locales/bn.js
-      bn: window.i18nLocales?.bn || {},
+      document.body.appendChild(modal);
+      this._loadingModal = modal;
+    },
 
-      // Tamil translations - loaded from /scripts/locales/ta.js
-      ta: window.i18nLocales?.ta || {},
+    /**
+     * Hide loading modal
+     */
+    hideLoadingModal() {
+      if (this._loadingModal) {
+        this._loadingModal.style.opacity = '0';
+        setTimeout(() => {
+          if (this._loadingModal) {
+            this._loadingModal.style.display = 'none';
+            this._loadingModal.style.opacity = '1';
+          }
+        }, 200);
+      }
+    },
 
-      // Malayalam translations - loaded from /scripts/locales/ml.js
-      ml: window.i18nLocales?.ml || {},
+    /**
+     * Load a locale file dynamically
+     * @param {string} langCode - The language code to load
+     * @returns {Promise} - Resolves when the locale is loaded
+     */
+    async loadLocale(langCode) {
+      // Already loaded
+      if (this.translations[langCode] && Object.keys(this.translations[langCode]).length > 0) {
+        return Promise.resolve();
+      }
 
-      // Punjabi (Gurmukhi) translations - loaded from /scripts/locales/pa.js
-      pa: window.i18nLocales?.pa || {},
+      // Check if it's a supported language
+      if (!SUPPORTED_LANGUAGES.includes(langCode)) {
+        console.warn(`i18n: Unsupported language code: ${langCode}`);
+        return Promise.resolve();
+      }
 
-      // Odia translations - loaded from /scripts/locales/or.js
-      or: window.i18nLocales?.or || {},
+      // Already loading - return existing promise
+      if (this._loadingLocales[langCode]) {
+        return this._loadingLocales[langCode];
+      }
 
-      // Assamese translations - loaded from /scripts/locales/as.js
-      as: window.i18nLocales?.as || {},
+      // Create loading promise
+      this._loadingLocales[langCode] = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `/scripts/locales/${langCode}.js`;
+        script.async = true;
 
-      // Bhojpuri translations - loaded from /scripts/locales/bho.js
-      bho: window.i18nLocales?.bho || {},
+        script.onload = () => {
+          // Copy from window.i18nLocales to our translations object
+          if (window.i18nLocales && window.i18nLocales[langCode]) {
+            this.translations[langCode] = window.i18nLocales[langCode];
+          }
+          delete this._loadingLocales[langCode];
+          resolve();
+        };
 
-      // Maithili translations - loaded from /scripts/locales/mai.js
-      mai: window.i18nLocales?.mai || {},
+        script.onerror = () => {
+          console.error(`i18n: Failed to load locale: ${langCode}`);
+          delete this._loadingLocales[langCode];
+          reject(new Error(`Failed to load locale: ${langCode}`));
+        };
 
-      // Awadhi translations - loaded from /scripts/locales/awa.js
-      awa: window.i18nLocales?.awa || {}
+        document.head.appendChild(script);
+      });
+
+      return this._loadingLocales[langCode];
+    },
+
+    /**
+     * Register a callback to be called when i18n is ready
+     * @param {Function} callback - Function to call when ready
+     */
+    onReady(callback) {
+      if (this.isReady) {
+        callback();
+      } else {
+        this._readyCallbacks.push(callback);
+      }
+    },
+
+    /**
+     * Mark i18n as ready and call all registered callbacks
+     */
+    _setReady() {
+      this.isReady = true;
+      this._readyCallbacks.forEach(cb => cb());
+      this._readyCallbacks = [];
     },
 
     // Format a number according to the current language
@@ -159,18 +273,41 @@
       return text;
     },
 
-    // Set the current language and update UI
-    setLanguage(langCode) {
-      if (this.translations[langCode]) {
-        this.currentLanguage = langCode;
-        localStorage.setItem('fertCalcLanguage', langCode);
-        this.updateUI();
-        this.refreshDynamicContent();
+    // Set the current language and update UI (async to support lazy loading)
+    async setLanguage(langCode) {
+      // Check if it's a supported language
+      if (!SUPPORTED_LANGUAGES.includes(langCode)) {
+        console.warn(`i18n: Unsupported language code: ${langCode}`);
+        return;
+      }
 
-        // Sync with Vue state if available
-        if (window.vueApp && window.vueApp.language !== langCode) {
-          window.vueApp.language = langCode;
+      // Load the locale if not already loaded
+      const needsLoading = !this.translations[langCode] || Object.keys(this.translations[langCode]).length === 0;
+
+      if (needsLoading) {
+        // Show loading modal for new locale
+        this.showLoadingModal();
+        try {
+          await this.loadLocale(langCode);
+        } catch (error) {
+          console.error(`i18n: Failed to load locale ${langCode}, falling back to English`);
+          langCode = 'en';
         }
+      }
+
+      this.currentLanguage = langCode;
+      localStorage.setItem('fertCalcLanguage', langCode);
+      this.updateUI();
+      this.refreshDynamicContent();
+
+      // Sync with Vue state if available
+      if (window.vueApp && window.vueApp.language !== langCode) {
+        window.vueApp.language = langCode;
+      }
+
+      // Hide loading modal after everything is updated
+      if (needsLoading) {
+        this.hideLoadingModal();
       }
     },
 
@@ -245,24 +382,44 @@
       }, 100);
     },
 
-    // Initialize language from localStorage or browser preference
-    init() {
+    // Initialize language from localStorage or browser preference (async for lazy loading)
+    async init() {
+      // Determine the target language
+      let targetLang = 'en';
       const savedLang = localStorage.getItem('fertCalcLanguage');
-      if (savedLang && this.translations[savedLang]) {
-        this.currentLanguage = savedLang;
+
+      if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
+        targetLang = savedLang;
       } else {
         // Try to detect browser language
         const browserLang = navigator.language?.split('-')[0];
-        if (browserLang && this.translations[browserLang]) {
-          this.currentLanguage = browserLang;
+        if (browserLang && SUPPORTED_LANGUAGES.includes(browserLang)) {
+          targetLang = browserLang;
         }
       }
-      // Initial UI update will happen after DOM is ready
+
+      try {
+        // Always load English first (as fallback for missing translations)
+        await this.loadLocale('en');
+
+        // Load the target language if different from English
+        if (targetLang !== 'en') {
+          await this.loadLocale(targetLang);
+        }
+
+        this.currentLanguage = targetLang;
+      } catch (error) {
+        console.error('i18n: Error during initialization:', error);
+        this.currentLanguage = 'en';
+      }
+
+      // Mark as ready and notify callbacks
+      this._setReady();
     },
 
     // Get list of available languages
     getAvailableLanguages() {
-      return Object.keys(this.translations).map(code => ({
+      return SUPPORTED_LANGUAGES.map(code => ({
         code,
         name: this.getLanguageName(code)
       }));
