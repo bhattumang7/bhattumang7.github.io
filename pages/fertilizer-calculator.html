@@ -6396,6 +6396,9 @@ const FertilizerApp = {
       // Clear pending calculation
       pendingWizardCalculation.value = null;
 
+      // Reset two-tank view state (in case it was shown previously)
+      twoTankDisplayData.show = false;
+
       // Show wizard results
       showWizardStepVue('wizard-results', { updateIndicator: false });
     }
@@ -6667,6 +6670,10 @@ const FertilizerApp = {
 
     function backFromWizardResults() {
       const mode = currentMode.value;
+
+      // Reset two-tank state when going back from results
+      twoTankDisplayData.show = false;
+
       if (mode === 'ppm-calc') {
         showWizardStepVue('grams-input-step');
       } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
