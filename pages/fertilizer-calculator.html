@@ -1611,7 +1611,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>
                 <span>{{ i18n.t('ionBalance') }}</span>
-                <span class="info-icon" @click="openFormulaIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+                <span class="info-icon" @click="openReverseIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
               </h2>
               <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
                 <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
@@ -1675,7 +1675,7 @@ permalink: /fertilizer-calculator/
           </template>
           <template v-if="wizardResultsSource === 'reverse-calc' && reverseResultsData.ecPrediction && reverseResultsData.ecPrediction.ec > 0">
             <div class="results-section" style="margin-top: 20px;">
-              <h2>{{ i18n.t('predictedEc') }} <span class="info-icon" @click="openFormulaEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
+              <h2>{{ i18n.t('estimatedEC') }} <span class="info-icon" @click="openReverseEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
               <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
                 <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: reverseResultsData.ecPrediction.color + '22', borderLeft: '4px solid ' + reverseResultsData.ecPrediction.color }">
                   <div style="font-size: 2em; font-weight: bold;" :style="{ color: reverseResultsData.ecPrediction.color }">{{ i18n.formatNumber(reverseResultsData.ecPrediction.ec.toFixed(2)) }}</div>
