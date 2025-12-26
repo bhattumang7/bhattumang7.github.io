@@ -384,6 +384,7 @@ window.i18nLocales.mr = {
   gramsUnit: 'ग्रॅम',
   molUnit: 'मोल',
   ecLabel: 'EC:',
+  ionLabel: 'आयन:',
   combinedEcLabel: 'एकत्रित EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'लक्ष्य EC गाठले',

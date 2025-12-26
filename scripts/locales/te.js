@@ -384,6 +384,7 @@ window.i18nLocales.te = {
   gramsUnit: 'గ్రాములు',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'అయాన్:',
   combinedEcLabel: 'సంయుక్త EC:',
   mScmUnit: 'mS/సెం',
   targetEcAchieved: 'లక్ష్యం EC సాధించబడింది',

@@ -437,6 +437,7 @@ window.i18nLocales.bho = {
   gramsUnit: 'ग्राम',
   molUnit: 'मोल',
   ecLabel: 'ईसी:',
+  ionLabel: 'आयन:',
   combinedEcLabel: 'मिला के ईसी:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'लक्ष्य ईसी पावल',

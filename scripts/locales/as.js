@@ -440,6 +440,7 @@ window.i18nLocales.as = {
   gramsUnit: 'গ্ৰাম',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'আয়ন:',
   combinedEcLabel: 'সংযুক্ত EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'লক্ষ্য EC লাভ কৰা হ\'ল',

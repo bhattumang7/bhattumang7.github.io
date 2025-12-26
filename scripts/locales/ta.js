@@ -203,6 +203,7 @@ window.i18nLocales.ta = {
 
   // EC related
   ecLabel: 'EC',
+  ionLabel: 'அயனி:',
   targetEc: 'இலக்கு EC',
   targetEcDescription: 'உங்கள் கரைசலுக்கான இலக்கு மின்கடத்துத்திறனை உள்ளிடவும்',
   predictedEc: 'கணிக்கப்பட்ட EC',

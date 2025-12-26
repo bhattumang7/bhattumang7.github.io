@@ -384,6 +384,7 @@ window.i18nLocales.kn = {
   gramsUnit: 'ಗ್ರಾಂ',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'ಅಯಾನು:',
   combinedEcLabel: 'ಸಂಯೋಜಿತ EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'ಗುರಿ ಇಸಿ ಸಾಧಿಸಲಾಗಿದೆ',

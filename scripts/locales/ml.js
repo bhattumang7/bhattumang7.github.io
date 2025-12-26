@@ -506,6 +506,7 @@ window.i18nLocales.ml = {
   gramsUnit: 'ഗ്രാം',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'അയോൺ:',
   combinedEcLabel: 'സംയുക്ത EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'ലക്ഷ്യ EC നേടി',

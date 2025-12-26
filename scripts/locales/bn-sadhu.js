@@ -384,6 +384,7 @@ window.i18nLocales['bn-sadhu'] = {
   gramsUnit: 'গ্রাম',
   molUnit: 'mol',
   ecLabel: 'ইসি:',
+  ionLabel: 'অয়ন:',
   combinedEcLabel: 'সম্মিলিত ইসি:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'লক্ষ্য ইসি অর্জিত',

@@ -408,6 +408,7 @@ window.i18nLocales.gu = {
   gramsUnit: 'ગ્રામ',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'આયન:',
   combinedEcLabel: 'સંયુક્ત EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'લક્ષ્ય EC પ્રાપ્ત થયું',

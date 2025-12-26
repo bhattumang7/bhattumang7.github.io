@@ -447,6 +447,7 @@ window.i18nLocales.pa = {
   gramsUnit: 'ਗ੍ਰਾਮ',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'ਆਇਨ:',
   combinedEcLabel: 'ਸੰਯੁਕਤ EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'ਟੀਚਾ EC ਪ੍ਰਾਪਤ',

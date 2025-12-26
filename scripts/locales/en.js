@@ -428,6 +428,7 @@ window.i18nLocales.en = {
   gramsUnit: 'grams',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'Ion:',
   combinedEcLabel: 'Combined EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'Target EC Achieved',

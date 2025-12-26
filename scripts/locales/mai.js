@@ -437,6 +437,7 @@ window.i18nLocales.mai = {
   gramsUnit: 'ग्राम',
   molUnit: 'मोल',
   ecLabel: 'ईसी:',
+  ionLabel: 'आयन:',
   combinedEcLabel: 'मिला कऽ ईसी:',
   mScmUnit: 'एमएस/सेमी',
   targetEcAchieved: 'लक्ष्य ईसी हासिल',

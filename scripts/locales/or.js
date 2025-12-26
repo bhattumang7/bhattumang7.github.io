@@ -444,6 +444,7 @@ window.i18nLocales.or = {
   gramsUnit: 'grams',
   molUnit: 'mol',
   ecLabel: 'EC:',
+  ionLabel: 'Ion:',
   combinedEcLabel: 'Combined EC:',
   mScmUnit: 'mS/cm',
   targetEcAchieved: 'Target EC Achieved',
