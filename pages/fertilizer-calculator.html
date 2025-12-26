@@ -594,6 +594,9 @@ permalink: /fertilizer-calculator/
               </div>
             </div>
             <p style="margin-top: 10px; color: #666;">{{ i18n.t('kCaOptimalRange') }}</p>
+            <p v-if="modalData.kCaStatus?.level === 'kLeaning'" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #e65100; font-size: 0.9em;">
+              {{ i18n.t('kCaContextualWarning') }}
+            </p>
           </div>
 
           <!-- When K:Ca is too high -->
@@ -1163,15 +1166,7 @@ permalink: /fertilizer-calculator/
         <div class="results-section" v-if="gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <div v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-              <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratio.name }}</div>
-              <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratio.ratio) }}</div>
-              <div style="font-size: 0.85em; color: #666;">
-                <span v-for="(label, i) in ratio.labels" :key="i">
-                  {{ label }}: {{ i18n.formatNumber((ratio.values[i] || 0).toFixed(1)) }} {{ ratio.unit || i18n.t('ppmUnit') }}<span v-if="i < ratio.labels.length - 1"> | </span>
-                </span>
-              </div>
-            </div>
+            <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation"></ratio-card>
           </div>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction && gramsToPpmDisplayData.ecPrediction.ec > 0" style="margin-top: 20px;">
@@ -1294,15 +1289,7 @@ permalink: /fertilizer-calculator/
         <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <div v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-              <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
-              <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
-              <div style="font-size: 0.85em; color: #666;">
-                <span v-for="(label, i) in ratioObj.labels" :key="i">
-                  {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
-                </span>
-              </div>
-            </div>
+            <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation"></ratio-card>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -1432,15 +1419,7 @@ permalink: /fertilizer-calculator/
         <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <div v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-              <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
-              <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
-              <div style="font-size: 0.85em; color: #666;">
-                <span v-for="(label, i) in ratioObj.labels" :key="i">
-                  {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
-                </span>
-              </div>
-            </div>
+            <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation"></ratio-card>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -1847,15 +1826,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <div v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-                  <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
-                  <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
-                  <div style="font-size: 0.85em; color: #666;">
-                    <span v-for="(label, i) in ratioObj.labels" :key="i">
-                      {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
-                    </span>
-                  </div>
-                </div>
+                <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -1863,15 +1834,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <div v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-                  <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
-                  <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
-                  <div style="font-size: 0.85em; color: #666;">
-                    <span v-for="(label, i) in ratioObj.labels" :key="i">
-                      {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
-                    </span>
-                  </div>
-                </div>
+                <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -1879,15 +1842,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <div v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-                  <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
-                  <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
-                  <div style="font-size: 0.85em; color: #666;">
-                    <span v-for="(label, i) in ratioObj.labels" :key="i">
-                      {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
-                    </span>
-                  </div>
-                </div>
+                <ratio-card v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -2115,15 +2070,7 @@ permalink: /fertilizer-calculator/
   <div class="results-section" id="ratio-analysis-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-      <div v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-        <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratio.name }}</div>
-        <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratio.ratio) }}</div>
-        <div style="font-size: 0.85em; color: #666;">
-          <span v-for="(label, i) in ratio.labels" :key="i">
-            {{ label }}: {{ i18n.formatNumber((ratio.values[i] || 0).toFixed(1)) }} {{ ratio.unit || i18n.t('ppmUnit') }}<span v-if="i < ratio.labels.length - 1"> | </span>
-          </span>
-        </div>
-      </div>
+      <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation"></ratio-card>
     </div>
     <div class="conversion-note" style="margin-top: 15px;">
       <strong>{{ i18n.t('whatAreNutrientRatios') }}</strong> {{ i18n.t('nutrientRatioExplanationFull') }}
@@ -2622,15 +2569,7 @@ permalink: /fertilizer-calculator/
       <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-          <div v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-            <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
-            <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
-            <div style="font-size: 0.85em; color: #666;">
-              <span v-for="(label, i) in ratioObj.labels" :key="i">
-                {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
-              </span>
-            </div>
-          </div>
+          <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation"></ratio-card>
         </div>
       </div>
 
@@ -3075,15 +3014,7 @@ permalink: /fertilizer-calculator/
       <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-          <div v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" style="background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #007bff;">
-            <div style="font-weight: bold; margin-bottom: 8px; color: #007bff; font-size: 1.1em;">{{ ratioObj.name }}</div>
-            <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">{{ i18n.formatNumber(ratioObj.ratio) }}</div>
-            <div style="font-size: 0.85em; color: #666;">
-              <span v-for="(label, i) in ratioObj.labels" :key="i">
-                {{ label }}: {{ i18n.formatNumber((ratioObj.values[i] || 0).toFixed(1)) }} {{ ratioObj.unit || i18n.t('ppmUnit') }}<span v-if="i < ratioObj.labels.length - 1"> | </span>
-              </span>
-            </div>
-          </div>
+          <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation"></ratio-card>
         </div>
       </div>
 
@@ -4248,6 +4179,17 @@ function getIonBalanceStatus(imbalance, useSymbols = true) {
 /**
  * Determines K:Ca ratio warning status based on ratio value
  * Returns status info including color, text, and level for UI display
+ *
+ * Thresholds based on agronomic guidance:
+ * - 0.7:1 to 1.5:1 → generally balanced for many feeds
+ * - 1.5:1 to 2.0:1 → K-leaning (watch quality/new growth)
+ * - > 2.0:1 → K-skewed / K-heavy (higher risk of Ca uptake suppression)
+ * - < 0.6:1 → Ca-skewed / Ca-heavy (can limit K-driven performance)
+ *
+ * Note: Even 1.5-2.0:1 can behave like "too K-heavy" when:
+ * - EC/salts are high, media dries between irrigations
+ * - Heat stress periods, low root activity
+ *
  * @param {number} ratio - K:Ca ratio value (K divided by Ca)
  * @returns {Object} {color, text, level, showWarning} - Status info
  */
@@ -4256,26 +4198,26 @@ function getKCaWarningStatus(ratio) {
     return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
   }
 
-  // Very low K:Ca (< 0.5) - Ca-heavy, may slow growth
-  if (ratio < 0.5) {
+  // Ca-heavy / Ca-skewed (< 0.6) - can limit K-driven performance
+  if (ratio < 0.6) {
     return {
       color: '#fd7e14',
-      text: i18n.t('kCaRatioStatusVeryLow'),
-      level: 'veryLow',
-      showWarning: true
-    };
-  }
-  // Low K:Ca (0.5 - 0.8) - Ca-heavy
-  if (ratio < 0.8) {
-    return {
-      color: '#ffc107',
       text: i18n.t('kCaRatioStatusLow'),
       level: 'low',
       showWarning: true
     };
   }
-  // Good range (0.8 - 2.5) - Balanced
-  if (ratio <= 2.5) {
+  // Borderline Ca-heavy (0.6 - 0.7)
+  if (ratio < 0.7) {
+    return {
+      color: '#ffc107',
+      text: i18n.t('kCaRatioStatusLow'),
+      level: 'lowBorderline',
+      showWarning: true
+    };
+  }
+  // Good range (0.7 - 1.5) - Balanced for many feeds
+  if (ratio <= 1.5) {
     return {
       color: '#28a745',
       text: i18n.t('kCaRatioStatusGood'),
@@ -4283,20 +4225,20 @@ function getKCaWarningStatus(ratio) {
       showWarning: false
     };
   }
-  // High K:Ca (2.5 - 3.5) - K-heavy, caution
-  if (ratio <= 3.5) {
+  // K-leaning (1.5 - 2.0) - Watch quality/new growth
+  if (ratio <= 2.0) {
     return {
       color: '#ffc107',
-      text: i18n.t('kCaRatioStatusHigh'),
-      level: 'high',
+      text: i18n.t('kCaRatioStatusKLeaning'),
+      level: 'kLeaning',
       showWarning: true
     };
   }
-  // Very high K:Ca (> 3.5) - Very K-heavy, likely Ca deficiency
+  // K-heavy / K-skewed (> 2.0) - Higher risk of Ca uptake suppression
   return {
     color: '#dc3545',
-    text: i18n.t('kCaRatioStatusVeryHigh'),
-    level: 'veryHigh',
+    text: i18n.t('kCaRatioStatusHigh'),
+    level: 'high',
     showWarning: true
   };
 }
@@ -4950,6 +4892,98 @@ if (document.readyState === 'loading') {
 // functionality remains in vanilla JS while new features use Vue reactivity.
 
 const { createApp, ref, computed, reactive, watch, onMounted } = Vue;
+
+// =============================================================================
+// RATIO CARD COMPONENT - Reusable component for displaying nutrient ratios
+// =============================================================================
+const RatioCard = {
+  props: {
+    ratio: {
+      type: Object,
+      required: true
+    }
+  },
+  emits: ['info-click'],
+  setup(props, { emit }) {
+    // Create explicit computed properties for all ratio data
+    const ratioName = computed(() => props.ratio?.name || '');
+    const ratioDisplayValue = computed(() => props.ratio?.ratio || ''); // This is a string like "1 : 1.2"
+    const ratioLabels = computed(() => props.ratio?.labels || []);
+    const ratioValues = computed(() => props.ratio?.values || []);
+    const ratioUnit = computed(() => props.ratio?.unit);
+
+    const isKCaRatio = computed(() => {
+      const name = ratioName.value;
+      return name && name.includes('K') && name.includes('Ca') && !name.includes('Mg');
+    });
+
+    // For K:Ca, calculate the numeric ratio from the values array (K ppm / Ca ppm)
+    const kCaNumericRatio = computed(() => {
+      if (!isKCaRatio.value) return null;
+      const values = ratioValues.value;
+      // K:Ca ratio - values[0] is K, values[1] is Ca
+      if (values && values.length >= 2 && values[1] > 0) {
+        return values[0] / values[1];
+      }
+      return null;
+    });
+
+    const kCaStatus = computed(() => {
+      if (!isKCaRatio.value || kCaNumericRatio.value === null) return null;
+      return getKCaWarningStatus(kCaNumericRatio.value);
+    });
+
+    const borderColor = computed(() => {
+      if (isKCaRatio.value && kCaStatus.value) {
+        return kCaStatus.value.color;
+      }
+      return '#007bff';
+    });
+
+    const textColor = computed(() => {
+      if (isKCaRatio.value && kCaStatus.value) {
+        return kCaStatus.value.color;
+      }
+      return '#007bff';
+    });
+
+    const handleInfoClick = () => {
+      if (isKCaRatio.value) {
+        emit('info-click', { ratio: kCaNumericRatio.value, status: kCaStatus.value });
+      }
+    };
+
+    return {
+      ratioName,
+      ratioDisplayValue,
+      ratioLabels,
+      ratioValues,
+      ratioUnit,
+      isKCaRatio,
+      kCaNumericRatio,
+      kCaStatus,
+      borderColor,
+      textColor,
+      handleInfoClick,
+      i18n
+    };
+  },
+  template: `{% raw %}<div style="background: #f8f9fa; padding: 15px; border-radius: 4px;" :style="{ borderLeft: '4px solid ' + borderColor }">
+      <div style="font-weight: bold; margin-bottom: 8px; font-size: 1.1em; display: flex; align-items: center; gap: 6px;" :style="{ color: textColor }">
+        {{ ratioName }}
+        <span v-if="isKCaRatio" class="info-icon" style="width: 18px; height: 18px; font-size: 11px; line-height: 18px;" @click="handleInfoClick" :title="i18n.t('clickToLearnKCa')">?</span>
+      </div>
+      <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 8px;">
+        {{ ratioDisplayValue }}
+        <span v-if="isKCaRatio && kCaStatus && kCaStatus.text" style="font-size: 0.6em; margin-left: 8px;" :style="{ color: kCaStatus.color }">{{ kCaStatus.text }}</span>
+      </div>
+      <div style="font-size: 0.85em; color: #666;">
+        <span v-for="(label, idx) in ratioLabels" :key="idx">
+          {{ label }}: {{ i18n.formatNumber((ratioValues[idx] || 0).toFixed(1)) }} {{ ratioUnit || i18n.t('ppmUnit') }}<span v-if="idx < ratioLabels.length - 1"> | </span>
+        </span>
+      </div>
+    </div>{% endraw %}`
+};
 
 const FertilizerApp = {
   setup() {
@@ -7624,7 +7658,9 @@ const FertilizerApp = {
 
 // Mount Vue app when both DOM and i18n are ready
 function mountVueApp() {
-  window.vueApp = createApp(FertilizerApp).mount('.calculator-container');
+  const app = createApp(FertilizerApp);
+  app.component('ratio-card', RatioCard);
+  window.vueApp = app.mount('.calculator-container');
 }
 
 function initializeApp() {

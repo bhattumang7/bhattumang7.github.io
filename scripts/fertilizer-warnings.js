@@ -176,16 +176,18 @@
     }
 
     // 4. K:Ca ratio (should be reasonably balanced)
+    // Balanced: 0.7:1 to 1.5:1, K-heavy: > 2:1, Ca-heavy: < 0.6:1
     if (k > 10 && ca > 10) {
       const kCaRatio = k / ca;
-      if (kCaRatio > 3) {
+      if (kCaRatio > 2) {
+        // K-heavy / K-skewed - higher risk of Ca uptake suppression
         warnings.push({
           level: 'info',
           category: i18n.t('warningCategoryKCaRatio'),
           message: i18n.t('warningMsgKCaRatioHigh', { ratio: i18n.formatNumber(kCaRatio.toFixed(2)) })
         });
-      } else if (kCaRatio < 0.5) {
-        // Very low K:Ca ratio (Ca-heavy) - may slow growth and reduce flowering
+      } else if (kCaRatio < 0.6) {
+        // Ca-heavy / Ca-skewed - can limit K-driven performance
         warnings.push({
           level: 'info',
           category: i18n.t('warningCategoryKCaRatio'),

@@ -742,10 +742,9 @@ window.i18nLocales.en = {
   understandingKCaRatio: 'Understanding K:Ca Ratio',
   clickToLearnKCa: 'Click to learn about K:Ca ratio',
   kCaRatioStatusGood: 'Balanced',
+  kCaRatioStatusKLeaning: 'K-leaning',
   kCaRatioStatusHigh: 'K-heavy',
-  kCaRatioStatusVeryHigh: 'Very K-heavy',
   kCaRatioStatusLow: 'Ca-heavy',
-  kCaRatioStatusVeryLow: 'Very Ca-heavy',
 
   // K:Ca Modal Content
   whatIsKCaRatio: 'What does K:Ca ratio tell you?',
@@ -801,7 +800,8 @@ window.i18nLocales.en = {
   kCaRealityCheckConclusion: 'Ca uptake depends heavily on water flow through the plant (transpiration).',
 
   kCaYourCurrentRatio: 'Your Current K:Ca Ratio',
-  kCaOptimalRange: 'Optimal range is typically 1:1 to 2:1 for most crops. Higher ratios (up to 3:1) may be appropriate during flowering.',
+  kCaOptimalRange: 'K:Ca is considered balanced at 0.7:1 to 1.5:1. Above 2:1 is K-heavy and can block Ca uptake—problems show up faster at high EC or with inconsistent watering.',
+  kCaContextualWarning: 'Even a 1.5–2.0:1 ratio can behave like "too K-heavy" when EC is high, watering is inconsistent, during heat stress, or with low root activity.',
 
   // Warning message for low K:Ca ratio
   warningMsgKCaRatioLow: 'K:Ca ratio is {ratio}:1 (Ca-heavy). When Ca significantly exceeds K, it may slow growth and reduce flowering response. Consider increasing K or reducing Ca.',
