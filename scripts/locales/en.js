@@ -1000,4 +1000,85 @@ window.i18nLocales.en = {
   nkRealityCheck3: 'Growing system (hydro/coco/soil)',
   nkRealityCheck4: 'Environmental conditions (light, temperature)',
   nkRealityCheckConclusion: 'Use the ratio as a guide, but watch plant response—it\'s more important than hitting exact numbers.',
+
+  // =====================
+  // Ca:Mg RATIO EDUCATION
+  // =====================
+
+  // Status labels
+  caMgStatusCaSkewed: 'Ca-skewed',
+  caMgStatusCaLeaning: 'Ca-leaning',
+  caMgStatusBalanced: 'Balanced',
+  caMgStatusMgSkewed: 'Mg-skewed',
+
+  // Click prompt
+  clickToLearnCaMg: 'Click to learn about Ca:Mg ratio',
+
+  // Modal title
+  understandingCaMgRatio: 'Understanding Ca:Mg Ratio',
+
+  // Modal content
+  whatIsCaMgRatio: 'What is Ca:Mg ratio?',
+  caMgRatioExplanation: 'The <strong>Ca:Mg ratio</strong> compares elemental calcium to elemental magnesium in your nutrient solution. These two cations compete for uptake at the root level—when one is too dominant, it can suppress absorption of the other, leading to deficiency symptoms even when the "blocked" nutrient is present in adequate amounts.',
+  caMgYourCurrentRatio: 'Your current Ca:Mg ratio',
+  caMgOptimalRange: 'Generally balanced range: 2:1 to 4:1 for most crops and media.',
+  caMgContextualWarning: 'This ratio is outside the typical range and may cause nutrient uptake issues.',
+
+  // Thresholds
+  caMgThresholdsTitle: 'Ca:Mg ratio guidelines',
+  caMgThreshold1: '> 6:1 — Ca-skewed (risk: Mg uptake suppression)',
+  caMgThreshold2: '4:1 to 6:1 — Ca-leaning (often OK, watch for Mg deficiency)',
+  caMgThreshold3: '2:1 to 4:1 — Balanced (generally good for most crops)',
+  caMgThreshold4: '< 2:1 — Mg-skewed (risk: Ca uptake suppression)',
+
+  // When Ca:Mg is too high (Ca-skewed)
+  caMgWhenTooHigh: 'When Ca:Mg is too high (Ca-heavy)',
+  caMgHighSymptoms: 'What it can cause:',
+  caMgHighSymptom1: 'Mg uptake suppression → classic Mg deficiency on older leaves',
+  caMgHighSymptom2: 'Interveinal chlorosis (yellowing between veins) on older foliage',
+  caMgHighSymptom3: 'Reduced photosynthesis and overall vigor',
+  caMgHighCauses: 'Common reasons:',
+  caMgHighCause1: 'Heavy calcium nitrate use',
+  caMgHighCause2: 'High-Ca source water or gypsum additions',
+  caMgHighCause3: 'Repeated Ca-focused programs without Mg balance',
+  caMgHighFixes: 'How to fix:',
+  caMgHighFix1: 'Add Mg source: <strong>Epsom salt (MgSO₄)</strong> or <strong>magnesium nitrate</strong>',
+  caMgHighFix2: 'Reduce Ca inputs if Ca ppm is already high',
+  caMgHighFixWarning: 'Don\'t "fix" by only increasing overall EC—address the ratio directly.',
+  caMgHighWhenToAct: 'When to act: Older-leaf Mg deficiency symptoms OR you\'ve been pushing Ca hard for weeks.',
+
+  // When Ca:Mg is too low (Mg-skewed)
+  caMgWhenTooLow: 'When Ca:Mg is too low (Mg-heavy)',
+  caMgLowSymptoms: 'What it can cause:',
+  caMgLowSymptom1: 'Ca uptake suppression → problems show in new growth/tips/buds',
+  caMgLowSymptom2: 'Tip burn, distorted new leaves or petals',
+  caMgLowSymptom3: 'Weaker growth quality and structure',
+  caMgLowSymptom4: 'Media structure issues in some mixes (Mg can "tighten" feel vs Ca)',
+  caMgLowCauses: 'Common reasons:',
+  caMgLowCause1: 'Overuse of Epsom salt as routine habit',
+  caMgLowCause2: 'High-Mg source water',
+  caMgLowCause3: 'Mg-heavy "Cal-Mag" products used too often',
+  caMgLowFixes: 'How to fix:',
+  caMgLowFix1: 'Reduce Mg additions',
+  caMgLowFix2: 'Increase Ca using <strong>calcium nitrate</strong> or other suitable Ca source',
+  caMgLowFix3: 'Ensure good watering/airflow—Ca delivery depends on transpiration',
+  caMgLowFixWarning: 'Don\'t assume more Cal-Mag is the answer—check which element is actually needed.',
+  caMgLowWhenToAct: 'When to act: New growth quality issues + you\'re dosing Mg frequently.',
+
+  // Common mistakes
+  caMgCommonMistakes: 'Common mistakes',
+  caMgMistake1Title: 'Adding Epsom every time "just in case"',
+  caMgMistake1Text: 'This can slowly make the program Mg-heavy and block Ca uptake.',
+  caMgMistake2Title: 'Chasing Ca for quality while ignoring Mg',
+  caMgMistake2Text: 'Too much Ca can starve Mg and reduce photosynthesis.',
+  caMgMistake3Title: 'Fixing Ca:Mg without checking K',
+  caMgMistake3Text: 'K also competes with Ca and Mg; a high K program can cause Ca/Mg issues even if Ca:Mg looks fine.',
+
+  // Timing
+  caMgTiming: 'When to bias Ca vs Mg',
+  caMgTimingCa: 'Bias Ca when you want strong new growth and flower quality—but keep Mg adequate.',
+  caMgTimingMg: 'Bias Mg only when you\'ve confirmed Mg is low or see older-leaf Mg deficiency—otherwise keep it moderate.',
+
+  // One-liner summary
+  caMgOneLiner: 'Ca and Mg compete at the roots. Ca:Mg is considered skewed above ~6:1 (Mg may get blocked) or below ~2:1 (Ca may get blocked). Ca issues show on new growth; Mg issues show first on older leaves.',
 };

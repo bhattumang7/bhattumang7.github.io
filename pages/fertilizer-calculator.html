@@ -1012,6 +1012,132 @@ permalink: /fertilizer-calculator/
           </div>
         </template>
 
+        <!-- Ca:Mg RATIO EXPLANATION MODAL -->
+        <template v-if="activeModal === 'ca-mg-ratio'">
+          <!-- What is Ca:Mg ratio -->
+          <div class="explanation-section">
+            <h3>{{ i18n.t('whatIsCaMgRatio') }}</h3>
+            <p v-html="i18n.t('caMgRatioExplanation')"></p>
+          </div>
+
+          <!-- Your current ratio -->
+          <div v-if="typeof modalData.caMgRatio === 'number' && isFinite(modalData.caMgRatio)" class="explanation-section" :style="{ background: modalData.caMgStatus?.color + '22', borderLeftColor: modalData.caMgStatus?.color }">
+            <h3 :style="{ color: modalData.caMgStatus?.color }">{{ i18n.t('caMgYourCurrentRatio') }}</h3>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <div style="font-size: 2em; font-weight: bold;" :style="{ color: modalData.caMgStatus?.color }">
+                {{ i18n.formatNumber(modalData.caMgRatio?.toFixed(2) || '0') }} : 1
+              </div>
+              <div v-if="modalData.caMgStatus?.text" style="padding: 6px 12px; border-radius: 20px; font-weight: 500;" :style="{ background: modalData.caMgStatus?.color, color: 'white' }">
+                {{ modalData.caMgStatus.text }}
+              </div>
+            </div>
+            <p style="margin-top: 10px; color: #666;">{{ i18n.t('caMgOptimalRange') }}</p>
+            <p v-if="modalData.caMgStatus?.showWarning" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #e65100; font-size: 0.9em;">
+              {{ i18n.t('caMgContextualWarning') }}
+            </p>
+          </div>
+
+          <!-- Ratio guidelines -->
+          <div class="explanation-section" style="background: #e8f5e9; border-left-color: #4caf50;">
+            <h3 style="color: #2e7d32;">{{ i18n.t('caMgThresholdsTitle') }}</h3>
+            <ul style="margin: 5px 0 0 20px; line-height: 2;">
+              <li><span style="color: #fd7e14; font-weight: bold;">{{ i18n.t('caMgThreshold1') }}</span></li>
+              <li><span style="color: #17a2b8; font-weight: bold;">{{ i18n.t('caMgThreshold2') }}</span></li>
+              <li><span style="color: #28a745; font-weight: bold;">{{ i18n.t('caMgThreshold3') }}</span></li>
+              <li><span style="color: #fd7e14; font-weight: bold;">{{ i18n.t('caMgThreshold4') }}</span></li>
+            </ul>
+          </div>
+
+          <!-- When Ca:Mg is too high (Ca-skewed) -->
+          <div class="explanation-section" style="background: #fff3e0; border-left-color: #ff9800;">
+            <h3 style="color: #e65100;">{{ i18n.t('caMgWhenTooHigh') }}</h3>
+
+            <p><strong>{{ i18n.t('caMgHighSymptoms') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('caMgHighSymptom1') }}</li>
+              <li>{{ i18n.t('caMgHighSymptom2') }}</li>
+              <li>{{ i18n.t('caMgHighSymptom3') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('caMgHighCauses') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('caMgHighCause1') }}</li>
+              <li>{{ i18n.t('caMgHighCause2') }}</li>
+              <li>{{ i18n.t('caMgHighCause3') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('caMgHighFixes') }}</strong></p>
+            <ul style="margin: 5px 0 10px 20px; line-height: 1.8;">
+              <li v-html="i18n.t('caMgHighFix1')"></li>
+              <li>{{ i18n.t('caMgHighFix2') }}</li>
+            </ul>
+            <p style="padding: 8px 12px; background: #ffebee; border-radius: 4px; color: #c62828; margin: 10px 0 0 0;">
+              <strong>{{ i18n.t('caMgHighFixWarning') }}</strong>
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">{{ i18n.t('caMgHighWhenToAct') }}</p>
+          </div>
+
+          <!-- When Ca:Mg is too low (Mg-skewed) -->
+          <div class="explanation-section" style="background: #f3e5f5; border-left-color: #9c27b0;">
+            <h3 style="color: #7b1fa2;">{{ i18n.t('caMgWhenTooLow') }}</h3>
+
+            <p><strong>{{ i18n.t('caMgLowSymptoms') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('caMgLowSymptom1') }}</li>
+              <li>{{ i18n.t('caMgLowSymptom2') }}</li>
+              <li>{{ i18n.t('caMgLowSymptom3') }}</li>
+              <li>{{ i18n.t('caMgLowSymptom4') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('caMgLowCauses') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('caMgLowCause1') }}</li>
+              <li>{{ i18n.t('caMgLowCause2') }}</li>
+              <li>{{ i18n.t('caMgLowCause3') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('caMgLowFixes') }}</strong></p>
+            <ul style="margin: 5px 0 10px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('caMgLowFix1') }}</li>
+              <li v-html="i18n.t('caMgLowFix2')"></li>
+              <li>{{ i18n.t('caMgLowFix3') }}</li>
+            </ul>
+            <p style="padding: 8px 12px; background: #ffebee; border-radius: 4px; color: #c62828; margin: 10px 0 0 0;">
+              <strong>{{ i18n.t('caMgLowFixWarning') }}</strong>
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">{{ i18n.t('caMgLowWhenToAct') }}</p>
+          </div>
+
+          <!-- Common mistakes -->
+          <div class="explanation-section" style="background: #ffebee; border-left-color: #f44336;">
+            <h3 style="color: #c62828;">{{ i18n.t('caMgCommonMistakes') }}</h3>
+            <div style="margin-bottom: 12px;">
+              <p style="font-weight: bold; margin-bottom: 4px;">{{ i18n.t('caMgMistake1Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('caMgMistake1Text') }}</p>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <p style="font-weight: bold; margin-bottom: 4px;">{{ i18n.t('caMgMistake2Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('caMgMistake2Text') }}</p>
+            </div>
+            <div>
+              <p style="font-weight: bold; margin-bottom: 4px;">{{ i18n.t('caMgMistake3Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('caMgMistake3Text') }}</p>
+            </div>
+          </div>
+
+          <!-- Timing -->
+          <div class="explanation-section" style="background: #e3f2fd; border-left-color: #2196f3;">
+            <h3 style="color: #1565c0;">{{ i18n.t('caMgTiming') }}</h3>
+            <p style="margin-bottom: 8px;"><strong style="color: #e65100;">{{ i18n.t('caMgTimingCa') }}</strong></p>
+            <p><strong style="color: #7b1fa2;">{{ i18n.t('caMgTimingMg') }}</strong></p>
+          </div>
+
+          <!-- One-liner summary -->
+          <div class="explanation-section" style="background: #f5f5f5; border-left-color: #9e9e9e;">
+            <p style="font-style: italic; color: #666; margin: 0;">{{ i18n.t('caMgOneLiner') }}</p>
+          </div>
+        </template>
+
       </div>
     </div>
   </div>
@@ -1474,7 +1600,7 @@ permalink: /fertilizer-calculator/
         <div class="results-section" v-if="gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+            <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
           </div>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction && gramsToPpmDisplayData.ecPrediction.ec > 0" style="margin-top: 20px;">
@@ -1597,7 +1723,7 @@ permalink: /fertilizer-calculator/
         <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+            <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -1727,7 +1853,7 @@ permalink: /fertilizer-calculator/
         <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+            <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -2134,7 +2260,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+                <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -2142,7 +2268,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+                <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -2150,7 +2276,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <ratio-card v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+                <ratio-card v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -2378,7 +2504,7 @@ permalink: /fertilizer-calculator/
   <div class="results-section" id="ratio-analysis-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-      <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+      <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
     </div>
     <div class="conversion-note" style="margin-top: 15px;">
       <strong>{{ i18n.t('whatAreNutrientRatios') }}</strong> {{ i18n.t('nutrientRatioExplanationFull') }}
@@ -2877,7 +3003,7 @@ permalink: /fertilizer-calculator/
       <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-          <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+          <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
         </div>
       </div>
 
@@ -3322,7 +3448,7 @@ permalink: /fertilizer-calculator/
       <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-          <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
+          <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation" @camg-info-click="openCaMgExplanation"></ratio-card>
         </div>
       </div>
 
@@ -4662,6 +4788,54 @@ function getNKWarningStatus(ratio) {
 }
 
 /**
+ * Get warning status for Ca:Mg ratio
+ * Ca and Mg compete for uptake at roots.
+ * Uses elemental Ca and Mg ppm from the final solution.
+ * @param {number} ratio - Ca:Mg ratio value (Ca divided by Mg)
+ * @returns {Object} {color, text, level, showWarning} - Status info
+ */
+function getCaMgWarningStatus(ratio) {
+  if (ratio === null || ratio === undefined || isNaN(ratio)) {
+    return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
+  }
+
+  // Ca-skewed (> 6:1) - Risk: Mg uptake suppression
+  if (ratio > 6) {
+    return {
+      color: '#fd7e14',
+      text: i18n.t('caMgStatusCaSkewed'),
+      level: 'caSkewed',
+      showWarning: true
+    };
+  }
+  // Ca-leaning (4:1 to 6:1) - Often OK, watch for Mg deficiency
+  if (ratio >= 4) {
+    return {
+      color: '#17a2b8',
+      text: i18n.t('caMgStatusCaLeaning'),
+      level: 'caLeaning',
+      showWarning: false
+    };
+  }
+  // Balanced (2:1 to 4:1) - Generally good
+  if (ratio >= 2) {
+    return {
+      color: '#28a745',
+      text: i18n.t('caMgStatusBalanced'),
+      level: 'balanced',
+      showWarning: false
+    };
+  }
+  // Mg-skewed (< 2:1) - Risk: Ca uptake suppression
+  return {
+    color: '#fd7e14',
+    text: i18n.t('caMgStatusMgSkewed'),
+    level: 'mgSkewed',
+    showWarning: true
+  };
+}
+
+/**
  * Core ion balance calculation - unified function for all modes
  * @param {Object|Array} fertilizers - Either array of {id, grams} or object {fertId: grams}
  * @param {number} volume - Solution volume in liters
@@ -5349,6 +5523,12 @@ const RatioCard = {
       return labels && labels.length === 2 && labels[0] === 'N' && labels[1] === 'K';
     });
 
+    // Ca:Mg ratio detection (exactly 'Ca : Mg')
+    const isCaMgRatio = computed(() => {
+      const labels = ratioLabels.value;
+      return labels && labels.length === 2 && labels[0] === 'Ca' && labels[1] === 'Mg';
+    });
+
     // For K:Ca, calculate the numeric ratio from the values array (K ppm / Ca ppm)
     const kCaNumericRatio = computed(() => {
       if (!isKCaRatio.value) return null;
@@ -5386,6 +5566,17 @@ const RatioCard = {
       return null;
     });
 
+    // For Ca:Mg, calculate the numeric ratio from the values array (Ca ppm / Mg ppm)
+    const caMgNumericRatio = computed(() => {
+      if (!isCaMgRatio.value) return null;
+      const values = ratioValues.value;
+      // Ca:Mg ratio - values[0] is Ca, values[1] is Mg
+      if (values && values.length >= 2 && values[1] > 0) {
+        return values[0] / values[1];
+      }
+      return null;
+    });
+
     const kCaStatus = computed(() => {
       if (!isKCaRatio.value || kCaNumericRatio.value === null) return null;
       return getKCaWarningStatus(kCaNumericRatio.value);
@@ -5401,6 +5592,11 @@ const RatioCard = {
       return getNKWarningStatus(nkNumericRatio.value);
     });
 
+    const caMgStatus = computed(() => {
+      if (!isCaMgRatio.value || caMgNumericRatio.value === null) return null;
+      return getCaMgWarningStatus(caMgNumericRatio.value);
+    });
+
     const borderColor = computed(() => {
       if (isKCaRatio.value && kCaStatus.value) {
         return kCaStatus.value.color;
@@ -5410,6 +5606,9 @@ const RatioCard = {
       }
       if (isNKRatio.value && nkStatus.value) {
         return nkStatus.value.color;
+      }
+      if (isCaMgRatio.value && caMgStatus.value) {
+        return caMgStatus.value.color;
       }
       return '#007bff';
     });
@@ -5424,6 +5623,9 @@ const RatioCard = {
       if (isNKRatio.value && nkStatus.value) {
         return nkStatus.value.color;
       }
+      if (isCaMgRatio.value && caMgStatus.value) {
+        return caMgStatus.value.color;
+      }
       return '#007bff';
     });
 
@@ -5431,6 +5633,7 @@ const RatioCard = {
       if (isKCaRatio.value && kCaStatus.value) return kCaStatus.value;
       if (isNo3Nh4Ratio.value && no3Nh4Status.value) return no3Nh4Status.value;
       if (isNKRatio.value && nkStatus.value) return nkStatus.value;
+      if (isCaMgRatio.value && caMgStatus.value) return caMgStatus.value;
       return null;
     });
 
@@ -5441,6 +5644,8 @@ const RatioCard = {
         emit('no3nh4-info-click', { ratio: no3Nh4NumericRatio.value, status: no3Nh4Status.value });
       } else if (isNKRatio.value) {
         emit('nk-info-click', { ratio: nkNumericRatio.value, status: nkStatus.value });
+      } else if (isCaMgRatio.value) {
+        emit('camg-info-click', { ratio: caMgNumericRatio.value, status: caMgStatus.value });
       }
     };
 
@@ -5448,11 +5653,12 @@ const RatioCard = {
       if (isKCaRatio.value) return i18n.t('clickToLearnKCa');
       if (isNo3Nh4Ratio.value) return i18n.t('clickToLearnNo3Nh4');
       if (isNKRatio.value) return i18n.t('clickToLearnNK');
+      if (isCaMgRatio.value) return i18n.t('clickToLearnCaMg');
       return '';
     });
 
     const showInfoButton = computed(() => {
-      return isKCaRatio.value || isNo3Nh4Ratio.value || isNKRatio.value;
+      return isKCaRatio.value || isNo3Nh4Ratio.value || isNKRatio.value || isCaMgRatio.value;
     });
 
     return {
@@ -5470,6 +5676,9 @@ const RatioCard = {
       isNKRatio,
       nkNumericRatio,
       nkStatus,
+      isCaMgRatio,
+      caMgNumericRatio,
+      caMgStatus,
       borderColor,
       textColor,
       currentStatus,
@@ -7285,7 +7494,8 @@ const FertilizerApp = {
         'ec': i18n.t('ecExplanationTitle') || 'EC Prediction Explained',
         'k-ca-ratio': i18n.t('understandingKCaRatio') || 'Understanding K:Ca Ratio',
         'no3-nh4-ratio': i18n.t('understandingNo3Nh4Ratio') || 'Understanding NO₃:NH₄ Ratio',
-        'n-k-ratio': i18n.t('understandingNKRatio') || 'Understanding N:K Ratio'
+        'n-k-ratio': i18n.t('understandingNKRatio') || 'Understanding N:K Ratio',
+        'ca-mg-ratio': i18n.t('understandingCaMgRatio') || 'Understanding Ca:Mg Ratio'
       };
       return titles[activeModal.value] || 'Explanation';
     });
@@ -7570,6 +7780,16 @@ const FertilizerApp = {
       openModal('n-k-ratio', {
         nkRatio: ratio,
         nkStatus: status
+      });
+    }
+
+    // Open Ca:Mg ratio explanation modal with current ratio data
+    function openCaMgExplanation(caMgData) {
+      const ratio = caMgData?.ratio !== undefined ? caMgData.ratio : null;
+      const status = caMgData?.status || (ratio !== null ? getCaMgWarningStatus(ratio) : null);
+      openModal('ca-mg-ratio', {
+        caMgRatio: ratio,
+        caMgStatus: status
       });
     }
 
@@ -8180,6 +8400,8 @@ const FertilizerApp = {
       getNo3Nh4WarningStatus,
       openNKExplanation,
       getNKWarningStatus,
+      openCaMgExplanation,
+      getCaMgWarningStatus,
       openReversePPMExplanation,
       openReverseIonBalanceExplanation,
       openReverseEcExplanation,
