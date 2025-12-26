@@ -27,6 +27,12 @@
       pct: { N_total: 15.5, N_NO3: 14.4, N_NH4: 1.1, Ca: 19.0 }
     },
     {
+      id: "hydrospeed_cab_max",
+      name: "HydroSpeed CaB Max (15% N, 19.3% Ca, 0.2% B)",
+      aliases: ["HydroSpeed CaB Max", "15-0-0 + 19.3Ca + 0.2B"],
+      pct: { N_total: 15.0, N_NO3: 14.3, N_NH4: 0.7, Ca: 19.3, B: 0.2 }
+    },
+    {
       id: "potassium_nitrate_typical",
       name: "Potassium Nitrate",
       aliases: ["KNO3", "13.7-0-46.3"],
@@ -628,6 +634,17 @@
         {ion: 'NO₃⁻', charge: 1, count: 11, type: 'anion'}
       ]
     },
+    hydrospeed_cab_max: {
+      formula: '5Ca(NO₃)₂·NH₄NO₃·10H₂O',
+      molarMass: 1080.64,
+      ions: [
+        {ion: 'Ca²⁺', charge: 2, count: 5, type: 'cation'},
+        {ion: 'NH₄⁺', charge: 1, count: 1, type: 'cation'},
+        {ion: 'NO₃⁻', charge: 1, count: 11, type: 'anion'}
+      ],
+      // Boron as boric acid - mostly neutral at fertigation pH, not included in charge balance
+      micronutrients: { B: 0.2 }
+    },
     calcium_nitrate_4h2o: {
       formula: 'Ca(NO₃)₂·4H₂O',
       molarMass: 236.18,
@@ -838,6 +855,7 @@
   window.FertilizerCore.FERTILIZER_COMPATIBILITY = {
     calcium_sources: [
       'calcium_nitrate_calcinit_typical',
+      'hydrospeed_cab_max',
       'calcium_nitrate_4h2o',
       'calcium_nitrate_anhydrous',
       'calcium_nitrate_liquid',
