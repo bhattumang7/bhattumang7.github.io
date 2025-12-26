@@ -1384,7 +1384,7 @@ permalink: /fertilizer-calculator/
               <span v-if="twoTankDisplayData.tankA.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.Mg.toFixed(1)) }}</span>
               <span v-if="twoTankDisplayData.tankA.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.S.toFixed(1)) }}</span>
               <span v-if="twoTankDisplayData.tankA.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankA.ionBalance.statusColor }">
-                <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
+                <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
               </span>
               <span v-if="twoTankDisplayData.tankA.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankA.ecPrediction.color }">
                 <strong :style="{ color: twoTankDisplayData.tankA.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ecPrediction.ec.toFixed(2)) }}</strong>
@@ -1473,7 +1473,7 @@ permalink: /fertilizer-calculator/
               <span v-if="twoTankDisplayData.tankB.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.Mg.toFixed(1)) }}</span>
               <span v-if="twoTankDisplayData.tankB.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.S.toFixed(1)) }}</span>
               <span v-if="twoTankDisplayData.tankB.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankB.ionBalance.statusColor }">
-                <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
+                <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
               </span>
               <span v-if="twoTankDisplayData.tankB.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankB.ecPrediction.color }">
                 <strong :style="{ color: twoTankDisplayData.tankB.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ecPrediction.ec.toFixed(2)) }}</strong>
@@ -1868,7 +1868,7 @@ permalink: /fertilizer-calculator/
         <span v-if="twoTankDisplayData.tankA.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.Mg.toFixed(1)) }}</span>
         <span v-if="twoTankDisplayData.tankA.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.S.toFixed(1)) }}</span>
         <span v-if="twoTankDisplayData.tankA.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankA.ionBalance.statusColor }">
-          <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
+          <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
         </span>
         <span v-if="twoTankDisplayData.tankA.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankA.ecPrediction.color }">
           <strong :style="{ color: twoTankDisplayData.tankA.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ecPrediction.ec.toFixed(2)) }}</strong>
@@ -1957,7 +1957,7 @@ permalink: /fertilizer-calculator/
         <span v-if="twoTankDisplayData.tankB.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.Mg.toFixed(1)) }}</span>
         <span v-if="twoTankDisplayData.tankB.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.S.toFixed(1)) }}</span>
         <span v-if="twoTankDisplayData.tankB.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankB.ionBalance.statusColor }">
-          <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
+          <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
         </span>
         <span v-if="twoTankDisplayData.tankB.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankB.ecPrediction.color }">
           <strong :style="{ color: twoTankDisplayData.tankB.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ecPrediction.ec.toFixed(2)) }}</strong>
@@ -2346,7 +2346,7 @@ permalink: /fertilizer-calculator/
         <div v-if="twoTankDisplayData.tankA.fertilizers.length > 0" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
           <span v-if="twoTankDisplayData.tankA.nutrients && twoTankDisplayData.tankA.nutrients.N_total > 0.1" class="tank-nutrient-badge"><strong>N:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.N_total.toFixed(1)) }}</span>
           <span v-if="twoTankDisplayData.tankA.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankA.ionBalance.statusColor }">
-            <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
+            <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
           </span>
           <span v-if="twoTankDisplayData.tankA.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankA.ecPrediction.color }">
             <strong :style="{ color: twoTankDisplayData.tankA.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ecPrediction.ec.toFixed(2)) }}</strong>
@@ -2381,7 +2381,7 @@ permalink: /fertilizer-calculator/
         <div v-if="twoTankDisplayData.tankB.fertilizers.length > 0" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
           <span v-if="twoTankDisplayData.tankB.nutrients && twoTankDisplayData.tankB.nutrients.N_total > 0.1" class="tank-nutrient-badge"><strong>N:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.N_total.toFixed(1)) }}</span>
           <span v-if="twoTankDisplayData.tankB.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankB.ionBalance.statusColor }">
-            <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
+            <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
           </span>
           <span v-if="twoTankDisplayData.tankB.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankB.ecPrediction.color }">
             <strong :style="{ color: twoTankDisplayData.tankB.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ecPrediction.ec.toFixed(2)) }}</strong>
@@ -2804,7 +2804,7 @@ permalink: /fertilizer-calculator/
           <span v-if="twoTankDisplayData.tankA.nutrients && twoTankDisplayData.tankA.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.Mg.toFixed(1)) }}</span>
           <span v-if="twoTankDisplayData.tankA.nutrients && twoTankDisplayData.tankA.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankA.nutrients.S.toFixed(1)) }}</span>
           <span v-if="twoTankDisplayData.tankA.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankA.ionBalance.statusColor }">
-            <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
+            <strong :style="{ color: twoTankDisplayData.tankA.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankA.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankA.ionBalance.statusText }}</strong>
           </span>
           <span v-if="twoTankDisplayData.tankA.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankA.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankA.ecPrediction.color }">
             <strong :style="{ color: twoTankDisplayData.tankA.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankA.ecPrediction.ec.toFixed(2)) }}</strong>
@@ -2891,7 +2891,7 @@ permalink: /fertilizer-calculator/
           <span v-if="twoTankDisplayData.tankB.nutrients && twoTankDisplayData.tankB.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.Mg.toFixed(1)) }}</span>
           <span v-if="twoTankDisplayData.tankB.nutrients && twoTankDisplayData.tankB.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.tankB.nutrients.S.toFixed(1)) }}</span>
           <span v-if="twoTankDisplayData.tankB.ionBalance" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ionBalance.statusColor + '20', border: '1px solid ' + twoTankDisplayData.tankB.ionBalance.statusColor }">
-            <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">{{ i18n.t('ionLabel') || 'Ion:' }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
+            <strong :style="{ color: twoTankDisplayData.tankB.ionBalance.statusColor }">Ion: {{ i18n.formatNumber(twoTankDisplayData.tankB.ionBalance.imbalance.toFixed(1)) }}% {{ twoTankDisplayData.tankB.ionBalance.statusText }}</strong>
           </span>
           <span v-if="twoTankDisplayData.tankB.ecPrediction" class="tank-status-badge" :style="{ background: twoTankDisplayData.tankB.ecPrediction.color + '15', border: '1px solid ' + twoTankDisplayData.tankB.ecPrediction.color }">
             <strong :style="{ color: twoTankDisplayData.tankB.ecPrediction.color }">{{ i18n.t('ecLabel') }} {{ i18n.formatNumber(twoTankDisplayData.tankB.ecPrediction.ec.toFixed(2)) }}</strong>
