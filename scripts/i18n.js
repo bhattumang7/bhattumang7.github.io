@@ -257,7 +257,9 @@
     // Get translation for a key
     t(key, replacements = {}) {
       const lang = this.translations[this.currentLanguage] || this.translations.en;
-      let text = lang[key] || this.translations.en[key] || key;
+      // Return key if translations not loaded yet
+      if (!lang) return key;
+      let text = lang[key] || (this.translations.en && this.translations.en[key]) || key;
 
       // Handle replacements like {current} and {total}
       // Numbers are automatically formatted to localized numerals

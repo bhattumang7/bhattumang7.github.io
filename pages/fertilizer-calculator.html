@@ -4353,8 +4353,12 @@ function init() {
   // Fertilizer lists are now rendered by Vue
   // Enter key support for wizard steps is now handled by Vue @keydown.enter directives
 
-  // Initialize i18n (update UI with current language)
-  i18n.updateUI();
+  // Initialize i18n (update UI with current language) - wait for translations to load
+  if (i18n.isReady) {
+    i18n.updateUI();
+  } else {
+    i18n.onReady(() => i18n.updateUI());
+  }
 
   // Language selector is now initialized via Vue v-model binding to language ref
 }
