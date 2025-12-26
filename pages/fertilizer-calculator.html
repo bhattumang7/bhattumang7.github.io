@@ -3778,13 +3778,15 @@ function proceedFromVolumeStep() {
     return;
   }
 
-  // Check if this mode needs the calculation mode step
+  // Route to appropriate next step based on mode
   const mode = getSelectedMode();
   if (MODES_WITH_CALC_MODE.includes(mode)) {
     showWizardStep('calc-mode-step');
   } else if (mode === 'ppm-calc') {
     showWizardStep('grams-input-step');
-    // Vue renders the fertilizer list reactively
+  } else if (mode === 'formula-builder') {
+    // PPM to Grams: go directly to PPM targets (calc mode is always elemental)
+    showWizardStep('ppm-targets-step');
   } else {
     // Skip directly to calculator (fallback)
     proceedToCalculator();
@@ -7862,6 +7864,9 @@ const FertilizerApp = {
         showWizardStepVue('calc-mode-step');
       } else if (mode === 'ppm-calc') {
         showWizardStepVue('grams-input-step');
+      } else if (mode === 'formula-builder') {
+        // PPM to Grams: go directly to PPM targets (calc mode is always elemental)
+        showWizardStepVue('ppm-targets-step');
       } else {
         proceedToCalculator();
       }
