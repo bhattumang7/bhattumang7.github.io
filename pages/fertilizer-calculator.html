@@ -1573,8 +1573,8 @@ permalink: /fertilizer-calculator/
               <div class="results-grid">
                 <div v-for="item in reverseResultsData.comparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : item.className === 'miss' ? '#dc3545' : '#ddd') }">
                   <div class="result-label">{{ item.label }}</div>
-                  <div class="result-value">{{ i18n.formatNumber((item.achieved || 0).toFixed(2)) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
-                  <div v-if="item.target" class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('targetLabel') || 'Target:' }} {{ i18n.formatNumber(item.target.toFixed(2)) }}</div>
+                  <div class="result-value">{{ i18n.formatNumber((item.achievedPPM || 0).toFixed(2)) }} <span :style="{ color: item.className === 'match' ? '#28a745' : item.className === 'close' ? '#ffc107' : '#dc3545', fontWeight: 'bold' }">{{ item.status }}</span></div>
+                  <div class="result-target" style="font-size: 0.85em; color: #666;">{{ i18n.t('ratioLabel') || 'Ratio:' }} {{ item.userInput }} → {{ i18n.formatNumber((item.achievedRatio || 0).toFixed(2)) }}</div>
                 </div>
               </div>
             </div>
