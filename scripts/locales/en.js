@@ -903,4 +903,101 @@ window.i18nLocales.en = {
 
   // Warning messages
   warningMsgNo3Nh4Low: 'NO₃:NH₄ ratio is {ratio}:1 (NH₄-heavy). High ammonium can cause soft growth, root stress, and pH drops—especially in heat or high EC.',
+
+  // =============================================================================
+  // N:K RATIO EDUCATION
+  // =============================================================================
+
+  // N:K Status labels
+  nkStatusStronglyNSkewed: 'Strongly N-skewed',
+  nkStatusNLeaning: 'N-leaning (veg push)',
+  nkStatusBalanced: 'Balanced',
+  nkStatusKLeaning: 'K-leaning (hardening)',
+  nkStatusStronglyKSkewed: 'Strongly K-skewed',
+
+  // Click prompt
+  clickToLearnNK: 'Click to learn about N:K ratio',
+
+  // Modal title
+  understandingNKRatio: 'Understanding N:K Ratio',
+
+  // Section headers
+  whatIsNKRatio: 'What is the N:K Ratio?',
+
+  // Main explanation
+  nkRatioExplanation: '<strong>The N:K ratio shows the balance between nitrogen (growth driver) and potassium (quality/hardening).</strong> Nitrogen pushes vegetative growth—leaves, stems, size. Potassium strengthens cell walls, improves stress tolerance, and supports flowering/fruiting. The ratio shifts depending on growth stage: higher N:K for vegetative push, lower N:K for flowering/hardening.',
+
+  // Current ratio section
+  nkYourCurrentRatio: 'Your Current N:K Ratio',
+  nkOptimalRange: 'General ranges: 1.0–1.5:1 = N-leaning (veg), 0.7–1.0:1 = balanced, 0.4–0.7:1 = K-leaning (bloom/hardening). These vary by crop and growing system.',
+  nkContextualWarning: 'Extreme ratios can cause issues: too much N = soft growth, pest pressure; too much K = salt stress, Ca/Mg uptake problems.',
+
+  // Ratio guidelines
+  nkThresholdsTitle: 'Ratio Guidelines',
+  nkThreshold1: '> 1.5:1 — Strongly N-skewed (risk: soft growth, delayed flowering)',
+  nkThreshold2: '1.0:1 to 1.5:1 — N-leaning (vegetative push)',
+  nkThreshold3: '0.7:1 to 1.0:1 — Fairly balanced',
+  nkThreshold4: '0.4:1 to 0.7:1 — K-leaning (hardening/flowering focus)',
+  nkThreshold5: '< 0.4:1 — Strongly K-skewed (risk: salt stress, Ca/Mg issues)',
+
+  // When N:K is too high (N-skewed)
+  nkWhenTooHigh: 'When ratio is too high (N-skewed)',
+  nkHighSymptoms: 'Common signs:',
+  nkHighSymptom1: 'Very lush/soft growth, long internodes',
+  nkHighSymptom2: 'Less flowering / delayed bud set',
+  nkHighSymptom3: 'More aphids/thrips pressure, weaker stems',
+  nkHighCauses: 'Why it happens:',
+  nkHighCause1: 'Heavy use of high-N fertilizers without balancing K',
+  nkHighCause2: 'Continuing veg-stage feeding into flowering',
+  nkHighFixes: 'What to change:',
+  nkHighFix1: '<strong>Reduce N-heavy inputs</strong> (especially nitrate sources)',
+  nkHighFix2: '<strong>Increase K</strong> using KNO₃, SOP, or MKP depending on your program',
+  nkHighFixWarning: 'Don\'t "fix" by raising EC overall—adjust the sources.',
+  nkHighWhenToAct: 'Act when you want to shift from veg to flowering/hardening, or when growth is too soft.',
+
+  // When N:K is too low (K-skewed)
+  nkWhenTooLow: 'When ratio is too low (K-skewed)',
+  nkLowSymptoms: 'Common signs:',
+  nkLowSymptom1: 'Growth slows too much, smaller leaves',
+  nkLowSymptom2: 'Pale look (if total N is low)',
+  nkLowSymptom3: 'Salt stress symptoms at higher EC (edge burn)',
+  nkLowSymptom4: 'Quality drops if Ca/Mg get suppressed (K competes)',
+  nkLowCauses: 'Why it happens:',
+  nkLowCause1: 'Heavy use of K boosters (MKP, SOP, high-K blends)',
+  nkLowCause2: 'Running bloom boosters repeatedly without balancing',
+  nkLowFixes: 'What to change:',
+  nkLowFix1: '<strong>Increase N modestly</strong> (often nitrate-based)',
+  nkLowFix2: '<strong>Reduce heavy K boosters</strong> (MKP / SOP / high-K blends)',
+  nkLowFix3: 'Ensure Ca and Mg aren\'t being "crowded out" by K',
+  nkLowFixWarning: 'High K can suppress Ca/Mg uptake even if those nutrients are present in solution.',
+  nkLowWhenToAct: 'Act when you see stalling/weak growth or you\'ve been running bloom boosters repeatedly.',
+
+  // Common mistakes
+  nkCommonMistakes: 'Common mistakes to avoid',
+  nkMistake1Title: '"More K = more flowers"',
+  nkMistake1Why: 'Past a point, excess K increases stress and can suppress Ca/Mg uptake, hurting quality.',
+  nkMistake2Title: '"Fix ratio by increasing everything"',
+  nkMistake2Why: 'Raising EC hides the real imbalance and can cause salt stress.',
+  nkMistake3Title: '"Chasing ratio without checking totals"',
+  nkMistake3Why: 'Ratio can look good but total N or K can still be too high/low for the crop.',
+
+  // When to adjust
+  nkTimingTitle: 'When to adjust N:K ratio',
+  nkPreferHigherNK: 'Prefer higher N:K (more N) when:',
+  nkPreferHigherNK1: 'In vegetative/establishment phase',
+  nkPreferHigherNK2: 'Plants are small and need to size up',
+  nkPreferHigherNK3: 'Growing leafy crops that don\'t flower',
+  nkPreferLowerNK: 'Prefer lower N:K (more K) when:',
+  nkPreferLowerNK1: 'Transitioning to flowering/fruiting',
+  nkPreferLowerNK2: 'Hardening plants before stress (heat, transplant)',
+  nkPreferLowerNK3: 'Improving fruit/flower quality and shelf life',
+
+  // Reality check
+  nkRealityCheck: 'Reality check',
+  nkRealityCheckText: 'The "right" N:K ratio depends on:',
+  nkRealityCheck1: 'Growth stage (veg vs. bloom)',
+  nkRealityCheck2: 'Crop type (leafy vs. fruiting)',
+  nkRealityCheck3: 'Growing system (hydro/coco/soil)',
+  nkRealityCheck4: 'Environmental conditions (light, temperature)',
+  nkRealityCheckConclusion: 'Use the ratio as a guide, but watch plant response—it\'s more important than hitting exact numbers.',
 };

@@ -864,6 +864,154 @@ permalink: /fertilizer-calculator/
           </div>
         </template>
 
+        <!-- N:K RATIO EXPLANATION MODAL -->
+        <template v-if="activeModal === 'n-k-ratio'">
+          <!-- What is N:K ratio -->
+          <div class="explanation-section">
+            <h3>{{ i18n.t('whatIsNKRatio') }}</h3>
+            <p v-html="i18n.t('nkRatioExplanation')"></p>
+          </div>
+
+          <!-- Your current ratio -->
+          <div v-if="typeof modalData.nkRatio === 'number' && isFinite(modalData.nkRatio)" class="explanation-section" :style="{ background: modalData.nkStatus?.color + '22', borderLeftColor: modalData.nkStatus?.color }">
+            <h3 :style="{ color: modalData.nkStatus?.color }">{{ i18n.t('nkYourCurrentRatio') }}</h3>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <div style="font-size: 2em; font-weight: bold;" :style="{ color: modalData.nkStatus?.color }">
+                {{ i18n.formatNumber(modalData.nkRatio?.toFixed(2) || '0') }} : 1
+              </div>
+              <div v-if="modalData.nkStatus?.text" style="padding: 6px 12px; border-radius: 20px; font-weight: 500;" :style="{ background: modalData.nkStatus?.color, color: 'white' }">
+                {{ modalData.nkStatus.text }}
+              </div>
+            </div>
+            <p style="margin-top: 10px; color: #666;">{{ i18n.t('nkOptimalRange') }}</p>
+            <p v-if="modalData.nkStatus?.showWarning" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #e65100; font-size: 0.9em;">
+              {{ i18n.t('nkContextualWarning') }}
+            </p>
+          </div>
+
+          <!-- Ratio guidelines -->
+          <div class="explanation-section" style="background: #e8f5e9; border-left-color: #4caf50;">
+            <h3 style="color: #2e7d32;">{{ i18n.t('nkThresholdsTitle') }}</h3>
+            <ul style="margin: 5px 0 0 20px; line-height: 2;">
+              <li><span style="color: #fd7e14; font-weight: bold;">{{ i18n.t('nkThreshold1') }}</span></li>
+              <li><span style="color: #17a2b8; font-weight: bold;">{{ i18n.t('nkThreshold2') }}</span></li>
+              <li><span style="color: #28a745; font-weight: bold;">{{ i18n.t('nkThreshold3') }}</span></li>
+              <li><span style="color: #9c27b0; font-weight: bold;">{{ i18n.t('nkThreshold4') }}</span></li>
+              <li><span style="color: #fd7e14; font-weight: bold;">{{ i18n.t('nkThreshold5') }}</span></li>
+            </ul>
+          </div>
+
+          <!-- When N:K is too high (N-skewed) -->
+          <div class="explanation-section" style="background: #fff3e0; border-left-color: #ff9800;">
+            <h3 style="color: #e65100;">{{ i18n.t('nkWhenTooHigh') }}</h3>
+
+            <p><strong>{{ i18n.t('nkHighSymptoms') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('nkHighSymptom1') }}</li>
+              <li>{{ i18n.t('nkHighSymptom2') }}</li>
+              <li>{{ i18n.t('nkHighSymptom3') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('nkHighCauses') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('nkHighCause1') }}</li>
+              <li>{{ i18n.t('nkHighCause2') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('nkHighFixes') }}</strong></p>
+            <ul style="margin: 5px 0 10px 20px; line-height: 1.8;">
+              <li v-html="i18n.t('nkHighFix1')"></li>
+              <li v-html="i18n.t('nkHighFix2')"></li>
+            </ul>
+            <p style="padding: 8px 12px; background: #ffebee; border-radius: 4px; color: #c62828; margin: 10px 0 0 0;">
+              <strong>{{ i18n.t('nkHighFixWarning') }}</strong>
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">{{ i18n.t('nkHighWhenToAct') }}</p>
+          </div>
+
+          <!-- When N:K is too low (K-skewed) -->
+          <div class="explanation-section" style="background: #f3e5f5; border-left-color: #9c27b0;">
+            <h3 style="color: #7b1fa2;">{{ i18n.t('nkWhenTooLow') }}</h3>
+
+            <p><strong>{{ i18n.t('nkLowSymptoms') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('nkLowSymptom1') }}</li>
+              <li>{{ i18n.t('nkLowSymptom2') }}</li>
+              <li>{{ i18n.t('nkLowSymptom3') }}</li>
+              <li>{{ i18n.t('nkLowSymptom4') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('nkLowCauses') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('nkLowCause1') }}</li>
+              <li>{{ i18n.t('nkLowCause2') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('nkLowFixes') }}</strong></p>
+            <ul style="margin: 5px 0 10px 20px; line-height: 1.8;">
+              <li v-html="i18n.t('nkLowFix1')"></li>
+              <li v-html="i18n.t('nkLowFix2')"></li>
+              <li>{{ i18n.t('nkLowFix3') }}</li>
+            </ul>
+            <p style="padding: 8px 12px; background: #ffebee; border-radius: 4px; color: #c62828; margin: 10px 0 0 0;">
+              <strong>{{ i18n.t('nkLowFixWarning') }}</strong>
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">{{ i18n.t('nkLowWhenToAct') }}</p>
+          </div>
+
+          <!-- Common mistakes -->
+          <div class="explanation-section" style="background: #ffebee; border-left-color: #f44336;">
+            <h3 style="color: #c62828;">{{ i18n.t('nkCommonMistakes') }}</h3>
+
+            <div style="margin-bottom: 15px;">
+              <p style="font-weight: bold; margin-bottom: 5px;">{{ i18n.t('nkMistake1Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('nkMistake1Why') }}</p>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+              <p style="font-weight: bold; margin-bottom: 5px;">{{ i18n.t('nkMistake2Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('nkMistake2Why') }}</p>
+            </div>
+
+            <div>
+              <p style="font-weight: bold; margin-bottom: 5px;">{{ i18n.t('nkMistake3Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('nkMistake3Why') }}</p>
+            </div>
+          </div>
+
+          <!-- When to adjust N:K -->
+          <div class="explanation-section" style="background: #e8f5e9; border-left-color: #4caf50;">
+            <h3 style="color: #2e7d32;">{{ i18n.t('nkTimingTitle') }}</h3>
+
+            <p><strong>{{ i18n.t('nkPreferHigherNK') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('nkPreferHigherNK1') }}</li>
+              <li>{{ i18n.t('nkPreferHigherNK2') }}</li>
+              <li>{{ i18n.t('nkPreferHigherNK3') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('nkPreferLowerNK') }}</strong></p>
+            <ul style="margin: 5px 0 0 20px; line-height: 1.8;">
+              <li>{{ i18n.t('nkPreferLowerNK1') }}</li>
+              <li>{{ i18n.t('nkPreferLowerNK2') }}</li>
+              <li>{{ i18n.t('nkPreferLowerNK3') }}</li>
+            </ul>
+          </div>
+
+          <!-- Reality check -->
+          <div class="explanation-section" style="background: #e3f2fd; border-left-color: #2196f3;">
+            <h3 style="color: #1565c0;">{{ i18n.t('nkRealityCheck') }}</h3>
+            <p>{{ i18n.t('nkRealityCheckText') }}</p>
+            <ul style="margin: 5px 0 10px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('nkRealityCheck1') }}</li>
+              <li>{{ i18n.t('nkRealityCheck2') }}</li>
+              <li>{{ i18n.t('nkRealityCheck3') }}</li>
+              <li>{{ i18n.t('nkRealityCheck4') }}</li>
+            </ul>
+            <p style="font-weight: 500; color: #1565c0;">{{ i18n.t('nkRealityCheckConclusion') }}</p>
+          </div>
+        </template>
+
       </div>
     </div>
   </div>
@@ -1326,7 +1474,7 @@ permalink: /fertilizer-calculator/
         <div class="results-section" v-if="gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+            <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
           </div>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ecPrediction && gramsToPpmDisplayData.ecPrediction.ec > 0" style="margin-top: 20px;">
@@ -1449,7 +1597,7 @@ permalink: /fertilizer-calculator/
         <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+            <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -1579,7 +1727,7 @@ permalink: /fertilizer-calculator/
         <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+            <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
           </div>
         </div>
         <!-- Nutritional Warnings -->
@@ -1986,7 +2134,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+                <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -1994,7 +2142,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+                <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -2002,7 +2150,7 @@ permalink: /fertilizer-calculator/
             <div class="results-section" style="margin-top: 20px;">
               <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <ratio-card v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+                <ratio-card v-for="(ratioObj, index) in gramsToPpmDisplayData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
               </div>
             </div>
           </template>
@@ -2230,7 +2378,7 @@ permalink: /fertilizer-calculator/
   <div class="results-section" id="ratio-analysis-section" v-if="gramsToPpmDisplayData.show && gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0 && !(twoTankDisplayData.show && twoTankDisplayData.sourceType === 'grams-to-ppm')" style="margin-top: 20px;">
     <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-      <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+      <ratio-card v-for="(ratio, idx) in gramsToPpmDisplayData.ratios" :key="idx" :ratio="ratio" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
     </div>
     <div class="conversion-note" style="margin-top: 15px;">
       <strong>{{ i18n.t('whatAreNutrientRatios') }}</strong> {{ i18n.t('nutrientRatioExplanationFull') }}
@@ -2729,7 +2877,7 @@ permalink: /fertilizer-calculator/
       <div v-if="formulaResultsData.ratios && formulaResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-          <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+          <ratio-card v-for="(ratioObj, index) in formulaResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
         </div>
       </div>
 
@@ -3174,7 +3322,7 @@ permalink: /fertilizer-calculator/
       <div v-if="reverseResultsData.ratios && reverseResultsData.ratios.length > 0" class="results-section" style="margin-top: 20px;">
         <h3>{{ i18n.t('nutrientRatioAnalysis') }}</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-          <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation"></ratio-card>
+          <ratio-card v-for="(ratioObj, index) in reverseResultsData.ratios" :key="index" :ratio="ratioObj" @info-click="openKCaExplanation" @no3nh4-info-click="openNo3Nh4Explanation" @nk-info-click="openNKExplanation"></ratio-card>
         </div>
       </div>
 
@@ -3439,7 +3587,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.3.0
+    v1.4.0
   </div>
 
 </div>
@@ -3980,7 +4128,9 @@ async function calculateFromWizardFertilizerSelect() {
 
   // Get current mode, calc mode, and EC from Vue state
   const mode = getSelectedMode();
-  const calcMode = getSelectedCalcMode();
+  // Use wizardCalcMode directly since we're in wizard flow
+  // (getSelectedCalcMode() would return mode-specific calc mode which hasn't been synced yet)
+  const calcMode = window.vueApp?.wizardCalcMode ?? 'oxide';
   const ec = getSelectedEC();
 
   // Get selected fertilizers from Vue state
@@ -4452,6 +4602,62 @@ function getNo3Nh4WarningStatus(ratio) {
     text: i18n.t('no3Nh4StatusVeryHigh'),
     level: 'veryHigh',
     showWarning: false
+  };
+}
+
+/**
+ * Helper function to get warning status for N:K ratio.
+ * Uses elemental N and K ppm from the final solution.
+ * @param {number} ratio - N:K ratio value (N divided by K)
+ * @returns {Object} {color, text, level, showWarning} - Status info
+ */
+function getNKWarningStatus(ratio) {
+  if (ratio === null || ratio === undefined || isNaN(ratio)) {
+    return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
+  }
+
+  // Strongly N-skewed (> 1.5:1) - Risk: soft growth, delayed flowering
+  if (ratio > 1.5) {
+    return {
+      color: '#fd7e14',
+      text: i18n.t('nkStatusStronglyNSkewed'),
+      level: 'stronglyNSkewed',
+      showWarning: true
+    };
+  }
+  // N-leaning (1.0:1 to 1.5:1) - Vegetative push
+  if (ratio >= 1.0) {
+    return {
+      color: '#17a2b8',
+      text: i18n.t('nkStatusNLeaning'),
+      level: 'nLeaning',
+      showWarning: false
+    };
+  }
+  // Fairly balanced (0.7:1 to 1.0:1)
+  if (ratio >= 0.7) {
+    return {
+      color: '#28a745',
+      text: i18n.t('nkStatusBalanced'),
+      level: 'balanced',
+      showWarning: false
+    };
+  }
+  // K-leaning (0.4:1 to 0.7:1) - Hardening/flowering focus
+  if (ratio >= 0.4) {
+    return {
+      color: '#9c27b0',
+      text: i18n.t('nkStatusKLeaning'),
+      level: 'kLeaning',
+      showWarning: false
+    };
+  }
+  // Strongly K-skewed (< 0.4:1) - Risk: salt stress, Ca/Mg issues
+  return {
+    color: '#fd7e14',
+    text: i18n.t('nkStatusStronglyKSkewed'),
+    level: 'stronglyKSkewed',
+    showWarning: true
   };
 }
 
@@ -5115,7 +5321,7 @@ const RatioCard = {
       required: true
     }
   },
-  emits: ['info-click', 'no3nh4-info-click'],
+  emits: ['info-click', 'no3nh4-info-click', 'nk-info-click'],
   setup(props, { emit }) {
     // Create explicit computed properties for all ratio data
     const ratioName = computed(() => props.ratio?.name || '');
@@ -5124,7 +5330,7 @@ const RatioCard = {
     const ratioValues = computed(() => props.ratio?.values || []);
     const ratioUnit = computed(() => props.ratio?.unit);
 
-    // K:Ca ratio detection
+    // K:Ca ratio detection (has K and Ca, but not Mg)
     const isKCaRatio = computed(() => {
       const name = ratioName.value;
       return name && name.includes('K') && name.includes('Ca') && !name.includes('Mg');
@@ -5134,6 +5340,13 @@ const RatioCard = {
     const isNo3Nh4Ratio = computed(() => {
       const name = ratioName.value;
       return name && (name.includes('NO₃') || name.includes('NO3')) && (name.includes('NH₄') || name.includes('NH4'));
+    });
+
+    // N:K ratio detection (exactly 'N : K', not 'N : P : K' or others)
+    const isNKRatio = computed(() => {
+      const labels = ratioLabels.value;
+      // Check if it's exactly N and K (2 labels)
+      return labels && labels.length === 2 && labels[0] === 'N' && labels[1] === 'K';
     });
 
     // For K:Ca, calculate the numeric ratio from the values array (K ppm / Ca ppm)
@@ -5162,6 +5375,17 @@ const RatioCard = {
       return null;
     });
 
+    // For N:K, calculate the numeric ratio from the values array (N ppm / K ppm)
+    const nkNumericRatio = computed(() => {
+      if (!isNKRatio.value) return null;
+      const values = ratioValues.value;
+      // N:K ratio - values[0] is N, values[1] is K
+      if (values && values.length >= 2 && values[1] > 0) {
+        return values[0] / values[1];
+      }
+      return null;
+    });
+
     const kCaStatus = computed(() => {
       if (!isKCaRatio.value || kCaNumericRatio.value === null) return null;
       return getKCaWarningStatus(kCaNumericRatio.value);
@@ -5172,12 +5396,20 @@ const RatioCard = {
       return getNo3Nh4WarningStatus(no3Nh4NumericRatio.value);
     });
 
+    const nkStatus = computed(() => {
+      if (!isNKRatio.value || nkNumericRatio.value === null) return null;
+      return getNKWarningStatus(nkNumericRatio.value);
+    });
+
     const borderColor = computed(() => {
       if (isKCaRatio.value && kCaStatus.value) {
         return kCaStatus.value.color;
       }
       if (isNo3Nh4Ratio.value && no3Nh4Status.value) {
         return no3Nh4Status.value.color;
+      }
+      if (isNKRatio.value && nkStatus.value) {
+        return nkStatus.value.color;
       }
       return '#007bff';
     });
@@ -5189,12 +5421,16 @@ const RatioCard = {
       if (isNo3Nh4Ratio.value && no3Nh4Status.value) {
         return no3Nh4Status.value.color;
       }
+      if (isNKRatio.value && nkStatus.value) {
+        return nkStatus.value.color;
+      }
       return '#007bff';
     });
 
     const currentStatus = computed(() => {
       if (isKCaRatio.value && kCaStatus.value) return kCaStatus.value;
       if (isNo3Nh4Ratio.value && no3Nh4Status.value) return no3Nh4Status.value;
+      if (isNKRatio.value && nkStatus.value) return nkStatus.value;
       return null;
     });
 
@@ -5203,17 +5439,20 @@ const RatioCard = {
         emit('info-click', { ratio: kCaNumericRatio.value, status: kCaStatus.value });
       } else if (isNo3Nh4Ratio.value) {
         emit('no3nh4-info-click', { ratio: no3Nh4NumericRatio.value, status: no3Nh4Status.value });
+      } else if (isNKRatio.value) {
+        emit('nk-info-click', { ratio: nkNumericRatio.value, status: nkStatus.value });
       }
     };
 
     const infoTooltip = computed(() => {
       if (isKCaRatio.value) return i18n.t('clickToLearnKCa');
       if (isNo3Nh4Ratio.value) return i18n.t('clickToLearnNo3Nh4');
+      if (isNKRatio.value) return i18n.t('clickToLearnNK');
       return '';
     });
 
     const showInfoButton = computed(() => {
-      return isKCaRatio.value || isNo3Nh4Ratio.value;
+      return isKCaRatio.value || isNo3Nh4Ratio.value || isNKRatio.value;
     });
 
     return {
@@ -5228,6 +5467,9 @@ const RatioCard = {
       isNo3Nh4Ratio,
       no3Nh4NumericRatio,
       no3Nh4Status,
+      isNKRatio,
+      nkNumericRatio,
+      nkStatus,
       borderColor,
       textColor,
       currentStatus,
@@ -6382,15 +6624,24 @@ const FertilizerApp = {
       reverseResultsData.fertilizers = ferts;
       reverseResultsData.totalGrams = totalGrams;
 
-      // Calculate achieved ratios (commercial N:P2O5:K2O)
-      const achievedPPM = {
-        N: result.achieved.N_total,
-        P2O5: result.achieved.P2O5,
-        K2O: result.achieved.K2O,
-        Ca: result.achieved.Ca,
-        Mg: result.achieved.Mg,
-        S: result.achieved.S
-      };
+      // Calculate achieved ratios - use elemental or oxide based on mode
+      const achievedPPM = mode === 'elemental'
+        ? {
+            N: result.achieved.N_total,
+            P: result.achieved.P,      // Elemental P
+            K: result.achieved.K,      // Elemental K
+            Ca: result.achieved.Ca,
+            Mg: result.achieved.Mg,
+            S: result.achieved.S
+          }
+        : {
+            N: result.achieved.N_total,
+            P2O5: result.achieved.P2O5,  // Oxide P2O5
+            K2O: result.achieved.K2O,    // Oxide K2O
+            Ca: result.achieved.Ca,
+            Mg: result.achieved.Mg,
+            S: result.achieved.S
+          };
       const achievedValues = Object.values(achievedPPM).filter(v => v > 0);
       const minAchieved = achievedValues.length > 0 ? Math.min(...achievedValues) : 1;
       const achievedRatios = {};
@@ -6398,25 +6649,35 @@ const FertilizerApp = {
         achievedRatios[k] = achievedPPM[k] > 0 ? achievedPPM[k] / minAchieved : 0;
       });
 
-      // Calculate target ratios
+      // Calculate target ratios - keys match achievedRatios based on mode
       const targetNutrients = { N: targets.N, P: targets.P, K: targets.K, Ca: targets.Ca, Mg: targets.Mg, S: targets.S };
       const targetValues = Object.values(targetNutrients).filter(v => v > 0);
       const minTarget = targetValues.length > 0 ? Math.min(...targetValues) : 1;
-      const targetRatios = {
-        N: targets.N > 0 ? targets.N / minTarget : 0,
-        P2O5: targets.P > 0 ? targets.P / minTarget : 0,
-        K2O: targets.K > 0 ? targets.K / minTarget : 0,
-        Ca: targets.Ca > 0 ? targets.Ca / minTarget : 0,
-        Mg: targets.Mg > 0 ? targets.Mg / minTarget : 0,
-        S: targets.S > 0 ? targets.S / minTarget : 0
-      };
+      const targetRatios = mode === 'elemental'
+        ? {
+            N: targets.N > 0 ? targets.N / minTarget : 0,
+            P: targets.P > 0 ? targets.P / minTarget : 0,   // Elemental P
+            K: targets.K > 0 ? targets.K / minTarget : 0,   // Elemental K
+            Ca: targets.Ca > 0 ? targets.Ca / minTarget : 0,
+            Mg: targets.Mg > 0 ? targets.Mg / minTarget : 0,
+            S: targets.S > 0 ? targets.S / minTarget : 0
+          }
+        : {
+            N: targets.N > 0 ? targets.N / minTarget : 0,
+            P2O5: targets.P > 0 ? targets.P / minTarget : 0,  // Oxide P2O5
+            K2O: targets.K > 0 ? targets.K / minTarget : 0,   // Oxide K2O
+            Ca: targets.Ca > 0 ? targets.Ca / minTarget : 0,
+            Mg: targets.Mg > 0 ? targets.Mg / minTarget : 0,
+            S: targets.S > 0 ? targets.S / minTarget : 0
+          };
 
       // Build comparison data
+      // Note: ratioKey must match the keys in achievedRatios/targetRatios (P/K for elemental, P2O5/K2O for oxide)
       const displayNutrients = mode === 'elemental'
         ? [
             { key: 'N', label: i18n.t('nitrogen'), ratioKey: 'N', ppmKey: 'N_total', targetKey: 'N' },
-            { key: 'P', label: i18n.t('phosphorusElemental'), ratioKey: 'P2O5', ppmKey: 'P', targetKey: 'P' },
-            { key: 'K', label: i18n.t('potassiumElemental'), ratioKey: 'K2O', ppmKey: 'K', targetKey: 'K' },
+            { key: 'P', label: i18n.t('phosphorusElemental'), ratioKey: 'P', ppmKey: 'P', targetKey: 'P' },
+            { key: 'K', label: i18n.t('potassiumElemental'), ratioKey: 'K', ppmKey: 'K', targetKey: 'K' },
             { key: 'Ca', label: i18n.t('calcium'), ratioKey: 'Ca', ppmKey: 'Ca', targetKey: 'Ca' },
             { key: 'Mg', label: i18n.t('magnesium'), ratioKey: 'Mg', ppmKey: 'Mg', targetKey: 'Mg' },
             { key: 'S', label: i18n.t('sulfur'), ratioKey: 'S', ppmKey: 'S', targetKey: 'S' },
@@ -7023,7 +7284,8 @@ const FertilizerApp = {
         'formula-ion': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
         'ec': i18n.t('ecExplanationTitle') || 'EC Prediction Explained',
         'k-ca-ratio': i18n.t('understandingKCaRatio') || 'Understanding K:Ca Ratio',
-        'no3-nh4-ratio': i18n.t('understandingNo3Nh4Ratio') || 'Understanding NO₃:NH₄ Ratio'
+        'no3-nh4-ratio': i18n.t('understandingNo3Nh4Ratio') || 'Understanding NO₃:NH₄ Ratio',
+        'n-k-ratio': i18n.t('understandingNKRatio') || 'Understanding N:K Ratio'
       };
       return titles[activeModal.value] || 'Explanation';
     });
@@ -7298,6 +7560,16 @@ const FertilizerApp = {
       openModal('no3-nh4-ratio', {
         no3Nh4Ratio: ratio,
         no3Nh4Status: status
+      });
+    }
+
+    // Open N:K ratio explanation modal with current ratio data
+    function openNKExplanation(nkData) {
+      const ratio = nkData?.ratio !== undefined ? nkData.ratio : null;
+      const status = nkData?.status || (ratio !== null ? getNKWarningStatus(ratio) : null);
+      openModal('n-k-ratio', {
+        nkRatio: ratio,
+        nkStatus: status
       });
     }
 
@@ -7906,6 +8178,8 @@ const FertilizerApp = {
       getKCaWarningStatus,
       openNo3Nh4Explanation,
       getNo3Nh4WarningStatus,
+      openNKExplanation,
+      getNKWarningStatus,
       openReversePPMExplanation,
       openReverseIonBalanceExplanation,
       openReverseEcExplanation,
