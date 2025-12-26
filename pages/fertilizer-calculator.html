@@ -1553,6 +1553,56 @@ permalink: /fertilizer-calculator/
               </span>
             </div>
           </div>
+
+          <!-- Target Deviation Warnings (for formula-builder) -->
+          <template v-if="wizardResultsSource === 'formula-builder'">
+            <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
+              <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+              <ul>
+                <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+              </ul>
+              <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+            </div>
+            <div v-if="formulaResultsData.nutritionalWarnings && formulaResultsData.nutritionalWarnings.length > 0" class="warning-box" style="margin-top: 15px;">
+              <strong>{{ i18n.t('nutritionalConsiderations') }}</strong>
+              <ul>
+                <li v-for="(warning, idx) in formulaResultsData.nutritionalWarnings" :key="idx" :class="warning.level">
+                  <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+                </li>
+              </ul>
+            </div>
+          </template>
+
+          <!-- Target Deviation Warnings (for reverse-calc) -->
+          <template v-if="wizardResultsSource === 'reverse-calc'">
+            <div v-if="!reverseResultsData.allGood" class="error-box" style="margin-top: 15px;">
+              <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+              <ul>
+                <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+              </ul>
+              <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+            </div>
+            <div v-if="reverseResultsData.nutritionalWarnings && reverseResultsData.nutritionalWarnings.length > 0" class="warning-box" style="margin-top: 15px;">
+              <strong>{{ i18n.t('nutritionalConsiderations') }}</strong>
+              <ul>
+                <li v-for="(warning, idx) in reverseResultsData.nutritionalWarnings" :key="idx" :class="warning.level">
+                  <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+                </li>
+              </ul>
+            </div>
+          </template>
+
+          <!-- Warnings (for ppm-calc/grams-to-ppm) -->
+          <template v-if="wizardResultsSource === 'ppm-calc'">
+            <div v-if="gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+              <strong>{{ i18n.t('warningsAndRecommendations') }}</strong>
+              <ul>
+                <li v-for="(warning, idx) in gramsToPpmDisplayData.warnings" :key="idx" :class="warning.level">
+                  <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+                </li>
+              </ul>
+            </div>
+          </template>
         </div>
       </template>
     </div>
@@ -1987,6 +2037,16 @@ permalink: /fertilizer-calculator/
         </span>
       </div>
     </div>
+
+    <!-- Warnings -->
+    <div v-if="gramsToPpmDisplayData.warnings && gramsToPpmDisplayData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+      <strong>{{ i18n.t('warningsAndRecommendations') }}</strong>
+      <ul>
+        <li v-for="(warning, idx) in gramsToPpmDisplayData.warnings" :key="idx" :class="warning.level">
+          <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+        </li>
+      </ul>
+    </div>
   </div>
   </div>
 
@@ -2350,6 +2410,25 @@ permalink: /fertilizer-calculator/
             <span style="color: #666; font-size: 0.85em;"> (Tank A: {{ i18n.formatNumber(twoTankDisplayData.tankA.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }} + Tank B: {{ i18n.formatNumber(twoTankDisplayData.tankB.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }})</span>
           </span>
         </div>
+      </div>
+
+      <!-- Target Deviation Warnings -->
+      <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
+        <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+        <ul>
+          <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+        </ul>
+        <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+      </div>
+
+      <!-- Nutritional Warnings -->
+      <div v-if="formulaResultsData.nutritionalWarnings && formulaResultsData.nutritionalWarnings.length > 0" class="warning-box" style="margin-top: 15px;">
+        <strong>{{ i18n.t('nutritionalConsiderations') }}</strong>
+        <ul>
+          <li v-for="(warning, idx) in formulaResultsData.nutritionalWarnings" :key="idx" :class="warning.level">
+            <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -2888,6 +2967,25 @@ permalink: /fertilizer-calculator/
             <span style="color: #666; font-size: 0.85em;"> (Tank A: {{ i18n.formatNumber(twoTankDisplayData.tankA.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }} + Tank B: {{ i18n.formatNumber(twoTankDisplayData.tankB.totalGrams.toFixed(2)) }}{{ i18n.t('gramsShort') }})</span>
           </span>
         </div>
+      </div>
+
+      <!-- Target Deviation Warnings -->
+      <div v-if="!reverseResultsData.allGood" class="error-box" style="margin-top: 15px;">
+        <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+        <ul>
+          <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+        </ul>
+        <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+      </div>
+
+      <!-- Nutritional Warnings -->
+      <div v-if="reverseResultsData.nutritionalWarnings && reverseResultsData.nutritionalWarnings.length > 0" class="warning-box" style="margin-top: 15px;">
+        <strong>{{ i18n.t('nutritionalConsiderations') }}</strong>
+        <ul>
+          <li v-for="(warning, idx) in reverseResultsData.nutritionalWarnings" :key="idx" :class="warning.level">
+            <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
+          </li>
+        </ul>
       </div>
     </div>
   </div>
