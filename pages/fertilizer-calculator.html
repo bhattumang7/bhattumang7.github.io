@@ -1479,7 +1479,7 @@ permalink: /fertilizer-calculator/
 
     <div class="wizard-step-buttons">
       <button class="btn-continue" @click="proceedToFormulaFertilizerStep()" data-i18n="continue">Continue →</button>
-      <button class="btn-back" @click="backToCalcModeStep()" data-i18n="back">← Back</button>
+      <button class="btn-back" @click="backFromPpmTargetsStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -3874,6 +3874,11 @@ function backToCalcModeStep() {
   showWizardStep('calc-mode-step');
 }
 
+function backFromPpmTargetsStep() {
+  // PPM to Grams (formula-builder) skips calc-mode-step, so go directly to volume-step
+  showWizardStep('volume-step');
+}
+
 function backToVolumeStep() {
   showWizardStep('volume-step');
 }
@@ -4146,7 +4151,12 @@ async function calculateFromWizardFertilizerSelect() {
 
   // Build mode indicator text
   let indicatorText = i18n.t('currentLabel') + ' <strong>' + getModeName(mode) + '</strong> · ' + wizardVolume + i18n.t('litersShort');
-  indicatorText += ' · ' + (calcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
+  // PPM to Grams always uses elemental; NPK Ratio uses the selected calc mode
+  if (mode === 'formula-builder') {
+    indicatorText += ' · ' + i18n.t('elementalShort');
+  } else {
+    indicatorText += ' · ' + (calcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
+  }
 
   let calculatedFormula = null;
 
@@ -5958,8 +5968,11 @@ const FertilizerApp = {
       text += ' · ' + wizardVolume.value + i18n.t('litersShort');
 
       // Add calc mode for formula-builder and reverse-calc
-      if (currentMode.value === 'formula-builder' || currentMode.value === 'reverse-calc') {
-        const calcMode = currentMode.value === 'formula-builder' ? formulaCalcMode.value : ratioCalcMode.value;
+      if (currentMode.value === 'formula-builder') {
+        // PPM to Grams always uses elemental (we removed the calc mode selection for this mode)
+        text += ' · ' + i18n.t('elementalShort');
+      } else if (currentMode.value === 'reverse-calc') {
+        const calcMode = ratioCalcMode.value;
         text += ' · ' + (calcMode === 'oxide' ? i18n.t('oxideShort') : i18n.t('elementalShort'));
       }
 
@@ -5983,19 +5996,19 @@ const FertilizerApp = {
       // Step counts per mode
       const STEP_COUNTS = {
         'ppm-calc': 3,
-        'formula-builder': 5,
+        'formula-builder': 4,  // Removed calc-mode-step for this mode
         'reverse-calc': 6
       };
 
       // Step numbers per step and mode
       const STEP_NUMBERS = {
         'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 },
-        'calc-mode-step': { 'formula-builder': 3, 'reverse-calc': 3 },
+        'calc-mode-step': { 'reverse-calc': 3 },  // Only reverse-calc uses this step
         'ec-step': { 'reverse-calc': 4 },
         'grams-input-step': { 'ppm-calc': 3 },
-        'ppm-targets-step': { 'formula-builder': 4 },
+        'ppm-targets-step': { 'formula-builder': 3 },  // Was 4, now 3 (no calc-mode-step)
         'npk-ratios-step': { 'reverse-calc': 5 },
-        'fertilizer-select-step': { 'formula-builder': 5, 'reverse-calc': 6 },
+        'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 },  // Was 5, now 4
         'two-tank-question-step': null // Dynamic
       };
 
@@ -6018,18 +6031,18 @@ const FertilizerApp = {
 
       const STEP_COUNTS = {
         'ppm-calc': 3,
-        'formula-builder': 5,
+        'formula-builder': 4,  // Removed calc-mode-step for this mode
         'reverse-calc': 6
       };
 
       const STEP_NUMBERS = {
         'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 },
-        'calc-mode-step': { 'formula-builder': 3, 'reverse-calc': 3 },
+        'calc-mode-step': { 'reverse-calc': 3 },  // Only reverse-calc uses this step
         'ec-step': { 'reverse-calc': 4 },
         'grams-input-step': { 'ppm-calc': 3 },
-        'ppm-targets-step': { 'formula-builder': 4 },
+        'ppm-targets-step': { 'formula-builder': 3 },  // Was 4, now 3 (no calc-mode-step)
         'npk-ratios-step': { 'reverse-calc': 5 },
-        'fertilizer-select-step': { 'formula-builder': 5, 'reverse-calc': 6 }
+        'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 }  // Was 5, now 4
       };
 
       const stepConfig = STEP_NUMBERS[stepId];
@@ -6051,7 +6064,7 @@ const FertilizerApp = {
 
       const STEP_COUNTS = {
         'ppm-calc': 3,
-        'formula-builder': 5,
+        'formula-builder': 4,  // Removed calc-mode-step for this mode
         'reverse-calc': 6
       };
 
@@ -7956,6 +7969,11 @@ const FertilizerApp = {
       showWizardStepVue('calc-mode-step');
     }
 
+    function backFromPpmTargetsStep() {
+      // PPM to Grams (formula-builder) skips calc-mode-step, so go directly to volume-step
+      showWizardStepVue('volume-step');
+    }
+
     function backToVolumeStep() {
       showWizardStepVue('volume-step');
     }
@@ -8346,6 +8364,7 @@ const FertilizerApp = {
       proceedToCalculator,
       backToECStep,
       backToCalcModeStep,
+      backFromPpmTargetsStep,
       backToVolumeStep,
       backToModeSelector,
       backFromCalculator,
