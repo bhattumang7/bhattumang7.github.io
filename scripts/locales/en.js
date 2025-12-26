@@ -805,4 +805,101 @@ window.i18nLocales.en = {
 
   // Warning message for low K:Ca ratio
   warningMsgKCaRatioLow: 'K:Ca ratio is {ratio}:1 (Ca-heavy). When Ca significantly exceeds K, it may slow growth and reduce flowering response. Consider increasing K or reducing Ca.',
+
+  // =========================================================================
+  // NO3:NH4 RATIO EDUCATION
+  // =========================================================================
+
+  // Status labels
+  no3Nh4StatusVeryHigh: 'Nitrate-dominant',
+  no3Nh4StatusGood: 'Balanced',
+  no3Nh4StatusWatch: 'NH₄-heavy',
+  no3Nh4StatusDanger: 'Very NH₄-heavy',
+
+  // Click prompt
+  clickToLearnNo3Nh4: 'Click to learn about NO₃:NH₄ ratio',
+
+  // Modal title
+  understandingNo3Nh4Ratio: 'Understanding NO₃:NH₄ Ratio',
+
+  // Section headers
+  whatIsNo3Nh4Ratio: 'What is the NO₃:NH₄ Ratio?',
+
+  // Main explanation
+  no3Nh4RatioExplanation: '<strong>Plants take nitrogen as nitrate (NO₃⁻) and ammonium (NH₄⁺).</strong> They behave very differently: <strong>NO₃⁻ (nitrate)</strong> = "safer/steadier" N form that supports balanced growth. <strong>NH₄⁺ (ammonium)</strong> = "stronger push" but easier to overdo—can cause stress, soft growth, and pH swings. This ratio helps you avoid ammonium-heavy feeding.',
+
+  // Current ratio section
+  no3Nh4YourCurrentRatio: 'Your Current NO₃:NH₄ Ratio',
+  no3Nh4OptimalRange: '"Ammonium-heavy" usually means NH₄-N > ~15% of total N (roughly NO₃:NH₄ < 4:1). In heat, high EC, or weak roots, problems can start even lower.',
+  no3Nh4ContextualWarning: 'NH₄ acts "heavier" when: hot weather, high EC, poor drainage/low oxygen, weak roots, or frequent fertigation. Even 10–15% NH₄-N can behave "too heavy" in those conditions.',
+
+  // Ratio thresholds explanation
+  no3Nh4ThresholdsTitle: 'Ratio Guidelines',
+  no3Nh4Threshold1: '≥ 10:1 — Very nitrate-dominant (usually safest)',
+  no3Nh4Threshold2: '4:1 to 10:1 — Generally OK',
+  no3Nh4Threshold3: '2:1 to 4:1 — Getting NH₄-heavy (watch closely)',
+  no3Nh4Threshold4: '< 2:1 — Ammonium-heavy (higher risk)',
+
+  // Too much NH4 section
+  no3Nh4WhenTooLow: 'When ratio is too low (NH₄-heavy)',
+  no3Nh4LowSymptoms: 'Common symptoms:',
+  no3Nh4LowSymptom1: 'Soft, lush growth that\'s weaker and more pest/disease-prone',
+  no3Nh4LowSymptom2: 'Leaf curl/clawing, tip burn, or "sudden collapse" in hot conditions',
+  no3Nh4LowSymptom3: 'Root stress (reduced root growth), slower water uptake',
+  no3Nh4LowSymptom4: 'Media/solution pH dropping too fast',
+  no3Nh4LowCauses: 'Why it happens:',
+  no3Nh4LowCause1: 'Overuse of urea/ammonium sulfate/MAP/ammonium nitrate',
+  no3Nh4LowCause2: 'Some "high N" blends that hide ammonium',
+  no3Nh4LowCause3: 'Trying to "push growth" by increasing NH₄',
+  no3Nh4LowFixes: 'What to change:',
+  no3Nh4LowFix1: '<strong>Reduce ammonium sources first:</strong> cut MAP/ammonium sulfate/ammonium-heavy NPK',
+  no3Nh4LowFix2: '<strong>Shift N toward nitrate:</strong> increase calcium nitrate, potassium nitrate',
+  no3Nh4LowFixWarning: 'Keep total N reasonable—don\'t "fix the ratio" by just adding more N.',
+  no3Nh4LowWhenToAct: 'Act when temps are high, roots are stressed, or you see soft growth + rapid pH drop.',
+
+  // Too little NH4 section
+  no3Nh4WhenVeryHigh: 'When ratio is very high (all-nitrate)',
+  no3Nh4VeryHighNote: 'Often fine—many growers run mostly nitrate successfully.',
+  no3Nh4VeryHighSymptoms: 'Possible (not always) symptoms:',
+  no3Nh4VeryHighSymptom1: 'Slower vegetative push',
+  no3Nh4VeryHighSymptom2: 'Slightly higher pH drift',
+  no3Nh4VeryHighSymptom3: 'Less "greening" response if overall N is low',
+  no3Nh4VeryHighCauses: 'Why it happens:',
+  no3Nh4VeryHighCause1: 'Using only nitrate-based fertilizers (calcium nitrate + potassium nitrate)',
+  no3Nh4VeryHighFixes: 'What to change:',
+  no3Nh4VeryHighFix1: 'If plants are healthy: don\'t change anything',
+  no3Nh4VeryHighFix2: 'If you need more "push" and roots are strong: add a small NH₄ contributor (e.g., a little MAP)',
+  no3Nh4VeryHighWhenToAct: 'Only act if you\'re seeing slow growth AND you\'ve confirmed it\'s not light/temp/EC/overall N.',
+
+  // Common mistakes
+  no3Nh4CommonMistakes: 'Common mistakes to avoid',
+  no3Nh4Mistake1Title: '"Plants are pale → add ammonium"',
+  no3Nh4Mistake1Why: 'Pale can be low total N, iron issue, high pH, root damage, or salt stress. Extra NH₄ can worsen roots.',
+  no3Nh4Mistake2Title: '"More NH₄ for faster growth"',
+  no3Nh4Mistake2Why: 'NH₄ is easy to overdo and can create soft growth and root stress.',
+  no3Nh4Mistake3Title: '"Fix ratio by increasing total fertilizer"',
+  no3Nh4Mistake3Why: 'You may correct the ratio but create high EC stress.',
+
+  // When to prefer each
+  no3Nh4TimingTitle: 'When to prefer nitrate vs ammonium',
+  no3Nh4PreferNitrate: 'Prefer mostly nitrate (higher ratio) when:',
+  no3Nh4PreferNitrate1: 'Hot weather, high EC risk, or sensitive crops',
+  no3Nh4PreferNitrate2: 'Root health is uncertain',
+  no3Nh4PreferNitrate3: 'You want sturdy growth and quality',
+  no3Nh4AllowNh4: 'Allow a little more NH₄ (lower ratio) when:',
+  no3Nh4AllowNh41: 'Cool conditions, strong roots, vigorous vegetative phase',
+  no3Nh4AllowNh42: 'You need slight acidification (pH tends to drift high)',
+  no3Nh4AllowNh43: 'You\'re using media that benefits from some ammonium (carefully)',
+
+  // Reality check
+  no3Nh4RealityCheck: 'Reality check',
+  no3Nh4RealityCheckText: 'NH₄ "problems" show up faster when:',
+  no3Nh4RealityCheck1: 'Temperatures are high',
+  no3Nh4RealityCheck2: 'Oxygen at roots is low (overwatering/poor drainage)',
+  no3Nh4RealityCheck3: 'EC is high',
+  no3Nh4RealityCheck4: 'Calcium/potassium/magnesium balance is already off',
+  no3Nh4RealityCheckConclusion: 'The ratio is a risk indicator, not a diagnosis by itself.',
+
+  // Warning messages
+  warningMsgNo3Nh4Low: 'NO₃:NH₄ ratio is {ratio}:1 (NH₄-heavy). High ammonium can cause soft growth, root stress, and pH drops—especially in heat or high EC.',
 };
