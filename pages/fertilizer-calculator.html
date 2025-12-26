@@ -1104,6 +1104,20 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
+        <!-- Target Deviation Warnings - Shown prominently at top -->
+        <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
+          <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
+          <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+        </div>
+        <div v-else-if="formulaResultsData.warnings && formulaResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+          <strong>{{ i18n.t('note') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
+        </div>
         <div class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('targetVsAchieved') || 'Target vs Achieved' }}</h2>
           <div class="results-grid">
@@ -1176,20 +1190,6 @@ permalink: /fertilizer-calculator/
             </ul>
           </div>
         </div>
-        <!-- Target Deviation Warnings -->
-        <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
-          <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
-          <ul>
-            <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
-          </ul>
-          <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
-        </div>
-        <div v-else-if="formulaResultsData.warnings && formulaResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
-          <strong>{{ i18n.t('note') }}</strong>
-          <ul>
-            <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
-          </ul>
-        </div>
       </template>
 
       <!-- Reverse Calculator Results (when wizardResultsSource === 'reverse-calc') -->
@@ -1225,6 +1225,20 @@ permalink: /fertilizer-calculator/
               <span style="color: #666; font-size: 0.9em;"> ({{ i18n.t('totalConcentration') }})</span>
             </div>
           </div>
+        </div>
+        <!-- Target Deviation Warnings - Shown prominently at top -->
+        <div v-if="!reverseResultsData.allGood" class="error-box" style="margin-top: 15px;">
+          <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
+          <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+        </div>
+        <div v-else-if="reverseResultsData.warnings && reverseResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+          <strong>{{ i18n.t('note') }}</strong>
+          <ul>
+            <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+          </ul>
         </div>
         <div class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('targetVsAchievedRatios') || 'Achieved PPM' }}</h2>
@@ -1313,20 +1327,6 @@ permalink: /fertilizer-calculator/
               </li>
             </ul>
           </div>
-        </div>
-        <!-- Target Deviation Warnings -->
-        <div v-if="!reverseResultsData.allGood" class="error-box" style="margin-top: 15px;">
-          <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
-          <ul>
-            <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
-          </ul>
-          <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
-        </div>
-        <div v-else-if="reverseResultsData.warnings && reverseResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
-          <strong>{{ i18n.t('note') }}</strong>
-          <ul>
-            <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
-          </ul>
         </div>
       </template>
 
@@ -2120,6 +2120,21 @@ permalink: /fertilizer-calculator/
         </div>
       </div>
 
+      <!-- Target Deviation Warnings - Shown prominently at top -->
+      <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
+        <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+        <ul>
+          <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+        </ul>
+        <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
+      </div>
+      <div v-else-if="formulaResultsData.warnings && formulaResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+        <strong>{{ i18n.t('note') }}</strong>
+        <ul>
+          <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
+        </ul>
+      </div>
+
       <!-- Comparison Table: Target vs Achieved -->
       <h3>{{ i18n.t('targetVsAchieved') }}</h3>
       <div class="comparison-table-wrapper">
@@ -2223,21 +2238,6 @@ permalink: /fertilizer-calculator/
             </li>
           </ul>
         </div>
-      </div>
-
-      <!-- Target Deviation Warnings -->
-      <div v-if="!formulaResultsData.allGood" class="error-box" style="margin-top: 15px;">
-        <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
-        <ul>
-          <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
-        </ul>
-        <p>{{ i18n.t('cannotAchieveExactTargetsDescription') }}</p>
-      </div>
-      <div v-else-if="formulaResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
-        <strong>{{ i18n.t('note') }}</strong>
-        <ul>
-          <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
-        </ul>
       </div>
     </div>
 
@@ -2531,6 +2531,30 @@ permalink: /fertilizer-calculator/
         </template>
       </div>
 
+      <!-- Target Deviation Warnings - Shown prominently at top -->
+      <div v-if="!reverseResultsData.allGood" class="error-box" style="margin-top: 15px;">
+        <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
+        <ul>
+          <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+        </ul>
+        <p>{{ i18n.t('cannotAchieveExactTargetsConsider') }}</p>
+        <ul>
+          <li>{{ i18n.t('considerSelectingAdditionalFertilizers') }}</li>
+          <li>{{ i18n.t('considerAdjustingTargetValues') }}</li>
+          <li>{{ i18n.t('considerAcceptingDeviations') }}</li>
+        </ul>
+      </div>
+      <div v-else-if="reverseResultsData.warnings && reverseResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
+        <strong>{{ i18n.t('note') }}</strong>
+        <ul>
+          <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
+        </ul>
+      </div>
+      <div v-else style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin-top: 15px;">
+        <strong style="color: #28a745;">✓ {{ i18n.t('targetsSuccessfullyAchieved') }}</strong>
+        <p style="margin: 5px 0 0 0;">{{ i18n.t('allNutrientValuesWithinRange') }}</p>
+      </div>
+
       <!-- Comparison Table: Target vs Achieved -->
       <h3>{{ i18n.t('targetVsAchievedRatios') }} <span class="info-icon" @click="openReversePPMExplanation()" title="Click to learn how we calculate PPM">?</span></h3>
       <div class="comparison-table-wrapper">
@@ -2648,30 +2672,6 @@ permalink: /fertilizer-calculator/
             </li>
           </ul>
         </div>
-      </div>
-
-      <!-- Target Deviation Warnings/Success -->
-      <div v-if="!reverseResultsData.allGood" class="error-box" style="margin-top: 15px;">
-        <strong>⚠ {{ i18n.t('cannotAchieveExactTargets') }}</strong>
-        <ul>
-          <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
-        </ul>
-        <p>{{ i18n.t('cannotAchieveExactTargetsConsider') }}</p>
-        <ul>
-          <li>{{ i18n.t('considerSelectingAdditionalFertilizers') }}</li>
-          <li>{{ i18n.t('considerAdjustingTargetValues') }}</li>
-          <li>{{ i18n.t('considerAcceptingDeviations') }}</li>
-        </ul>
-      </div>
-      <div v-else-if="reverseResultsData.warnings.length > 0" class="warning-box" style="margin-top: 15px;">
-        <strong>{{ i18n.t('note') }}</strong>
-        <ul>
-          <li v-for="(w, idx) in reverseResultsData.warnings" :key="idx">{{ w }}</li>
-        </ul>
-      </div>
-      <div v-else style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin-top: 15px;">
-        <strong style="color: #28a745;">✓ {{ i18n.t('targetsSuccessfullyAchieved') }}</strong>
-        <p style="margin: 5px 0 0 0;">{{ i18n.t('allNutrientValuesWithinRange') }}</p>
       </div>
     </div>
 
