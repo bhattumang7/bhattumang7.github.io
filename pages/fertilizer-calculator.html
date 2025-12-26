@@ -3709,30 +3709,30 @@ const EC_DESCRIPTIONS = {
 
 // State accessor functions - always read from Vue state (single source of truth)
 function getSelectedMode() {
-  return window.vueApp?.currentMode?.value ?? null;
+  return window.vueApp?.currentMode ?? null;
 }
 function getSelectedCalcMode() {
   // Use mode-specific calc mode based on current mode
   const mode = getSelectedMode();
   if (mode === 'formula-builder') {
-    return window.vueApp?.formulaCalcMode?.value ?? 'oxide';
+    return window.vueApp?.formulaCalcMode ?? 'oxide';
   } else if (mode === 'reverse-calc') {
-    return window.vueApp?.ratioCalcMode?.value ?? 'oxide';
+    return window.vueApp?.ratioCalcMode ?? 'oxide';
   }
-  return window.vueApp?.wizardCalcMode?.value ?? 'oxide';
+  return window.vueApp?.wizardCalcMode ?? 'oxide';
 }
 function getSelectedEC() {
-  return window.vueApp?.ratioTargetEC?.value ?? 'ec:1.2';
+  return window.vueApp?.ratioTargetEC ?? 'ec:1.2';
 }
 // Setter functions - update Vue state directly (use .value for refs)
 function setSelectedMode(mode) {
-  if (window.vueApp) window.vueApp.currentMode.value = mode;
+  if (window.vueApp) window.vueApp.currentMode = mode;
 }
 function setSelectedCalcMode(mode) {
-  if (window.vueApp) window.vueApp.wizardCalcMode.value = mode;
+  if (window.vueApp) window.vueApp.wizardCalcMode = mode;
 }
 function setSelectedEC(ec) {
-  if (window.vueApp) window.vueApp.ratioTargetEC.value = ec;
+  if (window.vueApp) window.vueApp.ratioTargetEC = ec;
 }
 
 // getStepCount removed - step counts now in Vue computed (getStepIndicator, getTwoTankStepIndicator)
@@ -3823,7 +3823,7 @@ function proceedFromECStep() {
 
 function proceedToCalculator() {
   // Get the volume from Vue state (use .value since it's a ref)
-  const wizardVolumeValue = window.vueApp?.wizardVolume?.value || 10;
+  const wizardVolumeValue = window.vueApp?.wizardVolume || 10;
 
   // Get current mode and calc mode from Vue state
   const mode = getSelectedMode();
@@ -3833,24 +3833,24 @@ function proceedToCalculator() {
   // Update volume in all calculator tabs via Vue state
   // Use .value since these are Vue refs accessed from outside the setup function
   if (window.vueApp) {
-    window.vueApp.volume.value = wizardVolumeValue;
-    window.vueApp.formulaVolume.value = wizardVolumeValue;
-    window.vueApp.ratioVolume.value = wizardVolumeValue;
+    window.vueApp.volume = wizardVolumeValue;
+    window.vueApp.formulaVolume = wizardVolumeValue;
+    window.vueApp.ratioVolume = wizardVolumeValue;
   }
 
   // Apply calculation mode if applicable via Vue state
   // Use .value since these are Vue refs accessed from outside the setup function
   if (MODES_WITH_CALC_MODE.includes(mode) && window.vueApp) {
     if (mode === 'formula-builder') {
-      window.vueApp.formulaCalcMode.value = calcMode;
+      window.vueApp.formulaCalcMode = calcMode;
     } else if (mode === 'reverse-calc') {
-      window.vueApp.ratioCalcMode.value = calcMode;
+      window.vueApp.ratioCalcMode = calcMode;
     }
   }
 
   // Apply EC setting if applicable via Vue state
   if (MODES_WITH_EC.includes(mode) && window.vueApp) {
-    window.vueApp.ratioTargetEC.value = ec;
+    window.vueApp.ratioTargetEC = ec;
   }
 
   // Show the calculator content (hides all wizard steps)
@@ -3910,25 +3910,25 @@ function goToModeSelector() {
   // Reset all Vue state (single source of truth)
   // Use .value for refs, direct assignment for reactive objects
   if (window.vueApp) {
-    window.vueApp.currentMode.value = null;
-    window.vueApp.calculationMode.value = 'oxide';
-    window.vueApp.wizardCalcMode.value = 'elemental';
-    window.vueApp.ratioTargetEC.value = 'ec:1.2';
+    window.vueApp.currentMode = null;
+    window.vueApp.calculationMode = 'oxide';
+    window.vueApp.wizardCalcMode = 'elemental';
+    window.vueApp.ratioTargetEC = 'ec:1.2';
     // Clear pending two-tank calculation
-    window.vueApp.pendingWizardCalculation.value = null;
+    window.vueApp.pendingWizardCalculation = null;
     // Reset results display state (controls v-if visibility - reactive objects, no .value needed)
     window.vueApp.gramsToPpmDisplayData.show = false;
     window.vueApp.formulaResultsData.show = false;
     window.vueApp.reverseResultsData.show = false;
     window.vueApp.twoTankDisplayData.show = false;
     // Clear wizard results source
-    window.vueApp.wizardResultsSource.value = null;
+    window.vueApp.wizardResultsSource = null;
   }
 }
 
 function backToModeSelector() {
   // Clear pending two-tank calculation
-  if (window.vueApp) window.vueApp.pendingWizardCalculation.value = null;
+  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
 
   // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
@@ -3936,11 +3936,11 @@ function backToModeSelector() {
   // Reset all Vue state (single source of truth)
   // Use .value for refs
   if (window.vueApp) {
-    window.vueApp.currentMode.value = null;
-    window.vueApp.wizardCalcMode.value = 'elemental';
-    window.vueApp.ratioTargetEC.value = 'ec:1.2';
+    window.vueApp.currentMode = null;
+    window.vueApp.wizardCalcMode = 'elemental';
+    window.vueApp.ratioTargetEC = 'ec:1.2';
     // Clear wizard results source
-    window.vueApp.wizardResultsSource.value = null;
+    window.vueApp.wizardResultsSource = null;
   }
 
   // Reset wizard inputs
@@ -3966,11 +3966,11 @@ function backToModeSelector() {
 
 async function calculateFromWizardGrams() {
   // Get the volume from wizard input (use .value since it's a ref)
-  const wizardVolume = window.vueApp?.wizardVolume?.value || 10;
+  const wizardVolume = window.vueApp?.wizardVolume || 10;
 
   // Update volume in Vue state (use .value for ref)
   if (window.vueApp) {
-    window.vueApp.volume.value = wizardVolume;
+    window.vueApp.volume = wizardVolume;
   }
 
   // Clear all existing fertilizer selections via Vue state
@@ -4014,7 +4014,7 @@ async function calculateFromWizardGrams() {
 
   // Set wizard results source to show results via Vue template (use .value for ref)
   if (window.vueApp) {
-    window.vueApp.wizardResultsSource.value = 'ppm-calc';
+    window.vueApp.wizardResultsSource = 'ppm-calc';
   }
 
   // Build mode indicator text
@@ -4025,7 +4025,7 @@ async function calculateFromWizardGrams() {
   if (hasIncompatibleFertilizers(formula)) {
     // Store pending calculation for later (via Vue ref - use .value)
     if (window.vueApp) {
-      window.vueApp.pendingWizardCalculation.value = {
+      window.vueApp.pendingWizardCalculation = {
         type: 'grams-to-ppm',
         formula: formula,
         volume: wizardVolume,
@@ -4039,7 +4039,7 @@ async function calculateFromWizardGrams() {
   } else {
     // No incompatibilities - show results directly
     if (window.vueApp) {
-      window.vueApp.wizardResultsModeText.value = indicatorText;
+      window.vueApp.wizardResultsModeText = indicatorText;
     }
     showWizardStep('wizard-results', { updateIndicator: false });
   }
@@ -4119,14 +4119,14 @@ function backFromFertilizerSelectStep() {
 
 async function calculateFromWizardFertilizerSelect() {
   // Get the volume from Vue state (use .value since it's a ref)
-  const wizardVolume = window.vueApp?.wizardVolume?.value || 10;
+  const wizardVolume = window.vueApp?.wizardVolume || 10;
 
   // Get current mode, calc mode, and EC from Vue state
   const mode = getSelectedMode();
   // Use wizardCalcMode directly since we're in wizard flow
   // (getSelectedCalcMode() would return mode-specific calc mode which hasn't been synced yet)
   // Use .value since wizardCalcMode is a Vue ref
-  const calcMode = window.vueApp?.wizardCalcMode?.value ?? 'oxide';
+  const calcMode = window.vueApp?.wizardCalcMode ?? 'oxide';
   const ec = getSelectedEC();
 
   // Get selected fertilizers from Vue state
@@ -4169,8 +4169,8 @@ async function calculateFromWizardFertilizerSelect() {
     // Sync volume and calculation mode to Vue state
     // Use .value since these are Vue refs accessed from outside the setup function
     if (window.vueApp) {
-      window.vueApp.formulaVolume.value = wizardVolume;
-      window.vueApp.formulaCalcMode.value = calcMode;
+      window.vueApp.formulaVolume = wizardVolume;
+      window.vueApp.formulaCalcMode = calcMode;
     }
 
     // Transfer fertilizer selections to main calculator Vue state
@@ -4185,7 +4185,7 @@ async function calculateFromWizardFertilizerSelect() {
 
     // Set wizard results source to show results via Vue template (use .value for ref)
     if (window.vueApp) {
-      window.vueApp.wizardResultsSource.value = 'formula-builder';
+      window.vueApp.wizardResultsSource = 'formula-builder';
     }
 
     // Get the calculated formula for incompatibility check
@@ -4213,9 +4213,9 @@ async function calculateFromWizardFertilizerSelect() {
     // Sync volume, EC, and calculation mode to Vue state
     // Use .value since these are Vue refs accessed from outside the setup function
     if (window.vueApp) {
-      window.vueApp.ratioVolume.value = wizardVolume;
-      window.vueApp.ratioTargetEC.value = ec;
-      window.vueApp.ratioCalcMode.value = calcMode;
+      window.vueApp.ratioVolume = wizardVolume;
+      window.vueApp.ratioTargetEC = ec;
+      window.vueApp.ratioCalcMode = calcMode;
     }
 
     // Transfer fertilizer selections to main calculator Vue state
@@ -4237,7 +4237,7 @@ async function calculateFromWizardFertilizerSelect() {
 
     // Set wizard results source to show results via Vue template (use .value for ref)
     if (window.vueApp) {
-      window.vueApp.wizardResultsSource.value = 'reverse-calc';
+      window.vueApp.wizardResultsSource = 'reverse-calc';
     }
 
     // Get the calculated formula for incompatibility check
@@ -4251,7 +4251,7 @@ async function calculateFromWizardFertilizerSelect() {
   if (calculatedFormula && hasIncompatibleFertilizers(calculatedFormula)) {
     // Store pending calculation for later (via Vue ref - use .value)
     if (window.vueApp) {
-      window.vueApp.pendingWizardCalculation.value = {
+      window.vueApp.pendingWizardCalculation = {
         type: mode === 'formula-builder' ? 'ppm-to-grams' : 'npk-ratio-to-grams',
         formula: calculatedFormula,
         volume: wizardVolume,
@@ -4265,7 +4265,7 @@ async function calculateFromWizardFertilizerSelect() {
   } else {
     // No incompatibilities - show results directly
     if (window.vueApp) {
-      window.vueApp.wizardResultsModeText.value = indicatorText;
+      window.vueApp.wizardResultsModeText = indicatorText;
     }
     showWizardStep('wizard-results', { updateIndicator: false });
   }
@@ -4275,19 +4275,19 @@ async function calculateFromWizardFertilizerSelect() {
 
 // Skip two-tank view and show regular results
 function skipTwoTankView() {
-  const pendingCalc = window.vueApp?.pendingWizardCalculation?.value;
+  const pendingCalc = window.vueApp?.pendingWizardCalculation;
   // Update the mode indicator in wizard results
   if (pendingCalc && window.vueApp) {
-    window.vueApp.wizardResultsModeText.value = pendingCalc.indicatorText;
+    window.vueApp.wizardResultsModeText = pendingCalc.indicatorText;
 
     // Set wizard results source based on calculation type (Vue template handles rendering)
     if (pendingCalc.type === 'grams-to-ppm') {
-      window.vueApp.wizardResultsSource.value = 'ppm-calc';
+      window.vueApp.wizardResultsSource = 'ppm-calc';
     }
   }
 
   // Clear pending calculation
-  if (window.vueApp) window.vueApp.pendingWizardCalculation.value = null;
+  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
 
   // Show wizard results
   showWizardStep('wizard-results', { updateIndicator: false });
@@ -4295,7 +4295,7 @@ function skipTwoTankView() {
 
 // Show two-tank view
 function showTwoTankView() {
-  const pendingCalc = window.vueApp?.pendingWizardCalculation?.value;
+  const pendingCalc = window.vueApp?.pendingWizardCalculation;
   if (!pendingCalc) {
     alert(i18n.t('alertNoCalculationData'));
     return;
@@ -4315,18 +4315,18 @@ function showTwoTankView() {
   // Set wizard results source based on calculation type (Vue template handles rendering)
   if (window.vueApp) {
     if (type === 'grams-to-ppm') {
-      window.vueApp.wizardResultsSource.value = 'ppm-calc';
+      window.vueApp.wizardResultsSource = 'ppm-calc';
     } else if (type === 'ppm-to-grams') {
-      window.vueApp.wizardResultsSource.value = 'formula-builder';
+      window.vueApp.wizardResultsSource = 'formula-builder';
     } else if (type === 'npk-ratio-to-grams') {
-      window.vueApp.wizardResultsSource.value = 'reverse-calc';
+      window.vueApp.wizardResultsSource = 'reverse-calc';
     }
     // Update the mode indicator in wizard results via Vue state
-    window.vueApp.wizardResultsModeText.value = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
+    window.vueApp.wizardResultsModeText = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
   }
 
   // Clear pending calculation
-  if (window.vueApp) window.vueApp.pendingWizardCalculation.value = null;
+  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
 
   // Show wizard results
   showWizardStep('wizard-results', { updateIndicator: false });
@@ -5009,8 +5009,8 @@ function switchTab(tabId) {
   // Update Vue state - visibility is handled by :class bindings
   // Mode indicator is updated via Vue computed property (modeIndicatorText)
   if (window.vueApp) {
-    window.vueApp.currentTab.value = tabId;
-    window.vueApp.currentMode.value = tabId;
+    window.vueApp.currentTab = tabId;
+    window.vueApp.currentMode = tabId;
   }
 }
 
