@@ -600,7 +600,7 @@ window.i18nLocales.en = {
   ureaInfoExplanation: 'Urea does NOT form charged ions like nitrate (NO₃⁻) or ammonium (NH₄⁺). Therefore, it is NOT counted in ion balance calculations. However, its nitrogen content IS still counted when calculating nutrient PPM values.',
 
   // Ion table
-  cationType: 'Cation (+)',
+  cationType: 'Caftion (+)',
   anionType: 'Anion (-)',
   ionBreakdownByType: 'Ion Breakdown by Type',
   percentOfTotalCations: '{percentage}% of total cations',
@@ -737,4 +737,72 @@ window.i18nLocales.en = {
   showDetails: 'Show Details',
   understandingPpmCalculations: 'Understanding PPM Calculations',
   understandingIonBalance: 'Understanding Ion Balance',
+
+  // K:Ca Ratio Education
+  understandingKCaRatio: 'Understanding K:Ca Ratio',
+  clickToLearnKCa: 'Click to learn about K:Ca ratio',
+  kCaRatioStatusGood: 'Balanced',
+  kCaRatioStatusHigh: 'K-heavy',
+  kCaRatioStatusVeryHigh: 'Very K-heavy',
+  kCaRatioStatusLow: 'Ca-heavy',
+  kCaRatioStatusVeryLow: 'Very Ca-heavy',
+
+  // K:Ca Modal Content
+  whatIsKCaRatio: 'What does K:Ca ratio tell you?',
+  kCaRatioExplanation: '<strong>Potassium (K) and Calcium (Ca) compete at the root.</strong> When K is pushed too high compared to Ca, plants may fail to absorb enough calcium even if it\'s present in the mix. Calcium is especially important for new growth strength and flower/fruit quality.',
+
+  kCaWhenTooHigh: 'When K:Ca is too high (K-heavy)',
+  kCaHighSymptoms: 'Common symptoms:',
+  kCaHighSymptom1: 'Soft/weak new growth, tip burn, marginal burn',
+  kCaHighSymptom2: 'Bud/flower quality issues (deformed petals, smaller blooms, shorter vase life)',
+  kCaHighSymptom3: 'More problems during heat, high EC, or inconsistent watering',
+  kCaHighCauses: 'Why it happens:',
+  kCaHighCause1: 'Too much KNO\u2083 / MKP / SOP (K\u2082SO\u2084) relative to calcium sources',
+  kCaHighCause2: '"Bloom booster" thinking that keeps increasing K but forgets Ca',
+  kCaHighFixes: 'What to change:',
+  kCaHighFix1: '<strong>First reduce K</strong> (don\'t blindly increase EC): cut back MKP / SOP / KNO\u2083',
+  kCaHighFix2: 'Or increase Ca in a controlled way: add more calcium nitrate',
+  kCaHighFixWarning: 'Do NOT "fix" it by adding more magnesium \u2014 Mg also competes with Ca.',
+
+  kCaWhenTooLow: 'When K:Ca is too low (Ca-heavy)',
+  kCaLowSymptoms: 'Common symptoms:',
+  kCaLowSymptom1: 'Growth feels "stiff/slow," less push in flowering response',
+  kCaLowSymptom2: 'Plants may not be "finishing" blooms well',
+  kCaLowCauses: 'Why it happens:',
+  kCaLowCause1: 'Heavy use of calcium nitrate without enough K sources',
+  kCaLowCause2: 'Over-correcting after a K-heavy period',
+  kCaLowFixes: 'What to change:',
+  kCaLowFix1: 'Increase K modestly: add KNO\u2083 (adds K + nitrate N) or SOP (adds K + sulfur)',
+  kCaLowFix2: 'Or reduce Ca nitrate if N is already high',
+
+  kCaCommonMistakes: 'Common mistakes to avoid',
+  kCaMistake1Title: '"K:Ca is high, so I\'ll just increase calcium a lot"',
+  kCaMistake1Why: 'Big Ca increases can spike EC and nitrate-N (if using Ca nitrate), and may not solve uptake issues if watering/airflow is poor.',
+  kCaMistake2Title: '"More K = more blooms, always"',
+  kCaMistake2Why: 'Past a point, extra K mainly increases salt stress + Ca suppression, hurting bloom quality.',
+  kCaMistake3Title: '"Symptoms = add more of everything"',
+  kCaMistake3Why: 'This raises EC and can make the imbalance worse.',
+
+  kCaWhenToAdjust: 'When to adjust',
+  kCaIncreaseKWhen: 'Increase K when:',
+  kCaIncreaseK1: 'Moving from vegetative \u2192 bud set / flowering, and Ca is already adequate',
+  kCaIncreaseK2: 'Plants are not filling/finishing well and K is genuinely low',
+  kCaIncreaseCaWhen: 'Increase Ca when:',
+  kCaIncreaseCa1: 'You want stronger new growth and better flower quality, especially in fast growth',
+  kCaIncreaseCa2: 'You\'re using higher K mixes and want to keep structure/quality',
+  kCaReduceKWhen: 'Reduce K when:',
+  kCaReduceK1: 'You\'ve been feeding bloom boosters repeatedly and see burn/tip issues or weak new growth',
+
+  kCaRealityCheck: 'Reality check',
+  kCaRealityCheckText: 'Even with a "good" K:Ca ratio, calcium problems can still happen if:',
+  kCaRealityCheck1: 'Watering is inconsistent (dry\u2013flood cycles)',
+  kCaRealityCheck2: 'Humidity is high / airflow is low',
+  kCaRealityCheck3: 'EC is high (overall salts high)',
+  kCaRealityCheckConclusion: 'Ca uptake depends heavily on water flow through the plant (transpiration).',
+
+  kCaYourCurrentRatio: 'Your Current K:Ca Ratio',
+  kCaOptimalRange: 'Optimal range is typically 1:1 to 2:1 for most crops. Higher ratios (up to 3:1) may be appropriate during flowering.',
+
+  // Warning message for low K:Ca ratio
+  warningMsgKCaRatioLow: 'K:Ca ratio is {ratio}:1 (Ca-heavy). When Ca significantly exceeds K, it may slow growth and reduce flowering response. Consider increasing K or reducing Ca.',
 };

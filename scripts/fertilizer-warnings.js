@@ -184,6 +184,13 @@
           category: i18n.t('warningCategoryKCaRatio'),
           message: i18n.t('warningMsgKCaRatioHigh', { ratio: i18n.formatNumber(kCaRatio.toFixed(2)) })
         });
+      } else if (kCaRatio < 0.5) {
+        // Very low K:Ca ratio (Ca-heavy) - may slow growth and reduce flowering
+        warnings.push({
+          level: 'info',
+          category: i18n.t('warningCategoryKCaRatio'),
+          message: i18n.t('warningMsgKCaRatioLow', { ratio: i18n.formatNumber(kCaRatio.toFixed(2)) })
+        });
       }
     }
 

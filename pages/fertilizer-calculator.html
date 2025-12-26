@@ -574,6 +574,133 @@ permalink: /fertilizer-calculator/
           </div>
         </template>
 
+        <!-- K:CA RATIO EXPLANATION MODAL -->
+        <template v-if="activeModal === 'k-ca-ratio'">
+          <!-- What is K:Ca ratio -->
+          <div class="explanation-section">
+            <h3>{{ i18n.t('whatIsKCaRatio') }}</h3>
+            <p v-html="i18n.t('kCaRatioExplanation')"></p>
+          </div>
+
+          <!-- Your current ratio -->
+          <div v-if="modalData.kCaRatio" class="explanation-section" :style="{ background: modalData.kCaStatus?.color + '22', borderLeftColor: modalData.kCaStatus?.color }">
+            <h3 :style="{ color: modalData.kCaStatus?.color }">{{ i18n.t('kCaYourCurrentRatio') }}</h3>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <div style="font-size: 2em; font-weight: bold;" :style="{ color: modalData.kCaStatus?.color }">
+                {{ i18n.formatNumber(modalData.kCaRatio) }} : 1
+              </div>
+              <div v-if="modalData.kCaStatus?.text" style="padding: 6px 12px; border-radius: 20px; font-weight: 500;" :style="{ background: modalData.kCaStatus?.color, color: 'white' }">
+                {{ modalData.kCaStatus.text }}
+              </div>
+            </div>
+            <p style="margin-top: 10px; color: #666;">{{ i18n.t('kCaOptimalRange') }}</p>
+          </div>
+
+          <!-- When K:Ca is too high -->
+          <div class="explanation-section" style="background: #fff3e0; border-left-color: #ff9800;">
+            <h3 style="color: #e65100;">{{ i18n.t('kCaWhenTooHigh') }}</h3>
+
+            <p><strong>{{ i18n.t('kCaHighSymptoms') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaHighSymptom1') }}</li>
+              <li>{{ i18n.t('kCaHighSymptom2') }}</li>
+              <li>{{ i18n.t('kCaHighSymptom3') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('kCaHighCauses') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaHighCause1') }}</li>
+              <li>{{ i18n.t('kCaHighCause2') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('kCaHighFixes') }}</strong></p>
+            <ul style="margin: 5px 0 10px 20px; line-height: 1.8;">
+              <li v-html="i18n.t('kCaHighFix1')"></li>
+              <li>{{ i18n.t('kCaHighFix2') }}</li>
+            </ul>
+            <p style="padding: 8px 12px; background: #ffebee; border-radius: 4px; color: #c62828; margin: 10px 0 0 0;">
+              <strong>{{ i18n.t('kCaHighFixWarning') }}</strong>
+            </p>
+          </div>
+
+          <!-- When K:Ca is too low -->
+          <div class="explanation-section" style="background: #e3f2fd; border-left-color: #2196f3;">
+            <h3 style="color: #1565c0;">{{ i18n.t('kCaWhenTooLow') }}</h3>
+
+            <p><strong>{{ i18n.t('kCaLowSymptoms') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaLowSymptom1') }}</li>
+              <li>{{ i18n.t('kCaLowSymptom2') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('kCaLowCauses') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaLowCause1') }}</li>
+              <li>{{ i18n.t('kCaLowCause2') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('kCaLowFixes') }}</strong></p>
+            <ul style="margin: 5px 0 0 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaLowFix1') }}</li>
+              <li>{{ i18n.t('kCaLowFix2') }}</li>
+            </ul>
+          </div>
+
+          <!-- Common mistakes -->
+          <div class="explanation-section" style="background: #ffebee; border-left-color: #f44336;">
+            <h3 style="color: #c62828;">{{ i18n.t('kCaCommonMistakes') }}</h3>
+
+            <div style="margin-bottom: 15px;">
+              <p style="font-weight: bold; margin-bottom: 5px;">{{ i18n.t('kCaMistake1Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('kCaMistake1Why') }}</p>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+              <p style="font-weight: bold; margin-bottom: 5px;">{{ i18n.t('kCaMistake2Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('kCaMistake2Why') }}</p>
+            </div>
+
+            <div>
+              <p style="font-weight: bold; margin-bottom: 5px;">{{ i18n.t('kCaMistake3Title') }}</p>
+              <p style="color: #666; margin: 0;">{{ i18n.t('kCaMistake3Why') }}</p>
+            </div>
+          </div>
+
+          <!-- When to adjust -->
+          <div class="explanation-section" style="background: #e8f5e9; border-left-color: #4caf50;">
+            <h3 style="color: #2e7d32;">{{ i18n.t('kCaWhenToAdjust') }}</h3>
+
+            <p><strong>{{ i18n.t('kCaIncreaseKWhen') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaIncreaseK1') }}</li>
+              <li>{{ i18n.t('kCaIncreaseK2') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('kCaIncreaseCaWhen') }}</strong></p>
+            <ul style="margin: 5px 0 15px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaIncreaseCa1') }}</li>
+              <li>{{ i18n.t('kCaIncreaseCa2') }}</li>
+            </ul>
+
+            <p><strong>{{ i18n.t('kCaReduceKWhen') }}</strong></p>
+            <ul style="margin: 5px 0 0 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaReduceK1') }}</li>
+            </ul>
+          </div>
+
+          <!-- Reality check -->
+          <div class="explanation-section" style="background: #f3e5f5; border-left-color: #9c27b0;">
+            <h3 style="color: #7b1fa2;">{{ i18n.t('kCaRealityCheck') }}</h3>
+            <p>{{ i18n.t('kCaRealityCheckText') }}</p>
+            <ul style="margin: 5px 0 10px 20px; line-height: 1.8;">
+              <li>{{ i18n.t('kCaRealityCheck1') }}</li>
+              <li>{{ i18n.t('kCaRealityCheck2') }}</li>
+              <li>{{ i18n.t('kCaRealityCheck3') }}</li>
+            </ul>
+            <p style="font-weight: 500; color: #7b1fa2;">{{ i18n.t('kCaRealityCheckConclusion') }}</p>
+          </div>
+        </template>
+
       </div>
     </div>
   </div>
@@ -1431,9 +1558,13 @@ permalink: /fertilizer-calculator/
                   <div style="font-size: 0.8em; color: #666;">N:Ca</div>
                   <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.nCa.ratio) }} : 1</div>
                 </div>
-                <div v-if="twoTankDisplayData.tankA.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
-                  <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankA.ratios.kCa.kLabel }}:Ca</div>
-                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.kCa.ratio) }} : 1</div>
+                <div v-if="twoTankDisplayData.tankA.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center; position: relative;" :style="twoTankDisplayData.tankA.ratios.kCa.status?.showWarning ? { borderLeft: '3px solid ' + twoTankDisplayData.tankA.ratios.kCa.status.color } : {}">
+                  <div style="font-size: 0.8em; color: #666; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    {{ twoTankDisplayData.tankA.ratios.kCa.kLabel }}:Ca
+                    <span class="info-icon" style="width: 16px; height: 16px; font-size: 10px; line-height: 16px;" @click="openKCaExplanation(twoTankDisplayData.tankA.ratios.kCa)" :title="i18n.t('clickToLearnKCa')">?</span>
+                  </div>
+                  <div style="font-size: 1.1em; font-weight: bold;" :style="{ color: twoTankDisplayData.tankA.ratios.kCa.status?.showWarning ? twoTankDisplayData.tankA.ratios.kCa.status.color : 'inherit' }">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.kCa.ratio) }} : 1</div>
+                  <div v-if="twoTankDisplayData.tankA.ratios.kCa.status?.showWarning" style="font-size: 0.7em; margin-top: 2px; font-weight: 500;" :style="{ color: twoTankDisplayData.tankA.ratios.kCa.status.color }">{{ twoTankDisplayData.tankA.ratios.kCa.status.text }}</div>
                 </div>
               </div>
             </div>
@@ -1520,9 +1651,13 @@ permalink: /fertilizer-calculator/
                   <div style="font-size: 0.8em; color: #666;">N:Ca</div>
                   <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.nCa.ratio) }} : 1</div>
                 </div>
-                <div v-if="twoTankDisplayData.tankB.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
-                  <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankB.ratios.kCa.kLabel }}:Ca</div>
-                  <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.kCa.ratio) }} : 1</div>
+                <div v-if="twoTankDisplayData.tankB.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center; position: relative;" :style="twoTankDisplayData.tankB.ratios.kCa.status?.showWarning ? { borderLeft: '3px solid ' + twoTankDisplayData.tankB.ratios.kCa.status.color } : {}">
+                  <div style="font-size: 0.8em; color: #666; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    {{ twoTankDisplayData.tankB.ratios.kCa.kLabel }}:Ca
+                    <span class="info-icon" style="width: 16px; height: 16px; font-size: 10px; line-height: 16px;" @click="openKCaExplanation(twoTankDisplayData.tankB.ratios.kCa)" :title="i18n.t('clickToLearnKCa')">?</span>
+                  </div>
+                  <div style="font-size: 1.1em; font-weight: bold;" :style="{ color: twoTankDisplayData.tankB.ratios.kCa.status?.showWarning ? twoTankDisplayData.tankB.ratios.kCa.status.color : 'inherit' }">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.kCa.ratio) }} : 1</div>
+                  <div v-if="twoTankDisplayData.tankB.ratios.kCa.status?.showWarning" style="font-size: 0.7em; margin-top: 2px; font-weight: 500;" :style="{ color: twoTankDisplayData.tankB.ratios.kCa.status.color }">{{ twoTankDisplayData.tankB.ratios.kCa.status.text }}</div>
                 </div>
               </div>
             </div>
@@ -2118,9 +2253,13 @@ permalink: /fertilizer-calculator/
             <div style="font-size: 0.8em; color: #666;">N:Ca</div>
             <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.nCa.ratio) }} : 1</div>
           </div>
-          <div v-if="twoTankDisplayData.tankA.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
-            <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankA.ratios.kCa.kLabel }}:Ca</div>
-            <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.kCa.ratio) }} : 1</div>
+          <div v-if="twoTankDisplayData.tankA.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center; position: relative;" :style="twoTankDisplayData.tankA.ratios.kCa.status?.showWarning ? { borderLeft: '3px solid ' + twoTankDisplayData.tankA.ratios.kCa.status.color } : {}">
+            <div style="font-size: 0.8em; color: #666; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              {{ twoTankDisplayData.tankA.ratios.kCa.kLabel }}:Ca
+              <span class="info-icon" style="width: 16px; height: 16px; font-size: 10px; line-height: 16px;" @click="openKCaExplanation(twoTankDisplayData.tankA.ratios.kCa)" :title="i18n.t('clickToLearnKCa')">?</span>
+            </div>
+            <div style="font-size: 1.1em; font-weight: bold;" :style="{ color: twoTankDisplayData.tankA.ratios.kCa.status?.showWarning ? twoTankDisplayData.tankA.ratios.kCa.status.color : 'inherit' }">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.kCa.ratio) }} : 1</div>
+            <div v-if="twoTankDisplayData.tankA.ratios.kCa.status?.showWarning" style="font-size: 0.7em; margin-top: 2px; font-weight: 500;" :style="{ color: twoTankDisplayData.tankA.ratios.kCa.status.color }">{{ twoTankDisplayData.tankA.ratios.kCa.status.text }}</div>
           </div>
         </div>
       </div>
@@ -2207,9 +2346,13 @@ permalink: /fertilizer-calculator/
             <div style="font-size: 0.8em; color: #666;">N:Ca</div>
             <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.nCa.ratio) }} : 1</div>
           </div>
-          <div v-if="twoTankDisplayData.tankB.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
-            <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankB.ratios.kCa.kLabel }}:Ca</div>
-            <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.kCa.ratio) }} : 1</div>
+          <div v-if="twoTankDisplayData.tankB.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center; position: relative;" :style="twoTankDisplayData.tankB.ratios.kCa.status?.showWarning ? { borderLeft: '3px solid ' + twoTankDisplayData.tankB.ratios.kCa.status.color } : {}">
+            <div style="font-size: 0.8em; color: #666; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              {{ twoTankDisplayData.tankB.ratios.kCa.kLabel }}:Ca
+              <span class="info-icon" style="width: 16px; height: 16px; font-size: 10px; line-height: 16px;" @click="openKCaExplanation(twoTankDisplayData.tankB.ratios.kCa)" :title="i18n.t('clickToLearnKCa')">?</span>
+            </div>
+            <div style="font-size: 1.1em; font-weight: bold;" :style="{ color: twoTankDisplayData.tankB.ratios.kCa.status?.showWarning ? twoTankDisplayData.tankB.ratios.kCa.status.color : 'inherit' }">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.kCa.ratio) }} : 1</div>
+            <div v-if="twoTankDisplayData.tankB.ratios.kCa.status?.showWarning" style="font-size: 0.7em; margin-top: 2px; font-weight: 500;" :style="{ color: twoTankDisplayData.tankB.ratios.kCa.status.color }">{{ twoTankDisplayData.tankB.ratios.kCa.status.text }}</div>
           </div>
         </div>
       </div>
@@ -3054,9 +3197,13 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 0.8em; color: #666;">N:Ca</div>
               <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.nCa.ratio) }} : 1</div>
             </div>
-            <div v-if="twoTankDisplayData.tankA.ratios && twoTankDisplayData.tankA.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
-              <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankA.ratios.kCa.kLabel }}:Ca</div>
-              <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.kCa.ratio) }} : 1</div>
+            <div v-if="twoTankDisplayData.tankA.ratios && twoTankDisplayData.tankA.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center; position: relative;" :style="twoTankDisplayData.tankA.ratios.kCa.status?.showWarning ? { borderLeft: '3px solid ' + twoTankDisplayData.tankA.ratios.kCa.status.color } : {}">
+              <div style="font-size: 0.8em; color: #666; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                {{ twoTankDisplayData.tankA.ratios.kCa.kLabel }}:Ca
+                <span class="info-icon" style="width: 16px; height: 16px; font-size: 10px; line-height: 16px;" @click="openKCaExplanation(twoTankDisplayData.tankA.ratios.kCa)" :title="i18n.t('clickToLearnKCa')">?</span>
+              </div>
+              <div style="font-size: 1.1em; font-weight: bold;" :style="{ color: twoTankDisplayData.tankA.ratios.kCa.status?.showWarning ? twoTankDisplayData.tankA.ratios.kCa.status.color : 'inherit' }">{{ i18n.formatNumber(twoTankDisplayData.tankA.ratios.kCa.ratio) }} : 1</div>
+              <div v-if="twoTankDisplayData.tankA.ratios.kCa.status?.showWarning" style="font-size: 0.7em; margin-top: 2px; font-weight: 500;" :style="{ color: twoTankDisplayData.tankA.ratios.kCa.status.color }">{{ twoTankDisplayData.tankA.ratios.kCa.status.text }}</div>
             </div>
           </div>
         </div>
@@ -3141,9 +3288,13 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 0.8em; color: #666;">N:Ca</div>
               <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.nCa.ratio) }} : 1</div>
             </div>
-            <div v-if="twoTankDisplayData.tankB.ratios && twoTankDisplayData.tankB.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center;">
-              <div style="font-size: 0.8em; color: #666;">{{ twoTankDisplayData.tankB.ratios.kCa.kLabel }}:Ca</div>
-              <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.kCa.ratio) }} : 1</div>
+            <div v-if="twoTankDisplayData.tankB.ratios && twoTankDisplayData.tankB.ratios.kCa" style="padding: 10px 15px; background: white; border-radius: 4px; text-align: center; position: relative;" :style="twoTankDisplayData.tankB.ratios.kCa.status?.showWarning ? { borderLeft: '3px solid ' + twoTankDisplayData.tankB.ratios.kCa.status.color } : {}">
+              <div style="font-size: 0.8em; color: #666; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                {{ twoTankDisplayData.tankB.ratios.kCa.kLabel }}:Ca
+                <span class="info-icon" style="width: 16px; height: 16px; font-size: 10px; line-height: 16px;" @click="openKCaExplanation(twoTankDisplayData.tankB.ratios.kCa)" :title="i18n.t('clickToLearnKCa')">?</span>
+              </div>
+              <div style="font-size: 1.1em; font-weight: bold;" :style="{ color: twoTankDisplayData.tankB.ratios.kCa.status?.showWarning ? twoTankDisplayData.tankB.ratios.kCa.status.color : 'inherit' }">{{ i18n.formatNumber(twoTankDisplayData.tankB.ratios.kCa.ratio) }} : 1</div>
+              <div v-if="twoTankDisplayData.tankB.ratios.kCa.status?.showWarning" style="font-size: 0.7em; margin-top: 2px; font-weight: 500;" :style="{ color: twoTankDisplayData.tankB.ratios.kCa.status.color }">{{ twoTankDisplayData.tankB.ratios.kCa.status.text }}</div>
             </div>
           </div>
         </div>
@@ -4092,6 +4243,62 @@ function getIonBalanceStatus(imbalance, useSymbols = true) {
     statusText = useSymbols ? i18n.t('imbalancedX') : i18n.t('imbalanced');
   }
   return { statusColor, statusText };
+}
+
+/**
+ * Determines K:Ca ratio warning status based on ratio value
+ * Returns status info including color, text, and level for UI display
+ * @param {number} ratio - K:Ca ratio value (K divided by Ca)
+ * @returns {Object} {color, text, level, showWarning} - Status info
+ */
+function getKCaWarningStatus(ratio) {
+  if (ratio === null || ratio === undefined || isNaN(ratio)) {
+    return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
+  }
+
+  // Very low K:Ca (< 0.5) - Ca-heavy, may slow growth
+  if (ratio < 0.5) {
+    return {
+      color: '#fd7e14',
+      text: i18n.t('kCaRatioStatusVeryLow'),
+      level: 'veryLow',
+      showWarning: true
+    };
+  }
+  // Low K:Ca (0.5 - 0.8) - Ca-heavy
+  if (ratio < 0.8) {
+    return {
+      color: '#ffc107',
+      text: i18n.t('kCaRatioStatusLow'),
+      level: 'low',
+      showWarning: true
+    };
+  }
+  // Good range (0.8 - 2.5) - Balanced
+  if (ratio <= 2.5) {
+    return {
+      color: '#28a745',
+      text: i18n.t('kCaRatioStatusGood'),
+      level: 'good',
+      showWarning: false
+    };
+  }
+  // High K:Ca (2.5 - 3.5) - K-heavy, caution
+  if (ratio <= 3.5) {
+    return {
+      color: '#ffc107',
+      text: i18n.t('kCaRatioStatusHigh'),
+      level: 'high',
+      showWarning: true
+    };
+  }
+  // Very high K:Ca (> 3.5) - Very K-heavy, likely Ca deficiency
+  return {
+    color: '#dc3545',
+    text: i18n.t('kCaRatioStatusVeryHigh'),
+    level: 'veryHigh',
+    showWarning: true
+  };
 }
 
 /**
@@ -6310,11 +6517,14 @@ const FertilizerApp = {
         displayTank.ratios.nCa = { ratio: (nutrients.N_total / nutrients.Ca).toFixed(2) };
       }
 
-      // K:Ca ratio
+      // K:Ca ratio with warning status
       if (kVal > 0.1 && nutrients.Ca > 0.1) {
+        const kCaRatio = kVal / nutrients.Ca;
+        const kCaStatus = getKCaWarningStatus(kCaRatio);
         displayTank.ratios.kCa = {
-          ratio: (kVal / nutrients.Ca).toFixed(2),
-          kLabel: mode === 'elemental' ? 'K' : 'K₂O'
+          ratio: kCaRatio.toFixed(2),
+          kLabel: mode === 'elemental' ? 'K' : 'K₂O',
+          status: kCaStatus
         };
       }
 
@@ -6480,7 +6690,8 @@ const FertilizerApp = {
         'reverse-ppm': i18n.t('understandingPpmCalculations') || 'Understanding PPM Calculations',
         'reverse-ion': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
         'formula-ion': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
-        'ec': i18n.t('ecExplanationTitle') || 'EC Prediction Explained'
+        'ec': i18n.t('ecExplanationTitle') || 'EC Prediction Explained',
+        'k-ca-ratio': i18n.t('understandingKCaRatio') || 'Understanding K:Ca Ratio'
       };
       return titles[activeModal.value] || 'Explanation';
     });
@@ -6736,6 +6947,16 @@ const FertilizerApp = {
         ec: ecPrediction?.ec || 0
       };
       openModal('ec', data);
+    }
+
+    // Open K:Ca ratio explanation modal with current ratio data
+    function openKCaExplanation(kCaData) {
+      const ratio = kCaData?.ratio ? parseFloat(kCaData.ratio) : null;
+      const status = kCaData?.status || (ratio ? getKCaWarningStatus(ratio) : null);
+      openModal('k-ca-ratio', {
+        kCaRatio: ratio,
+        kCaStatus: status
+      });
     }
 
     function openReversePPMExplanation() {
@@ -7339,6 +7560,8 @@ const FertilizerApp = {
       openPPMExplanation,
       openIonBalanceExplanation,
       openEcExplanation,
+      openKCaExplanation,
+      getKCaWarningStatus,
       openReversePPMExplanation,
       openReverseIonBalanceExplanation,
       openReverseEcExplanation,
