@@ -1309,8 +1309,8 @@ permalink: /fertilizer-calculator/
         </div>
       </div>
 
-      <!-- Stock Solution Maker -->
-      <div class="mode-card" @click="selectMode('stock-solution')">
+      <!-- Stock Solution Maker - DISABLED -->
+      <div class="mode-card" style="display: none;" @click="selectMode('stock-solution')">
         <h3>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 2v4"></path>
@@ -2230,25 +2230,116 @@ permalink: /fertilizer-calculator/
             </table>
           </div>
 
-          <!-- Achieved PPM per Target -->
-          <div v-if="stockResultsData.achievedPPM && Object.keys(stockResultsData.achievedPPM).length > 0" class="stock-achieved-ppm" style="margin-top: 25px;">
-            <h3>{{ i18n.t('achievedNutrients') || 'Achieved Nutrients' }}</h3>
-            <div v-for="(ppm, targetName) in stockResultsData.achievedPPM" :key="targetName" style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-              <h4 style="margin: 0 0 10px 0;">{{ targetName }}</h4>
-              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <span v-for="(value, nutrient) in ppm" :key="nutrient" style="padding: 5px 12px; background: white; border-radius: 4px; border: 1px solid #dee2e6;">
-                  <strong>{{ nutrient }}:</strong> {{ i18n.formatNumber((value || 0).toFixed(1)) }} ppm
-                </span>
+          <!-- Target Results: Achieved PPM, EC, and Comparison -->
+          <div v-if="stockResultsData.dosingTable && stockResultsData.dosingTable.length > 0" class="stock-target-results" style="margin-top: 25px;">
+            <h3>{{ i18n.t('targetResults') || 'Target Results' }}</h3>
+
+            <div v-for="(dosing, idx) in stockResultsData.dosingTable" :key="idx" class="stock-target-result-card" style="margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+              <!-- Target Header -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: #007bff;">{{ dosing.targetName }}</h4>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                  <span style="padding: 5px 12px; background: white; border-radius: 4px; border: 1px solid #007bff;">
+                    <strong>{{ i18n.t('targetECLabel') || 'Target EC' }}:</strong> {{ dosing.ec }} mS/cm
+                  </span>
+                  <span v-if="dosing.predicted && dosing.predicted.EC" style="padding: 5px 12px; border-radius: 4px;"
+                        :style="{ background: Math.abs(dosing.predicted.EC - dosing.ec) / dosing.ec < 0.05 ? '#d4edda' : '#fff3cd',
+                                  border: '1px solid ' + (Math.abs(dosing.predicted.EC - dosing.ec) / dosing.ec < 0.05 ? '#28a745' : '#ffc107') }">
+                    <strong>{{ i18n.t('achievedEC') || 'Achieved' }}:</strong> {{ i18n.formatNumber((dosing.predicted.EC || 0).toFixed(2)) }} mS/cm
+                    <span :style="{ color: Math.abs(dosing.predicted.EC - dosing.ec) / dosing.ec < 0.05 ? '#28a745' : '#ffc107' }">
+                      {{ Math.abs(dosing.predicted.EC - dosing.ec) / dosing.ec < 0.05 ? '✓' : '~' }}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Target vs Achieved Nutrients -->
+              <div v-if="dosing.predicted && dosing.predicted.nutrients" style="margin-bottom: 15px;">
+                <div style="font-size: 0.9em; color: #666; margin-bottom: 8px;">{{ i18n.t('achievedNutrients') || 'Achieved Nutrients' }} (ppm):</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                  <template v-for="nutrient in ['N', 'P', 'K', 'Ca', 'Mg', 'S']" :key="nutrient">
+                    <div v-if="dosing.predicted.nutrients[nutrient] > 0 || (dosing.predicted.ratio && dosing.predicted.ratio[nutrient] > 0)"
+                         style="padding: 8px 12px; background: white; border-radius: 6px; text-align: center; min-width: 70px;"
+                         :style="{ borderLeft: '3px solid ' + (dosing.predicted.ratio && dosing.predicted.ratio[nutrient] > 0 ? '#007bff' : '#ddd') }">
+                      <div style="font-size: 0.8em; color: #666;">{{ nutrient }}</div>
+                      <div style="font-size: 1.1em; font-weight: bold;">{{ i18n.formatNumber((dosing.predicted.nutrients[nutrient] || 0).toFixed(1)) }}</div>
+                      <div v-if="dosing.predicted.ratio && dosing.predicted.ratio[nutrient] > 0" style="font-size: 0.75em; color: #888;">
+                        ratio: {{ dosing.predicted.ratio[nutrient] }}
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Ion Balance for this target -->
+              <div v-if="dosing.predicted && dosing.predicted.ionBalance && dosing.predicted.ionBalance.cations > 0" style="margin-bottom: 15px;">
+                <div style="font-size: 0.9em; color: #666; margin-bottom: 8px;">{{ i18n.t('ionBalance') || 'Ion Balance' }}:</div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                  <span style="padding: 5px 10px; background: #e3f2fd; border-radius: 4px;">
+                    <strong style="color: #1976d2;">+</strong> {{ i18n.formatNumber((dosing.predicted.ionBalance.cations || 0).toFixed(2)) }} meq/L
+                  </span>
+                  <span style="color: #666;">vs</span>
+                  <span style="padding: 5px 10px; background: #fce4ec; border-radius: 4px;">
+                    <strong style="color: #c2185b;">−</strong> {{ i18n.formatNumber((dosing.predicted.ionBalance.anions || 0).toFixed(2)) }} meq/L
+                  </span>
+                  <span style="padding: 5px 10px; border-radius: 4px;"
+                        :style="{ background: (dosing.predicted.ionBalance.imbalance || 0) < 10 ? '#d4edda' : (dosing.predicted.ionBalance.imbalance || 0) < 20 ? '#fff3cd' : '#f8d7da' }">
+                    {{ i18n.t('imbalance') || 'Imbalance' }}: {{ i18n.formatNumber((dosing.predicted.ionBalance.imbalance || 0).toFixed(1)) }}%
+                  </span>
+                </div>
+              </div>
+
+              <!-- Per-target warnings -->
+              <div v-if="dosing.warnings && dosing.warnings.length > 0">
+                <div v-for="(warning, wIdx) in dosing.warnings" :key="wIdx"
+                     :class="warning.level === 'warning' ? 'warning-box' : warning.level === 'error' ? 'error-box' : 'conversion-note'"
+                     style="margin-top: 10px; padding: 10px; font-size: 0.9em;">
+                  <strong>{{ warning.level === 'warning' ? '⚠️' : warning.level === 'error' ? '❌' : 'ℹ️' }}</strong>
+                  {{ warning.message }}
+                  <!-- Show ratio mismatch details -->
+                  <div v-if="warning.code === 'RATIO_MISMATCH' && warning.details" style="margin-top: 8px; font-size: 0.85em;">
+                    <div v-for="(err, nutrient) in warning.details" :key="nutrient" style="padding: 3px 0;">
+                      <strong>{{ nutrient }}:</strong>
+                      target ratio {{ i18n.formatNumber((err.target || 0).toFixed(2)) }} →
+                      achieved {{ i18n.formatNumber((err.achieved || 0).toFixed(2)) }}
+                      <span style="color: #dc3545;">({{ i18n.formatNumber(((err.error || 0) * 100).toFixed(1)) }}% off)</span>
+                    </div>
+                  </div>
+                  <!-- Show dosing details -->
+                  <div v-if="warning.code === 'DOSING_EXCEEDS_MAX' && warning.details" style="margin-top: 5px; font-size: 0.85em; color: #666;">
+                    Required: {{ i18n.formatNumber((warning.details.required || 0).toFixed(1)) }} mL/L,
+                    Max allowed: {{ i18n.formatNumber((warning.details.max || 0).toFixed(1)) }} mL/L
+                  </div>
+                  <!-- Show EC mismatch details -->
+                  <div v-if="warning.code === 'EC_MISMATCH' && warning.details" style="margin-top: 5px; font-size: 0.85em; color: #666;">
+                    Target: {{ i18n.formatNumber((warning.details.target || 0).toFixed(2)) }} mS/cm,
+                    Predicted: {{ i18n.formatNumber((warning.details.predicted || 0).toFixed(2)) }} mS/cm
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Warnings -->
+          <!-- Global Warnings -->
           <div v-if="stockResultsData.warnings && stockResultsData.warnings.length > 0" class="results-section" style="margin-top: 20px;">
             <h3>{{ i18n.t('warningsAndRecommendations') }}</h3>
             <div v-for="(warning, idx) in stockResultsData.warnings" :key="idx" :class="warning.level === 'warning' ? 'warning-box' : warning.level === 'error' ? 'error-box' : 'conversion-note'" style="margin-bottom: 10px;">
               <strong>{{ warning.level === 'warning' ? '⚠️' : warning.level === 'error' ? '❌' : 'ℹ️' }} {{ warning.category }}</strong><br>
               {{ warning.message }}
+              <!-- Show detailed info for RATIO_MISMATCH -->
+              <div v-if="warning.code === 'RATIO_MISMATCH' && warning.details" style="margin-top: 8px; font-size: 0.9em;">
+                <div v-for="(err, nutrient) in warning.details" :key="nutrient" style="padding: 3px 0;">
+                  <strong>{{ nutrient }}:</strong>
+                  target ratio {{ i18n.formatNumber((err.target || 0).toFixed(2)) }} →
+                  achieved {{ i18n.formatNumber((err.achieved || 0).toFixed(2)) }}
+                  <span style="color: #dc3545;">({{ i18n.formatNumber(((err.error || 0) * 100).toFixed(1)) }}% off)</span>
+                </div>
+              </div>
+              <!-- Show solubility details -->
+              <div v-if="warning.code === 'SOLUBILITY_EXCEEDED' && warning.details" style="margin-top: 5px; font-size: 0.9em; color: #666;">
+                Required: {{ i18n.formatNumber((warning.details.required_gL || 0).toFixed(1)) }} g/L,
+                Max solubility: {{ i18n.formatNumber((warning.details.max_gL || 0).toFixed(0)) }} g/L
+              </div>
             </div>
           </div>
         </div>
@@ -8618,7 +8709,14 @@ const FertilizerApp = {
           });
           stockResultsData.dosingTable = dosingTable;
           stockResultsData.warnings = result.warnings || [];
-          stockResultsData.achievedPPM = result.achievedPPM || {};
+          // Build achievedPPM from dosing table's predicted nutrients
+          const achievedPPM = {};
+          dosingTable.forEach(d => {
+            if (d.predicted && d.predicted.nutrients) {
+              achievedPPM[d.targetName] = d.predicted.nutrients;
+            }
+          });
+          stockResultsData.achievedPPM = Object.keys(achievedPPM).length > 0 ? achievedPPM : (result.achievedPPM || {});
           stockResultsData.settings = {
             concentrationFactor: stockSettings.concentrationFactor,
             tankVolume: stockSettings.tankVolume,
