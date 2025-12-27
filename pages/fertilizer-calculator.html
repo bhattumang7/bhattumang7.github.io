@@ -1667,11 +1667,11 @@ permalink: /fertilizer-calculator/
     </div>
   </div>
 
-  <!-- Stock Solution: Target Ratios Step -->
+  <!-- Stock Solution: Target Nutrient Ratios Step -->
   <div id="stock-targets-step" class="wizard-input-step" :class="{ active: wizardStep === 'stock-targets-step' }">
     <div class="step-indicator">{{ getStepIndicator('stock-targets-step') }}</div>
-    <h3 data-i18n="stockTargetsTitle">Define Target Ratios</h3>
-    <p data-i18n="stockTargetsDescription">Add the nutrient ratios and EC levels you want to achieve. The same stock solutions will serve all targets by varying dosing.</p>
+    <h3 data-i18n="stockTargetsTitle">Define Target Nutrient Ratios</h3>
+    <p data-i18n="stockTargetsDescription">Enter the nutrient ratio values (N, P, K, Ca, Mg) and EC levels you want to achieve. The same stock solutions will serve all targets by varying dosing.</p>
 
     <div class="stock-targets-list">
       <div v-for="(target, index) in stockTargets" :key="index" class="stock-target-card">
@@ -1679,12 +1679,30 @@ permalink: /fertilizer-calculator/
           <span class="stock-target-number">{{ i18n.t('targetNumber', { n: index + 1 }) || ('Target ' + (index + 1)) }}</span>
           <button v-if="stockTargets.length > 1" class="stock-target-remove" @click="removeStockTarget(index)" :title="i18n.t('remove')">×</button>
         </div>
-        <div class="stock-target-row">
-          <div class="stock-target-field">
-            <label>{{ i18n.t('ratioLabel') || 'Ratio' }} (N:P:K)</label>
-            <input type="text" v-model="target.ratio" placeholder="3:1:2" @input="validateStockRatio(index)">
-            <span v-if="target.ratioError" class="stock-target-error">{{ target.ratioError }}</span>
+        <div class="stock-target-row stock-target-ratio-row">
+          <div class="stock-target-field stock-ratio-field">
+            <label>N</label>
+            <input type="number" v-model.number="target.n" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
           </div>
+          <div class="stock-target-field stock-ratio-field">
+            <label>P</label>
+            <input type="number" v-model.number="target.p" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+          </div>
+          <div class="stock-target-field stock-ratio-field">
+            <label>K</label>
+            <input type="number" v-model.number="target.k" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+          </div>
+          <div class="stock-target-field stock-ratio-field">
+            <label>Ca</label>
+            <input type="number" v-model.number="target.ca" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+          </div>
+          <div class="stock-target-field stock-ratio-field">
+            <label>Mg</label>
+            <input type="number" v-model.number="target.mg" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+          </div>
+          <span v-if="target.ratioError" class="stock-target-error">{{ target.ratioError }}</span>
+        </div>
+        <div class="stock-target-row">
           <div class="stock-target-field">
             <label>{{ i18n.t('targetECLabel') || 'Target EC' }}</label>
             <select v-model="target.ec">
@@ -5971,8 +5989,8 @@ const FertilizerApp = {
       maxDosing: 10              // max mL/L dosing per tank
     });
     const stockTargets = reactive([
-      { ratio: '3:1:2', ec: '1.5', name: 'Veg', ratioError: null },
-      { ratio: '1:2:3', ec: '2.0', name: 'Flower', ratioError: null }
+      { n: 3, p: 1, k: 2, ca: '', mg: '', ec: '1.5', name: 'Veg', ratioError: null },
+      { n: 1, p: 2, k: 3, ca: '', mg: '', ec: '2.0', name: 'Flower', ratioError: null }
     ]);
     const stockSelectedFertilizers = reactive({}); // { fertilizer_id: checked }
     const stockFertilizerSearch = ref('');
@@ -8409,7 +8427,7 @@ const FertilizerApp = {
     // Add a new target ratio
     function addStockTarget() {
       if (stockTargets.length < 6) {
-        stockTargets.push({ ratio: '', ec: '1.5', name: '', ratioError: null });
+        stockTargets.push({ n: '', p: '', k: '', ca: '', mg: '', ec: '1.5', name: '', ratioError: null });
       }
     }
 
@@ -8420,20 +8438,10 @@ const FertilizerApp = {
       }
     }
 
-    // Validate stock ratio input
+    // Validate stock ratio input - checks if at least one nutrient value is set
     function validateStockRatio(index) {
       const target = stockTargets[index];
-      const ratio = target.ratio.trim();
-      if (!ratio) {
-        target.ratioError = null;
-        return true;
-      }
-      // Parse ratio - supports "3:1:2" or "N3:P1:K2" formats
-      const parseResult = FertilizerCore.parseRatio ? FertilizerCore.parseRatio(ratio) : null;
-      if (!parseResult || parseResult.error) {
-        target.ratioError = i18n.t('invalidRatioFormat') || 'Invalid ratio format';
-        return false;
-      }
+      // Clear error - numeric inputs don't need the same validation as string parsing
       target.ratioError = null;
       return true;
     }
@@ -8459,21 +8467,18 @@ const FertilizerApp = {
 
     // Proceed from stock targets step
     function proceedFromStockTargets() {
-      // Validate targets
-      const validTargets = stockTargets.filter(t => t.ratio.trim());
+      // Validate targets - check if at least one target has a non-zero nutrient value
+      const hasValidTarget = (t) => {
+        const n = parseFloat(t.n) || 0;
+        const p = parseFloat(t.p) || 0;
+        const k = parseFloat(t.k) || 0;
+        const ca = parseFloat(t.ca) || 0;
+        const mg = parseFloat(t.mg) || 0;
+        return n > 0 || p > 0 || k > 0 || ca > 0 || mg > 0;
+      };
+      const validTargets = stockTargets.filter(hasValidTarget);
       if (validTargets.length === 0) {
-        alert(i18n.t('alertEnterAtLeastOneRatio') || 'Enter at least one target ratio');
-        return;
-      }
-      // Validate all ratios
-      let hasError = false;
-      stockTargets.forEach((t, i) => {
-        if (t.ratio.trim() && !validateStockRatio(i)) {
-          hasError = true;
-        }
-      });
-      if (hasError) {
-        alert(i18n.t('alertFixRatioErrors') || 'Please fix the ratio errors before continuing');
+        alert(i18n.t('alertEnterAtLeastOneRatio') || 'Enter at least one target with nutrient values');
         return;
       }
       // Initialize fertilizers if not done
@@ -8497,26 +8502,29 @@ const FertilizerApp = {
         return;
       }
 
-      // Get valid targets - map to expected format with targetEC property
+      // Get valid targets - build ratio from separate N, P, K, Ca, Mg fields
       const validTargets = stockTargets
-        .filter(t => t.ratio.trim())
         .map((t, idx) => {
-          const parseResult = FertilizerCore.parseRatio ? FertilizerCore.parseRatio(t.ratio) : null;
-          // Check if parsing succeeded and ratio has at least one non-zero value
-          const ratio = (parseResult && parseResult.ratio) ? parseResult.ratio : null;
+          // Build ratio object from separate fields
+          const ratio = {
+            N: parseFloat(t.n) || 0,
+            P: parseFloat(t.p) || 0,
+            K: parseFloat(t.k) || 0,
+            Ca: parseFloat(t.ca) || 0,
+            Mg: parseFloat(t.mg) || 0,
+            S: 0
+          };
           const name = t.name || ('Target ' + (idx + 1));
           return {
             id: 'target_' + idx,  // Core function expects id field
             ratio,
             targetEC: parseFloat(t.ec) || 1.5,
             baselineEC: stockSettings.baselineEC || 0,
-            name: name,
-            parseError: parseResult ? parseResult.error : 'Parse function not available'
+            name: name
           };
         })
         .filter(t => {
-          // Filter out targets with parsing errors or all-zero ratios
-          if (!t.ratio) return false;
+          // Filter out targets with all-zero ratios
           const hasNonZero = Object.values(t.ratio).some(v => v > 0);
           return hasNonZero;
         });

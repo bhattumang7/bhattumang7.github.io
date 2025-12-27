@@ -2453,6 +2453,30 @@
   gap: 15px;
 }
 
+.stock-target-ratio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stock-ratio-field {
+  flex: 1;
+  min-width: 60px;
+  max-width: 80px;
+}
+
+.stock-ratio-field label {
+  text-align: center;
+  font-weight: 600;
+  color: #007bff;
+}
+
+.stock-ratio-field input {
+  text-align: center;
+  padding: 8px 4px;
+}
+
 .stock-target-field label {
   display: block;
   font-size: 0.85em;
@@ -2535,6 +2559,15 @@
   .stock-target-row {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+
+  .stock-target-ratio-row {
+    justify-content: center;
+  }
+
+  .stock-ratio-field {
+    min-width: 50px;
+    max-width: 60px;
   }
 
   .stock-dosing-table {
