@@ -24,6 +24,35 @@ window.i18nLocales.en = {
   ppmToGramsUseCase: 'You have specific PPM targets (e.g., from a recipe or plant requirements) and need to know how much of each fertilizer to use.',
   npkRatioUseCase: 'You know the nutrient ratio you want (e.g., for a specific growth stage) and want to scale it to your desired EC/strength.',
 
+  // Stock Solution Maker mode
+  stockSolutionMaker: 'Stock Solution Maker',
+  stockSolutionMakerDescription: 'Create concentrated stock solutions that can serve multiple growth stages by varying the dosing amounts.',
+  stockSolutionUseCase: 'You want to pre-mix concentrated stock solutions that can serve multiple growth stages by varying the dosing amounts.',
+
+  // Stock Solution Settings step
+  stockSettingsTitle: 'Stock Solution Settings',
+  stockSettingsDescription: 'Configure your stock solution parameters. These settings apply to all tanks.',
+  stockConcentrationLabel: 'Concentration Factor',
+  stockConcentrationHint: 'How many times concentrated (typically 100× or 200×)',
+  stockTankVolumeLabel: 'Stock Tank Volume',
+  stockTankVolumeHint: 'Volume of each stock tank you\'ll prepare',
+  stockBaselineECLabel: 'Baseline Water EC (optional)',
+  stockBaselineECHint: 'EC of your source water (leave 0 for RO water)',
+  stockMaxDosingLabel: 'Max Dosing Volume',
+  stockMaxDosingHint: 'Maximum dosing per tank (affects concentration)',
+
+  // Stock Solution Targets step
+  stockTargetsTitle: 'Define Target Ratios',
+  stockTargetsDescription: 'Add the nutrient ratios and EC levels you want to achieve. The same stock solutions will serve all targets by varying dosing.',
+
+  // Stock Solution Fertilizer step
+  stockFertilizerTitle: 'Select Fertilizers',
+  stockFertilizerDescription: 'Choose the fertilizers available for your stock solutions. The calculator will determine optimal amounts.',
+
+  // Stock Solution Results
+  stockSolutionRecipe: 'Stock Solution Recipe',
+  stockSettings: 'Stock Solution Settings',
+
   // Volume step (Step 2)
   howMuchSolution: 'How much solution are you making?',
   volumeDescription: 'Enter the total volume of water you\'ll be mixing your fertilizers into.',
