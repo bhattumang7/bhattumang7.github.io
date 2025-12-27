@@ -1266,15 +1266,784 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 };
 
 // =============================================================================
+// STOCK SOLUTION MAKER
+// =============================================================================
+// Creates shared stock solutions that can achieve multiple target ratios
+// by varying dosing. Implements Progressive-K algorithm for minimal tanks.
+
+/**
+ * Get solubility limit for a fertilizer (g/L at 20°C)
+ * @param {string} fertId - Fertilizer ID
+ * @returns {number} Solubility in g/L
+ */
+window.FertilizerCore.getSolubility = function(fertId) {
+  const fert = this.FERTILIZERS.find(f => f.id === fertId);
+  return fert?.solubility_gL ?? this.DEFAULT_SOLUBILITY_GL;
+};
+
+/**
+ * Get compatibility tag for a fertilizer
+ * @param {string} fertId - Fertilizer ID
+ * @returns {string} 'calcium' | 'phosphate' | 'sulfate' | 'silicate' | 'neutral'
+ */
+window.FertilizerCore.getCompatibilityTag = function(fertId) {
+  const compat = this.FERTILIZER_COMPATIBILITY;
+  if (compat.calcium_sources.includes(fertId)) return 'calcium';
+  if (compat.phosphate_sources.includes(fertId)) return 'phosphate';
+  if (compat.sulfate_sources.includes(fertId)) return 'sulfate';
+  if (compat.silicate_sources.includes(fertId)) return 'silicate';
+  return 'neutral';
+};
+
+/**
+ * Parse ratio string into object
+ * Supports: "2:1:3" (positional N:P:K:Ca:Mg) or "N2:P1:K3" (labeled)
+ * @param {string} input - Ratio string
+ * @returns {Object} { ratio: {N,P,K,Ca,Mg,S}, error?: string }
+ */
+window.FertilizerCore.parseRatio = function(input) {
+  if (!input || typeof input !== 'string') {
+    return { error: 'Invalid input: expected ratio string' };
+  }
+
+  const cleaned = input.trim().replace(/\s+/g, '');
+  if (!cleaned) {
+    return { error: 'Empty ratio string' };
+  }
+
+  const ratio = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+
+  // Check if labeled format (contains letters before numbers)
+  const labeledPattern = /^([A-Za-z]+[\d.]+:?)+$/;
+  const isLabeled = labeledPattern.test(cleaned);
+
+  if (isLabeled) {
+    // Labeled format: "N2:P1:K3:Ca0.5"
+    const parts = cleaned.split(':').filter(Boolean);
+    for (const part of parts) {
+      const match = part.match(/^([A-Za-z]+)([\d.]+)$/);
+      if (!match) {
+        return { error: `Invalid labeled format: ${part}` };
+      }
+      const label = match[1].toUpperCase();
+      const value = parseFloat(match[2]);
+      if (isNaN(value)) {
+        return { error: `Invalid number: ${match[2]}` };
+      }
+      // Map common labels
+      const labelMap = { N: 'N', P: 'P', K: 'K', CA: 'Ca', MG: 'Mg', S: 'S' };
+      const key = labelMap[label];
+      if (!key) {
+        return { error: `Unknown nutrient label: ${label}` };
+      }
+      ratio[key] = value;
+    }
+  } else {
+    // Positional format: "2:1:3" or "2:1:3:1:0.5"
+    const parts = cleaned.split(':');
+    const order = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+    for (let i = 0; i < parts.length && i < order.length; i++) {
+      const value = parseFloat(parts[i]);
+      if (isNaN(value)) {
+        return { error: `Invalid number at position ${i + 1}: ${parts[i]}` };
+      }
+      ratio[order[i]] = value;
+    }
+  }
+
+  return { ratio };
+};
+
+/**
+ * Calculate elemental PPM contribution from 1 gram of fertilizer per liter
+ * @param {Object} fert - Fertilizer object with pct
+ * @returns {Object} { N, P, K, Ca, Mg, S } in ppm per gram per liter
+ */
+window.FertilizerCore.getElementalContributionPerGram = function(fert) {
+  const OXIDE = this.OXIDE_CONVERSIONS;
+  const contrib = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+  const pct = fert.pct || {};
+
+  // Nitrogen: sum all N forms
+  const hasNForms = pct.N_NO3 || pct.N_NH4;
+  if (hasNForms) {
+    contrib.N = ((pct.N_NO3 || 0) + (pct.N_NH4 || 0)) * 10; // % * 10 = ppm per g/L
+  } else if (pct.N_total) {
+    contrib.N = pct.N_total * 10;
+  }
+
+  // Phosphorus
+  if (pct.P) {
+    contrib.P = pct.P * 10;
+  } else if (pct.P2O5) {
+    contrib.P = pct.P2O5 * 10 * OXIDE.P2O5_to_P;
+  }
+
+  // Potassium
+  if (pct.K) {
+    contrib.K = pct.K * 10;
+  } else if (pct.K2O) {
+    contrib.K = pct.K2O * 10 * OXIDE.K2O_to_K;
+  }
+
+  // Calcium
+  if (pct.Ca) {
+    contrib.Ca = pct.Ca * 10;
+  } else if (pct.CaO) {
+    contrib.Ca = pct.CaO * 10 * OXIDE.CaO_to_Ca;
+  }
+
+  // Magnesium
+  if (pct.Mg) {
+    contrib.Mg = pct.Mg * 10;
+  } else if (pct.MgO) {
+    contrib.Mg = pct.MgO * 10 * OXIDE.MgO_to_Mg;
+  }
+
+  // Sulfur
+  if (pct.S) {
+    contrib.S = pct.S * 10;
+  } else if (pct.SO3) {
+    contrib.S = pct.SO3 * 10 * OXIDE.SO3_to_S;
+  }
+
+  return contrib;
+};
+
+/**
+ * Assign fertilizers to tanks based on compatibility rules
+ * @param {Object} formula - { fertId: grams } for final solution
+ * @param {number} numTanks - Number of tanks (2, 3, or 4)
+ * @returns {Object} { A: {...}, B: {...}, C?: {...}, D?: {...} }
+ */
+window.FertilizerCore.assignToTanks = function(formula, numTanks = 2) {
+  const tanks = { A: {}, B: {} };
+  if (numTanks >= 3) tanks.C = {};
+  if (numTanks >= 4) tanks.D = {};
+
+  for (const [fertId, grams] of Object.entries(formula)) {
+    if (!grams || grams <= 0) continue;
+
+    const tag = this.getCompatibilityTag(fertId);
+
+    switch (tag) {
+      case 'calcium':
+        // Ca goes to Tank A (isolated from phosphate/sulfate)
+        tanks.A[fertId] = grams;
+        break;
+      case 'phosphate':
+      case 'sulfate':
+        // Phosphate and sulfate go to Tank B
+        tanks.B[fertId] = grams;
+        break;
+      case 'silicate':
+        // Silicate goes to Tank C if available, otherwise B
+        if (tanks.C) {
+          tanks.C[fertId] = grams;
+        } else {
+          tanks.B[fertId] = grams;
+        }
+        break;
+      case 'neutral':
+      default:
+        // Neutral fertilizers go to Tank B (or A if B is empty)
+        tanks.B[fertId] = grams;
+        break;
+    }
+  }
+
+  return tanks;
+};
+
+/**
+ * Check if a tank's stock composition is feasible (solubility)
+ * @param {Object} tankFormula - { fertId: g/L in stock }
+ * @returns {Object} { feasible: boolean, issues: [] }
+ */
+window.FertilizerCore.checkTankFeasibility = function(tankFormula) {
+  const issues = [];
+
+  for (const [fertId, gL] of Object.entries(tankFormula)) {
+    if (!gL || gL <= 0) continue;
+
+    const solubility = this.getSolubility(fertId);
+    const pctUsed = (gL / solubility) * 100;
+
+    if (gL > solubility) {
+      const fert = this.FERTILIZERS.find(f => f.id === fertId);
+      issues.push({
+        level: 'error',
+        code: 'SOLUBILITY_EXCEEDED',
+        message: `${fert?.name || fertId} requires ${gL.toFixed(1)} g/L but max solubility is ${solubility} g/L`,
+        details: { fertilizer: fertId, required_gL: gL, max_gL: solubility, pctUsed }
+      });
+    } else if (pctUsed > 80) {
+      const fert = this.FERTILIZERS.find(f => f.id === fertId);
+      issues.push({
+        level: 'warning',
+        code: 'SOLUBILITY_NEAR_LIMIT',
+        message: `${fert?.name || fertId} at ${pctUsed.toFixed(0)}% of solubility limit`,
+        details: { fertilizer: fertId, required_gL: gL, max_gL: solubility, pctUsed }
+      });
+    }
+  }
+
+  return {
+    feasible: !issues.some(i => i.level === 'error'),
+    issues
+  };
+};
+
+/**
+ * Calculate PPM achieved from stock compositions and dosing
+ * @param {Object} tanks - { A: {fertId: g/L}, B: {...}, ... }
+ * @param {Object} dosing - { A: mL/L, B: mL/L, ... }
+ * @returns {Object} { N, P, K, Ca, Mg, S } in ppm
+ */
+window.FertilizerCore.calculateAchievedPPM = function(tanks, dosing) {
+  const achieved = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+
+  for (const [tankId, tankFormula] of Object.entries(tanks)) {
+    const dose_mL = dosing[tankId] || 0;
+    if (dose_mL <= 0) continue;
+
+    for (const [fertId, stock_gL] of Object.entries(tankFormula)) {
+      if (!stock_gL || stock_gL <= 0) continue;
+
+      const fert = this.FERTILIZERS.find(f => f.id === fertId);
+      if (!fert) continue;
+
+      const contribPerGram = this.getElementalContributionPerGram(fert);
+      // stock_gL = grams per liter of stock
+      // dose_mL = mL of stock per liter of final
+      // grams in final = stock_gL * dose_mL / 1000
+      const gramsInFinal = stock_gL * dose_mL / 1000;
+
+      for (const nutrient of Object.keys(achieved)) {
+        achieved[nutrient] += contribPerGram[nutrient] * gramsInFinal;
+      }
+    }
+  }
+
+  return achieved;
+};
+
+/**
+ * Check if achieved PPM matches target ratio within tolerance
+ * @param {Object} achieved - { N, P, K, Ca, Mg, S } in ppm
+ * @param {Object} targetRatio - { N, P, K, Ca, Mg, S } ratio values
+ * @param {number} tolerance - Allowed deviation (0.05 = 5%)
+ * @returns {Object} { matches: boolean, errors: {} }
+ */
+window.FertilizerCore.checkRatioMatch = function(achieved, targetRatio, tolerance = 0.05) {
+  const errors = {};
+
+  // Find non-zero target nutrients
+  const targetKeys = Object.keys(targetRatio).filter(k => targetRatio[k] > 0);
+  if (targetKeys.length === 0) {
+    return { matches: true, errors };
+  }
+
+  // Normalize both to minimum non-zero value
+  const targetMin = Math.min(...targetKeys.map(k => targetRatio[k]));
+  const achievedMin = Math.min(...targetKeys.map(k => achieved[k] || 0.0001).filter(v => v > 0));
+
+  if (achievedMin <= 0) {
+    for (const k of targetKeys) {
+      if (achieved[k] <= 0 && targetRatio[k] > 0) {
+        errors[k] = { target: targetRatio[k], achieved: 0, error: 1.0 };
+      }
+    }
+    return { matches: false, errors };
+  }
+
+  for (const k of targetKeys) {
+    const targetNorm = targetRatio[k] / targetMin;
+    const achievedNorm = (achieved[k] || 0) / achievedMin;
+
+    if (targetNorm > 0) {
+      const relError = Math.abs(achievedNorm - targetNorm) / targetNorm;
+      if (relError > tolerance) {
+        errors[k] = { target: targetNorm, achieved: achievedNorm, error: relError };
+      }
+    }
+  }
+
+  return { matches: Object.keys(errors).length === 0, errors };
+};
+
+/**
+ * Solve for dosing given fixed stock compositions to match target ratio and EC
+ * Uses iterative scaling approach
+ * @param {Object} tanks - { A: {fertId: g/L}, B: {...} }
+ * @param {Object} target - { ratio: {...}, targetEC, baselineEC }
+ * @param {Object} options - { maxDosing, tolerance }
+ * @returns {Object} { dosing: {A, B, ...}, achieved, predictedEC, feasible, issues }
+ */
+window.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
+  const { maxDosing = 50, tolerance = 0.05 } = options;
+  const { ratio, targetEC, baselineEC = 0 } = target;
+  const estimateECFromPPM = this.estimateECFromPPM;
+
+  // Calculate nutrient contribution per mL of each tank
+  const tankContribPerML = {};
+  for (const [tankId, tankFormula] of Object.entries(tanks)) {
+    tankContribPerML[tankId] = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
+    for (const [fertId, stock_gL] of Object.entries(tankFormula)) {
+      if (!stock_gL) continue;
+      const fert = this.FERTILIZERS.find(f => f.id === fertId);
+      if (!fert) continue;
+      const contribPerGram = this.getElementalContributionPerGram(fert);
+      // Per mL of stock = per gram * stock_gL / 1000
+      for (const n of Object.keys(tankContribPerML[tankId])) {
+        tankContribPerML[tankId][n] += contribPerGram[n] * stock_gL / 1000;
+      }
+    }
+  }
+
+  // Initial guess: equal dosing scaled to approximate target EC
+  const tankIds = Object.keys(tanks).filter(t => Object.keys(tanks[t]).length > 0);
+  if (tankIds.length === 0) {
+    return { dosing: {}, achieved: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }, predictedEC: baselineEC, feasible: false, issues: [{ level: 'error', code: 'NO_FERTILIZERS', message: 'No fertilizers in tanks' }] };
+  }
+
+  let dosing = {};
+  for (const t of tankIds) {
+    dosing[t] = 10; // Initial guess: 10 mL/L each
+  }
+
+  // Iterative refinement
+  const effectiveTargetEC = targetEC - baselineEC;
+  if (effectiveTargetEC <= 0) {
+    return { dosing: {}, achieved: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }, predictedEC: baselineEC, feasible: false, issues: [{ level: 'error', code: 'EC_UNACHIEVABLE', message: `Target EC ${targetEC} is below baseline ${baselineEC}` }] };
+  }
+
+  for (let iter = 0; iter < 20; iter++) {
+    const achieved = this.calculateAchievedPPM(tanks, dosing);
+    const ecResult = estimateECFromPPM.call(this, achieved);
+    const currentEC = ecResult.ec_mS_cm;
+
+    if (currentEC <= 0) {
+      // Scale up dosing
+      for (const t of tankIds) {
+        dosing[t] *= 2;
+      }
+      continue;
+    }
+
+    // Scale to match target EC
+    const scale = effectiveTargetEC / currentEC;
+    for (const t of tankIds) {
+      dosing[t] *= scale;
+    }
+
+    // Check if within tolerance
+    if (Math.abs(scale - 1) < 0.01) break;
+  }
+
+  // Final calculation
+  const achieved = this.calculateAchievedPPM(tanks, dosing);
+  const ecResult = estimateECFromPPM.call(this, achieved);
+  const predictedEC = ecResult.ec_mS_cm + baselineEC;
+
+  // Check constraints
+  const issues = [];
+  const totalDosing = Object.values(dosing).reduce((a, b) => a + b, 0);
+
+  if (totalDosing > maxDosing) {
+    issues.push({
+      level: 'error',
+      code: 'DOSING_EXCEEDS_MAX',
+      message: `Total dosing ${totalDosing.toFixed(1)} mL/L exceeds max ${maxDosing} mL/L`,
+      details: { required: totalDosing, max: maxDosing }
+    });
+  } else if (totalDosing > maxDosing * 0.6) {
+    issues.push({
+      level: 'warning',
+      code: 'HIGH_DOSING_VOLUME',
+      message: `Total dosing ${totalDosing.toFixed(1)} mL/L is high`,
+      details: { required: totalDosing, max: maxDosing }
+    });
+  }
+
+  // Check ratio match
+  const ratioCheck = this.checkRatioMatch(achieved, ratio, tolerance);
+  if (!ratioCheck.matches) {
+    issues.push({
+      level: 'warning',
+      code: 'RATIO_MISMATCH',
+      message: 'Achieved ratio does not match target within tolerance',
+      details: ratioCheck.errors
+    });
+  }
+
+  // Check EC match
+  const ecError = Math.abs(predictedEC - targetEC) / targetEC;
+  if (ecError > tolerance) {
+    issues.push({
+      level: 'warning',
+      code: 'EC_MISMATCH',
+      message: `Predicted EC ${predictedEC.toFixed(2)} differs from target ${targetEC.toFixed(2)}`,
+      details: { predicted: predictedEC, target: targetEC, error: ecError }
+    });
+  }
+
+  return {
+    dosing,
+    achieved,
+    predictedEC,
+    feasible: !issues.some(i => i.level === 'error'),
+    issues
+  };
+};
+
+/**
+ * Build stock compositions for a set of targets using Progressive-K algorithm
+ * MODE B: Common stocks for all targets, vary dosing
+ * @param {Object} options
+ * @param {Array} options.targets - Array of { id, ratio, targetEC, baselineEC?, maxDosingML?, finalLiters? }
+ * @param {Array} options.availableFertilizers - Array of fertilizer IDs
+ * @param {number} options.stockConcentration - e.g., 100 for 100x
+ * @param {number} options.stockTankVolumeL - Liters per stock tank
+ * @param {number} options.baselineEC - Default baseline EC
+ * @returns {Promise<Object>} StockPlan
+ */
+window.FertilizerCore.calculateStockSolutions = async function(options) {
+  const {
+    targets,
+    availableFertilizers,
+    stockConcentration = 100,
+    stockTankVolumeL = 20,
+    baselineEC: defaultBaselineEC = 0
+  } = options;
+
+  if (!targets || targets.length === 0) {
+    return { success: false, errors: [{ level: 'error', code: 'NO_TARGETS', message: 'No targets specified' }] };
+  }
+
+  if (!availableFertilizers || availableFertilizers.length === 0) {
+    return { success: false, errors: [{ level: 'error', code: 'NO_FERTILIZERS', message: 'No fertilizers available' }] };
+  }
+
+  // Get fertilizer objects
+  const fertObjects = availableFertilizers
+    .map(id => this.FERTILIZERS.find(f => f.id === id))
+    .filter(Boolean);
+
+  if (fertObjects.length === 0) {
+    return { success: false, errors: [{ level: 'error', code: 'NO_VALID_FERTILIZERS', message: 'No valid fertilizers found' }] };
+  }
+
+  // Find target with highest EC (base case for stock concentration)
+  const sortedTargets = [...targets].sort((a, b) => (b.targetEC || 0) - (a.targetEC || 0));
+  const maxECTarget = sortedTargets[0];
+
+  // Progressive-K algorithm: try K=2, then K=3, then K=4
+  for (let numTanks = 2; numTanks <= 4; numTanks++) {
+    const result = await this._tryStockSolutionWithKTanks(
+      numTanks,
+      targets,
+      fertObjects,
+      stockConcentration,
+      stockTankVolumeL,
+      defaultBaselineEC,
+      maxECTarget
+    );
+
+    if (result.success) {
+      return result;
+    }
+
+    // If K=4 failed, return the error
+    if (numTanks === 4) {
+      return result;
+    }
+  }
+
+  return { success: false, errors: [{ level: 'error', code: 'INFEASIBLE', message: 'Could not find feasible stock solution with up to 4 tanks' }] };
+};
+
+/**
+ * Internal: Try to build stock solution with K tanks
+ */
+window.FertilizerCore._tryStockSolutionWithKTanks = async function(
+  numTanks,
+  targets,
+  fertObjects,
+  stockConcentration,
+  stockTankVolumeL,
+  defaultBaselineEC,
+  maxECTarget
+) {
+  const allIssues = [];
+  const allErrors = [];
+
+  // Step 1: Optimize formula for the highest EC target
+  // This gives us the base fertilizer amounts for the stock
+  const optimizeFormula = this.optimizeFormula;
+  const baselineEC = maxECTarget.baselineEC ?? defaultBaselineEC;
+  const effectiveEC = maxECTarget.targetEC - baselineEC;
+
+  if (effectiveEC <= 0) {
+    return { success: false, errors: [{ level: 'error', code: 'EC_UNACHIEVABLE', message: `Target EC ${maxECTarget.targetEC} is at or below baseline ${baselineEC}` }] };
+  }
+
+  // Build formula for max EC target
+  const optimResult = await optimizeFormula.call(
+    this,
+    maxECTarget.ratio,
+    1, // 1 liter final
+    fertObjects,
+    effectiveEC * 50, // Concentration hint
+    'elemental',
+    { useMilp: true, targetEC: effectiveEC }
+  );
+
+  if (!optimResult.formula || Object.keys(optimResult.formula).length === 0) {
+    return { success: false, errors: [{ level: 'error', code: 'OPTIMIZATION_FAILED', message: 'Could not find fertilizer formula for target ratio' }] };
+  }
+
+  // Step 2: Assign fertilizers to tanks
+  const tankAssignment = this.assignToTanks(optimResult.formula, numTanks);
+
+  // Step 3: Scale up to stock concentration
+  // stock_gL = formula_grams_per_final_L * stockConcentration
+  const tanks = {};
+  const tankNames = { A: 'Calcium Tank', B: 'Base Nutrients', C: 'Silicate/Specialty', D: 'Overflow' };
+  const tankDescriptions = {
+    A: 'Calcium-bearing fertilizers (isolated from phosphate/sulfate)',
+    B: 'Phosphate, sulfate, and neutral fertilizers',
+    C: 'Silicate and specialty fertilizers',
+    D: 'Additional fertilizers'
+  };
+
+  for (const [tankId, tankFormula] of Object.entries(tankAssignment)) {
+    if (!tankFormula || Object.keys(tankFormula).length === 0) continue;
+
+    tanks[tankId] = {
+      id: tankId,
+      name: tankNames[tankId] || `Tank ${tankId}`,
+      description: tankDescriptions[tankId] || '',
+      fertilizers: {},
+      totalSolids_gL: 0,
+      nutrientsPerML: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }
+    };
+
+    for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
+      const stock_gL = gramsPerFinalL * stockConcentration;
+      const solubility = this.getSolubility(fertId);
+      const solubility_pct = (stock_gL / solubility) * 100;
+
+      tanks[tankId].fertilizers[fertId] = {
+        grams_per_L: stock_gL,
+        grams_total: stock_gL * stockTankVolumeL,
+        solubility_pct
+      };
+      tanks[tankId].totalSolids_gL += stock_gL;
+
+      // Calculate nutrients per mL
+      const fert = this.FERTILIZERS.find(f => f.id === fertId);
+      if (fert) {
+        const contribPerGram = this.getElementalContributionPerGram(fert);
+        for (const n of Object.keys(tanks[tankId].nutrientsPerML)) {
+          tanks[tankId].nutrientsPerML[n] += contribPerGram[n] * stock_gL / 1000;
+        }
+      }
+    }
+
+    // Check tank feasibility
+    const tankFormulaGL = {};
+    for (const [fertId, data] of Object.entries(tanks[tankId].fertilizers)) {
+      tankFormulaGL[fertId] = data.grams_per_L;
+    }
+    const feasibility = this.checkTankFeasibility(tankFormulaGL);
+    allIssues.push(...feasibility.issues);
+    if (!feasibility.feasible) {
+      allErrors.push(...feasibility.issues.filter(i => i.level === 'error'));
+    }
+  }
+
+  // If solubility errors, this K is infeasible
+  if (allErrors.length > 0) {
+    return { success: false, tanks, errors: allErrors, warnings: allIssues.filter(i => i.level !== 'error') };
+  }
+
+  // Step 4: Calculate dosing for each target
+  const dosingInstructions = [];
+
+  // Build tank structure for dosing calculation
+  const tanksForDosing = {};
+  for (const [tankId, tankData] of Object.entries(tanks)) {
+    tanksForDosing[tankId] = {};
+    for (const [fertId, fertData] of Object.entries(tankData.fertilizers)) {
+      tanksForDosing[tankId][fertId] = fertData.grams_per_L;
+    }
+  }
+
+  for (const target of targets) {
+    const targetBaselineEC = target.baselineEC ?? defaultBaselineEC;
+    const maxDosing = target.maxDosingML ?? 50;
+    const finalLiters = target.finalLiters ?? 1000;
+
+    const dosingResult = this.solveDosing(tanksForDosing, {
+      ratio: target.ratio,
+      targetEC: target.targetEC,
+      baselineEC: targetBaselineEC
+    }, { maxDosing, tolerance: 0.05 });
+
+    const tankDosing = {};
+    for (const [tankId, mL_per_L] of Object.entries(dosingResult.dosing)) {
+      tankDosing[tankId] = {
+        mL_per_L,
+        mL_total: mL_per_L * finalLiters
+      };
+    }
+
+    const totalDosing_mL_per_L = Object.values(dosingResult.dosing).reduce((a, b) => a + b, 0);
+
+    // Calculate ion balance for achieved PPM
+    const ionBalance = this.calculateIonBalanceCore
+      ? this.calculateIonBalanceCore(optimResult.formula, 1)
+      : { totalCations: 0, totalAnions: 0, imbalance: 0 };
+
+    dosingInstructions.push({
+      targetId: target.id,
+      targetEC: target.targetEC,
+      tanks: tankDosing,
+      totalDosing_mL_per_L,
+      predicted: {
+        nutrients: dosingResult.achieved,
+        ratio: target.ratio,
+        EC: dosingResult.predictedEC,
+        ionBalance: {
+          cations: ionBalance.totalCations,
+          anions: ionBalance.totalAnions,
+          imbalance: ionBalance.imbalance
+        }
+      },
+      warnings: dosingResult.issues
+    });
+
+    allIssues.push(...dosingResult.issues);
+    if (!dosingResult.feasible) {
+      // This target is infeasible with current K
+      allErrors.push(...dosingResult.issues.filter(i => i.level === 'error'));
+    }
+  }
+
+  // If any target is infeasible, this K is infeasible
+  if (allErrors.length > 0) {
+    return { success: false, tanks, dosing: dosingInstructions, errors: allErrors, warnings: allIssues.filter(i => i.level !== 'error') };
+  }
+
+  return {
+    success: true,
+    tanks,
+    dosing: dosingInstructions,
+    warnings: allIssues.filter(i => i.level !== 'error'),
+    errors: [],
+    meta: {
+      concentrationFactor: stockConcentration,
+      tankVolumeL: stockTankVolumeL,
+      baselineEC: defaultBaselineEC,
+      mode: 'B', // Common stocks
+      numTanks: Object.keys(tanks).length
+    }
+  };
+};
+
+/**
+ * Mode A fallback: Optimize separately for each target, then try to merge
+ * @param {Object} options - Same as calculateStockSolutions
+ * @returns {Promise<Object>} StockPlan
+ */
+window.FertilizerCore.calculateStockSolutionsModeA = async function(options) {
+  const {
+    targets,
+    availableFertilizers,
+    stockConcentration = 100,
+    stockTankVolumeL = 20,
+    baselineEC: defaultBaselineEC = 0
+  } = options;
+
+  // For each target, optimize independently
+  const perTargetResults = [];
+  const fertObjects = availableFertilizers
+    .map(id => this.FERTILIZERS.find(f => f.id === id))
+    .filter(Boolean);
+
+  for (const target of targets) {
+    const baselineEC = target.baselineEC ?? defaultBaselineEC;
+    const effectiveEC = target.targetEC - baselineEC;
+
+    const optimResult = await this.optimizeFormula(
+      target.ratio,
+      1,
+      fertObjects,
+      effectiveEC * 50,
+      'elemental',
+      { useMilp: true, targetEC: effectiveEC }
+    );
+
+    perTargetResults.push({
+      target,
+      formula: optimResult.formula,
+      achieved: optimResult.achieved
+    });
+  }
+
+  // For Mode A, we return separate stock plans per target
+  const plans = [];
+  for (const result of perTargetResults) {
+    const tankAssignment = this.assignToTanks(result.formula, 2);
+    const tanks = {};
+
+    for (const [tankId, tankFormula] of Object.entries(tankAssignment)) {
+      if (!tankFormula || Object.keys(tankFormula).length === 0) continue;
+
+      tanks[tankId] = { id: tankId, fertilizers: {} };
+      for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
+        const stock_gL = gramsPerFinalL * stockConcentration;
+        tanks[tankId].fertilizers[fertId] = {
+          grams_per_L: stock_gL,
+          grams_total: stock_gL * stockTankVolumeL
+        };
+      }
+    }
+
+    plans.push({
+      targetId: result.target.id,
+      tanks,
+      dosing: { A: { mL_per_L: 1000 / stockConcentration }, B: { mL_per_L: 1000 / stockConcentration } }
+    });
+  }
+
+  return {
+    success: true,
+    mode: 'A',
+    plans,
+    meta: {
+      concentrationFactor: stockConcentration,
+      tankVolumeL: stockTankVolumeL,
+      baselineEC: defaultBaselineEC
+    }
+  };
+};
+
+// =============================================================================
 // EXPORTS SUMMARY
 // =============================================================================
 // Data: FERTILIZERS, OXIDE_CONVERSIONS, MOLAR_MASSES, IONIC_CHARGES, EC_CONTRIBUTIONS,
-//       IONIC_MOLAR_CONDUCTIVITY, ION_CHARGES, ION_DATA, COMMON_FERTILIZERS, FERTILIZER_COMPATIBILITY
-// Helpers: hasCaContent, hasSulfateContent, hasPhosphateContent, hasSilicateContent, hasIncompatibleFertilizers
+//       IONIC_MOLAR_CONDUCTIVITY, ION_CHARGES, ION_DATA, COMMON_FERTILIZERS, FERTILIZER_COMPATIBILITY,
+//       DEFAULT_SOLUBILITY_GL
+// Helpers: hasCaContent, hasSulfateContent, hasPhosphateContent, hasSilicateContent, hasIncompatibleFertilizers,
+//          getSolubility, getCompatibilityTag, parseRatio, getElementalContributionPerGram
 // EC: estimateEC, ppmToIonsForEC, estimateECFromPPM
 // Ion Balance: getIonBalanceStatus, calculateIonBalanceCore
 // Ratios: calculateNutrientRatios
 // Optimization: solveMilpBrowser, solveNonNegativeLeastSquares, pruneSolution, optimizeFormula
+// Stock Solutions: assignToTanks, checkTankFeasibility, calculateAchievedPPM, checkRatioMatch,
+//                  solveDosing, calculateStockSolutions, calculateStockSolutionsModeA
 //
 // Copy Text Builders (in fertilizer-copy.js):
 //   buildTankCopyText, buildTwoTankCopyText, buildGramsToPpmCopyText, buildFormulaCopyText, buildReverseCopyText

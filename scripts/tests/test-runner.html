@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Solution Maker - Test Runner</title>
+  <style>
+    body {
+      font-family: 'Consolas', 'Monaco', monospace;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #569cd6;
+    }
+    #output {
+      background: #252526;
+      padding: 20px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+    .pass {
+      color: #4ec9b0;
+    }
+    .fail {
+      color: #f14c4c;
+    }
+    .info {
+      color: #808080;
+    }
+    .summary {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .summary.success {
+      background: #2d4a3e;
+      border: 1px solid #4ec9b0;
+    }
+    .summary.failure {
+      background: #4a2d2d;
+      border: 1px solid #f14c4c;
+    }
+  </style>
+</head>
+<body>
+  <h1>Stock Solution Maker - Unit Tests</h1>
+  <div id="output"></div>
+  <div id="summary" class="summary"></div>
+
+  <!-- Load dependencies -->
+  <script src="../fertilizer-data.js"></script>
+  <script src="../fertilizer-core.js"></script>
+
+  <!-- Load tests -->
+  <script src="stock-solution-maker.test.js"></script>
+
+  <script>
+    const output = document.getElementById('output');
+    const summary = document.getElementById('summary');
+
+    // Override console.log to display in page
+    const originalLog = console.log;
+    const originalError = console.error;
+
+    console.log = function(...args) {
+      const text = args.join(' ');
+      const span = document.createElement('span');
+
+      if (text.startsWith('✓')) {
+        span.className = 'pass';
+      } else if (text.startsWith('=') || text.startsWith('-')) {
+        span.className = 'info';
+      }
+
+      span.textContent = text + '\n';
+      output.appendChild(span);
+      originalLog.apply(console, args);
+    };
+
+    console.error = function(...args) {
+      const text = args.join(' ');
+      const span = document.createElement('span');
+      span.className = 'fail';
+      span.textContent = text + '\n';
+      output.appendChild(span);
+      originalError.apply(console, args);
+    };
+
+    // Run tests when ready
+    window.addEventListener('load', async () => {
+      // Wait a bit for scripts to initialize
+      await new Promise(r => setTimeout(r, 100));
+
+      if (window.StockSolutionMakerTests) {
+        const results = await window.StockSolutionMakerTests.runTests();
+
+        summary.textContent = `Tests completed: ${results.passed} passed, ${results.failed} failed`;
+        summary.className = 'summary ' + (results.failed === 0 ? 'success' : 'failure');
+      } else {
+        output.textContent = 'Error: Tests not loaded';
+      }
+    });
+  </script>
+</body>
+</html>

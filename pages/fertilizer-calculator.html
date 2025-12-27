@@ -1308,6 +1308,31 @@ permalink: /fertilizer-calculator/
           <span data-i18n="npkRatioUseCase">You know the nutrient ratio you want (e.g., for a specific growth stage) and want to scale it to your desired EC/strength.</span>
         </div>
       </div>
+
+      <!-- Stock Solution Maker -->
+      <div class="mode-card" @click="selectMode('stock-solution')">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v4"></path>
+            <path d="M16 2v4"></path>
+            <rect x="3" y="6" width="18" height="16" rx="2"></rect>
+            <path d="M3 10h18"></path>
+            <path d="M8 14h.01"></path>
+            <path d="M12 14h.01"></path>
+            <path d="M16 14h.01"></path>
+            <path d="M8 18h.01"></path>
+            <path d="M12 18h.01"></path>
+          </svg>
+          <span data-i18n="stockSolutionMaker">Stock Solution Maker</span>
+        </h3>
+        <p class="description" data-i18n="stockSolutionMakerDescription">
+          Create concentrated A/B stock solutions with dosing instructions for multiple target ratios and EC levels.
+        </p>
+        <div class="use-case">
+          <strong data-i18n="bestFor">Best for:</strong>
+          <span data-i18n="stockSolutionUseCase">You want to pre-mix concentrated stock solutions that can serve multiple growth stages by varying the dosing amounts.</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1589,6 +1614,140 @@ permalink: /fertilizer-calculator/
     <div class="wizard-step-buttons two-tank-buttons">
       <button class="btn-continue btn-two-tank" @click="showTwoTankView()" data-i18n="yesShowTwoTanks">Yes, show two-tank view</button>
       <button class="btn-back" @click="skipTwoTankView()" data-i18n="noShowRegularResults">No, show regular results</button>
+    </div>
+  </div>
+
+  <!-- Stock Solution: Settings Step -->
+  <div id="stock-settings-step" class="wizard-input-step" :class="{ active: wizardStep === 'stock-settings-step' }">
+    <div class="step-indicator">{{ getStepIndicator('stock-settings-step') }}</div>
+    <h3 data-i18n="stockSettingsTitle">Stock Solution Settings</h3>
+    <p data-i18n="stockSettingsDescription">Configure your stock solution parameters. These settings apply to all tanks.</p>
+
+    <div class="stock-settings-grid">
+      <div class="stock-setting-item">
+        <label data-i18n="stockConcentrationLabel">Concentration Factor</label>
+        <div class="stock-setting-input">
+          <input type="number" v-model.number="stockSettings.concentrationFactor" min="10" max="500" step="10">
+          <span>×</span>
+        </div>
+        <span class="stock-setting-hint" data-i18n="stockConcentrationHint">How many times concentrated (typically 100× or 200×)</span>
+      </div>
+
+      <div class="stock-setting-item">
+        <label data-i18n="stockTankVolumeLabel">Stock Tank Volume</label>
+        <div class="stock-setting-input">
+          <input type="number" v-model.number="stockSettings.tankVolume" min="1" max="1000" step="1">
+          <span data-i18n="liters">liters</span>
+        </div>
+        <span class="stock-setting-hint" data-i18n="stockTankVolumeHint">Volume of each stock tank you'll prepare</span>
+      </div>
+
+      <div class="stock-setting-item">
+        <label data-i18n="stockBaselineECLabel">Baseline Water EC (optional)</label>
+        <div class="stock-setting-input">
+          <input type="number" v-model.number="stockSettings.baselineEC" min="0" max="2" step="0.1" placeholder="0.0">
+          <span>mS/cm</span>
+        </div>
+        <span class="stock-setting-hint" data-i18n="stockBaselineECHint">EC of your source water (leave 0 for RO water)</span>
+      </div>
+
+      <div class="stock-setting-item">
+        <label data-i18n="stockMaxDosingLabel">Max Dosing Volume</label>
+        <div class="stock-setting-input">
+          <input type="number" v-model.number="stockSettings.maxDosing" min="1" max="50" step="1">
+          <span data-i18n="mlPerLiter">mL/L</span>
+        </div>
+        <span class="stock-setting-hint" data-i18n="stockMaxDosingHint">Maximum dosing per tank (affects concentration)</span>
+      </div>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-continue" @click="proceedFromStockSettings()" data-i18n="continue">Continue →</button>
+      <button class="btn-back" @click="backToModeSelector()" data-i18n="back">← Back</button>
+    </div>
+  </div>
+
+  <!-- Stock Solution: Target Ratios Step -->
+  <div id="stock-targets-step" class="wizard-input-step" :class="{ active: wizardStep === 'stock-targets-step' }">
+    <div class="step-indicator">{{ getStepIndicator('stock-targets-step') }}</div>
+    <h3 data-i18n="stockTargetsTitle">Define Target Ratios</h3>
+    <p data-i18n="stockTargetsDescription">Add the nutrient ratios and EC levels you want to achieve. The same stock solutions will serve all targets by varying dosing.</p>
+
+    <div class="stock-targets-list">
+      <div v-for="(target, index) in stockTargets" :key="index" class="stock-target-card">
+        <div class="stock-target-header">
+          <span class="stock-target-number">{{ i18n.t('targetNumber', { n: index + 1 }) || ('Target ' + (index + 1)) }}</span>
+          <button v-if="stockTargets.length > 1" class="stock-target-remove" @click="removeStockTarget(index)" :title="i18n.t('remove')">×</button>
+        </div>
+        <div class="stock-target-row">
+          <div class="stock-target-field">
+            <label>{{ i18n.t('ratioLabel') || 'Ratio' }} (N:P:K)</label>
+            <input type="text" v-model="target.ratio" placeholder="3:1:2" @input="validateStockRatio(index)">
+            <span v-if="target.ratioError" class="stock-target-error">{{ target.ratioError }}</span>
+          </div>
+          <div class="stock-target-field">
+            <label>{{ i18n.t('targetECLabel') || 'Target EC' }}</label>
+            <select v-model="target.ec">
+              <option value="0.6">0.6 mS/cm</option>
+              <option value="0.8">0.8 mS/cm</option>
+              <option value="1.0">1.0 mS/cm</option>
+              <option value="1.2">1.2 mS/cm</option>
+              <option value="1.5">1.5 mS/cm</option>
+              <option value="1.8">1.8 mS/cm</option>
+              <option value="2.0">2.0 mS/cm</option>
+              <option value="2.5">2.5 mS/cm</option>
+              <option value="3.0">3.0 mS/cm</option>
+            </select>
+          </div>
+          <div class="stock-target-field">
+            <label>{{ i18n.t('targetNameLabel') || 'Name (optional)' }}</label>
+            <input type="text" v-model="target.name" :placeholder="i18n.t('targetNamePlaceholder') || 'e.g., Veg, Flower'">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-add-target" @click="addStockTarget()" :disabled="stockTargets.length >= 6">
+      <span>+</span> {{ i18n.t('addTarget') || 'Add Target' }}
+    </button>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-continue" @click="proceedFromStockTargets()" data-i18n="continue">Continue →</button>
+      <button class="btn-back" @click="backToStockSettings()" data-i18n="back">← Back</button>
+    </div>
+  </div>
+
+  <!-- Stock Solution: Fertilizer Selection Step -->
+  <div id="stock-fertilizer-step" class="wizard-input-step" :class="{ active: wizardStep === 'stock-fertilizer-step' }">
+    <div class="step-indicator">{{ getStepIndicator('stock-fertilizer-step') }}</div>
+    <h3 data-i18n="stockFertilizerTitle">Select Fertilizers</h3>
+    <p data-i18n="stockFertilizerDescription">Choose the fertilizers available for your stock solutions. The calculator will determine optimal amounts.</p>
+
+    <div class="wizard-fertilizer-section">
+      <div class="wizard-fertilizer-search">
+        <input type="text" v-model="stockFertilizerSearch" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
+      </div>
+      <div class="wizard-selection-controls">
+        <button @click="selectCommonStockFertilizers()" data-i18n="selectCommon">Select Common</button>
+        <button @click="deselectAllStockFertilizers()" data-i18n="clearAll">Clear All</button>
+      </div>
+      <div class="wizard-fertilizer-list">
+        <div v-for="fert in filteredStockFertilizers" :key="fert.id" class="wizard-fertilizer-item">
+          <input type="checkbox"
+                 :id="'stock-fert-' + fert.id"
+                 :checked="stockSelectedFertilizers[fert.id]"
+                 @change="toggleStockFertilizer(fert.id)">
+          <label :for="'stock-fert-' + fert.id" class="wizard-fert-label">
+            <span class="wizard-fert-name">{{ i18n.getFertilizerName(fert) }}</span>
+            <span class="wizard-fert-solubility" v-if="fert.solubility_gL">{{ fert.solubility_gL }} g/L max</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-calculate" @click="calculateStockSolutions()" data-i18n="calculate">Calculate Stock Solutions</button>
+      <button class="btn-back" @click="backToStockTargets()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -1965,6 +2124,114 @@ permalink: /fertilizer-calculator/
                 <strong v-if="warning.category">{{ warning.category }}:</strong> {{ warning.message }}
               </li>
             </ul>
+          </div>
+        </div>
+      </template>
+
+      <!-- Stock Solution Maker Results -->
+      <template v-if="wizardResultsSource === 'stock-solution' && stockResultsData.show">
+        <div class="results-section stock-solution-results">
+          <div class="results-header">
+            <h2>{{ i18n.t('stockSolutionRecipe') || 'Stock Solution Recipe' }}</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="copy-btn" :class="{ copied: copiedButtonId === 'stock-solution' }" @click="copyStockSolutionResults()" :title="i18n.t('copyToClipboard')">
+                <svg v-if="copiedButtonId !== 'stock-solution'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>{{ copiedButtonId === 'stock-solution' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Settings Summary -->
+          <div class="stock-settings-summary" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <h4 style="margin: 0 0 10px 0;">{{ i18n.t('stockSettings') || 'Stock Solution Settings' }}</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+              <div><strong>{{ i18n.t('concentration') || 'Concentration' }}:</strong> {{ stockResultsData.settings?.concentrationFactor }}×</div>
+              <div><strong>{{ i18n.t('tankVolume') || 'Tank Volume' }}:</strong> {{ stockResultsData.settings?.tankVolume }} L</div>
+              <div v-if="stockResultsData.settings?.baselineEC"><strong>{{ i18n.t('baselineEC') || 'Baseline EC' }}:</strong> {{ stockResultsData.settings?.baselineEC }} mS/cm</div>
+              <div><strong>{{ i18n.t('maxDosing') || 'Max Dosing' }}:</strong> {{ stockResultsData.settings?.maxDosing }} mL/L</div>
+            </div>
+          </div>
+
+          <!-- Tank Recipes -->
+          <div v-for="(tank, tankIdx) in stockResultsData.tanks" :key="tankIdx" class="stock-tank-section" :style="{ marginBottom: '20px', padding: '20px', background: tankIdx === 0 ? '#f0f7ff' : '#fff7f0', borderRadius: '8px', borderLeft: '4px solid ' + (tankIdx === 0 ? '#007bff' : '#fd7e14') }">
+            <h4 :style="{ margin: '0 0 15px 0', color: tankIdx === 0 ? '#007bff' : '#fd7e14' }">
+              {{ tank.name || ('Tank ' + String.fromCharCode(65 + tankIdx)) }}
+              <span style="font-weight: normal; font-size: 0.85em; color: #666;"> ({{ tank.description || '' }})</span>
+            </h4>
+
+            <!-- Fertilizers in this tank -->
+            <div class="stock-tank-fertilizers">
+              <div v-for="fert in tank.fertilizers" :key="fert.id" style="display: flex; justify-content: space-between; padding: 10px 12px; background: white; border-radius: 4px; margin-bottom: 8px;">
+                <span>{{ i18n.getFertilizerName(fert) || fert.name }}</span>
+                <div style="text-align: right;">
+                  <strong>{{ i18n.formatNumber(fert.gPerL.toFixed(2)) }} g/L</strong>
+                  <span style="color: #666; font-size: 0.85em;"> ({{ i18n.formatNumber((fert.gPerL * stockResultsData.settings?.tankVolume).toFixed(1)) }} g total)</span>
+                </div>
+              </div>
+              <div v-if="tank.fertilizers.length > 1" style="display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 4px; border-top: 2px solid; margin-top: 8px;" :style="{ borderColor: tankIdx === 0 ? '#007bff' : '#fd7e14', background: tankIdx === 0 ? '#007bff15' : '#fd7e1415' }">
+                <strong>{{ i18n.t('total') || 'Total' }}</strong>
+                <strong>{{ i18n.formatNumber(tank.fertilizers.reduce((sum, f) => sum + f.gPerL, 0).toFixed(2)) }} g/L</strong>
+              </div>
+            </div>
+
+            <!-- Solubility Warning -->
+            <div v-if="tank.nearSolubilityLimit" class="warning-box" style="margin-top: 15px;">
+              <strong>⚠️ {{ i18n.t('nearSolubilityLimit') || 'Near Solubility Limit' }}</strong>
+              <p style="margin: 5px 0 0 0;">{{ i18n.t('nearSolubilityLimitDesc') || 'Some fertilizers are near their solubility limit. Ensure complete dissolution.' }}</p>
+            </div>
+          </div>
+
+          <!-- Dosing Table -->
+          <div class="stock-dosing-section" style="margin-top: 25px;">
+            <h3>{{ i18n.t('dosingInstructions') || 'Dosing Instructions' }}</h3>
+            <p style="color: #666; margin-bottom: 15px;">{{ i18n.t('dosingInstructionsDesc') || 'Add these amounts of each stock to your reservoir per liter of final solution:' }}</p>
+
+            <table class="stock-dosing-table" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+              <thead>
+                <tr style="background: #f8f9fa;">
+                  <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">{{ i18n.t('target') || 'Target' }}</th>
+                  <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">{{ i18n.t('targetEC') || 'EC' }}</th>
+                  <th v-for="(tank, idx) in stockResultsData.tanks" :key="idx" style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;" :style="{ color: idx === 0 ? '#007bff' : '#fd7e14' }">
+                    {{ tank.name || ('Tank ' + String.fromCharCode(65 + idx)) }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(dosing, idx) in stockResultsData.dosingTable" :key="idx" style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 12px;">
+                    <strong>{{ dosing.targetName }}</strong>
+                    <div style="font-size: 0.85em; color: #666;">{{ dosing.ratio }}</div>
+                  </td>
+                  <td style="padding: 12px; text-align: center;">{{ dosing.ec }} mS/cm</td>
+                  <td v-for="(dose, tankIdx) in dosing.doses" :key="tankIdx" style="padding: 12px; text-align: center; font-weight: bold;">
+                    {{ i18n.formatNumber(dose.toFixed(2)) }} mL/L
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Achieved PPM per Target -->
+          <div v-if="stockResultsData.achievedPPM && Object.keys(stockResultsData.achievedPPM).length > 0" class="stock-achieved-ppm" style="margin-top: 25px;">
+            <h3>{{ i18n.t('achievedNutrients') || 'Achieved Nutrients' }}</h3>
+            <div v-for="(ppm, targetName) in stockResultsData.achievedPPM" :key="targetName" style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+              <h4 style="margin: 0 0 10px 0;">{{ targetName }}</h4>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span v-for="(value, nutrient) in ppm" :key="nutrient" style="padding: 5px 12px; background: white; border-radius: 4px; border: 1px solid #dee2e6;">
+                  <strong>{{ nutrient }}:</strong> {{ i18n.formatNumber(value.toFixed(1)) }} ppm
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Warnings -->
+          <div v-if="stockResultsData.warnings && stockResultsData.warnings.length > 0" class="results-section" style="margin-top: 20px;">
+            <h3>{{ i18n.t('warningsAndRecommendations') }}</h3>
+            <div v-for="(warning, idx) in stockResultsData.warnings" :key="idx" :class="warning.level === 'warning' ? 'warning-box' : warning.level === 'error' ? 'error-box' : 'conversion-note'" style="margin-bottom: 10px;">
+              <strong>{{ warning.level === 'warning' ? '⚠️' : warning.level === 'error' ? '❌' : 'ℹ️' }} {{ warning.category }}</strong><br>
+              {{ warning.message }}
+            </div>
           </div>
         </div>
       </template>
@@ -3762,6 +4029,12 @@ function showWizardStep(stepId, options = {}) {
 function selectMode(tabId) {
   // Store the selected mode in Vue state (single source of truth)
   setSelectedMode(tabId);
+
+  // Stock solution mode skips volume step (has its own tank volume setting)
+  if (tabId === 'stock-solution') {
+    showWizardStep('stock-settings-step');
+    return;
+  }
 
   // Show volume step (also updates wizardStep via Vue)
   showWizardStep('volume-step');
@@ -5692,6 +5965,28 @@ const FertilizerApp = {
     const wizardAvailFertilizers = reactive({}); // { fertilizer_id: checked }
     const wizardAvailSearchTerm = ref('');
 
+    // Stock Solution Maker state
+    const stockSettings = reactive({
+      concentrationFactor: 100,  // e.g., 100x concentration
+      tankVolume: 10,            // liters per stock tank
+      baselineEC: 0,             // baseline water EC
+      maxDosing: 10              // max mL/L dosing per tank
+    });
+    const stockTargets = reactive([
+      { ratio: '3:1:2', ec: '1.5', name: 'Veg', ratioError: null },
+      { ratio: '1:2:3', ec: '2.0', name: 'Flower', ratioError: null }
+    ]);
+    const stockSelectedFertilizers = reactive({}); // { fertilizer_id: checked }
+    const stockFertilizerSearch = ref('');
+    const stockResultsData = reactive({
+      show: false,
+      tanks: [],           // Array of tank objects with fertilizers and g/L
+      dosingTable: [],     // Per-target dosing instructions
+      warnings: [],
+      achievedPPM: {},
+      settings: null
+    });
+
     // Shared inputs
     const volume = ref(10);
     const calculationMode = ref('oxide'); // 'oxide' or 'elemental'
@@ -5960,11 +6255,19 @@ const FertilizerApp = {
       const modeKeys = {
         'ppm-calc': 'gramsToPpm',
         'formula-builder': 'ppmToGrams',
-        'reverse-calc': 'npkRatioToGrams'
+        'reverse-calc': 'npkRatioToGrams',
+        'stock-solution': 'stockSolutionMaker'
       };
       const modeName = i18n.t(modeKeys[currentMode.value]) || currentMode.value;
 
       let text = i18n.t('currentLabel') + ' <strong>' + modeName + '</strong>';
+
+      // Stock solution mode shows different info
+      if (currentMode.value === 'stock-solution') {
+        text += ' · ' + stockSettings.concentrationFactor + '× · ' + stockSettings.tankVolume + i18n.t('litersShort');
+        return text;
+      }
+
       text += ' · ' + wizardVolume.value + i18n.t('litersShort');
 
       // Add calc mode for formula-builder and reverse-calc
@@ -6032,7 +6335,8 @@ const FertilizerApp = {
       const STEP_COUNTS = {
         'ppm-calc': 3,
         'formula-builder': 4,  // Removed calc-mode-step for this mode
-        'reverse-calc': 6
+        'reverse-calc': 6,
+        'stock-solution': 4  // Settings, Targets, Fertilizers, Calculate
       };
 
       const STEP_NUMBERS = {
@@ -6042,7 +6346,11 @@ const FertilizerApp = {
         'grams-input-step': { 'ppm-calc': 3 },
         'ppm-targets-step': { 'formula-builder': 3 },  // Was 4, now 3 (no calc-mode-step)
         'npk-ratios-step': { 'reverse-calc': 5 },
-        'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 }  // Was 5, now 4
+        'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 },
+        // Stock solution steps
+        'stock-settings-step': { 'stock-solution': 1 },
+        'stock-targets-step': { 'stock-solution': 2 },
+        'stock-fertilizer-step': { 'stock-solution': 3 }
       };
 
       const stepConfig = STEP_NUMBERS[stepId];
@@ -6065,7 +6373,8 @@ const FertilizerApp = {
       const STEP_COUNTS = {
         'ppm-calc': 3,
         'formula-builder': 4,  // Removed calc-mode-step for this mode
-        'reverse-calc': 6
+        'reverse-calc': 6,
+        'stock-solution': 4
       };
 
       const totalSteps = STEP_COUNTS[mode] || 0;
@@ -7860,6 +8169,13 @@ const FertilizerApp = {
     function selectMode(tabId) {
       // Store the selected mode in Vue state (single source of truth)
       currentMode.value = tabId;
+
+      // Stock solution mode skips volume step (has its own tank volume setting)
+      if (tabId === 'stock-solution') {
+        showWizardStepVue('stock-settings-step');
+        return;
+      }
+
       // Show volume step
       showWizardStepVue('volume-step');
       // Focus on the volume input
@@ -7884,6 +8200,9 @@ const FertilizerApp = {
       } else if (mode === 'formula-builder') {
         // PPM to Grams: go directly to PPM targets (calc mode is always elemental)
         showWizardStepVue('ppm-targets-step');
+      } else if (mode === 'stock-solution') {
+        // Stock Solution Maker: go to stock settings step
+        showWizardStepVue('stock-settings-step');
       } else {
         proceedToCalculator();
       }
@@ -7998,11 +8317,14 @@ const FertilizerApp = {
 
       // Reset two-tank state when going back from results
       twoTankDisplayData.show = false;
+      stockResultsData.show = false;
 
       if (mode === 'ppm-calc') {
         showWizardStepVue('grams-input-step');
       } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
         showWizardStepVue('fertilizer-select-step');
+      } else if (mode === 'stock-solution') {
+        showWizardStepVue('stock-fertilizer-step');
       } else {
         showWizardStepVue('volume-step');
       }
@@ -8031,7 +8353,219 @@ const FertilizerApp = {
       formulaResultsData.show = false;
       reverseResultsData.show = false;
       twoTankDisplayData.show = false;
+      stockResultsData.show = false;
       wizardResultsSource.value = null;
+    }
+
+    // =========================================================================
+    // STOCK SOLUTION MAKER METHODS
+    // =========================================================================
+
+    // Computed: filtered fertilizers for stock solution selection
+    const filteredStockFertilizers = computed(() => {
+      const search = stockFertilizerSearch.value.toLowerCase().trim();
+      if (!search) return FERTILIZERS;
+      return FERTILIZERS.filter(fert => {
+        const name = (fert.name || '').toLowerCase();
+        const aliases = (fert.aliases || []).join(' ').toLowerCase();
+        return name.includes(search) || aliases.includes(search);
+      });
+    });
+
+    // Initialize stock fertilizer selection with common fertilizers
+    function initStockFertilizers() {
+      const commonIds = [
+        'calcium_nitrate_calcinit_typical',
+        'potassium_nitrate_pure',
+        'magnesium_sulfate_typical',
+        'monopotassium_phosphate_pure',
+        'potassium_sulfate_common'
+      ];
+      FERTILIZERS.forEach(fert => {
+        stockSelectedFertilizers[fert.id] = commonIds.includes(fert.id);
+      });
+    }
+
+    // Toggle stock fertilizer selection
+    function toggleStockFertilizer(fertId) {
+      stockSelectedFertilizers[fertId] = !stockSelectedFertilizers[fertId];
+    }
+
+    // Select common fertilizers for stock solutions
+    function selectCommonStockFertilizers() {
+      initStockFertilizers();
+    }
+
+    // Deselect all fertilizers for stock solutions
+    function deselectAllStockFertilizers() {
+      FERTILIZERS.forEach(fert => {
+        stockSelectedFertilizers[fert.id] = false;
+      });
+    }
+
+    // Add a new target ratio
+    function addStockTarget() {
+      if (stockTargets.length < 6) {
+        stockTargets.push({ ratio: '', ec: '1.5', name: '', ratioError: null });
+      }
+    }
+
+    // Remove a target ratio
+    function removeStockTarget(index) {
+      if (stockTargets.length > 1) {
+        stockTargets.splice(index, 1);
+      }
+    }
+
+    // Validate stock ratio input
+    function validateStockRatio(index) {
+      const target = stockTargets[index];
+      const ratio = target.ratio.trim();
+      if (!ratio) {
+        target.ratioError = null;
+        return true;
+      }
+      // Parse ratio - supports "3:1:2" or "N3:P1:K2" formats
+      const parseResult = FertilizerCore.parseRatio ? FertilizerCore.parseRatio(ratio) : null;
+      if (!parseResult || parseResult.error) {
+        target.ratioError = i18n.t('invalidRatioFormat') || 'Invalid ratio format';
+        return false;
+      }
+      target.ratioError = null;
+      return true;
+    }
+
+    // Proceed from stock settings step
+    function proceedFromStockSettings() {
+      // Validate settings
+      if (stockSettings.concentrationFactor < 10 || stockSettings.concentrationFactor > 500) {
+        alert(i18n.t('alertInvalidConcentration') || 'Concentration factor should be between 10 and 500');
+        return;
+      }
+      if (stockSettings.tankVolume < 1) {
+        alert(i18n.t('alertInvalidTankVolume') || 'Tank volume must be at least 1 liter');
+        return;
+      }
+      showWizardStepVue('stock-targets-step');
+    }
+
+    // Back to stock settings
+    function backToStockSettings() {
+      showWizardStepVue('stock-settings-step');
+    }
+
+    // Proceed from stock targets step
+    function proceedFromStockTargets() {
+      // Validate targets
+      const validTargets = stockTargets.filter(t => t.ratio.trim());
+      if (validTargets.length === 0) {
+        alert(i18n.t('alertEnterAtLeastOneRatio') || 'Enter at least one target ratio');
+        return;
+      }
+      // Validate all ratios
+      let hasError = false;
+      stockTargets.forEach((t, i) => {
+        if (t.ratio.trim() && !validateStockRatio(i)) {
+          hasError = true;
+        }
+      });
+      if (hasError) {
+        alert(i18n.t('alertFixRatioErrors') || 'Please fix the ratio errors before continuing');
+        return;
+      }
+      // Initialize fertilizers if not done
+      if (Object.keys(stockSelectedFertilizers).length === 0) {
+        initStockFertilizers();
+      }
+      showWizardStepVue('stock-fertilizer-step');
+    }
+
+    // Back to stock targets
+    function backToStockTargets() {
+      showWizardStepVue('stock-targets-step');
+    }
+
+    // Calculate stock solutions
+    async function calculateStockSolutionsVue() {
+      // Get selected fertilizers
+      const selectedFerts = FERTILIZERS.filter(f => stockSelectedFertilizers[f.id]);
+      if (selectedFerts.length === 0) {
+        alert(i18n.t('alertSelectFertilizer') || 'Please select at least one fertilizer');
+        return;
+      }
+
+      // Get valid targets
+      const validTargets = stockTargets.filter(t => t.ratio.trim()).map(t => {
+        const parseResult = FertilizerCore.parseRatio ? FertilizerCore.parseRatio(t.ratio) : null;
+        return {
+          ratio: parseResult ? parseResult.ratio : {},
+          ec: parseFloat(t.ec) || 1.5,
+          name: t.name || ('Target ' + (stockTargets.indexOf(t) + 1))
+        };
+      });
+
+      if (validTargets.length === 0) {
+        alert(i18n.t('alertEnterAtLeastOneRatio') || 'Enter at least one valid target ratio');
+        return;
+      }
+
+      // Show progress
+      progressState.show = true;
+      progressState.title = i18n.t('calculatingStockSolutions') || 'Calculating Stock Solutions...';
+      progressState.message = i18n.t('optimizingTankComposition') || 'Optimizing tank composition...';
+      progressState.percent = 0;
+      progressState.indeterminate = true;
+
+      try {
+        // Use the FertilizerCore.calculateStockSolutions function if available
+        let result;
+        if (FertilizerCore.calculateStockSolutions) {
+          result = await FertilizerCore.calculateStockSolutions({
+            targets: validTargets,
+            fertilizers: selectedFerts,
+            concentrationFactor: stockSettings.concentrationFactor,
+            tankVolume: stockSettings.tankVolume,
+            baselineEC: stockSettings.baselineEC,
+            maxDosing: stockSettings.maxDosing,
+            mode: 'common' // Mode B: Common stocks for all targets
+          });
+        } else {
+          // Fallback if core function not available
+          result = {
+            success: false,
+            error: 'Stock solution calculation not available'
+          };
+        }
+
+        progressState.show = false;
+
+        if (result.success) {
+          // Populate results
+          stockResultsData.show = true;
+          stockResultsData.tanks = result.tanks || [];
+          stockResultsData.dosingTable = result.dosingTable || [];
+          stockResultsData.warnings = result.warnings || [];
+          stockResultsData.achievedPPM = result.achievedPPM || {};
+          stockResultsData.settings = {
+            concentrationFactor: stockSettings.concentrationFactor,
+            tankVolume: stockSettings.tankVolume,
+            baselineEC: stockSettings.baselineEC,
+            maxDosing: stockSettings.maxDosing
+          };
+
+          // Set results source and mode text
+          wizardResultsSource.value = 'stock-solution';
+          const modeName = i18n.t('stockSolutionMaker') || 'Stock Solution Maker';
+          wizardResultsModeText.value = i18n.t('currentLabel') + ' <strong>' + modeName + '</strong> · ' + stockSettings.concentrationFactor + '×';
+          showWizardStepVue('wizard-results');
+        } else {
+          alert(result.error || i18n.t('alertStockCalculationFailed') || 'Stock solution calculation failed');
+        }
+      } catch (err) {
+        progressState.show = false;
+        console.error('Stock solution calculation error:', err);
+        alert(i18n.t('alertCalculationError') || 'Calculation error: ' + err.message);
+      }
     }
 
     // Calculate from wizard grams input step
@@ -8174,6 +8708,39 @@ const FertilizerApp = {
       copyToClipboardVue(text, 'two-tank');
     }
 
+    function copyStockSolutionResults() {
+      if (!stockResultsData.show || !stockResultsData.tanks.length) {
+        alert(i18n.t('alertNoResults') || 'No results to copy');
+        return;
+      }
+
+      let text = '=== STOCK SOLUTION RECIPE ===\n\n';
+      text += `Settings: ${stockResultsData.settings?.concentrationFactor}× concentration, ${stockResultsData.settings?.tankVolume}L tanks\n\n`;
+
+      // Tank recipes
+      stockResultsData.tanks.forEach((tank, idx) => {
+        text += `--- ${tank.name || ('Tank ' + String.fromCharCode(65 + idx))} ---\n`;
+        tank.fertilizers.forEach(fert => {
+          const fertName = i18n.getFertilizerName(fert) || fert.name;
+          text += `  ${fertName}: ${fert.gPerL.toFixed(2)} g/L (${(fert.gPerL * stockResultsData.settings?.tankVolume).toFixed(1)} g total)\n`;
+        });
+        text += '\n';
+      });
+
+      // Dosing table
+      text += '=== DOSING PER TARGET ===\n\n';
+      stockResultsData.dosingTable.forEach(dosing => {
+        text += `${dosing.targetName} (EC ${dosing.ec} mS/cm, ratio ${dosing.ratio}):\n`;
+        dosing.doses.forEach((dose, idx) => {
+          const tankName = stockResultsData.tanks[idx]?.name || ('Tank ' + String.fromCharCode(65 + idx));
+          text += `  ${tankName}: ${dose.toFixed(2)} mL/L\n`;
+        });
+        text += '\n';
+      });
+
+      copyToClipboardVue(text, 'stock-solution');
+    }
+
     // =========================================================================
     // PROGRESS BAR METHODS (Vue-powered)
     // =========================================================================
@@ -8279,6 +8846,14 @@ const FertilizerApp = {
       ratioResults,
       ratioIsCalculating,
 
+      // Stock Solution Maker State
+      stockSettings,
+      stockTargets,
+      stockSelectedFertilizers,
+      stockFertilizerSearch,
+      stockResultsData,
+      filteredStockFertilizers,
+
       // Computed
       filteredFertilizers,
       activeFertilizers,
@@ -8371,6 +8946,18 @@ const FertilizerApp = {
       backFromWizardResults,
       backFromFertilizerSelectStep,
       goToModeSelector,
+      // Stock Solution Maker Methods
+      proceedFromStockSettings,
+      backToStockSettings,
+      proceedFromStockTargets,
+      backToStockTargets,
+      addStockTarget,
+      removeStockTarget,
+      validateStockRatio,
+      toggleStockFertilizer,
+      selectCommonStockFertilizers,
+      deselectAllStockFertilizers,
+      calculateStockSolutions: calculateStockSolutionsVue,
       calculateFromWizardGrams,
       calculateFromWizardFertilizerSelectVue,
       showTwoTankView,
@@ -8441,6 +9028,7 @@ const FertilizerApp = {
       copyPPMToGramsResultsVue,
       copyNPKRatioResultsVue,
       copyTwoTankResultsVue,
+      copyStockSolutionResults,
 
       // Data references (for template access)
       FERTILIZERS,
