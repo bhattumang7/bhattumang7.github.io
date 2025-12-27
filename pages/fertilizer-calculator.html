@@ -8548,8 +8548,6 @@ const FertilizerApp = {
           };
         }
 
-        progressState.show = false;
-
         if (result.success) {
           // Populate results
           stockResultsData.show = true;
@@ -8578,9 +8576,11 @@ const FertilizerApp = {
           alert(errorMsg);
         }
       } catch (err) {
-        progressState.show = false;
         console.error('Stock solution calculation error:', err);
         alert(i18n.t('alertCalculationError') || 'Calculation error: ' + err.message);
+      } finally {
+        // Always hide progress overlay to prevent UI lockup
+        progressState.show = false;
       }
     }
 
