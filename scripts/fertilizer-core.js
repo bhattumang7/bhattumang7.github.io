@@ -804,443 +804,89 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
   const OXIDE_CONVERSIONS = window.FertilizerCore.OXIDE_CONVERSIONS;
   const solveMilpBrowser = window.FertilizerCore.solveMilpBrowser;
   const onProgress = options.onProgress;
-  const solveNNLS = window.FertilizerCore.solveNonNegativeLeastSquares;
-  const pruneSolution = window.FertilizerCore.pruneSolution;
 
-  // Optional MILP path
-  if (options.useMilp && typeof solveMilpBrowser === 'function') {
-    const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
-    const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
-
-    let ppmTargets;
-
-    if (options.useAbsoluteTargets) {
-      ppmTargets = {
-        N_total: targetRatios.N || 0,
-        P2O5: mode === 'elemental' ? (targetRatios.P || 0) * P_to_P2O5 : (targetRatios.P || 0),
-        K2O: mode === 'elemental' ? (targetRatios.K || 0) * K_to_K2O : (targetRatios.K || 0),
-        Ca: targetRatios.Ca || 0,
-        Mg: targetRatios.Mg || 0,
-        S: targetRatios.S || 0,
-        Si: targetRatios.Si || 0
-      };
-    } else {
-      const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
-      const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
-      const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
-      const normalizedRatios = {
-        N: targetRatios.N / minRatio,
-        P: targetRatios.P / minRatio,
-        K: targetRatios.K / minRatio,
-        Ca: targetRatios.Ca / minRatio,
-        Mg: targetRatios.Mg / minRatio,
-        S: targetRatios.S / minRatio
-      };
-      const basePPMForMinRatio = concentration;
-
-      ppmTargets = {
-        N_total: normalizedRatios.N * basePPMForMinRatio,
-        P2O5: mode === 'elemental'
-          ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
-          : normalizedRatios.P * basePPMForMinRatio,
-        K2O: mode === 'elemental'
-          ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
-          : normalizedRatios.K * basePPMForMinRatio,
-        Ca: normalizedRatios.Ca * basePPMForMinRatio,
-        Mg: normalizedRatios.Mg * basePPMForMinRatio,
-        S: normalizedRatios.S * basePPMForMinRatio,
-        Si: targetRatios.Si || 0
-      };
-    }
-
-    const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress });
-
-    // Apply EC scaling if targetEC is specified
-    if (options.targetEC && options.targetEC > 0) {
-      const estimateECFromPPM = window.FertilizerCore.estimateECFromPPM;
-      if (typeof estimateECFromPPM === 'function') {
-        const originalEC = estimateECFromPPM(milpResult.achieved);
-        if (originalEC && originalEC.ec_mS_cm > 0) {
-          // Iterative scaling to handle non-linear ionic strength correction
-          let scaleFactor = options.targetEC / originalEC.ec_mS_cm;
-          let scaledFormula = {};
-          let scaledAchieved = {};
-          let finalEC = originalEC.ec_mS_cm;
-
-          // Si is an absolute PPM target (not ratio-based), so we need to handle it specially
-          const targetSi = targetRatios.Si || 0;
-
-          // Iterate up to 5 times to converge on target EC
-          for (let i = 0; i < 5; i++) {
-            // Scale formula
-            scaledFormula = {};
-            Object.entries(milpResult.formula).forEach(([fertId, grams]) => {
-              scaledFormula[fertId] = grams * scaleFactor;
-            });
-
-            // Scale achieved PPM
-            scaledAchieved = {};
-            Object.entries(milpResult.achieved).forEach(([key, value]) => {
-              scaledAchieved[key] = value * scaleFactor;
-            });
-
-            // Check actual EC after scaling
-            const newEC = estimateECFromPPM(scaledAchieved);
-            finalEC = newEC.ec_mS_cm;
-
-            // If within 1% of target, we're done
-            const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
-            if (error < 0.01) break;
-
-            // Adjust scale factor based on error
-            scaleFactor = scaleFactor * (options.targetEC / finalEC);
-          }
-
-          // For Si: if user specified an absolute Si target, we need to iteratively adjust
-          // the Si target so that after EC scaling it reaches the desired value.
-          // Always adjust Si after EC scaling (scale up or down) because Si is an absolute PPM target
-          if (targetSi > 0) {
-            let currentSiTarget = targetSi;
-            let bestSiError = Math.abs((scaledAchieved.Si || 0) - targetSi);
-            let bestFormula = { ...scaledFormula };
-            let bestAchieved = { ...scaledAchieved };
-            let bestScaleFactor = scaleFactor;
-
-            // Iterate up to 5 times to converge Si to target
-            for (let siIter = 0; siIter < 5; siIter++) {
-              const achievedSi = scaledAchieved.Si || 0;
-              const siError = Math.abs(achievedSi - targetSi);
-
-              // Track best result
-              if (siError < bestSiError) {
-                bestSiError = siError;
-                bestFormula = { ...scaledFormula };
-                bestAchieved = { ...scaledAchieved };
-                bestScaleFactor = scaleFactor;
-              }
-
-              // If Si is within 10% of target, good enough
-              if (siError / targetSi < 0.1) break;
-
-              // Adjust Si target based on how much we're missing
-              // If achieved 14 but want 25, ratio is 25/14 = 1.79, so multiply current target by that
-              const siAdjustmentRatio = achievedSi > 0 ? targetSi / achievedSi : 2;
-              currentSiTarget = currentSiTarget * siAdjustmentRatio;
-
-              // Cap the adjustment to avoid runaway values
-              currentSiTarget = Math.min(currentSiTarget, targetSi * 5);
-
-              const adjustedPpmTargets = { ...ppmTargets, Si: currentSiTarget };
-
-              // Re-run solver with adjusted Si target
-              const adjustedResult = await solveMilpBrowser({
-                fertilizers: availableFertilizers,
-                targets: adjustedPpmTargets,
-                volume,
-                tolerance: 0.01,
-                onProgress
-              });
-
-              // Re-apply EC scaling to the adjusted result
-              const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
-              if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
-                scaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
-
-                for (let i = 0; i < 5; i++) {
-                  scaledFormula = {};
-                  Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
-                    scaledFormula[fertId] = grams * scaleFactor;
-                  });
-
-                  scaledAchieved = {};
-                  Object.entries(adjustedResult.achieved).forEach(([key, value]) => {
-                    scaledAchieved[key] = value * scaleFactor;
-                  });
-
-                  const newEC = estimateECFromPPM(scaledAchieved);
-                  finalEC = newEC.ec_mS_cm;
-
-                  const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
-                  if (error < 0.01) break;
-
-                  scaleFactor = scaleFactor * (options.targetEC / finalEC);
-                }
-              }
-            }
-
-            // Use the best result found
-            scaledFormula = bestFormula;
-            scaledAchieved = bestAchieved;
-            scaleFactor = bestScaleFactor;
-          }
-
-          return {
-            formula: scaledFormula,
-            achieved: scaledAchieved,
-            targetRatios,
-            targetPPM: ppmTargets,
-            ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC: options.targetEC, achievedEC: finalEC }
-          };
-        }
-      }
-    }
-
-    return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
+  // MILP is required - no fallback
+  if (typeof solveMilpBrowser !== 'function') {
+    throw new Error('MILP solver (solveMilpBrowser) is not available. Ensure HiGHS and lp-model are loaded.');
   }
 
-  // Fallback gradient descent + pruning path
-  const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
-  const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
-  const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
-
-  const normalizedRatios = {
-    N: targetRatios.N / minRatio,
-    P: targetRatios.P / minRatio,
-    K: targetRatios.K / minRatio,
-    Ca: targetRatios.Ca / minRatio,
-    Mg: targetRatios.Mg / minRatio,
-    S: targetRatios.S / minRatio
-  };
-
-  const basePPMForMinRatio = concentration;
   const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
   const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
 
-  const targetPPM_Commercial = {
-    N: normalizedRatios.N * basePPMForMinRatio,
-    P2O5: mode === 'elemental'
-      ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
-      : normalizedRatios.P * basePPMForMinRatio,
-    K2O: mode === 'elemental'
-      ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
-      : normalizedRatios.K * basePPMForMinRatio,
-    Ca: normalizedRatios.Ca * basePPMForMinRatio,
-    Mg: normalizedRatios.Mg * basePPMForMinRatio,
-    S: normalizedRatios.S * basePPMForMinRatio,
-    Si: targetRatios.Si || 0
-  };
+  let ppmTargets;
 
   if (options.useAbsoluteTargets) {
-    targetPPM_Commercial.N = targetRatios.N || 0;
-    targetPPM_Commercial.P2O5 = mode === 'elemental' ? (targetRatios.P || 0) * P_to_P2O5 : (targetRatios.P || 0);
-    targetPPM_Commercial.K2O = mode === 'elemental' ? (targetRatios.K || 0) * K_to_K2O : (targetRatios.K || 0);
-    targetPPM_Commercial.Ca = targetRatios.Ca || 0;
-    targetPPM_Commercial.Mg = targetRatios.Mg || 0;
-    targetPPM_Commercial.S = targetRatios.S || 0;
-    targetPPM_Commercial.Si = targetRatios.Si || 0;
+    ppmTargets = {
+      N_total: targetRatios.N || 0,
+      P2O5: mode === 'elemental' ? (targetRatios.P || 0) * P_to_P2O5 : (targetRatios.P || 0),
+      K2O: mode === 'elemental' ? (targetRatios.K || 0) * K_to_K2O : (targetRatios.K || 0),
+      Ca: targetRatios.Ca || 0,
+      Mg: targetRatios.Mg || 0,
+      S: targetRatios.S || 0,
+      Si: targetRatios.Si || 0
+    };
+  } else {
+    const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
+    const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
+    const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
+    const normalizedRatios = {
+      N: targetRatios.N / minRatio,
+      P: targetRatios.P / minRatio,
+      K: targetRatios.K / minRatio,
+      Ca: targetRatios.Ca / minRatio,
+      Mg: targetRatios.Mg / minRatio,
+      S: targetRatios.S / minRatio
+    };
+    const basePPMForMinRatio = concentration;
+
+    ppmTargets = {
+      N_total: normalizedRatios.N * basePPMForMinRatio,
+      P2O5: mode === 'elemental'
+        ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
+        : normalizedRatios.P * basePPMForMinRatio,
+      K2O: mode === 'elemental'
+        ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
+        : normalizedRatios.K * basePPMForMinRatio,
+      Ca: normalizedRatios.Ca * basePPMForMinRatio,
+      Mg: normalizedRatios.Mg * basePPMForMinRatio,
+      S: normalizedRatios.S * basePPMForMinRatio,
+      Si: targetRatios.Si || 0
+    };
   }
 
-  const formula = {};
-  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+  const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress });
 
-  function calculatePPM(fert, grams) {
-    const contribution = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-
-    Object.entries(fert.pct).forEach(([nutrient, percentage]) => {
-      const ppm = (grams * 1000 * (percentage / 100)) / volume;
-
-      if (nutrient === 'P2O5') {
-        contribution.P2O5 += ppm;
-        contribution.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-      } else if (nutrient === 'K2O') {
-        contribution.K2O += ppm;
-        contribution.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-      } else if (nutrient === 'N_NO3') {
-        contribution.N_NO3 += ppm;
-        contribution.N_total += ppm;
-      } else if (nutrient === 'N_NH4') {
-        contribution.N_NH4 += ppm;
-        contribution.N_total += ppm;
-      } else if (nutrient === 'N_total') {
-        if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
-          contribution.N_total += ppm;
-        }
-      } else if (nutrient === 'CaO' && OXIDE_CONVERSIONS.CaO_to_Ca) {
-        contribution.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
-      } else if (nutrient === 'MgO' && OXIDE_CONVERSIONS.MgO_to_Mg) {
-        contribution.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
-      } else if (nutrient === 'SO3' && OXIDE_CONVERSIONS.SO3_to_S) {
-        contribution.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
-      } else if (nutrient === 'SiO2' && OXIDE_CONVERSIONS.SiO2_to_Si) {
-        contribution.Si += ppm * OXIDE_CONVERSIONS.SiO2_to_Si;
-      } else if (nutrient === 'SiOH4' && OXIDE_CONVERSIONS.SiOH4_to_Si) {
-        contribution.Si += ppm * OXIDE_CONVERSIONS.SiOH4_to_Si;
-      } else if (nutrient === 'Si') {
-        contribution.Si += ppm;
-      } else {
-        contribution[nutrient] = (contribution[nutrient] || 0) + ppm;
-      }
-    });
-
-    return contribution;
-  }
-
-  function addFertilizer(fert, grams) {
-    if (!formula[fert.id]) formula[fert.id] = 0;
-    formula[fert.id] += grams;
-
-    const contribution = calculatePPM(fert, grams);
-    Object.keys(contribution).forEach(nutrient => {
-      achieved[nutrient] += contribution[nutrient];
-    });
-  }
-
-  // Build matrix for least-squares solver
-  const allNutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S', 'Si'];
-  const targetedKeys = allNutrients.filter(key => (targetPPM_Commercial[key] || 0) > 0);
-  const extraKeys = allNutrients.filter(key => (targetPPM_Commercial[key] || 0) === 0);
-  const nutrientKeys = targetedKeys.concat(extraKeys);
-
-  const weights = [];
-  const targetVector = [];
-  const softWeight = 0.1;
-
-  nutrientKeys.forEach(key => {
-    const isTargeted = (targetPPM_Commercial[key] || 0) > 0;
-    // Si gets much higher weight because it's an absolute PPM target (not ratio-normalized)
-    // and silicon fertilizers often contribute other nutrients (e.g., K2O from Potassium Silicate)
-    // Using 100 to strongly prioritize Si over ratio precision
-    const weight = isTargeted ? (key === 'Si' ? 100 : 1) : softWeight;
-    weights.push(weight);
-    targetVector.push(targetPPM_Commercial[key] || 0);
-  });
-
-  if (targetedKeys.length === 0) {
-    weights.fill(1);
-  }
-
-  const matrix = availableFertilizers.map(fert => {
-    const contrib = calculatePPM(fert, 1);
-    return nutrientKeys.map(key => contrib[key] || 0);
-  });
-
-  const pruneTolerance = typeof options.pruneTolerance === 'number' ? options.pruneTolerance : 0.01;
-
-  function solveForSubset(indices) {
-    const subsetMatrix = indices.map(idx => matrix[idx]);
-    const subsetFerts = indices.map(idx => availableFertilizers[idx]);
-    const baseSolution = solveNNLS(subsetMatrix, targetVector, 1500, weights);
-    const pruned = pruneSolution(subsetMatrix, targetVector, weights, baseSolution, subsetFerts, pruneTolerance, 800);
-    return pruned && pruned.x ? { solution: pruned, indices } : { solution: baseSolution, indices };
-  }
-
-  function evaluateSolution(solObj) {
-    const achievedVec = new Array(targetVector.length).fill(0);
-    solObj.solution.x.forEach((xi, pos) => {
-      if (xi === 0) return;
-      const row = solObj.indices.map(idx => matrix[idx])[pos];
-      row.forEach((val, j) => {
-        achievedVec[j] += val * xi;
-      });
-    });
-    let err = 0;
-    targetVector.forEach((t, j) => {
-      if (t > 0) {
-        const diff = Math.abs(achievedVec[j] - t) / t;
-        err += diff * diff;
-      } else {
-        err += achievedVec[j] * achievedVec[j] * 1e-6;
-      }
-    });
-    return { err, achievedVec };
-  }
-
-  let best = null;
-  let bestWithin = null;
-  const maxCombo = Math.min(4, availableFertilizers.length);
-
-  if (availableFertilizers.length <= 8) {
-    function choose(start, depth, combo) {
-      if (depth === 0) {
-        const sol = solveForSubset(combo);
-        const { err } = evaluateSolution(sol);
-        const usedCount = sol.solution.x.filter(v => v > 1e-4).length;
-        const withinTol = targetVector.every((t, j) => {
-          if (t <= 0) return true;
-          const achievedVal = sol.solution.x.reduce((sum, xi, pos) => {
-            const row = sol.indices.map(idx => matrix[idx])[pos];
-            return sum + xi * row[j];
-          }, 0);
-          return Math.abs(achievedVal - t) / t <= pruneTolerance;
-        });
-
-        if (withinTol) {
-          if (!bestWithin || usedCount < bestWithin.usedCount || (usedCount === bestWithin.usedCount && err < bestWithin.err)) {
-            bestWithin = { sol, err, usedCount };
-          }
-        }
-        if (!best || usedCount < best.usedCount || (usedCount === best.usedCount && err < best.err)) {
-          best = { sol, err, usedCount };
-        }
-        return;
-      }
-      for (let i = start; i <= availableFertilizers.length - depth; i++) {
-        combo.push(i);
-        choose(i + 1, depth - 1, combo);
-        combo.pop();
-      }
-    }
-
-    for (let size = 1; size <= maxCombo; size++) {
-      choose(0, size, []);
-      if (best && best.usedCount === size) break;
-    }
-  }
-
-  let chosen = bestWithin;
-
-  if (!chosen) {
-    const baseSolution = solveNNLS(matrix, targetVector, 1500, weights);
-    const pruned = pruneSolution(matrix, targetVector, weights, baseSolution, availableFertilizers, pruneTolerance, 800);
-    chosen = { sol: pruned && pruned.x ? pruned : baseSolution, err: 0, usedCount: availableFertilizers.length };
-  }
-
-  const finalSol = chosen.sol.solution || chosen.sol;
-  const finalIndices = chosen.sol.active || chosen.sol.indices || availableFertilizers.map((_, i) => i);
-  finalSol.x.forEach((grams, pos) => {
-    if (grams > 0.0001) {
-      const fertIdx = finalIndices[pos] !== undefined ? finalIndices[pos] : pos;
-      addFertilizer(availableFertilizers[fertIdx], grams);
-    }
-  });
-
-  if (Object.keys(formula).length === 0) {
-    const baseSolution = solveNNLS(matrix, targetVector, 1500, weights);
-    baseSolution.x.forEach((grams, index) => {
-      if (grams > 0.0001) {
-        addFertilizer(availableFertilizers[index], grams);
-      }
-    });
-  }
-
-  // Apply EC scaling if targetEC is specified (fallback path)
+  // Apply EC scaling if targetEC is specified
   if (options.targetEC && options.targetEC > 0) {
     const estimateECFromPPM = window.FertilizerCore.estimateECFromPPM;
     if (typeof estimateECFromPPM === 'function') {
-      const originalEC = estimateECFromPPM(achieved);
+      const originalEC = estimateECFromPPM(milpResult.achieved);
       if (originalEC && originalEC.ec_mS_cm > 0) {
         // Iterative scaling to handle non-linear ionic strength correction
         let scaleFactor = options.targetEC / originalEC.ec_mS_cm;
+        let scaledFormula = {};
+        let scaledAchieved = {};
         let finalEC = originalEC.ec_mS_cm;
 
-        // Store original values for scaling
-        const originalFormula = { ...formula };
-        const originalAchieved = { ...achieved };
+        // Si is an absolute PPM target (not ratio-based), so we need to handle it specially
+        const targetSi = targetRatios.Si || 0;
 
         // Iterate up to 5 times to converge on target EC
         for (let i = 0; i < 5; i++) {
           // Scale formula
-          Object.keys(formula).forEach(fertId => {
-            formula[fertId] = originalFormula[fertId] * scaleFactor;
+          scaledFormula = {};
+          Object.entries(milpResult.formula).forEach(([fertId, grams]) => {
+            scaledFormula[fertId] = grams * scaleFactor;
           });
 
           // Scale achieved PPM
-          Object.keys(achieved).forEach(key => {
-            achieved[key] = originalAchieved[key] * scaleFactor;
+          scaledAchieved = {};
+          Object.entries(milpResult.achieved).forEach(([key, value]) => {
+            scaledAchieved[key] = value * scaleFactor;
           });
 
           // Check actual EC after scaling
-          const newEC = estimateECFromPPM(achieved);
+          const newEC = estimateECFromPPM(scaledAchieved);
           finalEC = newEC.ec_mS_cm;
 
           // If within 1% of target, we're done
@@ -1251,18 +897,96 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
           scaleFactor = scaleFactor * (options.targetEC / finalEC);
         }
 
+        // For Si: if user specified an absolute Si target, we need to iteratively adjust
+        // the Si target so that after EC scaling it reaches the desired value.
+        // Always adjust Si after EC scaling (scale up or down) because Si is an absolute PPM target
+        if (targetSi > 0) {
+          let currentSiTarget = targetSi;
+          let bestSiError = Math.abs((scaledAchieved.Si || 0) - targetSi);
+          let bestFormula = { ...scaledFormula };
+          let bestAchieved = { ...scaledAchieved };
+          let bestScaleFactor = scaleFactor;
+
+          // Iterate up to 5 times to converge Si to target
+          for (let siIter = 0; siIter < 5; siIter++) {
+            const achievedSi = scaledAchieved.Si || 0;
+            const siError = Math.abs(achievedSi - targetSi);
+
+            // Track best result
+            if (siError < bestSiError) {
+              bestSiError = siError;
+              bestFormula = { ...scaledFormula };
+              bestAchieved = { ...scaledAchieved };
+              bestScaleFactor = scaleFactor;
+            }
+
+            // If Si is within 10% of target, good enough
+            if (siError / targetSi < 0.1) break;
+
+            // Adjust Si target based on how much we're missing
+            // If achieved 14 but want 25, ratio is 25/14 = 1.79, so multiply current target by that
+            const siAdjustmentRatio = achievedSi > 0 ? targetSi / achievedSi : 2;
+            currentSiTarget = currentSiTarget * siAdjustmentRatio;
+
+            // Cap the adjustment to avoid runaway values
+            currentSiTarget = Math.min(currentSiTarget, targetSi * 5);
+
+            const adjustedPpmTargets = { ...ppmTargets, Si: currentSiTarget };
+
+            // Re-run solver with adjusted Si target
+            const adjustedResult = await solveMilpBrowser({
+              fertilizers: availableFertilizers,
+              targets: adjustedPpmTargets,
+              volume,
+              tolerance: 0.01,
+              onProgress
+            });
+
+            // Re-apply EC scaling to the adjusted result
+            const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
+            if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
+              scaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
+
+              for (let i = 0; i < 5; i++) {
+                scaledFormula = {};
+                Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
+                  scaledFormula[fertId] = grams * scaleFactor;
+                });
+
+                scaledAchieved = {};
+                Object.entries(adjustedResult.achieved).forEach(([key, value]) => {
+                  scaledAchieved[key] = value * scaleFactor;
+                });
+
+                const newEC = estimateECFromPPM(scaledAchieved);
+                finalEC = newEC.ec_mS_cm;
+
+                const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
+                if (error < 0.01) break;
+
+                scaleFactor = scaleFactor * (options.targetEC / finalEC);
+              }
+            }
+          }
+
+          // Use the best result found
+          scaledFormula = bestFormula;
+          scaledAchieved = bestAchieved;
+          scaleFactor = bestScaleFactor;
+        }
+
         return {
-          formula,
-          achieved,
+          formula: scaledFormula,
+          achieved: scaledAchieved,
           targetRatios,
-          targetPPM: targetPPM_Commercial,
+          targetPPM: ppmTargets,
           ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC: options.targetEC, achievedEC: finalEC }
         };
       }
     }
   }
 
-  return { formula, achieved, targetRatios, targetPPM: targetPPM_Commercial };
+  return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
 };
 
 // =============================================================================
@@ -1953,7 +1677,7 @@ window.FertilizerCore._tryStockSolutionWithKTanks = async function(
 };
 
 /**
- * Mode A fallback: Optimize separately for each target, then try to merge
+ * Mode A (alternative): Optimize separately for each target, then try to merge
  * @param {Object} options - Same as calculateStockSolutions
  * @returns {Promise<Object>} StockPlan
  */

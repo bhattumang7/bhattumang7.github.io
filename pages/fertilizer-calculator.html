@@ -2205,7 +2205,7 @@ permalink: /fertilizer-calculator/
                   </td>
                   <td style="padding: 12px; text-align: center;">{{ dosing.ec }} mS/cm</td>
                   <td v-for="(dose, tankIdx) in dosing.doses" :key="tankIdx" style="padding: 12px; text-align: center; font-weight: bold;">
-                    {{ i18n.formatNumber(dose.toFixed(2)) }} mL/L
+                    {{ i18n.formatNumber((dose || 0).toFixed(2)) }} mL/L
                   </td>
                 </tr>
               </tbody>
@@ -2219,7 +2219,7 @@ permalink: /fertilizer-calculator/
               <h4 style="margin: 0 0 10px 0;">{{ targetName }}</h4>
               <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 <span v-for="(value, nutrient) in ppm" :key="nutrient" style="padding: 5px 12px; background: white; border-radius: 4px; border: 1px solid #dee2e6;">
-                  <strong>{{ nutrient }}:</strong> {{ i18n.formatNumber(value.toFixed(1)) }} ppm
+                  <strong>{{ nutrient }}:</strong> {{ i18n.formatNumber((value || 0).toFixed(1)) }} ppm
                 </span>
               </div>
             </div>
@@ -3892,8 +3892,6 @@ const {
   ppmToIonsForEC,
   estimateECFromPPM,
   calculateNutrientRatios,
-  solveNonNegativeLeastSquares,
-  pruneSolution,
   optimizeFormula
 } = window.FertilizerCore;
 // Note: getIonBalanceStatus and calculateIonBalanceCore are defined locally as they use i18n
@@ -5984,7 +5982,8 @@ const FertilizerApp = {
       dosingTable: [],     // Per-target dosing instructions
       warnings: [],
       achievedPPM: {},
-      settings: null
+      settings: null,
+      meta: null           // Metadata from calculation (numTanks, mode, etc.)
     });
 
     // Shared inputs
@@ -8172,6 +8171,10 @@ const FertilizerApp = {
 
       // Stock solution mode skips volume step (has its own tank volume setting)
       if (tabId === 'stock-solution') {
+        // Initialize stock fertilizers if not already done
+        if (Object.keys(stockSelectedFertilizers).length === 0) {
+          initStockFertilizers();
+        }
         showWizardStepVue('stock-settings-step');
         return;
       }
@@ -8376,9 +8379,9 @@ const FertilizerApp = {
     function initStockFertilizers() {
       const commonIds = [
         'calcium_nitrate_calcinit_typical',
-        'potassium_nitrate_pure',
-        'magnesium_sulfate_typical',
-        'monopotassium_phosphate_pure',
+        'potassium_nitrate_typical',
+        'magnesium_sulfate_heptahydrate_common',
+        'mkp_typical',
         'potassium_sulfate_common'
       ];
       FERTILIZERS.forEach(fert => {
@@ -8497,15 +8500,17 @@ const FertilizerApp = {
       // Get valid targets - map to expected format with targetEC property
       const validTargets = stockTargets
         .filter(t => t.ratio.trim())
-        .map(t => {
+        .map((t, idx) => {
           const parseResult = FertilizerCore.parseRatio ? FertilizerCore.parseRatio(t.ratio) : null;
           // Check if parsing succeeded and ratio has at least one non-zero value
           const ratio = (parseResult && parseResult.ratio) ? parseResult.ratio : null;
+          const name = t.name || ('Target ' + (idx + 1));
           return {
+            id: 'target_' + idx,  // Core function expects id field
             ratio,
             targetEC: parseFloat(t.ec) || 1.5,
             baselineEC: stockSettings.baselineEC || 0,
-            name: t.name || ('Target ' + (stockTargets.indexOf(t) + 1)),
+            name: name,
             parseError: parseResult ? parseResult.error : 'Parse function not available'
           };
         })
@@ -8533,13 +8538,16 @@ const FertilizerApp = {
         let result;
         if (FertilizerCore.calculateStockSolutions) {
           // Map parameter names to what FertilizerCore.calculateStockSolutions expects
-          result = await FertilizerCore.calculateStockSolutions({
+          const calcOptions = {
             targets: validTargets,
             availableFertilizers: selectedFerts.map(f => f.id),
             stockConcentration: stockSettings.concentrationFactor,
             stockTankVolumeL: stockSettings.tankVolume,
             baselineEC: stockSettings.baselineEC
-          });
+          };
+          console.log('Stock Solution Calculation Input:', JSON.stringify(calcOptions, null, 2));
+          result = await FertilizerCore.calculateStockSolutions(calcOptions);
+          console.log('Stock Solution Calculation Result:', JSON.stringify(result, null, 2));
         } else {
           // Fallback if core function not available
           result = {
@@ -8551,8 +8559,56 @@ const FertilizerApp = {
         if (result.success) {
           // Populate results
           stockResultsData.show = true;
-          stockResultsData.tanks = result.tanks || [];
-          stockResultsData.dosingTable = result.dosingTable || [];
+          // Convert tanks object to array for UI consumption
+          const tanksArray = [];
+          if (result.tanks && typeof result.tanks === 'object') {
+            for (const [tankId, tankData] of Object.entries(result.tanks)) {
+              if (tankData && Object.keys(tankData.fertilizers || {}).length > 0) {
+                tanksArray.push({
+                  id: tankId,
+                  name: tankData.name || `Tank ${tankId}`,
+                  description: tankData.description || '',
+                  fertilizers: Object.entries(tankData.fertilizers || {}).map(([fertId, fertInfo]) => {
+                    const fert = FERTILIZERS.find(f => f.id === fertId);
+                    return {
+                      id: fertId,
+                      name: fert ? i18n.getFertilizerName(fert) : fertId,
+                      gPerL: fertInfo.grams_per_L || 0,
+                      gTotal: fertInfo.grams_total || 0,
+                      solubility_pct: fertInfo.solubility_pct || 100
+                    };
+                  }),
+                  totalSolids_gL: tankData.totalSolids_gL || 0
+                });
+              }
+            }
+          }
+          stockResultsData.tanks = tanksArray;
+          // Core returns 'dosing' with different structure - transform it
+          const dosingTable = (result.dosing || []).map((d, idx) => {
+            // Find the original target to get the name
+            const originalTarget = validTargets[idx] || {};
+            // Get tank IDs in order (A, B, C, D)
+            const tankIds = Object.keys(result.tanks || {}).sort();
+            // Build doses array in tank order - extract mL_per_L from tank dosing object
+            const doses = tankIds.map(tankId => d.tanks?.[tankId]?.mL_per_L || 0);
+            // Format ratio as string
+            const ratioStr = d.predicted?.ratio
+              ? Object.entries(d.predicted.ratio)
+                  .filter(([_, v]) => v > 0)
+                  .map(([k, v]) => `${k}:${v}`)
+                  .join(' ')
+              : originalTarget.name || '';
+            return {
+              targetName: originalTarget.name || `Target ${idx + 1}`,
+              ratio: ratioStr,
+              ec: d.targetEC || 0,
+              doses: doses,
+              predicted: d.predicted || {},
+              warnings: d.warnings || []
+            };
+          });
+          stockResultsData.dosingTable = dosingTable;
           stockResultsData.warnings = result.warnings || [];
           stockResultsData.achievedPPM = result.achievedPPM || {};
           stockResultsData.settings = {
@@ -8561,6 +8617,7 @@ const FertilizerApp = {
             baselineEC: stockSettings.baselineEC,
             maxDosing: stockSettings.maxDosing
           };
+          stockResultsData.meta = result.meta || {};
 
           // Set results source and mode text
           wizardResultsSource.value = 'stock-solution';
@@ -8569,8 +8626,9 @@ const FertilizerApp = {
           showWizardStepVue('wizard-results');
         } else {
           // Handle both error formats: result.error (string) or result.errors (array)
+          console.error('Stock Solution Calculation Failed:', result);
           const errorMsg = result.error ||
-            (result.errors && result.errors.length > 0 ? result.errors[0].message : null) ||
+            (result.errors && result.errors.length > 0 ? result.errors.map(e => e.message).join('; ') : null) ||
             i18n.t('alertStockCalculationFailed') ||
             'Stock solution calculation failed';
           alert(errorMsg);
@@ -8749,7 +8807,7 @@ const FertilizerApp = {
         text += `${dosing.targetName} (EC ${dosing.ec} mS/cm, ratio ${dosing.ratio}):\n`;
         dosing.doses.forEach((dose, idx) => {
           const tankName = stockResultsData.tanks[idx]?.name || ('Tank ' + String.fromCharCode(65 + idx));
-          text += `  ${tankName}: ${dose.toFixed(2)} mL/L\n`;
+          text += `  ${tankName}: ${(dose || 0).toFixed(2)} mL/L\n`;
         });
         text += '\n';
       });
