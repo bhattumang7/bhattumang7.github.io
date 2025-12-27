@@ -265,6 +265,10 @@ window.i18nLocales.en = {
   alertSelectFertilizerToUse: 'Please select at least one fertilizer to use.',
   alertCopyFailedTryAgain: 'Failed to copy to clipboard. Please try again.',
   alertRunCalculationFirst: 'Please run a calculation first.',
+  alertEnterAtLeastOneRatio: 'Please enter at least one valid target ratio (e.g., 3:1:2 for N:P:K).',
+  alertStockCalculationFailed: 'Stock solution calculation failed. Please check your targets and selected fertilizers.',
+  calculatingStockSolutions: 'Calculating Stock Solutions...',
+  optimizingTankComposition: 'Optimizing tank composition...',
   nutrientOffTarget: '{nutrient} is {percent}% off target',
   nutrientOffTargetAcceptable: '{nutrient} is {percent}% off target (acceptable range)',
 

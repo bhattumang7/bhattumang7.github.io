@@ -8494,18 +8494,30 @@ const FertilizerApp = {
         return;
       }
 
-      // Get valid targets
-      const validTargets = stockTargets.filter(t => t.ratio.trim()).map(t => {
-        const parseResult = FertilizerCore.parseRatio ? FertilizerCore.parseRatio(t.ratio) : null;
-        return {
-          ratio: parseResult ? parseResult.ratio : {},
-          ec: parseFloat(t.ec) || 1.5,
-          name: t.name || ('Target ' + (stockTargets.indexOf(t) + 1))
-        };
-      });
+      // Get valid targets - map to expected format with targetEC property
+      const validTargets = stockTargets
+        .filter(t => t.ratio.trim())
+        .map(t => {
+          const parseResult = FertilizerCore.parseRatio ? FertilizerCore.parseRatio(t.ratio) : null;
+          // Check if parsing succeeded and ratio has at least one non-zero value
+          const ratio = (parseResult && parseResult.ratio) ? parseResult.ratio : null;
+          return {
+            ratio,
+            targetEC: parseFloat(t.ec) || 1.5,
+            baselineEC: stockSettings.baselineEC || 0,
+            name: t.name || ('Target ' + (stockTargets.indexOf(t) + 1)),
+            parseError: parseResult ? parseResult.error : 'Parse function not available'
+          };
+        })
+        .filter(t => {
+          // Filter out targets with parsing errors or all-zero ratios
+          if (!t.ratio) return false;
+          const hasNonZero = Object.values(t.ratio).some(v => v > 0);
+          return hasNonZero;
+        });
 
       if (validTargets.length === 0) {
-        alert(i18n.t('alertEnterAtLeastOneRatio') || 'Enter at least one valid target ratio');
+        alert(i18n.t('alertEnterAtLeastOneRatio') || 'Enter at least one valid target ratio (e.g., 3:1:2 for N:P:K)');
         return;
       }
 
@@ -8520,14 +8532,13 @@ const FertilizerApp = {
         // Use the FertilizerCore.calculateStockSolutions function if available
         let result;
         if (FertilizerCore.calculateStockSolutions) {
+          // Map parameter names to what FertilizerCore.calculateStockSolutions expects
           result = await FertilizerCore.calculateStockSolutions({
             targets: validTargets,
-            fertilizers: selectedFerts,
-            concentrationFactor: stockSettings.concentrationFactor,
-            tankVolume: stockSettings.tankVolume,
-            baselineEC: stockSettings.baselineEC,
-            maxDosing: stockSettings.maxDosing,
-            mode: 'common' // Mode B: Common stocks for all targets
+            availableFertilizers: selectedFerts.map(f => f.id),
+            stockConcentration: stockSettings.concentrationFactor,
+            stockTankVolumeL: stockSettings.tankVolume,
+            baselineEC: stockSettings.baselineEC
           });
         } else {
           // Fallback if core function not available
@@ -8559,7 +8570,12 @@ const FertilizerApp = {
           wizardResultsModeText.value = i18n.t('currentLabel') + ' <strong>' + modeName + '</strong> · ' + stockSettings.concentrationFactor + '×';
           showWizardStepVue('wizard-results');
         } else {
-          alert(result.error || i18n.t('alertStockCalculationFailed') || 'Stock solution calculation failed');
+          // Handle both error formats: result.error (string) or result.errors (array)
+          const errorMsg = result.error ||
+            (result.errors && result.errors.length > 0 ? result.errors[0].message : null) ||
+            i18n.t('alertStockCalculationFailed') ||
+            'Stock solution calculation failed';
+          alert(errorMsg);
         }
       } catch (err) {
         progressState.show = false;
