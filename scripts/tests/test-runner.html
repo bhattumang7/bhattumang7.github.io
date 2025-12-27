@@ -52,9 +52,14 @@
   <div id="output"></div>
   <div id="summary" class="summary"></div>
 
-  <!-- Load dependencies -->
+  <!-- Load MILP dependencies -->
+  <script src="../../assets/vendor/lp-model/lp-model.min.js"></script>
+  <script src="../../assets/vendor/highs/highs.js"></script>
+
+  <!-- Load fertilizer modules -->
   <script src="../fertilizer-data.js"></script>
   <script src="../fertilizer-core.js"></script>
+  <script src="../fertilizer-warnings.js"></script>
 
   <!-- Load tests -->
   <script src="stock-solution-maker.test.js"></script>

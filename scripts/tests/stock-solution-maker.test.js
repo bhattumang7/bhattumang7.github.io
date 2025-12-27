@@ -620,8 +620,7 @@
     assert(ecResult.ec_mS_cm > 0, 'EC should be positive');
     assert(ecResult.ec_mS_cm < 5, 'EC should be reasonable (< 5 mS/cm)');
     assertHasKey(ecResult, 'ec_mS_cm', 'Should have ec_mS_cm');
-    assertHasKey(ecResult, 'tds_500', 'Should have tds_500');
-    assertHasKey(ecResult, 'tds_700', 'Should have tds_700');
+    assertHasKey(ecResult, 'contributions', 'Should have contributions');
   });
 
   test('Regression: estimateECFromPPM scales with concentration', () => {
@@ -637,18 +636,15 @@
     assert(ratio > 1.5 && ratio < 2.5, 'EC should scale roughly with concentration');
   });
 
-  test('Regression: calculateIonBalance returns valid data', () => {
-    const ppm = {
-      N_NO3: 150,
-      N_NH4: 10,
-      K: 200,
-      Ca: 120,
-      Mg: 40,
-      S: 30,
-      P: 30
+  test('Regression: calculateIonBalanceCore returns valid data', () => {
+    // calculateIonBalanceCore expects fertilizers and volume, not raw PPM
+    // Test with a simple fertilizer formula
+    const formula = {
+      'calcium_nitrate_calcinit_typical': 1.0,  // 1g
+      'potassium_nitrate_typical': 0.5
     };
 
-    const ionBalance = window.FertilizerCore.calculateIonBalance(ppm);
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(formula, 1);
 
     assertHasKey(ionBalance, 'totalCations', 'Should have totalCations');
     assertHasKey(ionBalance, 'totalAnions', 'Should have totalAnions');
@@ -664,25 +660,26 @@
       return;
     }
 
-    const targets = { N: 150, P: 40, K: 200, Ca: 100, Mg: 40, S: 40 };
-    const fertIds = [
-      'calcium_nitrate_calcinit_typical',
-      'monopotassium_phosphate_pure',
-      'potassium_nitrate_pure',
-      'magnesium_sulfate_typical'
-    ];
+    const ratio = { N: 3, P: 1, K: 2, Ca: 2, Mg: 0.5, S: 0 };
+    const fertObjects = [
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'calcium_nitrate_calcinit_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'mkp_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'magnesium_sulfate_heptahydrate_common')
+    ].filter(Boolean);
 
-    const result = await window.FertilizerCore.optimizeFormula({
-      targets,
-      volume: 10,
-      availableFertilizers: fertIds,
-      targetEC: 1.5,
-      calcMode: 'elemental'
-    });
+    // optimizeFormula(targetRatios, volume, availableFertilizers, concentration, mode, options)
+    const result = await window.FertilizerCore.optimizeFormula(
+      ratio,
+      1,
+      fertObjects,
+      150,
+      'elemental'
+    );
 
     assert(result !== null, 'Result should not be null');
     assertHasKey(result, 'formula', 'Should have formula');
-    assertHasKey(result, 'ppm', 'Should have ppm');
+    assertHasKey(result, 'achieved', 'Should have achieved');
   });
 
   test('Regression: OXIDE_CONVERSIONS are accurate', () => {
@@ -734,9 +731,9 @@
     const FERTILIZERS = window.FertilizerCore.FERTILIZERS;
     const commonIds = [
       'calcium_nitrate_calcinit_typical',
-      'potassium_nitrate_pure',
-      'monopotassium_phosphate_pure',
-      'magnesium_sulfate_typical'
+      'potassium_nitrate_typical',
+      'mkp_typical',
+      'magnesium_sulfate_heptahydrate_common'
     ];
 
     for (const id of commonIds) {
@@ -796,13 +793,7 @@
   // Export for browser
   if (typeof window !== 'undefined') {
     window.StockSolutionMakerTests = { runTests };
-
-    // Auto-run if DOM ready
-    if (document.readyState === 'complete') {
-      runTests();
-    } else {
-      window.addEventListener('load', runTests);
-    }
+    // Note: Auto-run is handled by test-runner.html, not here
   }
 
   // Export for Node.js
