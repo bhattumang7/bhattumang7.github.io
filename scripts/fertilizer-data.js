@@ -452,6 +452,13 @@
       ],
       pct: { B: 20.0 },
       solubility_gL: 100
+    },
+    {
+      id: "icl_pekacid_pk_acid",
+      name: "ICL PeKacid (0-58-18) - Acidifying PK Fertilizer",
+      aliases: ["PeKacid", "Peakacid", "ICL PeKacid", "PeaK PeKacid", "0-58-18"],
+      pct: { P2O5: 58.0, K2O: 18.0 },
+      solubility_gL: 650
     }
   ];
 
@@ -896,6 +903,14 @@
         {ion: 'Na⁺', charge: 1, count: 2, type: 'cation'},
         {ion: 'B₈O₁₃²⁻', charge: 2, count: 1, type: 'anion'}
       ]
+    },
+    icl_pekacid_pk_acid: {
+      formula: 'KH₂PO₄ (acidified)',
+      molarMass: 136.1,
+      ions: [
+        {ion: 'K⁺', charge: 1, count: 1, type: 'cation'},
+        {ion: 'H₂PO₄⁻', charge: 1, count: 1, type: 'anion'}
+      ]
     }
   };
 
@@ -944,7 +959,8 @@
       'dap_common',
       'ssp_typical',
       'phosphoric_acid_49',
-      'urea_phosphate'
+      'urea_phosphate',
+      'icl_pekacid_pk_acid'
     ],
     silicate_sources: [
       'potassium_silicate_liquid_typical'
