@@ -78,6 +78,10 @@ docker run --rm -it \
 
 **Important:** After making changes to `_config.yml`, you must restart the container for the changes to take effect. Stop the container with `Ctrl+C` and run the command again.
 
+## Blog Posts
+
+For multilingual posts, use `-en` or `-gu` suffix (e.g., `2026-01-11-post-title-en.md`).
+
 ## Configuration
 
 The site configuration is managed in `_config.yml`. To exclude pages from the navigation menu, add them to the `nav_exclude` list.
