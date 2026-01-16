@@ -1432,6 +1432,7 @@ permalink: /fertilizer-calculator/
     <div class="wizard-fertilizer-section">
       <div class="wizard-fertilizer-search">
         <input type="text" v-model="wizardGramsSearchTerm" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
+        <button v-if="wizardGramsSearchTerm" class="clear-search" @click="wizardGramsSearchTerm = ''" type="button" aria-label="Clear search">&times;</button>
       </div>
       <div class="wizard-selection-controls">
         <button @click="clearWizardGramsSelectionsVue" data-i18n="clearAll">Clear All</button>
@@ -1560,6 +1561,7 @@ permalink: /fertilizer-calculator/
     <div class="wizard-fertilizer-section">
       <div class="wizard-fertilizer-search">
         <input type="text" v-model="wizardAvailSearchTerm" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
+        <button v-if="wizardAvailSearchTerm" class="clear-search" @click="wizardAvailSearchTerm = ''" type="button" aria-label="Clear search">&times;</button>
       </div>
       <div class="wizard-selection-controls">
         <button @click="selectAllWizardFertilizersVue" data-i18n="selectAll">Select All</button>
@@ -1744,6 +1746,7 @@ permalink: /fertilizer-calculator/
     <div class="wizard-fertilizer-section">
       <div class="wizard-fertilizer-search">
         <input type="text" v-model="stockFertilizerSearch" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
+        <button v-if="stockFertilizerSearch" class="clear-search" @click="stockFertilizerSearch = ''" type="button" aria-label="Clear search">&times;</button>
       </div>
       <div class="wizard-selection-controls">
         <button @click="selectCommonStockFertilizers()" data-i18n="selectCommon">Select Common</button>

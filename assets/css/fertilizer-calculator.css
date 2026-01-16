@@ -794,11 +794,12 @@
 
 .wizard-fertilizer-search {
   margin-bottom: 12px;
+  position: relative;
 }
 
 .wizard-fertilizer-search input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 40px 10px 12px;
   font-size: 0.95em;
   border: 2px solid #ddd;
   border-radius: 6px;
@@ -808,6 +809,30 @@
 .wizard-fertilizer-search input:focus {
   outline: none;
   border-color: #007bff;
+}
+
+.wizard-fertilizer-search .clear-search {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.3em;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.wizard-fertilizer-search .clear-search:hover {
+  color: #333;
 }
 
 .wizard-fertilizer-list {
