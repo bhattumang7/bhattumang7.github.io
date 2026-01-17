@@ -531,8 +531,14 @@ window.FertilizerCore.calculateNutrientRatios = function(results) {
  * @returns {Object} {formula, achieved}
  */
 window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0 }) {
+  // Helper to log to both console and UI dev logs
+  const devLog = (msg, type = 'info') => {
+    console.log('[MILP]', msg);
+    if (window.addDevLog) window.addDevLog(msg, type);
+  };
+
   // Debug: log PeKacid limit
-  console.log('[MILP] pekacidMaxLimit received:', pekacidMaxLimit, 'volume:', volume, 'target grams:', pekacidMaxLimit * volume);
+  devLog(`pekacidMaxLimit: ${pekacidMaxLimit} g/L, volume: ${volume}L, target grams: ${pekacidMaxLimit * volume}g`);
 
   if (!window.LPModel) {
     throw new Error('MILP dependencies not loaded');
@@ -577,10 +583,10 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   let pekacidSlack = null;
   let pekacidTargetGrams = 0;
   const hasPekacid = x[PEKACID_ID] !== undefined;
-  console.log('[MILP] PeKacid in fertilizers:', hasPekacid, 'limit > 0:', pekacidMaxLimit > 0);
+  devLog(`PeKacid in fertilizers: ${hasPekacid}, limit > 0: ${pekacidMaxLimit > 0}`);
   if (pekacidMaxLimit > 0 && hasPekacid) {
     pekacidTargetGrams = pekacidMaxLimit * volume;
-    console.log('[MILP] Adding PeKacid constraints: targetGrams =', pekacidTargetGrams);
+    devLog(`Adding PeKacid constraints: targetGrams = ${pekacidTargetGrams}g`);
     // Max constraint - can't exceed the limit
     model.addConstr([[1, x[PEKACID_ID]]], '<=', pekacidTargetGrams);
     // Min constraint with slack - try to use at least the limit amount
@@ -589,7 +595,9 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     // When x[PEKACID_ID] = targetGrams, slack can be 0 (no penalty)
     pekacidSlack = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 'pekacid_slack' });
     model.addConstr([[1, pekacidSlack], [1, x[PEKACID_ID]]], '>=', pekacidTargetGrams);
-    console.log('[MILP] PeKacid slack variable created');
+    devLog('PeKacid slack variable created for minimum enforcement');
+  } else if (!hasPekacid && pekacidMaxLimit > 0) {
+    devLog('WARNING: PeKacid limit set but PeKacid not in selected fertilizers!', 'warn');
   }
 
   function perGramContrib(fert) {
@@ -690,6 +698,16 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
       const grams = col && typeof col.Primal === 'number' ? col.Primal : 0;
       if (grams > 1e-4) formula[f.id] = grams;
     });
+  }
+
+  // Log PeKacid result if it was constrained
+  if (pekacidMaxLimit > 0 && hasPekacid) {
+    const pekacidGrams = formula[PEKACID_ID] || 0;
+    const pekacidGPerL = pekacidGrams / volume;
+    devLog(`RESULT: PeKacid = ${pekacidGrams.toFixed(3)}g (${pekacidGPerL.toFixed(4)} g/L), target was ${pekacidTargetGrams}g (${pekacidMaxLimit} g/L)`);
+    if (pekacidGrams < pekacidTargetGrams * 0.99) {
+      devLog(`WARNING: PeKacid below target! Used ${(pekacidGrams/pekacidTargetGrams*100).toFixed(1)}% of limit`, 'warn');
+    }
   }
 
   const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };

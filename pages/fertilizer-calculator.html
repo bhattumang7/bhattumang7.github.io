@@ -1247,6 +1247,17 @@ permalink: /fertilizer-calculator/
 
   <!-- Mode Selector (Wizard Step 1) -->
   <div id="mode-selector" class="mode-selector" v-show="wizardStep === 'mode-selector'">
+    <!-- Experimental Warning Banner -->
+    <div class="experimental-warning-banner" v-if="showExperimentalWarning">
+      <div class="warning-content">
+        <span class="warning-icon">⚠️</span>
+        <span class="warning-text">
+          <strong>Experimental Changes in Progress:</strong> PeKacid priority feature is being tested. Results may vary.
+        </span>
+        <button class="warning-dismiss" @click="showExperimentalWarning = false">×</button>
+      </div>
+    </div>
+
     <h2 data-i18n="whatWouldYouLikeToDo">What would you like to do?</h2>
     <p data-i18n="chooseModeDescription">Choose a calculator mode based on what information you have.</p>
 
@@ -2852,6 +2863,26 @@ permalink: /fertilizer-calculator/
           </template>
         </div>
       </template>
+
+      <!-- Developer Logs Section (Expandable) -->
+      <div class="dev-logs-section" v-if="devLogs.length > 0">
+        <button class="dev-logs-toggle" @click="devLogsExpanded = !devLogsExpanded">
+          <span class="toggle-icon">{{ devLogsExpanded ? '▼' : '▶' }}</span>
+          Developer Logs ({{ devLogs.length }})
+        </button>
+        <div class="dev-logs-container" v-show="devLogsExpanded">
+          <div class="dev-logs-actions">
+            <button @click="clearDevLogs()" class="dev-logs-clear">Clear</button>
+            <button @click="copyDevLogs()" class="dev-logs-copy">Copy All</button>
+          </div>
+          <div class="dev-logs-content">
+            <div v-for="(log, index) in devLogs" :key="index" class="dev-log-entry" :class="log.type">
+              <span class="log-time">{{ log.time }}</span>
+              <span class="log-message">{{ log.message }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -6078,6 +6109,13 @@ const FertilizerApp = {
     // Copy button feedback state (Vue-powered)
     const copiedButtonId = ref(null); // Which copy button is showing "Copied!" feedback
 
+    // Experimental warning banner state
+    const showExperimentalWarning = ref(true);
+
+    // Developer logs state
+    const devLogs = reactive([]);
+    const devLogsExpanded = ref(false);
+
     // Wizard PPM target inputs (for PPM → Grams mode)
     const wizardTargets = reactive({
       N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0'
@@ -8556,6 +8594,39 @@ const FertilizerApp = {
     }
 
     // =========================================================================
+    // DEVELOPER LOGS METHODS
+    // =========================================================================
+
+    // Add a log entry
+    function addDevLog(message, type = 'info') {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', { hour12: false }) + '.' + now.getMilliseconds().toString().padStart(3, '0');
+      devLogs.push({ time, message, type });
+      // Keep only last 100 logs
+      if (devLogs.length > 100) {
+        devLogs.shift();
+      }
+    }
+
+    // Clear all dev logs
+    function clearDevLogs() {
+      devLogs.splice(0, devLogs.length);
+    }
+
+    // Copy all dev logs to clipboard
+    function copyDevLogs() {
+      const logText = devLogs.map(log => `[${log.time}] [${log.type.toUpperCase()}] ${log.message}`).join('\n');
+      navigator.clipboard.writeText(logText).then(() => {
+        alert('Developer logs copied to clipboard!');
+      }).catch(err => {
+        console.error('Failed to copy logs:', err);
+      });
+    }
+
+    // Expose addDevLog globally for fertilizer-core.js to use
+    window.addDevLog = addDevLog;
+
+    // =========================================================================
     // STOCK SOLUTION MAKER METHODS
     // =========================================================================
 
@@ -9217,6 +9288,13 @@ const FertilizerApp = {
       proceedFromPekacidLimitStep,
       backFromPekacidLimitStep,
       goToModeSelector,
+      // Experimental warning and developer logs
+      showExperimentalWarning,
+      devLogs,
+      devLogsExpanded,
+      addDevLog,
+      clearDevLogs,
+      copyDevLogs,
       // Stock Solution Maker Methods
       proceedFromStockSettings,
       backToStockSettings,
