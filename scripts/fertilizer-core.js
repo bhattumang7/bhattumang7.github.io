@@ -1092,7 +1092,8 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
               targets: adjustedPpmTargets,
               volume,
               tolerance: 0.01,
-              onProgress
+              onProgress,
+              pekacidMaxLimit
             });
 
             // Re-apply EC scaling to the adjusted result
