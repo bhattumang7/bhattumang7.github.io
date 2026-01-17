@@ -531,6 +531,9 @@ window.FertilizerCore.calculateNutrientRatios = function(results) {
  * @returns {Object} {formula, achieved}
  */
 window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0 }) {
+  // Debug: log PeKacid limit
+  console.log('[MILP] pekacidMaxLimit received:', pekacidMaxLimit, 'volume:', volume, 'target grams:', pekacidMaxLimit * volume);
+
   if (!window.LPModel) {
     throw new Error('MILP dependencies not loaded');
   }
@@ -573,8 +576,11 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   // We add BOTH a max constraint AND a minimum incentive via slack variable
   let pekacidSlack = null;
   let pekacidTargetGrams = 0;
-  if (pekacidMaxLimit > 0 && x[PEKACID_ID]) {
+  const hasPekacid = x[PEKACID_ID] !== undefined;
+  console.log('[MILP] PeKacid in fertilizers:', hasPekacid, 'limit > 0:', pekacidMaxLimit > 0);
+  if (pekacidMaxLimit > 0 && hasPekacid) {
     pekacidTargetGrams = pekacidMaxLimit * volume;
+    console.log('[MILP] Adding PeKacid constraints: targetGrams =', pekacidTargetGrams);
     // Max constraint - can't exceed the limit
     model.addConstr([[1, x[PEKACID_ID]]], '<=', pekacidTargetGrams);
     // Min constraint with slack - try to use at least the limit amount
@@ -583,6 +589,7 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     // When x[PEKACID_ID] = targetGrams, slack can be 0 (no penalty)
     pekacidSlack = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 'pekacid_slack' });
     model.addConstr([[1, pekacidSlack], [1, x[PEKACID_ID]]], '>=', pekacidTargetGrams);
+    console.log('[MILP] PeKacid slack variable created');
   }
 
   function perGramContrib(fert) {
