@@ -565,6 +565,58 @@
   background: #0056b3;
 }
 
+/* PeKacid Limit Step */
+.pekacid-limit-input {
+  max-width: 400px;
+  margin: 0 auto 25px;
+  text-align: left;
+}
+
+.pekacid-limit-input label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: #333;
+}
+
+.pekacid-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pekacid-input-wrapper input {
+  width: 120px;
+  padding: 12px 15px;
+  font-size: 1.2em;
+  text-align: center;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.pekacid-input-wrapper input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.pekacid-input-wrapper span {
+  font-size: 1.1em;
+  color: #555;
+}
+
+.pekacid-hint {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.4;
+  margin: 0;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
 /* Step 3: Calculation Mode Selection */
 .calc-mode-step {
   display: none;

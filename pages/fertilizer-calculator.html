@@ -1584,8 +1584,29 @@ permalink: /fertilizer-calculator/
     </div>
 
     <div class="wizard-step-buttons">
-      <button class="btn-calculate" id="fertilizer-select-calc-btn" @click="calculateFromWizardFertilizerSelectVue()" data-i18n="calculate">Calculate</button>
+      <button class="btn-continue" id="fertilizer-select-continue-btn" @click="proceedFromFertilizerSelectStep()" data-i18n="continue">Continue →</button>
       <button class="btn-back" id="fertilizer-select-back-btn" @click="backFromFertilizerSelectStep()" data-i18n="back">← Back</button>
+    </div>
+  </div>
+
+  <!-- Step: PeKacid Max Limit (shown when PeKacid is selected in fertilizer selection) -->
+  <div id="pekacid-limit-step" class="wizard-input-step" :class="{ active: wizardStep === 'pekacid-limit-step' }">
+    <div class="step-indicator">{{ getStepIndicator('pekacid-limit-step') }}</div>
+    <h3 data-i18n="pekacidLimitTitle">PeKacid Maximum Limit</h3>
+    <p data-i18n="pekacidLimitDescription">PeKacid is an acidifying fertilizer. Set a maximum limit to control how much is used in the formula. If you enter 0, there will be no limit and PeKacid will be used as needed.</p>
+
+    <div class="pekacid-limit-input">
+      <label for="pekacid-max-limit" data-i18n="pekacidMaxLimitLabel">Maximum PeKacid (grams per liter)</label>
+      <div class="pekacid-input-wrapper">
+        <input type="number" id="pekacid-max-limit" v-model.number="pekacidMaxLimit" min="0" step="0.01" required @keydown.enter="proceedFromPekacidLimitStep()">
+        <span data-i18n="gramsPerLiter">g/L</span>
+      </div>
+      <p class="pekacid-hint" data-i18n="pekacidLimitHint">Enter 0 for no limit. PeKacid will be preferred first until this limit is reached, then other fertilizers will be used to meet remaining targets.</p>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-calculate" @click="proceedFromPekacidLimitStep()" data-i18n="calculate">Calculate</button>
+      <button class="btn-back" @click="backFromPekacidLimitStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -6075,6 +6096,10 @@ const FertilizerApp = {
     const wizardAvailFertilizers = reactive({}); // { fertilizer_id: checked }
     const wizardAvailSearchTerm = ref('');
 
+    // PeKacid max quantity limit (g/L) - 0 means no limit
+    // This is used to cap PeKacid usage for acidification purposes
+    const pekacidMaxLimit = ref(0);
+
     // Stock Solution Maker state
     const stockSettings = reactive({
       concentrationFactor: 100,  // e.g., 100x concentration
@@ -6408,10 +6433,13 @@ const FertilizerApp = {
       if (!mode) return '';
 
       // Step counts per mode
+      // Check if PeKacid is selected to adjust step counts
+      const isPekacidSelected = wizardAvailFertilizers['icl_pekacid_pk_acid'] === true;
+
       const STEP_COUNTS = {
         'ppm-calc': 3,
-        'formula-builder': 4,  // Removed calc-mode-step for this mode
-        'reverse-calc': 6
+        'formula-builder': isPekacidSelected ? 5 : 4,  // +1 if PeKacid selected
+        'reverse-calc': isPekacidSelected ? 7 : 6      // +1 if PeKacid selected
       };
 
       // Step numbers per step and mode
@@ -6422,7 +6450,8 @@ const FertilizerApp = {
         'grams-input-step': { 'ppm-calc': 3 },
         'ppm-targets-step': { 'formula-builder': 3 },  // Was 4, now 3 (no calc-mode-step)
         'npk-ratios-step': { 'reverse-calc': 5 },
-        'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 },  // Was 5, now 4
+        'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 },
+        'pekacid-limit-step': { 'formula-builder': 5, 'reverse-calc': 7 },  // Only shown when PeKacid selected
         'two-tank-question-step': null // Dynamic
       };
 
@@ -6443,11 +6472,14 @@ const FertilizerApp = {
       const mode = currentMode.value;
       if (!mode) return '';
 
+      // Check if PeKacid is selected to adjust step counts
+      const isPekacidSelected = wizardAvailFertilizers['icl_pekacid_pk_acid'] === true;
+
       const STEP_COUNTS = {
         'ppm-calc': 3,
-        'formula-builder': 4,  // Removed calc-mode-step for this mode
-        'reverse-calc': 6,
-        'stock-solution': 4  // Settings, Targets, Fertilizers, Calculate
+        'formula-builder': isPekacidSelected ? 5 : 4,  // +1 if PeKacid selected
+        'reverse-calc': isPekacidSelected ? 7 : 6,     // +1 if PeKacid selected
+        'stock-solution': 4    // Settings, Targets, Fertilizers, Calculate
       };
 
       const STEP_NUMBERS = {
@@ -6458,6 +6490,7 @@ const FertilizerApp = {
         'ppm-targets-step': { 'formula-builder': 3 },  // Was 4, now 3 (no calc-mode-step)
         'npk-ratios-step': { 'reverse-calc': 5 },
         'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 },
+        'pekacid-limit-step': { 'formula-builder': 5, 'reverse-calc': 7 },  // Shown only when PeKacid selected
         // Stock solution steps
         'stock-settings-step': { 'stock-solution': 1 },
         'stock-targets-step': { 'stock-solution': 2 },
@@ -6943,6 +6976,8 @@ const FertilizerApp = {
         }
 
         // Run optimization with progress callback
+        // Include pekacidMaxLimit if PeKacid is selected
+        const pekacidLimit = pekacidMaxLimit.value || 0;
         const result = await optimizeFormula(
           targets,
           formulaVolume.value,
@@ -6952,6 +6987,7 @@ const FertilizerApp = {
           {
             useAbsoluteTargets: true,
             useMilp: true,
+            pekacidMaxLimit: pekacidLimit,
             onProgress: (status) => {
               if (status === 'ready') {
                 progressBar.setIndeterminate(i18n.t('optimizingCombination'));
@@ -7112,6 +7148,8 @@ const FertilizerApp = {
         }
 
         // Run optimization with progress callback
+        // Include pekacidMaxLimit if PeKacid is selected
+        const pekacidLimit = pekacidMaxLimit.value || 0;
         const result = await optimizeFormula(
           targets,
           volume,
@@ -7121,6 +7159,7 @@ const FertilizerApp = {
           {
             targetEC,
             useMilp: true,
+            pekacidMaxLimit: pekacidLimit,
             onProgress: (status) => {
               if (status === 'ready') {
                 progressBar.setIndeterminate(i18n.t('optimizingCombination'));
@@ -8018,7 +8057,7 @@ const FertilizerApp = {
     // Handle keydown.enter for fertilizer select step
     function handleFertilizerSelectEnter(event) {
       if (wizardStep.value === 'fertilizer-select-step' && !isSearchInput(event)) {
-        calculateFromWizardFertilizerSelectVue();
+        proceedFromFertilizerSelectStep();
       }
     }
 
@@ -8437,7 +8476,12 @@ const FertilizerApp = {
       if (mode === 'ppm-calc') {
         showWizardStepVue('grams-input-step');
       } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
-        showWizardStepVue('fertilizer-select-step');
+        // Go back to PeKacid limit step if PeKacid was selected, otherwise go to fertilizer select
+        if (isPekacidSelected()) {
+          showWizardStepVue('pekacid-limit-step');
+        } else {
+          showWizardStepVue('fertilizer-select-step');
+        }
       } else if (mode === 'stock-solution') {
         showWizardStepVue('stock-fertilizer-step');
       } else {
@@ -8456,6 +8500,44 @@ const FertilizerApp = {
       }
     }
 
+    // Check if PeKacid is selected in the available fertilizers
+    function isPekacidSelected() {
+      return wizardAvailFertilizers['icl_pekacid_pk_acid'] === true;
+    }
+
+    // Proceed from fertilizer select step - show PeKacid limit step if selected, otherwise calculate
+    function proceedFromFertilizerSelectStep() {
+      // Check if any fertilizers are selected
+      const selectedFerts = Object.entries(wizardAvailFertilizers)
+        .filter(([id, checked]) => checked)
+        .map(([id]) => id);
+
+      if (selectedFerts.length === 0) {
+        alert(i18n.t('alertSelectFertilizer'));
+        return;
+      }
+
+      // If PeKacid is selected, show the limit step
+      if (isPekacidSelected()) {
+        showWizardStepVue('pekacid-limit-step');
+      } else {
+        // Otherwise, proceed directly to calculation
+        calculateFromWizardFertilizerSelectVue();
+      }
+    }
+
+    // Proceed from PeKacid limit step - run the calculation
+    function proceedFromPekacidLimitStep() {
+      // pekacidMaxLimit is already bound via v-model
+      // The value will be used in the calculation
+      calculateFromWizardFertilizerSelectVue();
+    }
+
+    // Go back from PeKacid limit step to fertilizer select step
+    function backFromPekacidLimitStep() {
+      showWizardStepVue('fertilizer-select-step');
+    }
+
     function goToModeSelector() {
       showWizardStepVue('mode-selector');
       // Reset state
@@ -8470,6 +8552,7 @@ const FertilizerApp = {
       twoTankDisplayData.show = false;
       stockResultsData.show = false;
       wizardResultsSource.value = null;
+      pekacidMaxLimit.value = 0;  // Reset PeKacid limit
     }
 
     // =========================================================================
@@ -9128,6 +9211,11 @@ const FertilizerApp = {
       backFromCalculator,
       backFromWizardResults,
       backFromFertilizerSelectStep,
+      proceedFromFertilizerSelectStep,
+      isPekacidSelected,
+      pekacidMaxLimit,
+      proceedFromPekacidLimitStep,
+      backFromPekacidLimitStep,
       goToModeSelector,
       // Stock Solution Maker Methods
       proceedFromStockSettings,

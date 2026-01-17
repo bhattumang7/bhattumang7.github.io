@@ -525,11 +525,12 @@ window.FertilizerCore.calculateNutrientRatios = function(results) {
 
 /**
  * MILP solver helper using highs.js + lp-model
- * @param {Object} params - {fertilizers, targets, volume, tolerance, onProgress}
+ * @param {Object} params - {fertilizers, targets, volume, tolerance, onProgress, pekacidMaxLimit}
  * @param {Function} params.onProgress - Optional callback for progress updates: (status: string) => void
+ * @param {number} params.pekacidMaxLimit - Optional max limit for PeKacid in g/L (0 = no limit)
  * @returns {Object} {formula, achieved}
  */
-window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress }) {
+window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0 }) {
   if (!window.LPModel) {
     throw new Error('MILP dependencies not loaded');
   }
@@ -562,9 +563,17 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   });
 
   const BIG_M = 10000;
+  const PEKACID_ID = 'icl_pekacid_pk_acid';
   fertilizers.forEach(f => {
     model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
   });
+
+  // Add PeKacid max limit constraint if specified (and > 0)
+  // The limit is in g/L, so max grams = limit * volume
+  if (pekacidMaxLimit > 0 && x[PEKACID_ID]) {
+    const maxGrams = pekacidMaxLimit * volume;
+    model.addConstr([[1, x[PEKACID_ID]]], '<=', maxGrams);
+  }
 
   function perGramContrib(fert) {
     const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
@@ -621,7 +630,15 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
 
   const objective = [];
   fertilizers.forEach(f => {
-    const priorityCoeff = (f.priority || 10) / 10;
+    // PeKacid gets very low priority coefficient (near 0) to be strongly preferred first
+    // This encourages the solver to use PeKacid before other P/K sources
+    // Lower coefficient = higher preference (since we're minimizing)
+    let priorityCoeff;
+    if (f.id === PEKACID_ID) {
+      priorityCoeff = 0.01;  // Very low = strongly prefer PeKacid
+    } else {
+      priorityCoeff = (f.priority || 10) / 10;
+    }
     objective.push([priorityCoeff, y[f.id]]);
   });
   nutrients.forEach(n => {
@@ -900,7 +917,9 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
     };
   }
 
-  const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress });
+  // Pass pekacidMaxLimit to the MILP solver if specified
+  const pekacidMaxLimit = options.pekacidMaxLimit || 0;
+  const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit });
 
   // Apply EC scaling if targetEC is specified
   if (options.targetEC && options.targetEC > 0) {

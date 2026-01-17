@@ -196,6 +196,13 @@ window.i18nLocales.en = {
   twoTanks: 'Two Tanks',
   twoTanksForStockSolutions: 'Split into two tanks for stock solutions',
 
+  // PeKacid Limit Step
+  pekacidLimitTitle: 'PeKacid Maximum Limit',
+  pekacidLimitDescription: 'PeKacid is an acidifying fertilizer. Set a maximum limit to control how much is used in the formula. If you enter 0, there will be no limit and PeKacid will be used as needed.',
+  pekacidMaxLimitLabel: 'Maximum PeKacid (grams per liter)',
+  gramsPerLiter: 'g/L',
+  pekacidLimitHint: 'Enter 0 for no limit. PeKacid will be preferred first until this limit is reached, then other fertilizers will be used to meet remaining targets.',
+
   // Two-Tank Question Step
   twoTankQuestionTitle: 'Would you like to see a two-tank view?',
   incompatibleFertilizersDetected: 'Incompatible fertilizers detected in your selection',
