@@ -568,11 +568,21 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
   });
 
-  // Add PeKacid max limit constraint if specified (and > 0)
-  // The limit is in g/L, so max grams = limit * volume
+  // Add PeKacid limit constraint if specified (and > 0)
+  // The limit is in g/L, so target grams = limit * volume
+  // We add BOTH a max constraint AND a minimum incentive via slack variable
+  let pekacidSlack = null;
+  let pekacidTargetGrams = 0;
   if (pekacidMaxLimit > 0 && x[PEKACID_ID]) {
-    const maxGrams = pekacidMaxLimit * volume;
-    model.addConstr([[1, x[PEKACID_ID]]], '<=', maxGrams);
+    pekacidTargetGrams = pekacidMaxLimit * volume;
+    // Max constraint - can't exceed the limit
+    model.addConstr([[1, x[PEKACID_ID]]], '<=', pekacidTargetGrams);
+    // Min constraint with slack - try to use at least the limit amount
+    // pekacidSlack + x[PEKACID_ID] >= targetGrams
+    // When x[PEKACID_ID] < targetGrams, slack must be positive (penalized)
+    // When x[PEKACID_ID] = targetGrams, slack can be 0 (no penalty)
+    pekacidSlack = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 'pekacid_slack' });
+    model.addConstr([[1, pekacidSlack], [1, x[PEKACID_ID]]], '>=', pekacidTargetGrams);
   }
 
   function perGramContrib(fert) {
@@ -642,14 +652,13 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     objective.push([priorityCoeff, y[f.id]]);
   });
 
-  // Add very strong incentive to MAXIMIZE PeKacid usage up to the limit
-  // By adding a large negative coefficient on the continuous variable, we encourage using more
-  // The constraint we added earlier caps it at the user-specified limit
-  // Must be stronger than slack penalties (100) to override nutrient balancing
-  if (x[PEKACID_ID]) {
-    // Negative coefficient = solver wants to increase this value (since we minimize)
-    // Use -1000 to strongly prioritize filling PeKacid to max before other considerations
-    objective.push([-1000, x[PEKACID_ID]]);
+  // Add very strong penalty for NOT using the full PeKacid limit
+  // The pekacidSlack variable represents how much below the target we are
+  // A very high penalty forces the solver to minimize this slack (i.e., use more PeKacid)
+  if (pekacidSlack) {
+    // Penalty of 10000 makes filling PeKacid to limit more important than exact nutrient ratios
+    // (nutrient slack penalties are only 100)
+    objective.push([10000, pekacidSlack]);
   }
 
   nutrients.forEach(n => {
