@@ -455,9 +455,9 @@
     },
     {
       id: "icl_pekacid_pk_acid",
-      name: "ICL PeKacid (0-58-18) - Acidifying PK Fertilizer",
-      aliases: ["PeKacid", "Peakacid", "ICL PeKacid", "PeaK PeKacid", "0-58-18"],
-      pct: { P2O5: 58.0, K2O: 18.0 },
+      name: "ICL PeKacid (0-60-20) - Acidifying PK Fertilizer",
+      aliases: ["PeKacid", "Peakacid", "ICL PeKacid", "PeaK PeKacid", "0-60-20"],
+      pct: { P2O5: 60.0, K2O: 20.0 },
       solubility_gL: 650
     }
   ];

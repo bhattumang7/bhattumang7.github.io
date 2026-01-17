@@ -629,11 +629,16 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   devLog(`PeKacid in fertilizers: ${hasPekacid}, limit > 0: ${pekacidMaxLimit > 0}`);
   if (pekacidMaxLimit > 0 && hasPekacid) {
     pekacidTargetGrams = pekacidMaxLimit * volume;
-    devLog(`Adding PeKacid constraints: targetGrams = ${pekacidTargetGrams}g`);
-    // Fixed constraint - PeKacid must be exactly the limit amount
-    // This ensures it stays fixed even during EC scaling
-    model.addConstr([[1, x[PEKACID_ID]]], '=', pekacidTargetGrams);
-    devLog('PeKacid fixed to exact amount (not a range)');
+    devLog(`Adding PeKacid constraints: maxGrams = ${pekacidTargetGrams}g`);
+    // Maximum constraint - PeKacid can be used up to the limit
+    // The low priority coefficient (0.01) in the objective encourages using it first
+    // but allows the solver to use less if needed for better ratio matching
+    model.addConstr([[1, x[PEKACID_ID]]], '<=', pekacidTargetGrams);
+    // Slack variable to encourage filling PeKacid up to the cap.
+    // x + slack = target, minimize slack to push x toward the cap when feasible.
+    pekacidSlack = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_pekacid' });
+    model.addConstr([[1, x[PEKACID_ID]], [1, pekacidSlack]], '=', pekacidTargetGrams);
+    devLog('PeKacid capped at maximum (can use less if needed for ratios)');
   } else if (!hasPekacid && pekacidMaxLimit > 0) {
     devLog('WARNING: PeKacid limit set but PeKacid not in selected fertilizers!', 'warn');
   }
@@ -742,10 +747,9 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   if (pekacidMaxLimit > 0 && hasPekacid) {
     const pekacidGrams = formula[PEKACID_ID] || 0;
     const pekacidGPerL = pekacidGrams / volume;
-    devLog(`RESULT: PeKacid = ${pekacidGrams.toFixed(3)}g (${pekacidGPerL.toFixed(4)} g/L), target was ${pekacidTargetGrams}g (${pekacidMaxLimit} g/L)`);
-    if (pekacidGrams < pekacidTargetGrams * 0.99) {
-      devLog(`WARNING: PeKacid below target! Used ${(pekacidGrams/pekacidTargetGrams*100).toFixed(1)}% of limit`, 'warn');
-    }
+    devLog(`RESULT: PeKacid = ${pekacidGrams.toFixed(3)}g (${pekacidGPerL.toFixed(4)} g/L), max allowed was ${pekacidTargetGrams}g (${pekacidMaxLimit} g/L)`);
+    const percentUsed = (pekacidGrams/pekacidTargetGrams*100).toFixed(1);
+    devLog(`PeKacid used ${percentUsed}% of maximum allowed (${pekacidGrams.toFixed(3)}g / ${pekacidTargetGrams}g)`);
   }
 
   const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
@@ -951,6 +955,18 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
   const solveMilpBrowser = window.FertilizerCore.solveMilpBrowser;
   const onProgress = options.onProgress;
 
+  // Helper to log to both console and UI dev logs
+  const devLog = (msg, type = 'info') => {
+    const logMsg = `[OptimizeFormula] ${msg}`;
+    console.log(logMsg);
+    if (window.addDevLog) {
+      window.addDevLog(msg, type);
+    } else {
+      window._pendingDevLogs = window._pendingDevLogs || [];
+      window._pendingDevLogs.push({ msg, type });
+    }
+  };
+
   // MILP is required - no fallback
   if (typeof solveMilpBrowser !== 'function') {
     throw new Error('MILP solver (solveMilpBrowser) is not available. Ensure HiGHS and lp-model are loaded.');
@@ -1002,66 +1018,211 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 
   // Pass pekacidMaxLimit to the MILP solver if specified
   const pekacidMaxLimit = options.pekacidMaxLimit || 0;
-  const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit });
+  let milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit });
 
   // Apply EC scaling if targetEC is specified
   if (options.targetEC && options.targetEC > 0) {
     const estimateECFromPPM = window.FertilizerCore.estimateECFromPPM;
     if (typeof estimateECFromPPM === 'function') {
-      const originalEC = estimateECFromPPM(milpResult.achieved);
+      let originalEC = estimateECFromPPM(milpResult.achieved);
       if (originalEC && originalEC.ec_mS_cm > 0) {
         const PEKACID_ID = 'icl_pekacid_pk_acid';
-        const fixedPekacidGrams = pekacidMaxLimit > 0 ? pekacidMaxLimit * volume : 0;
+        // Strategy: Keep PeKacid at cap whenever possible to maximize acidification
+        // If EC scaling would reduce PeKacid below cap, re-run MILP with PeKacid fixed at cap
 
-        // Calculate EC contribution from fixed PeKacid if present
-        let pekacidECContribution = 0;
-        let pekacidAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-        if (fixedPekacidGrams > 0) {
+        // Calculate initial scale factor - scale all fertilizers proportionally
+        let scaleFactor = options.targetEC / originalEC.ec_mS_cm;
+        const pekacidMaxGrams = pekacidMaxLimit * volume;
+        const pekacidFromMilp = milpResult.formula[PEKACID_ID] || 0;
+        const shouldFixPekacid = pekacidMaxLimit > 0 && pekacidFromMilp > 0;
+        let fixedPekacidGrams = shouldFixPekacid ? Math.min(pekacidFromMilp, pekacidMaxGrams) : 0;
+
+        // Special handling: when PeKacid is fixed at cap, solve ratios for other fertilizers
+        // at the target EC so total ratios stay aligned (PeKacid adds P/K but no N/Ca/Mg).
+        if (shouldFixPekacid && !options.useAbsoluteTargets) {
           const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
-          if (pekacidFert && pekacidFert.pct) {
-            // Calculate nutrient contributions from fixed PeKacid
-            Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
-              const ppm = (fixedPekacidGrams * 1000 * (pct / 100)) / volume;
-              if (nutrient === 'N_NO3') {
-                pekacidAchieved.N_NO3 += ppm;
-                pekacidAchieved.N_total += ppm;
-              } else if (nutrient === 'N_NH4') {
-                pekacidAchieved.N_NH4 += ppm;
-                pekacidAchieved.N_total += ppm;
-              } else if (nutrient === 'N_total') {
-                pekacidAchieved.N_total += ppm;
-              } else if (nutrient === 'P2O5') {
-                pekacidAchieved.P2O5 += ppm;
-                pekacidAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-              } else if (nutrient === 'P') {
-                pekacidAchieved.P += ppm;
-                pekacidAchieved.P2O5 += ppm * P_to_P2O5;
-              } else if (nutrient === 'K2O') {
-                pekacidAchieved.K2O += ppm;
-                pekacidAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-              } else if (nutrient === 'K') {
-                pekacidAchieved.K += ppm;
-                pekacidAchieved.K2O += ppm * K_to_K2O;
-              } else if (nutrient === 'Ca') {
-                pekacidAchieved.Ca += ppm;
-              } else if (nutrient === 'Mg') {
-                pekacidAchieved.Mg += ppm;
-              } else if (nutrient === 'S') {
-                pekacidAchieved.S += ppm;
-              } else if (nutrient === 'Si') {
-                pekacidAchieved.Si += ppm;
+          if (pekacidFert) {
+            const pekacidP2O5_ppm = (fixedPekacidGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
+            const pekacidK2O_ppm = (fixedPekacidGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
+            const pekacidP_ppm = pekacidP2O5_ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+            const pekacidK_ppm = pekacidK2O_ppm * OXIDE_CONVERSIONS.K2O_to_K;
+
+            const ratioValues = [
+              targetRatios.N,
+              targetRatios.P,
+              targetRatios.K,
+              targetRatios.Ca,
+              targetRatios.Mg,
+              targetRatios.S
+            ].filter(v => v > 0);
+            if (ratioValues.length === 0) {
+              return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
+            }
+            const minRatio = Math.min(...ratioValues);
+            const normalizedRatios = {
+              N: targetRatios.N / minRatio,
+              P: targetRatios.P / minRatio,
+              K: targetRatios.K / minRatio,
+              Ca: targetRatios.Ca / minRatio,
+              Mg: targetRatios.Mg / minRatio,
+              S: targetRatios.S / minRatio
+            };
+
+            const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
+            const targetSi = targetRatios.Si || 0;
+
+            const solveForScale = async (scale) => {
+              const targets = {
+                N_total: normalizedRatios.N * scale,
+                P2O5: mode === 'elemental' ? normalizedRatios.P * scale * P_to_P2O5 : normalizedRatios.P * scale,
+                K2O: mode === 'elemental' ? normalizedRatios.K * scale * K_to_K2O : normalizedRatios.K * scale,
+                Ca: normalizedRatios.Ca * scale,
+                Mg: normalizedRatios.Mg * scale,
+                S: normalizedRatios.S * scale,
+                Si: targetSi
+              };
+
+              targets.P2O5 = Math.max(0, (targets.P2O5 || 0) - pekacidP2O5_ppm);
+              targets.K2O = Math.max(0, (targets.K2O || 0) - pekacidK2O_ppm);
+
+              const result = await solveMilpBrowser({
+                fertilizers: fertilizersWithoutPekacid,
+                targets,
+                volume,
+                tolerance: 0.01,
+                onProgress,
+                pekacidMaxLimit: 0
+              });
+
+              result.formula[PEKACID_ID] = fixedPekacidGrams;
+              result.achieved.P2O5 += pekacidP2O5_ppm;
+              result.achieved.P += pekacidP_ppm;
+              result.achieved.K2O += pekacidK2O_ppm;
+              result.achieved.K += pekacidK_ppm;
+
+              const ecData = estimateECFromPPM(result.achieved);
+              return { result, ec: ecData.ec_mS_cm };
+            };
+
+            let lowScale = 1;
+            let highScale = Math.max(concentration, 10);
+            let lowData = await solveForScale(lowScale);
+            let highData = await solveForScale(highScale);
+
+            for (let i = 0; i < 6 && highData.ec < options.targetEC; i++) {
+              lowScale = highScale;
+              lowData = highData;
+              highScale *= 2;
+              highData = await solveForScale(highScale);
+            }
+
+            let best = lowData;
+            if (Math.abs(highData.ec - options.targetEC) < Math.abs(best.ec - options.targetEC)) {
+              best = highData;
+            }
+
+            for (let i = 0; i < 8 && lowData.ec < options.targetEC && highData.ec > options.targetEC; i++) {
+              const midScale = (lowScale + highScale) / 2;
+              const midData = await solveForScale(midScale);
+              if (Math.abs(midData.ec - options.targetEC) < Math.abs(best.ec - options.targetEC)) {
+                best = midData;
               }
-            });
-            const pekacidEC = estimateECFromPPM(pekacidAchieved);
-            pekacidECContribution = pekacidEC ? pekacidEC.ec_mS_cm : 0;
+              if (midData.ec >= options.targetEC) {
+                highScale = midScale;
+                highData = midData;
+              } else {
+                lowScale = midScale;
+                lowData = midData;
+              }
+            }
+
+            return {
+              formula: best.result.formula,
+              achieved: best.result.achieved,
+              targetRatios,
+              targetPPM: ppmTargets,
+              ecScaling: { scaleFactor: 1, originalEC: originalEC.ec_mS_cm, targetEC: options.targetEC, achievedEC: best.ec },
+              pekacidFixed: true
+            };
           }
         }
 
-        // Calculate initial scale factor accounting for fixed PeKacid
-        // targetEC = pekacidEC + (otherEC * scaleFactor)
-        // scaleFactor = (targetEC - pekacidEC) / otherEC
-        const otherEC = originalEC.ec_mS_cm - pekacidECContribution;
-        let scaleFactor = otherEC > 0 ? (options.targetEC - pekacidECContribution) / otherEC : options.targetEC / originalEC.ec_mS_cm;
+        // Enable PeKacid re-run logic to keep PeKacid at cap during EC scaling
+        // PeKacid takes priority for acidification - keep it at cap and adjust other P/K sources
+        const enablePekacidRerun = true;
+
+        // Check if EC scaling would reduce PeKacid below its cap
+        // If so, fix PeKacid at cap and re-calculate other fertilizers at the target EC
+        if (enablePekacidRerun && pekacidMaxLimit > 0 && pekacidFromMilp > 0 && scaleFactor < 0.99) {
+          const scaledPekacid = pekacidFromMilp * scaleFactor;
+
+          // If scaling would reduce PeKacid below 95% of cap, fix it at cap and re-run
+          if (scaledPekacid < pekacidMaxGrams * 0.95) {
+            devLog(`EC scaling would reduce PeKacid from ${pekacidFromMilp.toFixed(3)}g to ${scaledPekacid.toFixed(3)}g (cap is ${pekacidMaxGrams.toFixed(3)}g)`);
+            devLog(`Re-running MILP with PeKacid fixed at cap (${pekacidMaxGrams.toFixed(3)}g) to maintain acidification`);
+
+            const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
+            if (pekacidFert) {
+              // Calculate PeKacid's contribution to nutrients
+              const pekacidP2O5_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
+              const pekacidK2O_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
+              const pekacidP_ppm = pekacidP2O5_ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+              const pekacidK_ppm = pekacidK2O_ppm * OXIDE_CONVERSIONS.K2O_to_K;
+
+              // Calculate PeKacid's EC contribution
+              const pekacidNutrients = { N_total: 0, P: pekacidP_ppm, K: pekacidK_ppm, Ca: 0, Mg: 0, S: 0 };
+              const pekacidEC = estimateECFromPPM(pekacidNutrients);
+              const pekacidECContrib = pekacidEC ? pekacidEC.ec_mS_cm : 0;
+
+              // Remaining EC budget for other fertilizers
+              const remainingEC = options.targetEC - pekacidECContrib;
+              devLog(`PeKacid EC contribution: ${pekacidECContrib.toFixed(2)} mS/cm, remaining EC budget: ${remainingEC.toFixed(2)} mS/cm`);
+
+              // Subtract PeKacid's P and K contributions from targets
+              // Keep N, Ca, Mg, S at original levels (PeKacid doesn't provide these)
+              // This maintains the correct N:Ca:Mg ratios while accounting for PeKacid's P and K
+              const adjustedTargets = { ...ppmTargets };
+              adjustedTargets.P2O5 = Math.max(0, (ppmTargets.P2O5 || 0) - pekacidP2O5_ppm);
+              adjustedTargets.K2O = Math.max(0, (ppmTargets.K2O || 0) - pekacidK2O_ppm);
+
+              devLog(`Adjusted targets for other fertilizers (PeKacid P/K subtracted): N:${(adjustedTargets.N_total || 0).toFixed(1)} P2O5:${adjustedTargets.P2O5.toFixed(1)} K2O:${adjustedTargets.K2O.toFixed(1)}`);
+
+              // Re-run MILP without PeKacid, using adjusted targets
+              const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
+              const rerunResult = await solveMilpBrowser({
+                fertilizers: fertilizersWithoutPekacid,
+                targets: adjustedTargets,
+                volume,
+                tolerance: 0.01,
+                onProgress,
+                pekacidMaxLimit: 0
+              });
+
+              devLog(`Re-run MILP complete. Keeping ratios intact (not scaling for EC).`);
+
+              // Now add PeKacid back at cap
+              rerunResult.formula[PEKACID_ID] = pekacidMaxGrams;
+
+              // Add PeKacid's contribution to achieved
+              rerunResult.achieved.P2O5 += pekacidP2O5_ppm;
+              rerunResult.achieved.P += pekacidP_ppm;
+              rerunResult.achieved.K2O += pekacidK2O_ppm;
+              rerunResult.achieved.K += pekacidK_ppm;
+
+              devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
+
+              // Calculate final EC
+              const rerunEC = estimateECFromPPM(rerunResult.achieved);
+              devLog(`Final EC with PeKacid at cap (maintaining ratios): ${rerunEC.ec_mS_cm.toFixed(2)} mS/cm (target was: ${options.targetEC.toFixed(2)})`);
+
+              // Continue scaling with PeKacid fixed at cap to match target EC as closely as possible.
+              milpResult = rerunResult;
+              originalEC = rerunEC;
+              scaleFactor = options.targetEC / originalEC.ec_mS_cm;
+              fixedPekacidGrams = pekacidMaxGrams;
+            }
+          }
+        }
 
         let scaledFormula = {};
         let scaledAchieved = {};
@@ -1071,13 +1232,11 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
         const targetSi = targetRatios.Si || 0;
 
         // Iterate up to 5 times to converge on target EC
-
         for (let i = 0; i < 5; i++) {
-          // Scale formula, but keep PeKacid fixed if it has a limit
+          // Scale fertilizers proportionally, keeping PeKacid fixed at cap when applicable
           scaledFormula = {};
           Object.entries(milpResult.formula).forEach(([fertId, grams]) => {
-            if (fertId === PEKACID_ID && fixedPekacidGrams > 0) {
-              // Don't scale PeKacid - keep it fixed at the limit
+            if (fertId === PEKACID_ID && shouldFixPekacid) {
               scaledFormula[fertId] = fixedPekacidGrams;
             } else {
               scaledFormula[fertId] = grams * scaleFactor;
@@ -1086,7 +1245,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 
           // Scale achieved PPM
           // We need to calculate from the scaled formula instead of scaling achieved PPM
-          // because PeKacid is not scaled
+          // because PeKacid may be fixed at cap during scaling
           scaledAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
           availableFertilizers.forEach(fert => {
             const grams = scaledFormula[fert.id] || 0;
@@ -1145,10 +1304,126 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
           const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
           if (error < 0.01) break;
 
-          // Adjust scale factor accounting for fixed PeKacid EC contribution
-          // targetEC = pekacidEC + (otherEC * scaleFactor)
-          const currentOtherEC = finalEC - pekacidECContribution;
-          scaleFactor = currentOtherEC > 0 ? (options.targetEC - pekacidECContribution) / currentOtherEC : scaleFactor * (options.targetEC / finalEC);
+          // Adjust scale factor to converge to target EC
+          scaleFactor = scaleFactor * (options.targetEC / finalEC);
+        }
+
+        // Check if PeKacid exceeds cap after EC scaling
+        // If it does, cap it and re-run MILP with PeKacid fixed at the cap
+        const scaledPekacid = scaledFormula[PEKACID_ID] || 0;
+        if (pekacidMaxLimit > 0 && scaledPekacid > pekacidMaxGrams * 1.001) {
+          devLog(`PeKacid after EC scaling (${scaledPekacid.toFixed(3)}g) exceeds cap (${pekacidMaxGrams.toFixed(3)}g) - re-running MILP with PeKacid fixed at cap`);
+
+          // Re-run MILP with PeKacid fixed at the cap amount
+          // Calculate new targets: reduce P and K targets by what PeKacid provides
+          const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
+          if (pekacidFert) {
+            const pekacidP2O5_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
+            const pekacidK2O_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
+
+            const adjustedTargets = { ...ppmTargets };
+            adjustedTargets.P2O5 = Math.max(0, (ppmTargets.P2O5 || 0) - pekacidP2O5_ppm);
+            adjustedTargets.K2O = Math.max(0, (ppmTargets.K2O || 0) - pekacidK2O_ppm);
+
+            devLog(`Adjusted targets after fixing PeKacid: P2O5:${adjustedTargets.P2O5.toFixed(1)} K2O:${adjustedTargets.K2O.toFixed(1)}`);
+
+            // Re-run MILP without PeKacid in the fertilizer list
+            const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
+            const rerunResult = await solveMilpBrowser({
+              fertilizers: fertilizersWithoutPekacid,
+              targets: adjustedTargets,
+              volume,
+              tolerance: 0.01,
+              onProgress,
+              pekacidMaxLimit: 0  // No PeKacid limit since we're excluding it
+            });
+
+            // Add PeKacid back to the formula at the capped amount
+            rerunResult.formula[PEKACID_ID] = pekacidMaxGrams;
+
+            // Recalculate achieved with PeKacid included
+            Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
+              const ppm = (pekacidMaxGrams * 1000 * (pct / 100)) / volume;
+              if (nutrient === 'P2O5') {
+                rerunResult.achieved.P2O5 += ppm;
+                rerunResult.achieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+              } else if (nutrient === 'K2O') {
+                rerunResult.achieved.K2O += ppm;
+                rerunResult.achieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+              }
+            });
+
+            devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
+
+            // Use the re-run result and re-apply EC scaling
+            milpResult = rerunResult;
+            const newEC = estimateECFromPPM(rerunResult.achieved);
+            scaleFactor = options.targetEC / newEC.ec_mS_cm;
+
+            // Re-scale with PeKacid fixed at cap
+            scaledFormula = {};
+            Object.entries(rerunResult.formula).forEach(([fertId, grams]) => {
+              if (fertId === PEKACID_ID) {
+                scaledFormula[fertId] = pekacidMaxGrams;  // Keep PeKacid at cap
+              } else {
+                scaledFormula[fertId] = grams * scaleFactor;
+              }
+            });
+
+            // Recalculate achieved after scaling
+            scaledAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+            availableFertilizers.forEach(fert => {
+              const grams = scaledFormula[fert.id] || 0;
+              if (grams === 0) return;
+              const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+              Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+                const ppm = (grams * 1000 * (pct / 100)) / volume;
+                if (nutrient === 'N_NO3') {
+                  scaledAchieved.N_NO3 += ppm;
+                  scaledAchieved.N_total += ppm;
+                } else if (nutrient === 'N_NH4') {
+                  scaledAchieved.N_NH4 += ppm;
+                  scaledAchieved.N_total += ppm;
+                } else if (nutrient === 'N_total' && !hasNForms) {
+                  scaledAchieved.N_total += ppm;
+                } else if (nutrient === 'P2O5') {
+                  scaledAchieved.P2O5 += ppm;
+                  scaledAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+                } else if (nutrient === 'P') {
+                  scaledAchieved.P += ppm;
+                  scaledAchieved.P2O5 += ppm * P_to_P2O5;
+                } else if (nutrient === 'K2O') {
+                  scaledAchieved.K2O += ppm;
+                  scaledAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+                } else if (nutrient === 'K') {
+                  scaledAchieved.K += ppm;
+                  scaledAchieved.K2O += ppm * K_to_K2O;
+                } else if (nutrient === 'Ca') {
+                  scaledAchieved.Ca += ppm;
+                } else if (nutrient === 'CaO') {
+                  scaledAchieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
+                } else if (nutrient === 'Mg') {
+                  scaledAchieved.Mg += ppm;
+                } else if (nutrient === 'MgO') {
+                  scaledAchieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
+                } else if (nutrient === 'S') {
+                  scaledAchieved.S += ppm;
+                } else if (nutrient === 'SO3') {
+                  scaledAchieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
+                } else if (nutrient === 'SiO2') {
+                  scaledAchieved.Si += ppm * 0.46744;
+                } else if (nutrient === 'SiOH4') {
+                  scaledAchieved.Si += ppm * 0.2922;
+                } else if (nutrient === 'Si') {
+                  scaledAchieved.Si += ppm;
+                }
+              });
+            });
+
+            const finalECAfterRerun = estimateECFromPPM(scaledAchieved);
+            finalEC = finalECAfterRerun.ec_mS_cm;
+            devLog(`Final EC after re-run and scaling: ${finalEC.toFixed(2)} mS/cm (target: ${options.targetEC.toFixed(2)})`);
+          }
         }
 
         // For Si: if user specified an absolute Si target, we need to iteratively adjust
@@ -1200,20 +1475,14 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
             // Re-apply EC scaling to the adjusted result
             const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
             if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
-              // Calculate scale factor accounting for fixed PeKacid EC
-              const adjustedOtherEC = adjustedOriginalEC.ec_mS_cm - pekacidECContribution;
-              scaleFactor = adjustedOtherEC > 0 ? (options.targetEC - pekacidECContribution) / adjustedOtherEC : options.targetEC / adjustedOriginalEC.ec_mS_cm;
+              // Calculate scale factor - scale all fertilizers proportionally
+              scaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
 
               for (let i = 0; i < 5; i++) {
-                // Scale formula, but keep PeKacid fixed if it has a limit
+                // Scale ALL fertilizers proportionally to maintain ratios
                 scaledFormula = {};
                 Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
-                  if (fertId === PEKACID_ID && fixedPekacidGrams > 0) {
-                    // Don't scale PeKacid - keep it fixed at the limit
-                    scaledFormula[fertId] = fixedPekacidGrams;
-                  } else {
-                    scaledFormula[fertId] = grams * scaleFactor;
-                  }
+                  scaledFormula[fertId] = grams * scaleFactor;
                 });
 
                 // Recalculate achieved PPM from the scaled formula
@@ -1273,9 +1542,8 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                 const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
                 if (error < 0.01) break;
 
-                // Adjust scale factor accounting for fixed PeKacid EC contribution
-                const currentOtherEC = finalEC - pekacidECContribution;
-                scaleFactor = currentOtherEC > 0 ? (options.targetEC - pekacidECContribution) / currentOtherEC : scaleFactor * (options.targetEC / finalEC);
+                // Adjust scale factor to converge to target EC
+                scaleFactor = scaleFactor * (options.targetEC / finalEC);
               }
             }
           }
