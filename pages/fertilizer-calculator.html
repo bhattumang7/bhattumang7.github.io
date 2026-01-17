@@ -6965,6 +6965,9 @@ const FertilizerApp = {
 
     // Build formula (PPM to Grams calculation)
     async function buildFormulaVue() {
+      // Log calculation start
+      addDevLog('=== Formula Builder Calculation Started ===');
+
       // Validate volume
       if (!formulaVolume.value || formulaVolume.value <= 0) {
         alert(i18n.t('alertEnterValidSolutionVolume'));
@@ -6981,6 +6984,8 @@ const FertilizerApp = {
         S: parseFloat(formulaTargets.S) || 0,
         Si: parseFloat(formulaTargets.Si) || 0
       };
+
+      addDevLog(`Volume: ${formulaVolume.value}L, PeKacid limit: ${pekacidMaxLimit.value} g/L`);
 
       // Check at least one target
       const hasTarget = Object.values(targets).some(v => v > 0);
@@ -7125,6 +7130,9 @@ const FertilizerApp = {
 
     // Calculate reverse (Ratio to Grams)
     async function calculateReverseVue() {
+      // Log calculation start
+      addDevLog('=== NPK Ratio Calculator Started ===');
+
       // Build targets object
       const targets = {
         N: parseFloat(ratioTargets.N) || 0,
@@ -7137,6 +7145,12 @@ const FertilizerApp = {
       };
 
       const volume = ratioVolume.value;
+      const pekacidLimit = pekacidMaxLimit.value || 0;
+
+      // Log input parameters
+      addDevLog(`Volume: ${volume}L`);
+      addDevLog(`Ratios: N:${targets.N} P:${targets.P} K:${targets.K} Ca:${targets.Ca} Mg:${targets.Mg}`);
+      addDevLog(`PeKacid limit: ${pekacidLimit > 0 ? pekacidLimit + ' g/L' : 'none'}`);
       const concentrationValue = ratioTargetEC.value;
 
       // Check at least one nutrient
@@ -7158,6 +7172,10 @@ const FertilizerApp = {
         alert(i18n.t('alertSelectFertilizer'));
         return;
       }
+
+      // Log selected fertilizers
+      const fertNames = selected.map(f => f.name.split(' - ')[0].split(' (')[0].substring(0, 20)).join(', ');
+      addDevLog(`Fertilizers (${selected.length}): ${fertNames}`);
 
       // Parse EC target
       let targetEC = null;
@@ -7213,11 +7231,32 @@ const FertilizerApp = {
 
         ratioResults.value = result;
 
+        // Log results
+        if (result && result.formula) {
+          const formulaStr = Object.entries(result.formula)
+            .map(([id, g]) => {
+              const fert = FERTILIZERS.find(f => f.id === id);
+              const name = fert ? fert.name.split(' - ')[0].split(' (')[0].substring(0, 15) : id;
+              return `${name}: ${g.toFixed(2)}g`;
+            })
+            .join(', ');
+          addDevLog(`Result: ${formulaStr}`);
+
+          // Check PeKacid specifically
+          const pekacidGrams = result.formula['icl_pekacid_pk_acid'] || 0;
+          if (pekacidLimit > 0 || pekacidGrams > 0) {
+            const pekacidGPerL = pekacidGrams / volume;
+            addDevLog(`PeKacid: ${pekacidGrams.toFixed(3)}g (${pekacidGPerL.toFixed(4)} g/L) - limit was ${pekacidLimit} g/L`);
+          }
+        }
+        addDevLog('=== Calculation Complete ===');
+
         // Display using Vue-powered function
         setReverseResults(result, targets, volume, targetEC);
 
       } catch (error) {
         console.error('Reverse calculation error:', error);
+        addDevLog(`ERROR: ${error.message}`, 'error');
         alert(i18n.t('alertCalculationError'));
       } finally {
         ratioIsCalculating.value = false;
