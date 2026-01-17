@@ -532,10 +532,24 @@ window.FertilizerCore.calculateNutrientRatios = function(results) {
  */
 window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0 }) {
   // Helper to log to both console and UI dev logs
+  // Queue logs if addDevLog isn't ready yet, flush when it becomes available
   const devLog = (msg, type = 'info') => {
-    console.log('[MILP]', msg);
-    if (window.addDevLog) window.addDevLog(msg, type);
+    const logMsg = `[MILP] ${msg}`;
+    console.log(logMsg);
+    if (window.addDevLog) {
+      window.addDevLog(msg, type);
+    } else {
+      // Queue for later
+      window._pendingDevLogs = window._pendingDevLogs || [];
+      window._pendingDevLogs.push({ msg, type });
+    }
   };
+
+  // Flush any pending logs if addDevLog is now available
+  if (window.addDevLog && window._pendingDevLogs && window._pendingDevLogs.length > 0) {
+    window._pendingDevLogs.forEach(log => window.addDevLog(log.msg, log.type));
+    window._pendingDevLogs = [];
+  }
 
   // Helper to get short fertilizer name (first part before parenthesis or dash)
   const shortName = (fert) => {
