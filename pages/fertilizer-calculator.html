@@ -1247,17 +1247,6 @@ permalink: /fertilizer-calculator/
 
   <!-- Mode Selector (Wizard Step 1) -->
   <div id="mode-selector" class="mode-selector" v-show="wizardStep === 'mode-selector'">
-    <!-- Experimental Warning Banner -->
-    <div class="experimental-warning-banner" v-if="showExperimentalWarning">
-      <div class="warning-content">
-        <span class="warning-icon">⚠️</span>
-        <span class="warning-text">
-          <strong>Experimental Changes in Progress:</strong> PeKacid priority feature is being tested. Results may vary.
-        </span>
-        <button class="warning-dismiss" @click="showExperimentalWarning = false">×</button>
-      </div>
-    </div>
-
     <h2 data-i18n="whatWouldYouLikeToDo">What would you like to do?</h2>
     <p data-i18n="chooseModeDescription">Choose a calculator mode based on what information you have.</p>
 
@@ -4008,7 +3997,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.6.0
+    v1.7.0
   </div>
 
 </div>
@@ -6110,8 +6099,8 @@ const FertilizerApp = {
     // Copy button feedback state (Vue-powered)
     const copiedButtonId = ref(null); // Which copy button is showing "Copied!" feedback
 
-    // Experimental warning banner state
-    const showExperimentalWarning = ref(true);
+    // Experimental warning banner state (removed - PeKacid feature is now stable)
+    const showExperimentalWarning = ref(false);
 
     // Developer logs state
     const devLogs = reactive([]);
