@@ -630,15 +630,10 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   if (pekacidMaxLimit > 0 && hasPekacid) {
     pekacidTargetGrams = pekacidMaxLimit * volume;
     devLog(`Adding PeKacid constraints: targetGrams = ${pekacidTargetGrams}g`);
-    // Max constraint - can't exceed the limit
-    model.addConstr([[1, x[PEKACID_ID]]], '<=', pekacidTargetGrams);
-    // Min constraint with slack - try to use at least the limit amount
-    // pekacidSlack + x[PEKACID_ID] >= targetGrams
-    // When x[PEKACID_ID] < targetGrams, slack must be positive (penalized)
-    // When x[PEKACID_ID] = targetGrams, slack can be 0 (no penalty)
-    pekacidSlack = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 'pekacid_slack' });
-    model.addConstr([[1, pekacidSlack], [1, x[PEKACID_ID]]], '>=', pekacidTargetGrams);
-    devLog('PeKacid slack variable created for minimum enforcement');
+    // Fixed constraint - PeKacid must be exactly the limit amount
+    // This ensures it stays fixed even during EC scaling
+    model.addConstr([[1, x[PEKACID_ID]]], '=', pekacidTargetGrams);
+    devLog('PeKacid fixed to exact amount (not a range)');
   } else if (!hasPekacid && pekacidMaxLimit > 0) {
     devLog('WARNING: PeKacid limit set but PeKacid not in selected fertilizers!', 'warn');
   }
@@ -1015,8 +1010,59 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
     if (typeof estimateECFromPPM === 'function') {
       const originalEC = estimateECFromPPM(milpResult.achieved);
       if (originalEC && originalEC.ec_mS_cm > 0) {
-        // Iterative scaling to handle non-linear ionic strength correction
-        let scaleFactor = options.targetEC / originalEC.ec_mS_cm;
+        const PEKACID_ID = 'icl_pekacid_pk_acid';
+        const fixedPekacidGrams = pekacidMaxLimit > 0 ? pekacidMaxLimit * volume : 0;
+
+        // Calculate EC contribution from fixed PeKacid if present
+        let pekacidECContribution = 0;
+        let pekacidAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+        if (fixedPekacidGrams > 0) {
+          const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
+          if (pekacidFert && pekacidFert.pct) {
+            // Calculate nutrient contributions from fixed PeKacid
+            Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
+              const ppm = (fixedPekacidGrams * 1000 * (pct / 100)) / volume;
+              if (nutrient === 'N_NO3') {
+                pekacidAchieved.N_NO3 += ppm;
+                pekacidAchieved.N_total += ppm;
+              } else if (nutrient === 'N_NH4') {
+                pekacidAchieved.N_NH4 += ppm;
+                pekacidAchieved.N_total += ppm;
+              } else if (nutrient === 'N_total') {
+                pekacidAchieved.N_total += ppm;
+              } else if (nutrient === 'P2O5') {
+                pekacidAchieved.P2O5 += ppm;
+                pekacidAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+              } else if (nutrient === 'P') {
+                pekacidAchieved.P += ppm;
+                pekacidAchieved.P2O5 += ppm * P_to_P2O5;
+              } else if (nutrient === 'K2O') {
+                pekacidAchieved.K2O += ppm;
+                pekacidAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+              } else if (nutrient === 'K') {
+                pekacidAchieved.K += ppm;
+                pekacidAchieved.K2O += ppm * K_to_K2O;
+              } else if (nutrient === 'Ca') {
+                pekacidAchieved.Ca += ppm;
+              } else if (nutrient === 'Mg') {
+                pekacidAchieved.Mg += ppm;
+              } else if (nutrient === 'S') {
+                pekacidAchieved.S += ppm;
+              } else if (nutrient === 'Si') {
+                pekacidAchieved.Si += ppm;
+              }
+            });
+            const pekacidEC = estimateECFromPPM(pekacidAchieved);
+            pekacidECContribution = pekacidEC ? pekacidEC.ec_mS_cm : 0;
+          }
+        }
+
+        // Calculate initial scale factor accounting for fixed PeKacid
+        // targetEC = pekacidEC + (otherEC * scaleFactor)
+        // scaleFactor = (targetEC - pekacidEC) / otherEC
+        const otherEC = originalEC.ec_mS_cm - pekacidECContribution;
+        let scaleFactor = otherEC > 0 ? (options.targetEC - pekacidECContribution) / otherEC : options.targetEC / originalEC.ec_mS_cm;
+
         let scaledFormula = {};
         let scaledAchieved = {};
         let finalEC = originalEC.ec_mS_cm;
@@ -1025,49 +1071,71 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
         const targetSi = targetRatios.Si || 0;
 
         // Iterate up to 5 times to converge on target EC
+
         for (let i = 0; i < 5; i++) {
-          // Scale formula
+          // Scale formula, but keep PeKacid fixed if it has a limit
           scaledFormula = {};
           Object.entries(milpResult.formula).forEach(([fertId, grams]) => {
-            scaledFormula[fertId] = grams * scaleFactor;
-          });
-
-          // PeKacid should not be scaled below its minimum target
-          // If EC scaling reduced it, restore it to the minimum
-          const PEKACID_ID = 'icl_pekacid_pk_acid';
-          let pekacidAmountDiff = 0;
-          if (pekacidMaxLimit > 0 && scaledFormula[PEKACID_ID] !== undefined) {
-            const minPekacid = pekacidMaxLimit * volume;
-            const scaledPekacid = scaledFormula[PEKACID_ID];
-            if (scaledPekacid < minPekacid) {
-              pekacidAmountDiff = minPekacid - scaledPekacid;
-              scaledFormula[PEKACID_ID] = minPekacid;
+            if (fertId === PEKACID_ID && fixedPekacidGrams > 0) {
+              // Don't scale PeKacid - keep it fixed at the limit
+              scaledFormula[fertId] = fixedPekacidGrams;
+            } else {
+              scaledFormula[fertId] = grams * scaleFactor;
             }
-          }
+          });
 
           // Scale achieved PPM
-          scaledAchieved = {};
-          Object.entries(milpResult.achieved).forEach(([key, value]) => {
-            scaledAchieved[key] = value * scaleFactor;
-          });
+          // We need to calculate from the scaled formula instead of scaling achieved PPM
+          // because PeKacid is not scaled
+          scaledAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+          availableFertilizers.forEach(fert => {
+            const grams = scaledFormula[fert.id] || 0;
+            if (grams === 0) return;
 
-          // Recalculate PeKacid contribution if it was restored to minimum
-          if (pekacidAmountDiff > 0) {
-            const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
-            if (pekacidFert && pekacidFert.pct) {
-              Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
-                const additionalPPM = (pekacidAmountDiff * 1000 * (pct / 100)) / volume;
-                if (nutrient === 'P2O5' || nutrient === 'K2O' || nutrient === 'N_total' ||
-                    nutrient === 'Ca' || nutrient === 'Mg' || nutrient === 'S' || nutrient === 'Si') {
-                  scaledAchieved[nutrient] = (scaledAchieved[nutrient] || 0) + additionalPPM;
-                } else if (nutrient === 'P') {
-                  scaledAchieved.P2O5 = (scaledAchieved.P2O5 || 0) + additionalPPM * P_to_P2O5;
-                } else if (nutrient === 'K') {
-                  scaledAchieved.K2O = (scaledAchieved.K2O || 0) + additionalPPM * K_to_K2O;
-                }
-              });
-            }
-          }
+            const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+            Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+              const ppm = (grams * 1000 * (pct / 100)) / volume;
+              if (nutrient === 'N_NO3') {
+                scaledAchieved.N_NO3 += ppm;
+                scaledAchieved.N_total += ppm;
+              } else if (nutrient === 'N_NH4') {
+                scaledAchieved.N_NH4 += ppm;
+                scaledAchieved.N_total += ppm;
+              } else if (nutrient === 'N_total' && !hasNForms) {
+                scaledAchieved.N_total += ppm;
+              } else if (nutrient === 'P2O5') {
+                scaledAchieved.P2O5 += ppm;
+                scaledAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+              } else if (nutrient === 'P') {
+                scaledAchieved.P += ppm;
+                scaledAchieved.P2O5 += ppm * P_to_P2O5;
+              } else if (nutrient === 'K2O') {
+                scaledAchieved.K2O += ppm;
+                scaledAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+              } else if (nutrient === 'K') {
+                scaledAchieved.K += ppm;
+                scaledAchieved.K2O += ppm * K_to_K2O;
+              } else if (nutrient === 'Ca') {
+                scaledAchieved.Ca += ppm;
+              } else if (nutrient === 'CaO') {
+                scaledAchieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
+              } else if (nutrient === 'Mg') {
+                scaledAchieved.Mg += ppm;
+              } else if (nutrient === 'MgO') {
+                scaledAchieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
+              } else if (nutrient === 'S') {
+                scaledAchieved.S += ppm;
+              } else if (nutrient === 'SO3') {
+                scaledAchieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
+              } else if (nutrient === 'SiO2') {
+                scaledAchieved.Si += ppm * 0.46744;
+              } else if (nutrient === 'SiOH4') {
+                scaledAchieved.Si += ppm * 0.2922;
+              } else if (nutrient === 'Si') {
+                scaledAchieved.Si += ppm;
+              }
+            });
+          });
 
           // Check actual EC after scaling
           const newEC = estimateECFromPPM(scaledAchieved);
@@ -1077,8 +1145,10 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
           const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
           if (error < 0.01) break;
 
-          // Adjust scale factor based on error
-          scaleFactor = scaleFactor * (options.targetEC / finalEC);
+          // Adjust scale factor accounting for fixed PeKacid EC contribution
+          // targetEC = pekacidEC + (otherEC * scaleFactor)
+          const currentOtherEC = finalEC - pekacidECContribution;
+          scaleFactor = currentOtherEC > 0 ? (options.targetEC - pekacidECContribution) / currentOtherEC : scaleFactor * (options.targetEC / finalEC);
         }
 
         // For Si: if user specified an absolute Si target, we need to iteratively adjust
@@ -1130,48 +1200,72 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
             // Re-apply EC scaling to the adjusted result
             const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
             if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
-              scaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
+              // Calculate scale factor accounting for fixed PeKacid EC
+              const adjustedOtherEC = adjustedOriginalEC.ec_mS_cm - pekacidECContribution;
+              scaleFactor = adjustedOtherEC > 0 ? (options.targetEC - pekacidECContribution) / adjustedOtherEC : options.targetEC / adjustedOriginalEC.ec_mS_cm;
 
               for (let i = 0; i < 5; i++) {
+                // Scale formula, but keep PeKacid fixed if it has a limit
                 scaledFormula = {};
                 Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
-                  scaledFormula[fertId] = grams * scaleFactor;
+                  if (fertId === PEKACID_ID && fixedPekacidGrams > 0) {
+                    // Don't scale PeKacid - keep it fixed at the limit
+                    scaledFormula[fertId] = fixedPekacidGrams;
+                  } else {
+                    scaledFormula[fertId] = grams * scaleFactor;
+                  }
                 });
 
-                // PeKacid should not be scaled below its minimum target
-                const PEKACID_ID = 'icl_pekacid_pk_acid';
-                let pekacidAmountDiff = 0;
-                if (pekacidMaxLimit > 0 && scaledFormula[PEKACID_ID] !== undefined) {
-                  const minPekacid = pekacidMaxLimit * volume;
-                  const scaledPekacid = scaledFormula[PEKACID_ID];
-                  if (scaledPekacid < minPekacid) {
-                    pekacidAmountDiff = minPekacid - scaledPekacid;
-                    scaledFormula[PEKACID_ID] = minPekacid;
-                  }
-                }
+                // Recalculate achieved PPM from the scaled formula
+                scaledAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+                availableFertilizers.forEach(fert => {
+                  const grams = scaledFormula[fert.id] || 0;
+                  if (grams === 0) return;
 
-                scaledAchieved = {};
-                Object.entries(adjustedResult.achieved).forEach(([key, value]) => {
-                  scaledAchieved[key] = value * scaleFactor;
+                  const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+                  Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+                    const ppm = (grams * 1000 * (pct / 100)) / volume;
+                    if (nutrient === 'N_NO3') {
+                      scaledAchieved.N_NO3 += ppm;
+                      scaledAchieved.N_total += ppm;
+                    } else if (nutrient === 'N_NH4') {
+                      scaledAchieved.N_NH4 += ppm;
+                      scaledAchieved.N_total += ppm;
+                    } else if (nutrient === 'N_total' && !hasNForms) {
+                      scaledAchieved.N_total += ppm;
+                    } else if (nutrient === 'P2O5') {
+                      scaledAchieved.P2O5 += ppm;
+                      scaledAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+                    } else if (nutrient === 'P') {
+                      scaledAchieved.P += ppm;
+                      scaledAchieved.P2O5 += ppm * P_to_P2O5;
+                    } else if (nutrient === 'K2O') {
+                      scaledAchieved.K2O += ppm;
+                      scaledAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+                    } else if (nutrient === 'K') {
+                      scaledAchieved.K += ppm;
+                      scaledAchieved.K2O += ppm * K_to_K2O;
+                    } else if (nutrient === 'Ca') {
+                      scaledAchieved.Ca += ppm;
+                    } else if (nutrient === 'CaO') {
+                      scaledAchieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
+                    } else if (nutrient === 'Mg') {
+                      scaledAchieved.Mg += ppm;
+                    } else if (nutrient === 'MgO') {
+                      scaledAchieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
+                    } else if (nutrient === 'S') {
+                      scaledAchieved.S += ppm;
+                    } else if (nutrient === 'SO3') {
+                      scaledAchieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
+                    } else if (nutrient === 'SiO2') {
+                      scaledAchieved.Si += ppm * 0.46744;
+                    } else if (nutrient === 'SiOH4') {
+                      scaledAchieved.Si += ppm * 0.2922;
+                    } else if (nutrient === 'Si') {
+                      scaledAchieved.Si += ppm;
+                    }
+                  });
                 });
-
-                // Recalculate PeKacid contribution if it was restored to minimum
-                if (pekacidAmountDiff > 0) {
-                  const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
-                  if (pekacidFert && pekacidFert.pct) {
-                    Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
-                      const additionalPPM = (pekacidAmountDiff * 1000 * (pct / 100)) / volume;
-                      if (nutrient === 'P2O5' || nutrient === 'K2O' || nutrient === 'N_total' ||
-                          nutrient === 'Ca' || nutrient === 'Mg' || nutrient === 'S' || nutrient === 'Si') {
-                        scaledAchieved[nutrient] = (scaledAchieved[nutrient] || 0) + additionalPPM;
-                      } else if (nutrient === 'P') {
-                        scaledAchieved.P2O5 = (scaledAchieved.P2O5 || 0) + additionalPPM * P_to_P2O5;
-                      } else if (nutrient === 'K') {
-                        scaledAchieved.K2O = (scaledAchieved.K2O || 0) + additionalPPM * K_to_K2O;
-                      }
-                    });
-                  }
-                }
 
                 const newEC = estimateECFromPPM(scaledAchieved);
                 finalEC = newEC.ec_mS_cm;
@@ -1179,7 +1273,9 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                 const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
                 if (error < 0.01) break;
 
-                scaleFactor = scaleFactor * (options.targetEC / finalEC);
+                // Adjust scale factor accounting for fixed PeKacid EC contribution
+                const currentOtherEC = finalEC - pekacidECContribution;
+                scaleFactor = currentOtherEC > 0 ? (options.targetEC - pekacidECContribution) / currentOtherEC : scaleFactor * (options.targetEC / finalEC);
               }
             }
           }
