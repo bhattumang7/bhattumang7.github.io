@@ -1593,7 +1593,7 @@ permalink: /fertilizer-calculator/
   <div id="pekacid-limit-step" class="wizard-input-step" :class="{ active: wizardStep === 'pekacid-limit-step' }">
     <div class="step-indicator">{{ getStepIndicator('pekacid-limit-step') }}</div>
     <h3 data-i18n="pekacidLimitTitle">PeKacid Maximum Limit</h3>
-    <p data-i18n="pekacidLimitDescription">PeKacid is an acidifying fertilizer. Set a maximum limit to control how much is used in the formula. If you enter 0, there will be no limit and PeKacid will be used as needed.</p>
+    <p data-i18n="pekacidLimitDescription">PeKacid is an acidifying fertilizer. Set a maximum cap to control how much is used. The solver will try to use PeKacid up to this cap, but may use less if needed to meet targets or EC. Enter 0 for no cap.</p>
 
     <div class="pekacid-limit-input">
       <label for="pekacid-max-limit" data-i18n="pekacidMaxLimitLabel">Maximum PeKacid (grams per liter)</label>
@@ -1601,7 +1601,7 @@ permalink: /fertilizer-calculator/
         <input type="number" id="pekacid-max-limit" v-model.number="pekacidMaxLimit" min="0" step="0.01" required @keydown.enter="proceedFromPekacidLimitStep()">
         <span data-i18n="gramsPerLiter">g/L</span>
       </div>
-      <p class="pekacid-hint" data-i18n="pekacidLimitHint">Enter 0 for no limit. PeKacid will be preferred first until this limit is reached, then other fertilizers will be used to meet remaining targets.</p>
+      <p class="pekacid-hint" data-i18n="pekacidLimitHint">Enter 0 for no cap. PeKacid is prioritized up to the cap when feasible; other fertilizers adjust to meet remaining targets.</p>
     </div>
 
     <div class="wizard-step-buttons">
