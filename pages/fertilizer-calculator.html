@@ -2864,8 +2864,8 @@ permalink: /fertilizer-calculator/
         </div>
       </template>
 
-      <!-- Developer Logs Section (Expandable) -->
-      <div class="dev-logs-section" v-if="devLogs.length > 0">
+      <!-- Developer Logs Section (Expandable) - Always visible for debugging -->
+      <div class="dev-logs-section">
         <button class="dev-logs-toggle" @click="devLogsExpanded = !devLogsExpanded">
           <span class="toggle-icon">{{ devLogsExpanded ? '▼' : '▶' }}</span>
           Developer Logs ({{ devLogs.length }})
@@ -2876,6 +2876,7 @@ permalink: /fertilizer-calculator/
             <button @click="copyDevLogs()" class="dev-logs-copy">Copy All</button>
           </div>
           <div class="dev-logs-content">
+            <div v-if="devLogs.length === 0" class="dev-logs-empty">No logs yet. Run a calculation to see logs.</div>
             <div v-for="(log, index) in devLogs" :key="index" class="dev-log-entry" :class="log.type">
               <span class="log-time">{{ log.time }}</span>
               <span class="log-message">{{ log.message }}</span>
