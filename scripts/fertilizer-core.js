@@ -641,6 +641,16 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     }
     objective.push([priorityCoeff, y[f.id]]);
   });
+
+  // Add strong incentive to MAXIMIZE PeKacid usage up to the limit
+  // By adding a negative coefficient on the continuous variable, we encourage using more
+  // The constraint we added earlier caps it at the user-specified limit
+  if (x[PEKACID_ID]) {
+    // Negative coefficient = solver wants to increase this value (since we minimize)
+    // Scale by volume to make the incentive proportional
+    objective.push([-10, x[PEKACID_ID]]);
+  }
+
   nutrients.forEach(n => {
     const isTargeted = (targets[n] || 0) > 0;
     // Si gets much higher penalty because it's an absolute PPM target (not ratio-normalized)
