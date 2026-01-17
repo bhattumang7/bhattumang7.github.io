@@ -537,8 +537,37 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     if (window.addDevLog) window.addDevLog(msg, type);
   };
 
-  // Debug: log PeKacid limit
-  devLog(`pekacidMaxLimit: ${pekacidMaxLimit} g/L, volume: ${volume}L, target grams: ${pekacidMaxLimit * volume}g`);
+  // Helper to get short fertilizer name (first part before parenthesis or dash)
+  const shortName = (fert) => {
+    const name = fert.name || fert.id;
+    // Try to get a short version: before " - " or before " ("
+    let short = name.split(' - ')[0].split(' (')[0];
+    // Limit to ~20 chars
+    if (short.length > 22) short = short.substring(0, 20) + '..';
+    return short;
+  };
+
+  // Log setup info
+  devLog(`=== MILP Solver Started ===`);
+  devLog(`Volume: ${volume}L`);
+
+  // Log selected fertilizers (short names)
+  const fertNames = fertilizers.map(f => shortName(f)).join(', ');
+  devLog(`Fertilizers (${fertilizers.length}): ${fertNames}`);
+
+  // Log target ratios
+  const targetStr = Object.entries(targets)
+    .filter(([k, v]) => v > 0)
+    .map(([k, v]) => `${k.replace('_total', '')}:${v.toFixed(1)}`)
+    .join(' ');
+  devLog(`Targets: ${targetStr}`);
+
+  // Log PeKacid limit
+  if (pekacidMaxLimit > 0) {
+    devLog(`PeKacid cap: ${pekacidMaxLimit} g/L (max ${(pekacidMaxLimit * volume).toFixed(2)}g)`);
+  } else {
+    devLog(`PeKacid cap: none`);
+  }
 
   if (!window.LPModel) {
     throw new Error('MILP dependencies not loaded');
