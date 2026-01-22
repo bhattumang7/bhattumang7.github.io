@@ -9720,25 +9720,32 @@ const FertilizerApp = {
       let failureReason = '';
       let failureDetails = '';
       if (!success) {
+        // Build detailed context for error message
+        const contextLines = [];
+        contextLines.push('Original recipe: P₂O₅=' + (beforePpm.P2O5 || 0).toFixed(1) + ' ppm, K₂O=' + (beforePpm.K2O || 0).toFixed(1) + ' ppm');
+        contextLines.push('PeKacid (' + pekacidGPerL + ' g/L) adds: P₂O₅=' + pekacidP2O5ppm.toFixed(1) + ' ppm, K₂O=' + pekacidK2Oppm.toFixed(1) + ' ppm');
+        contextLines.push('Target for other fertilizers: P₂O₅=' + targetPpm.P2O5.toFixed(1) + ' ppm, K₂O=' + targetPpm.K2O.toFixed(1) + ' ppm');
+        if (milpSuccess) {
+          contextLines.push('MILP achieved: P₂O₅=' + (adjustedPpm.P2O5 || 0).toFixed(1) + ' ppm, K₂O=' + (adjustedPpm.K2O || 0).toFixed(1) + ' ppm');
+          contextLines.push('Difference: P₂O₅=' + p2o5Remaining.toFixed(1) + ' ppm (tolerance: ' + p2o5Tolerance.toFixed(1) + '), K₂O=' + k2oRemaining.toFixed(1) + ' ppm (tolerance: ' + k2oTolerance.toFixed(1) + ')');
+        }
+        const contextText = contextLines.join('\n');
+
         if (milpError) {
           failureReason = i18n.t('acidifyFailedMilp') || 'MILP solver could not find a solution.';
-          failureDetails = milpError;
+          failureDetails = milpError + '\n\n' + contextText;
         } else if (p2o5Remaining > p2o5Tolerance && k2oRemaining > k2oTolerance) {
-          failureReason = i18n.t('acidifyFailedBothPK') || 'Cannot compensate for both P and K from PeKacid.';
-          failureDetails = (i18n.t('acidifyCannotReduceDetails') || 'Need to reduce {pAmount} more ppm P₂O₅ and {kAmount} more ppm K₂O but no suitable fertilizers available.')
-            .replace('{pAmount}', p2o5Remaining.toFixed(1))
-            .replace('{kAmount}', k2oRemaining.toFixed(1));
+          failureReason = i18n.t('acidifyFailedBothPK') || 'Cannot achieve target P and K levels with available fertilizers.';
+          failureDetails = 'The solver could not find a combination that matches both P₂O₅ and K₂O targets within tolerance.\n\n' + contextText;
         } else if (p2o5Remaining > p2o5Tolerance) {
-          failureReason = i18n.t('acidifyFailedP') || 'Cannot fully compensate for P from PeKacid.';
-          failureDetails = (i18n.t('acidifyCannotReducePDetails') || 'Need to reduce {amount} more ppm P₂O₅ but no suitable P sources available.')
-            .replace('{amount}', p2o5Remaining.toFixed(1));
+          failureReason = i18n.t('acidifyFailedP') || 'Cannot achieve target P level with available fertilizers.';
+          failureDetails = 'The P₂O₅ difference (' + p2o5Remaining.toFixed(1) + ' ppm) exceeds the allowed tolerance (' + p2o5Tolerance.toFixed(1) + ' ppm).\n\n' + contextText;
         } else if (k2oRemaining > k2oTolerance) {
-          failureReason = i18n.t('acidifyFailedK') || 'Cannot fully compensate for K from PeKacid.';
-          failureDetails = (i18n.t('acidifyCannotReduceKDetails') || 'Need to reduce {amount} more ppm K₂O but no suitable K sources available.')
-            .replace('{amount}', k2oRemaining.toFixed(1));
+          failureReason = i18n.t('acidifyFailedK') || 'Cannot achieve target K level with available fertilizers.';
+          failureDetails = 'The K₂O difference (' + k2oRemaining.toFixed(1) + ' ppm) exceeds the allowed tolerance (' + k2oTolerance.toFixed(1) + ' ppm).\n\n' + contextText;
         } else {
           failureReason = i18n.t('acidifyFailedGeneric') || 'Could not find optimal fertilizer amounts.';
-          failureDetails = '';
+          failureDetails = contextText;
         }
       }
 
