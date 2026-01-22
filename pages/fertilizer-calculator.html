@@ -9451,28 +9451,16 @@ const FertilizerApp = {
       // Calculate total PeKacid grams for the volume
       const pekacidTotalGrams = pekacidGPerL * vol;
 
-      // Calculate before PPM from the original recipe (this is our target)
+      // Calculate before PPM from the original recipe
       const beforePpm = calculatePpmFromFertilizers(originalFerts, vol);
 
-      // Calculate PPM contribution from the fixed PeKacid amount
-      const pekacidPpm = calculatePpmFromFertilizers([{ ...pekacidFert, grams: pekacidTotalGrams }], vol);
-
-      // Calculate the adjusted targets: original PPM minus PeKacid's contribution
-      // The MILP solver will find amounts for other fertilizers to achieve these adjusted targets
-      const adjustedTargets = {
-        N_total: Math.max(0, (beforePpm.N_total || 0) - (pekacidPpm.N_total || 0)),
-        P2O5: Math.max(0, (beforePpm.P2O5 || 0) - (pekacidPpm.P2O5 || 0)),
-        K2O: Math.max(0, (beforePpm.K2O || 0) - (pekacidPpm.K2O || 0)),
-        Ca: Math.max(0, (beforePpm.Ca || 0) - (pekacidPpm.Ca || 0)),
-        Mg: Math.max(0, (beforePpm.Mg || 0) - (pekacidPpm.Mg || 0)),
-        S: Math.max(0, (beforePpm.S || 0) - (pekacidPpm.S || 0)),
-        Si: Math.max(0, (beforePpm.Si || 0) - (pekacidPpm.Si || 0))
-      };
+      // Calculate P2O5 and K2O PPM contribution from PeKacid
+      const pekacidP2O5ppm = (pekacidTotalGrams * (pekacidFert.pct.P2O5 || 0) / 100) / vol * 1000;
+      const pekacidK2Oppm = (pekacidTotalGrams * (pekacidFert.pct.K2O || 0) / 100) / vol * 1000;
 
       // Check if PeKacid would contribute more P or K than the original recipe has
-      // This is a quick pre-check for obvious failure cases
-      const pekacidExceedsP = (pekacidPpm.P2O5 || 0) > (beforePpm.P2O5 || 0) * 1.01; // 1% tolerance
-      const pekacidExceedsK = (pekacidPpm.K2O || 0) > (beforePpm.K2O || 0) * 1.01;
+      const pekacidExceedsP = pekacidP2O5ppm > (beforePpm.P2O5 || 0) * 1.01; // 1% tolerance
+      const pekacidExceedsK = pekacidK2Oppm > (beforePpm.K2O || 0) * 1.01;
 
       if (pekacidExceedsP || pekacidExceedsK) {
         // PeKacid contributes more than the original recipe had - cannot compensate
@@ -9481,19 +9469,19 @@ const FertilizerApp = {
         if (pekacidExceedsP && pekacidExceedsK) {
           failureReason = i18n.t('acidifyFailedBothPK') || 'PeKacid would add more P and K than your original recipe contains.';
           failureDetails = (i18n.t('acidifyExceedsBothPKDetails') || 'PeKacid adds {pPpm} ppm P₂O₅ but your recipe only has {origP} ppm. PeKacid adds {kPpm} ppm K₂O but your recipe only has {origK} ppm.')
-            .replace('{pPpm}', (pekacidPpm.P2O5 || 0).toFixed(1))
+            .replace('{pPpm}', pekacidP2O5ppm.toFixed(1))
             .replace('{origP}', (beforePpm.P2O5 || 0).toFixed(1))
-            .replace('{kPpm}', (pekacidPpm.K2O || 0).toFixed(1))
+            .replace('{kPpm}', pekacidK2Oppm.toFixed(1))
             .replace('{origK}', (beforePpm.K2O || 0).toFixed(1));
         } else if (pekacidExceedsP) {
           failureReason = i18n.t('acidifyFailedP') || 'PeKacid would add more P than your original recipe contains.';
           failureDetails = (i18n.t('acidifyExceedsPDetails') || 'PeKacid adds {pPpm} ppm P₂O₅ but your recipe only has {origP} ppm.')
-            .replace('{pPpm}', (pekacidPpm.P2O5 || 0).toFixed(1))
+            .replace('{pPpm}', pekacidP2O5ppm.toFixed(1))
             .replace('{origP}', (beforePpm.P2O5 || 0).toFixed(1));
         } else {
           failureReason = i18n.t('acidifyFailedK') || 'PeKacid would add more K than your original recipe contains.';
           failureDetails = (i18n.t('acidifyExceedsKDetails') || 'PeKacid adds {kPpm} ppm K₂O but your recipe only has {origK} ppm.')
-            .replace('{kPpm}', (pekacidPpm.K2O || 0).toFixed(1))
+            .replace('{kPpm}', pekacidK2Oppm.toFixed(1))
             .replace('{origK}', (beforePpm.K2O || 0).toFixed(1));
         }
 
@@ -9521,168 +9509,214 @@ const FertilizerApp = {
         return;
       }
 
-      // Show progress overlay
-      progressState.show = true;
-      progressState.status = i18n.t('calculatingAdjustments') || 'Calculating adjustments...';
-      progressState.progress = 0;
+      // Calculate how much P2O5 and K2O we need to remove from other fertilizers (in PPM)
+      const p2o5ToRemove = pekacidP2O5ppm;
+      const k2oToRemove = pekacidK2Oppm;
 
-      try {
-        // Get the list of fertilizers from the original recipe (these are the ones we can adjust)
-        // We use the same fertilizers the user selected, but let the solver find optimal amounts
-        const availableFertilizers = originalFerts.map(f => FERTILIZERS.find(fert => fert.id === f.id)).filter(Boolean);
+      // Deep copy fertilizers for adjustment
+      const adjustedFerts = JSON.parse(JSON.stringify(originalFerts));
+      const adjustments = [];
 
-        // Use the MILP solver to find optimal amounts
-        const solveMilpBrowser = window.FertilizerCore.solveMilpBrowser;
-        if (typeof solveMilpBrowser !== 'function') {
-          throw new Error('MILP solver not available');
-        }
+      // Track remaining PPM to remove
+      let p2o5Remaining = p2o5ToRemove;
+      let k2oRemaining = k2oToRemove;
 
-        progressState.status = i18n.t('runningOptimizer') || 'Running optimizer...';
-        progressState.progress = 30;
+      // Helper to calculate PPM contribution per gram for a fertilizer
+      const getPpmPerGram = (fert, nutrient) => {
+        const pct = fert.pct[nutrient] || 0;
+        return (pct / 100) / vol * 1000;
+      };
 
-        const milpResult = await solveMilpBrowser({
-          fertilizers: availableFertilizers,
-          targets: adjustedTargets,
-          volume: vol,
-          tolerance: 0.02, // 2% tolerance for matching targets
-          onProgress: (status) => {
-            if (status === 'downloading') {
-              progressState.status = i18n.t('downloadingSolver') || 'Downloading solver...';
-            } else if (status === 'ready') {
-              progressState.status = i18n.t('solverReady') || 'Solver ready...';
-            }
-          }
-        });
+      // First pass: reduce fertilizers that provide BOTH P2O5 and K2O (like MKP)
+      for (const fert of adjustedFerts) {
+        if (p2o5Remaining <= 0.1 && k2oRemaining <= 0.1) break;
 
-        progressState.progress = 80;
-        progressState.status = i18n.t('processingResults') || 'Processing results...';
+        const p2o5PerGram = getPpmPerGram(fert, 'P2O5');
+        const k2oPerGram = getPpmPerGram(fert, 'K2O');
 
-        // Build the adjusted fertilizers list from MILP result
-        const adjustedFerts = [];
-        const adjustments = [];
+        // Skip if doesn't provide both P and K
+        if (p2o5PerGram <= 0 || k2oPerGram <= 0) continue;
 
-        for (const fert of originalFerts) {
-          const newGrams = milpResult.formula[fert.id] || 0;
+        // Calculate max grams we can reduce based on each constraint
+        const maxByP = p2o5Remaining > 0 ? p2o5Remaining / p2o5PerGram : Infinity;
+        const maxByK = k2oRemaining > 0 ? k2oRemaining / k2oPerGram : Infinity;
+        const maxReduce = Math.min(maxByP, maxByK, fert.grams);
+
+        if (maxReduce > 0.001) {
           const originalGrams = fert.grams;
-          const reduction = originalGrams - newGrams;
+          fert.grams -= maxReduce;
+          p2o5Remaining -= maxReduce * p2o5PerGram;
+          k2oRemaining -= maxReduce * k2oPerGram;
 
-          if (newGrams > 0.001) {
-            adjustedFerts.push({
-              ...fert,
-              grams: newGrams,
-              adjustment: -reduction // Negative means reduced
-            });
-          }
+          adjustments.push({
+            ...fert,
+            originalGrams,
+            newGrams: fert.grams,
+            reduction: maxReduce
+          });
+        }
+      }
 
-          if (Math.abs(reduction) > 0.001) {
+      // Second pass: reduce P2O5-only sources (no K2O)
+      for (const fert of adjustedFerts) {
+        if (p2o5Remaining <= 0.1) break;
+
+        const p2o5PerGram = getPpmPerGram(fert, 'P2O5');
+        const k2oPerGram = getPpmPerGram(fert, 'K2O');
+
+        // Skip if no P or has K (already handled)
+        if (p2o5PerGram <= 0 || k2oPerGram > 0) continue;
+
+        const maxReduce = Math.min(p2o5Remaining / p2o5PerGram, fert.grams);
+        if (maxReduce > 0.001) {
+          const existingAdj = adjustments.find(a => a.id === fert.id);
+          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
+
+          fert.grams -= maxReduce;
+          p2o5Remaining -= maxReduce * p2o5PerGram;
+
+          if (existingAdj) {
+            existingAdj.newGrams = fert.grams;
+            existingAdj.reduction = originalGrams - fert.grams;
+          } else {
             adjustments.push({
               ...fert,
               originalGrams,
-              newGrams,
-              reduction
+              newGrams: fert.grams,
+              reduction: maxReduce
             });
           }
         }
-
-        // Add PeKacid to the adjusted list (fixed amount)
-        adjustedFerts.push({
-          ...pekacidFert,
-          grams: pekacidTotalGrams,
-          adjustment: pekacidTotalGrams // Positive since it's added
-        });
-
-        // Calculate the actual achieved PPM with the adjusted recipe + PeKacid
-        const afterPpm = calculatePpmFromFertilizers(adjustedFerts, vol);
-
-        // Check if the solution is acceptable (within tolerance)
-        const ppmTolerance = 5; // Allow 5 ppm difference
-        const percentTolerance = 0.05; // Or 5% difference
-
-        let success = true;
-        const nutrientsToCheck = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S'];
-        for (const nutrient of nutrientsToCheck) {
-          const before = beforePpm[nutrient] || 0;
-          const after = afterPpm[nutrient] || 0;
-          if (before > 0) {
-            const diff = Math.abs(after - before);
-            const percentDiff = diff / before;
-            if (diff > ppmTolerance && percentDiff > percentTolerance) {
-              success = false;
-              break;
-            }
-          }
-        }
-
-        // Build PPM comparison
-        const ppmComparison = [];
-        const nutrients = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S', 'Si'];
-        const nutrientLabels = {
-          'N_total': 'N (total)',
-          'P': 'P',
-          'K': 'K',
-          'Ca': 'Ca',
-          'Mg': 'Mg',
-          'S': 'S',
-          'Si': 'Si'
-        };
-
-        for (const key of nutrients) {
-          const before = beforePpm[key] || 0;
-          const after = afterPpm[key] || 0;
-          if (before > 0 || after > 0) {
-            ppmComparison.push({
-              key,
-              label: nutrientLabels[key] || key,
-              before,
-              after,
-              diff: after - before
-            });
-          }
-        }
-
-        // Calculate ion balance and EC for after state
-        const afterIonBalance = calculateIonBalanceForFormula(adjustedFerts, vol);
-        const afterEcData = estimateECFromPPM(afterPpm);
-
-        // Build failure reason if not successful
-        let failureReason = '';
-        let failureDetails = '';
-        if (!success) {
-          failureReason = i18n.t('acidifyOptimizationFailed') || 'Could not find an exact solution to maintain nutrient balance.';
-          failureDetails = i18n.t('acidifyOptimizationFailedDetails') || 'The optimizer found a solution but the nutrient levels differ from the original recipe. This may happen if your recipe lacks sufficient P or K sources to compensate for PeKacid.';
-        }
-
-        progressState.progress = 100;
-
-        // Update results data
-        acidifyResultsData.show = true;
-        acidifyResultsData.success = success;
-        acidifyResultsData.failureReason = failureReason;
-        acidifyResultsData.failureDetails = failureDetails;
-        acidifyResultsData.beforeFertilizers = originalFerts;
-        acidifyResultsData.beforeTotalGrams = originalFerts.reduce((sum, f) => sum + f.grams, 0);
-        acidifyResultsData.beforePpm = beforePpm;
-        acidifyResultsData.afterFertilizers = adjustedFerts;
-        acidifyResultsData.afterTotalGrams = adjustedFerts.reduce((sum, f) => sum + f.grams, 0);
-        acidifyResultsData.afterPpm = afterPpm;
-        acidifyResultsData.afterIonBalance = afterIonBalance;
-        acidifyResultsData.afterEcPrediction = afterEcData;
-        acidifyResultsData.adjustments = adjustments.filter(a => Math.abs(a.reduction) > 0.001);
-        acidifyResultsData.ppmComparison = ppmComparison;
-        acidifyResultsData.volume = vol;
-        acidifyResultsData.pekacidAmount = pekacidGPerL;
-
-        // Set wizard results source and show results
-        wizardResultsSource.value = 'acidify-pekacid';
-        wizardResultsModeText.value = i18n.t('currentLabel') + ' <strong>' + getModeName('acidify-pekacid') + '</strong> · ' + vol + i18n.t('litersShort');
-        showWizardStepVue('wizard-results');
-
-      } catch (error) {
-        console.error('Acidify calculation error:', error);
-        alert((i18n.t('alertCalculationError') || 'Calculation error: ') + error.message);
-      } finally {
-        progressState.show = false;
       }
+
+      // Third pass: reduce K2O-only sources (no P2O5)
+      for (const fert of adjustedFerts) {
+        if (k2oRemaining <= 0.1) break;
+
+        const p2o5PerGram = getPpmPerGram(fert, 'P2O5');
+        const k2oPerGram = getPpmPerGram(fert, 'K2O');
+
+        // Skip if no K or has P (already handled)
+        if (k2oPerGram <= 0 || p2o5PerGram > 0) continue;
+
+        const maxReduce = Math.min(k2oRemaining / k2oPerGram, fert.grams);
+        if (maxReduce > 0.001) {
+          const existingAdj = adjustments.find(a => a.id === fert.id);
+          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
+
+          fert.grams -= maxReduce;
+          k2oRemaining -= maxReduce * k2oPerGram;
+
+          if (existingAdj) {
+            existingAdj.newGrams = fert.grams;
+            existingAdj.reduction = originalGrams - fert.grams;
+          } else {
+            adjustments.push({
+              ...fert,
+              originalGrams,
+              newGrams: fert.grams,
+              reduction: maxReduce
+            });
+          }
+        }
+      }
+
+      // Check if we successfully compensated
+      const tolerance = 1; // 1 ppm tolerance
+      const success = (p2o5Remaining < tolerance && k2oRemaining < tolerance);
+
+      // Prepare the final adjusted fertilizers list (non-zero amounts + PeKacid)
+      const finalAdjustedFerts = adjustedFerts.filter(f => f.grams > 0.001).map(f => {
+        const adj = adjustments.find(a => a.id === f.id);
+        return {
+          ...f,
+          adjustment: adj ? -(adj.originalGrams - adj.newGrams) : 0
+        };
+      });
+
+      // Add PeKacid to the list
+      finalAdjustedFerts.push({
+        ...pekacidFert,
+        grams: pekacidTotalGrams,
+        adjustment: pekacidTotalGrams // Positive since it's added
+      });
+
+      // Calculate after PPM
+      const afterPpm = calculatePpmFromFertilizers(finalAdjustedFerts, vol);
+
+      // Build PPM comparison
+      const ppmComparison = [];
+      const nutrients = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S', 'Si'];
+      const nutrientLabels = {
+        'N_total': 'N (total)',
+        'P': 'P',
+        'K': 'K',
+        'Ca': 'Ca',
+        'Mg': 'Mg',
+        'S': 'S',
+        'Si': 'Si'
+      };
+
+      for (const key of nutrients) {
+        const before = beforePpm[key] || 0;
+        const after = afterPpm[key] || 0;
+        if (before > 0 || after > 0) {
+          ppmComparison.push({
+            key,
+            label: nutrientLabels[key] || key,
+            before,
+            after,
+            diff: after - before
+          });
+        }
+      }
+
+      // Calculate ion balance and EC for after state
+      const afterIonBalance = calculateIonBalanceForFormula(finalAdjustedFerts, vol);
+      const afterEcData = estimateECFromPPM(afterPpm);
+
+      // Build failure reason if not successful
+      let failureReason = '';
+      let failureDetails = '';
+      if (!success) {
+        if (p2o5Remaining > tolerance && k2oRemaining > tolerance) {
+          failureReason = i18n.t('acidifyFailedBothPK') || 'Cannot compensate for both P and K from PeKacid.';
+          failureDetails = (i18n.t('acidifyCannotReduceDetails') || 'Need to reduce {pAmount} more ppm P₂O₅ and {kAmount} more ppm K₂O but no suitable fertilizers available.')
+            .replace('{pAmount}', p2o5Remaining.toFixed(1))
+            .replace('{kAmount}', k2oRemaining.toFixed(1));
+        } else if (p2o5Remaining > tolerance) {
+          failureReason = i18n.t('acidifyFailedP') || 'Cannot fully compensate for P from PeKacid.';
+          failureDetails = (i18n.t('acidifyCannotReducePDetails') || 'Need to reduce {amount} more ppm P₂O₅ but no suitable P sources available.')
+            .replace('{amount}', p2o5Remaining.toFixed(1));
+        } else {
+          failureReason = i18n.t('acidifyFailedK') || 'Cannot fully compensate for K from PeKacid.';
+          failureDetails = (i18n.t('acidifyCannotReduceKDetails') || 'Need to reduce {amount} more ppm K₂O but no suitable K sources available.')
+            .replace('{amount}', k2oRemaining.toFixed(1));
+        }
+      }
+
+      // Update results data
+      acidifyResultsData.show = true;
+      acidifyResultsData.success = success;
+      acidifyResultsData.failureReason = failureReason;
+      acidifyResultsData.failureDetails = failureDetails;
+      acidifyResultsData.beforeFertilizers = originalFerts;
+      acidifyResultsData.beforeTotalGrams = originalFerts.reduce((sum, f) => sum + f.grams, 0);
+      acidifyResultsData.beforePpm = beforePpm;
+      acidifyResultsData.afterFertilizers = finalAdjustedFerts;
+      acidifyResultsData.afterTotalGrams = finalAdjustedFerts.reduce((sum, f) => sum + f.grams, 0);
+      acidifyResultsData.afterPpm = afterPpm;
+      acidifyResultsData.afterIonBalance = afterIonBalance;
+      acidifyResultsData.afterEcPrediction = afterEcData;
+      acidifyResultsData.adjustments = adjustments.filter(a => a.reduction > 0.001);
+      acidifyResultsData.ppmComparison = ppmComparison;
+      acidifyResultsData.volume = vol;
+      acidifyResultsData.pekacidAmount = pekacidGPerL;
+
+      // Set wizard results source and show results
+      wizardResultsSource.value = 'acidify-pekacid';
+      wizardResultsModeText.value = i18n.t('currentLabel') + ' <strong>' + getModeName('acidify-pekacid') + '</strong> · ' + vol + i18n.t('litersShort');
+      showWizardStepVue('wizard-results');
     }
 
     // Copy acidify results to clipboard
