@@ -9528,228 +9528,108 @@ const FertilizerApp = {
         return;
       }
 
-      // Calculate how much P2O5 and K2O we need to remove from other fertilizers (in PPM)
-      const p2o5ToRemove = pekacidP2O5ppm;
-      const k2oToRemove = pekacidK2Oppm;
+      // ===== MILP-based Acidify Calculation =====
+      // Use MILP solver to find optimal fertilizer amounts that maintain baseline nutrients
+      // with PeKacid fixed at the specified amount
 
-      // Deep copy fertilizers for adjustment
-      const adjustedFerts = JSON.parse(JSON.stringify(originalFerts));
-      const adjustments = [];
+      addDevLog('--- Using MILP Solver for Acidify Optimization ---', 'info');
 
-      // Track remaining PPM to remove
-      let p2o5Remaining = p2o5ToRemove;
-      let k2oRemaining = k2oToRemove;
-
-      // Helper to calculate PPM contribution per gram for a fertilizer
-      const getPpmPerGram = (fert, nutrient) => {
-        const pct = fert.pct[nutrient] || 0;
-        return (pct / 100) / vol * 1000;
+      // Calculate target PPM for MILP (baseline minus PeKacid contribution)
+      // The MILP solver will find optimal amounts of other fertilizers to match these targets
+      const OXIDE_CONVERSIONS = window.FertilizerCore.OXIDE_CONVERSIONS;
+      const targetPpm = {
+        N_total: beforePpm.N_total || 0,
+        P2O5: Math.max(0, (beforePpm.P2O5 || 0) - pekacidP2O5ppm),
+        K2O: Math.max(0, (beforePpm.K2O || 0) - pekacidK2Oppm),
+        Ca: beforePpm.Ca || 0,
+        Mg: beforePpm.Mg || 0,
+        S: beforePpm.S || 0,
+        Si: beforePpm.Si || 0
       };
 
-      addDevLog('Need to remove: P2O5=' + p2o5ToRemove.toFixed(1) + ' ppm, K2O=' + k2oToRemove.toFixed(1) + ' ppm', 'info');
+      addDevLog('Target PPM (baseline minus PeKacid): ' + JSON.stringify(targetPpm), 'info');
 
-      // First pass: reduce fertilizers that provide BOTH P2O5 and K2O (like MKP)
-      addDevLog('--- Pass 1: Reducing fertilizers with both P2O5 and K2O ---', 'info');
-      for (const fert of adjustedFerts) {
-        if (p2o5Remaining <= 0.1 && k2oRemaining <= 0.1) break;
+      // Prepare fertilizers for MILP (exclude PeKacid from optimization)
+      const fertsForMilp = originalFerts.map(f => FERTILIZERS.find(fert => fert.id === f.id)).filter(f => f);
 
-        const p2o5PerGram = getPpmPerGram(fert, 'P2O5');
-        const k2oPerGram = getPpmPerGram(fert, 'K2O');
+      let milpSuccess = false;
+      let milpFormula = {};
+      let milpError = null;
 
-        // Skip if doesn't provide both P and K
-        if (p2o5PerGram <= 0 || k2oPerGram <= 0) continue;
-
-        // Calculate max grams we can reduce based on each constraint
-        const maxByP = p2o5Remaining > 0 ? p2o5Remaining / p2o5PerGram : Infinity;
-        const maxByK = k2oRemaining > 0 ? k2oRemaining / k2oPerGram : Infinity;
-        const maxReduce = Math.min(maxByP, maxByK, fert.grams);
-
-        if (maxReduce > 0.001) {
-          const originalGrams = fert.grams;
-          fert.grams -= maxReduce;
-          p2o5Remaining -= maxReduce * p2o5PerGram;
-          k2oRemaining -= maxReduce * k2oPerGram;
-
-          addDevLog('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
-          addDevLog('    Remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm, K2O=' + k2oRemaining.toFixed(1) + ' ppm', 'info');
-
-          adjustments.push({
-            ...fert,
-            originalGrams,
-            newGrams: fert.grams,
-            reduction: maxReduce
-          });
+      try {
+        // Check if MILP solver is available
+        if (!window.FertilizerCore || !window.FertilizerCore.solveMilpBrowser) {
+          throw new Error('MILP solver not available');
         }
+
+        // Run MILP solver with adjusted targets
+        const milpResult = await window.FertilizerCore.solveMilpBrowser({
+          fertilizers: fertsForMilp,
+          targets: targetPpm,
+          volume: vol,
+          tolerance: 0.02 // 2% tolerance for better convergence
+        });
+
+        milpFormula = milpResult.formula || {};
+        milpSuccess = true;
+
+        addDevLog('MILP solution found: ' + JSON.stringify(milpFormula), 'info');
+      } catch (err) {
+        milpError = err.message || 'Unknown error';
+        addDevLog('MILP solver error: ' + milpError, 'error');
+        milpSuccess = false;
       }
 
-      // Second pass: reduce P2O5-only sources (no K2O)
-      addDevLog('--- Pass 2: Reducing P2O5-only sources ---', 'info');
-      for (const fert of adjustedFerts) {
-        if (p2o5Remaining <= 0.1) break;
+      // Build adjusted fertilizers list from MILP solution
+      const adjustedFerts = [];
+      const adjustments = [];
 
-        const p2o5PerGram = getPpmPerGram(fert, 'P2O5');
-        const k2oPerGram = getPpmPerGram(fert, 'K2O');
-
-        // Skip if no P or has K (already handled)
-        if (p2o5PerGram <= 0 || k2oPerGram > 0) continue;
-
-        const maxReduce = Math.min(p2o5Remaining / p2o5PerGram, fert.grams);
-        if (maxReduce > 0.001) {
-          const existingAdj = adjustments.find(a => a.id === fert.id);
-          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
-
-          fert.grams -= maxReduce;
-          p2o5Remaining -= maxReduce * p2o5PerGram;
-
-          addDevLog('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
-          addDevLog('    Remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm', 'info');
-
-          if (existingAdj) {
-            existingAdj.newGrams = fert.grams;
-            existingAdj.reduction = originalGrams - fert.grams;
-          } else {
-            adjustments.push({
+      if (milpSuccess) {
+        for (const origFert of originalFerts) {
+          const newGrams = milpFormula[origFert.id] || 0;
+          const fert = FERTILIZERS.find(f => f.id === origFert.id);
+          if (fert) {
+            adjustedFerts.push({
               ...fert,
-              originalGrams,
-              newGrams: fert.grams,
-              reduction: maxReduce
+              grams: newGrams
+            });
+
+            if (Math.abs(origFert.grams - newGrams) > 0.001) {
+              adjustments.push({
+                ...fert,
+                originalGrams: origFert.grams,
+                newGrams: newGrams,
+                reduction: origFert.grams - newGrams
+              });
+            }
+          }
+        }
+      } else {
+        // If MILP failed, use original amounts (unchanged)
+        for (const origFert of originalFerts) {
+          const fert = FERTILIZERS.find(f => f.id === origFert.id);
+          if (fert) {
+            adjustedFerts.push({
+              ...fert,
+              grams: origFert.grams
             });
           }
         }
       }
 
-      // Third pass: reduce K2O-only sources (no P2O5)
-      addDevLog('--- Pass 3: Reducing K2O-only sources ---', 'info');
-      for (const fert of adjustedFerts) {
-        if (k2oRemaining <= 0.1) break;
+      // Calculate resulting PPM
+      const adjustedPpm = calculatePpmFromFertilizers(adjustedFerts, vol);
 
-        const p2o5PerGram = getPpmPerGram(fert, 'P2O5');
-        const k2oPerGram = getPpmPerGram(fert, 'K2O');
+      // Check how well the MILP solution matches the targets
+      const ppmTolerance = 1; // 1 ppm tolerance
+      const p2o5Remaining = Math.abs((adjustedPpm.P2O5 || 0) - targetPpm.P2O5);
+      const k2oRemaining = Math.abs((adjustedPpm.K2O || 0) - targetPpm.K2O);
+      const nRemaining = Math.abs((adjustedPpm.N_total || 0) - targetPpm.N_total);
 
-        // Skip if no K or has P (already handled)
-        if (k2oPerGram <= 0 || p2o5PerGram > 0) continue;
+      addDevLog('MILP result check - P2O5 diff: ' + p2o5Remaining.toFixed(2) + ', K2O diff: ' + k2oRemaining.toFixed(2) + ', N diff: ' + nRemaining.toFixed(2), 'info');
 
-        const maxReduce = Math.min(k2oRemaining / k2oPerGram, fert.grams);
-        if (maxReduce > 0.001) {
-          const existingAdj = adjustments.find(a => a.id === fert.id);
-          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
-
-          fert.grams -= maxReduce;
-          k2oRemaining -= maxReduce * k2oPerGram;
-
-          addDevLog('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
-          addDevLog('    Remaining: K2O=' + k2oRemaining.toFixed(1) + ' ppm', 'info');
-
-          if (existingAdj) {
-            existingAdj.newGrams = fert.grams;
-            existingAdj.reduction = originalGrams - fert.grams;
-          } else {
-            adjustments.push({
-              ...fert,
-              originalGrams,
-              newGrams: fert.grams,
-              reduction: maxReduce
-            });
-          }
-        }
-      }
-
-      // Iterative compensation: fix other nutrients (N, Ca, Mg, S) using fertilizers without P2O5/K2O
-      // This preserves P and K balance while minimizing changes to other nutrients
-      const maxIterations = 50;
-      const ppmTolerance = 0.5; // ppm tolerance for convergence
-      const nutrientsToFix = ['N_total', 'Ca', 'Mg', 'S', 'Si']; // Nutrients to try to preserve (not P/K)
-
-      addDevLog('--- Iterative Compensation (max ' + maxIterations + ' iterations) ---', 'info');
-
-      for (let iteration = 0; iteration < maxIterations; iteration++) {
-        // Calculate current PPM
-        const currentPpm = calculatePpmFromFertilizers(adjustedFerts, vol);
-
-        // Find the nutrient with the largest deficit (we lost it from reductions)
-        let maxDeficit = 0;
-        let nutrientToFix = null;
-
-        for (const nutrient of nutrientsToFix) {
-          const target = beforePpm[nutrient] || 0;
-          const current = currentPpm[nutrient] || 0;
-          const deficit = target - current; // Positive = we need to add more
-
-          if (deficit > ppmTolerance && deficit > maxDeficit) {
-            maxDeficit = deficit;
-            nutrientToFix = nutrient;
-          }
-        }
-
-        // If no significant deficit, we're done
-        if (!nutrientToFix) {
-          addDevLog('  Iteration ' + (iteration + 1) + ': All nutrients within tolerance', 'info');
-          break;
-        }
-
-        addDevLog('  Iteration ' + (iteration + 1) + ': Fixing ' + nutrientToFix + ' (deficit: ' + maxDeficit.toFixed(1) + ' ppm)', 'info');
-
-        // Find a fertilizer that provides this nutrient but NOT P2O5 or K2O
-        let fixed = false;
-        for (const fert of adjustedFerts) {
-          const p2o5Pct = fert.pct.P2O5 || 0;
-          const k2oPct = fert.pct.K2O || 0;
-
-          // Skip fertilizers with P or K - we can't use them without affecting P/K balance
-          if (p2o5Pct > 0 || k2oPct > 0) continue;
-
-          // Get the nutrient percentage for this fertilizer
-          let nutrientPct = 0;
-          if (nutrientToFix === 'N_total') {
-            nutrientPct = (fert.pct.N || 0) + (fert.pct.N_NO3 || 0) + (fert.pct.N_NH4 || 0);
-          } else {
-            nutrientPct = fert.pct[nutrientToFix] || 0;
-          }
-
-          if (nutrientPct <= 0) continue;
-
-          // Calculate PPM per gram for this nutrient
-          const ppmPerGram = (nutrientPct / 100) / vol * 1000;
-          if (ppmPerGram <= 0) continue;
-
-          // Calculate how many grams to add
-          const gramsToAdd = maxDeficit / ppmPerGram;
-
-          // Track original grams for this fertilizer
-          const existingAdj = adjustments.find(a => a.id === fert.id);
-          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
-
-          // Apply the adjustment
-          fert.grams += gramsToAdd;
-
-          addDevLog('    ' + fert.name + ': +' + gramsToAdd.toFixed(3) + 'g for ' + nutrientToFix, 'info');
-
-          // Update or add adjustment tracking
-          if (existingAdj) {
-            existingAdj.newGrams = fert.grams;
-            existingAdj.reduction = existingAdj.originalGrams - fert.grams;
-          } else {
-            adjustments.push({
-              ...fert,
-              originalGrams,
-              newGrams: fert.grams,
-              reduction: originalGrams - fert.grams
-            });
-          }
-
-          fixed = true;
-          break; // Move to next iteration to recalculate and check convergence
-        }
-
-        if (!fixed) {
-          addDevLog('    No suitable fertilizer found for ' + nutrientToFix + ' (needs source without P/K)', 'warn');
-          break; // Can't fix this nutrient, stop iterating
-        }
-      }
-
-      // Check if we successfully compensated
-      const tolerance = 1; // 1 ppm tolerance
-      const success = (p2o5Remaining < tolerance && k2oRemaining < tolerance);
+      // Check if we successfully matched targets
+      const success = milpSuccess && p2o5Remaining < ppmTolerance && k2oRemaining < ppmTolerance;
 
       addDevLog('--- Result ---', success ? 'success' : 'error');
       addDevLog('Success: ' + success, success ? 'success' : 'error');
@@ -9833,19 +9713,25 @@ const FertilizerApp = {
       let failureReason = '';
       let failureDetails = '';
       if (!success) {
-        if (p2o5Remaining > tolerance && k2oRemaining > tolerance) {
+        if (milpError) {
+          failureReason = i18n.t('acidifyFailedMilp') || 'MILP solver could not find a solution.';
+          failureDetails = milpError;
+        } else if (p2o5Remaining > ppmTolerance && k2oRemaining > ppmTolerance) {
           failureReason = i18n.t('acidifyFailedBothPK') || 'Cannot compensate for both P and K from PeKacid.';
           failureDetails = (i18n.t('acidifyCannotReduceDetails') || 'Need to reduce {pAmount} more ppm P₂O₅ and {kAmount} more ppm K₂O but no suitable fertilizers available.')
             .replace('{pAmount}', p2o5Remaining.toFixed(1))
             .replace('{kAmount}', k2oRemaining.toFixed(1));
-        } else if (p2o5Remaining > tolerance) {
+        } else if (p2o5Remaining > ppmTolerance) {
           failureReason = i18n.t('acidifyFailedP') || 'Cannot fully compensate for P from PeKacid.';
           failureDetails = (i18n.t('acidifyCannotReducePDetails') || 'Need to reduce {amount} more ppm P₂O₅ but no suitable P sources available.')
             .replace('{amount}', p2o5Remaining.toFixed(1));
-        } else {
+        } else if (k2oRemaining > ppmTolerance) {
           failureReason = i18n.t('acidifyFailedK') || 'Cannot fully compensate for K from PeKacid.';
           failureDetails = (i18n.t('acidifyCannotReduceKDetails') || 'Need to reduce {amount} more ppm K₂O but no suitable K sources available.')
             .replace('{amount}', k2oRemaining.toFixed(1));
+        } else {
+          failureReason = i18n.t('acidifyFailedGeneric') || 'Could not find optimal fertilizer amounts.';
+          failureDetails = '';
         }
       }
 
