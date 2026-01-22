@@ -29,6 +29,55 @@ window.i18nLocales.en = {
   stockSolutionMakerDescription: 'Create concentrated stock solutions that can serve multiple growth stages by varying the dosing amounts.',
   stockSolutionUseCase: 'You want to pre-mix concentrated stock solutions that can serve multiple growth stages by varying the dosing amounts.',
 
+  // Acidify Mix with PeKacid mode
+  acidifyMixPekacid: 'Acidify Mix with PeKacid',
+  acidifyMixPekacidDescription: 'Introduce PeKacid into your existing fertilizer mix for acidification, while keeping nutrient levels balanced.',
+  acidifyMixPekacidUseCase: 'You have a recipe and want to add PeKacid for pH control while maintaining the same nutrient profile.',
+
+  // Acidify - Step: Fertilizer Input
+  acidifySelectFertilizersTitle: 'Enter Your Current Recipe',
+  acidifySelectFertilizersDescription: 'Select the fertilizers in your existing mix and enter the amounts. PeKacid will be added in the next step.',
+
+  // Acidify - Step: PeKacid Amount
+  acidifyPekacidAmountTitle: 'How much PeKacid to add?',
+  acidifyPekacidAmountDescription: 'Enter how much PeKacid you want to introduce per liter. The calculator will adjust your recipe to maintain the same nutrient levels.',
+  acidifyPekacidAmountLabel: 'PeKacid amount (grams per liter)',
+  acidifyPekacidAmountHint: 'PeKacid (0-60-20) provides P₂O₅ and K₂O. Other fertilizers will be reduced to compensate.',
+  alertEnterPekacidAmount: 'Please enter a PeKacid amount greater than 0.',
+
+  // Acidify - Results
+  acidifyResultsTitle: 'Adjusted Recipe with PeKacid',
+  acidifySuccessMessage: 'Success! Your recipe has been adjusted to include PeKacid while maintaining nutrient balance.',
+  acidifyBeforeTitle: 'Original Recipe',
+  acidifyAfterTitle: 'With PeKacid',
+  acidifyAdjustmentsTitle: 'Adjustments Made',
+  acidifyPpmComparisonTitle: 'Nutrient Levels (PPM)',
+  acidifyPpmComparisonDesc: 'Values should remain the same before and after PeKacid addition.',
+  acidifyPekacidAdded: 'PeKacid added',
+
+  // Acidify - Failure
+  acidifyFailedTitle: 'Adjustment Not Possible',
+  acidifyFailedMessage: 'Cannot maintain the same nutrient profile with the requested PeKacid amount.',
+  acidifyWhyFailed: 'Why did this fail?',
+  acidifyFailedExplanation: 'The PeKacid amount requested would add more P or K than can be compensated by reducing other fertilizers in your mix. Your recipe may not have enough P or K sources to reduce.',
+  acidifySuggestions: 'Suggestions',
+  acidifySuggestion1: 'Try a smaller amount of PeKacid',
+  acidifySuggestion2: 'Add more P or K sources to your original recipe',
+  acidifySuggestion3: 'Use the PPM to Grams calculator to build a new recipe with PeKacid included',
+  acidifyOriginalRecipe: 'Your Original Recipe',
+  acidifyFailedBothPK: 'Cannot compensate for both P and K from PeKacid.',
+  acidifyFailedBothPKDetails: 'Your recipe doesn\'t have enough P and K sources to reduce.',
+  acidifyFailedP: 'Cannot compensate for P from PeKacid.',
+  acidifyFailedPDetails: 'Your recipe doesn\'t have enough P sources. Need to reduce {amount}g more elemental P.',
+  acidifyFailedK: 'Cannot compensate for K from PeKacid.',
+  acidifyFailedKDetails: 'Your recipe doesn\'t have enough K sources. Need to reduce {amount}g more elemental K.',
+
+  // Common labels used in acidify
+  before: 'Before',
+  after: 'After',
+  diffLabel: 'Diff',
+  total: 'Total',
+
   // Stock Solution Settings step
   stockSettingsTitle: 'Stock Solution Settings',
   stockSettingsDescription: 'Configure your stock solution parameters. These settings apply to all tanks.',

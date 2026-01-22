@@ -1309,6 +1309,27 @@ permalink: /fertilizer-calculator/
         </div>
       </div>
 
+      <!-- Acidify Mix with PeKacid -->
+      <div class="mode-card" @click="selectMode('acidify-pekacid')">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 2v6"></path>
+            <path d="M14 2v6"></path>
+            <path d="M6 8h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"></path>
+            <path d="M8 14h8"></path>
+            <path d="M12 14v4"></path>
+          </svg>
+          <span data-i18n="acidifyMixPekacid">Acidify Mix with PeKacid</span>
+        </h3>
+        <p class="description" data-i18n="acidifyMixPekacidDescription">
+          Introduce PeKacid into your existing fertilizer mix for acidification, while keeping nutrient levels balanced.
+        </p>
+        <div class="use-case">
+          <strong data-i18n="bestFor">Best for:</strong>
+          <span data-i18n="acidifyMixPekacidUseCase">You have a recipe and want to add PeKacid for pH control while maintaining the same nutrient profile.</span>
+        </div>
+      </div>
+
       <!-- Stock Solution Maker - DISABLED -->
       <div class="mode-card" style="display: none;" @click="selectMode('stock-solution')">
         <h3>
@@ -1463,6 +1484,70 @@ permalink: /fertilizer-calculator/
     <div class="wizard-step-buttons">
       <button class="btn-calculate" @click="calculateFromWizardGrams()" data-i18n="calculatePpm">Calculate PPM</button>
       <button class="btn-back" @click="backToVolumeStep()" data-i18n="back">← Back</button>
+    </div>
+  </div>
+
+  <!-- Step: Acidify - Fertilizer Input (for Acidify Mix with PeKacid) -->
+  <div id="acidify-grams-input-step" class="wizard-input-step" :class="{ active: wizardStep === 'acidify-grams-input-step' }" @keydown.enter="handleAcidifyGramsInputEnter($event)">
+    <div class="step-indicator">{{ getStepIndicator('acidify-grams-input-step') }}</div>
+    <h3 data-i18n="acidifySelectFertilizersTitle">Enter Your Current Recipe</h3>
+    <p data-i18n="acidifySelectFertilizersDescription">Select the fertilizers in your existing mix and enter the amounts. PeKacid will be added in the next step.</p>
+
+    <div class="wizard-fertilizer-section">
+      <div class="wizard-fertilizer-search">
+        <input type="text" v-model="acidifyGramsSearchTerm" data-i18n-placeholder="searchFertilizers" placeholder="Search fertilizers...">
+        <button v-if="acidifyGramsSearchTerm" class="clear-search" @click="acidifyGramsSearchTerm = ''" type="button" aria-label="Clear search">&times;</button>
+      </div>
+      <div class="wizard-selection-controls">
+        <button @click="clearAcidifyGramsSelectionsVue" data-i18n="clearAll">Clear All</button>
+      </div>
+      <div class="wizard-fertilizer-list">
+        <div v-for="fert in filteredAcidifyGramsFertilizers" :key="fert.id" class="wizard-fertilizer-item">
+          <input type="checkbox"
+                 :id="'acidify-grams-check-' + fert.id"
+                 class="wizard-fert-checkbox"
+                 :checked="acidifyGramsFertilizers[fert.id]?.checked"
+                 @change="toggleAcidifyGramsFertilizer(fert.id)">
+          <label :for="'acidify-grams-check-' + fert.id" class="wizard-fert-label">
+            <span class="wizard-fert-name">{{ i18n.getFertilizerName(fert) }}</span>
+            <span v-if="fert.aliases && fert.aliases.length" class="wizard-fert-aliases">{{ i18n.getFertilizerAliases(fert) }}</span>
+          </label>
+          <input type="number"
+                 class="wizard-grams-input"
+                 :value="acidifyGramsFertilizers[fert.id]?.grams"
+                 @input="updateAcidifyGrams(fert.id, $event.target.value)"
+                 data-i18n-placeholder="grams"
+                 placeholder="Grams"
+                 min="0"
+                 step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-continue" @click="proceedToAcidifyPekacidStep()" data-i18n="continue">Continue →</button>
+      <button class="btn-back" @click="backToVolumeStep()" data-i18n="back">← Back</button>
+    </div>
+  </div>
+
+  <!-- Step: Acidify - PeKacid Amount (for Acidify Mix with PeKacid) -->
+  <div id="acidify-pekacid-step" class="wizard-input-step" :class="{ active: wizardStep === 'acidify-pekacid-step' }">
+    <div class="step-indicator">{{ getStepIndicator('acidify-pekacid-step') }}</div>
+    <h3 data-i18n="acidifyPekacidAmountTitle">How much PeKacid to add?</h3>
+    <p data-i18n="acidifyPekacidAmountDescription">Enter how much PeKacid you want to introduce per liter. The calculator will adjust your recipe to maintain the same nutrient levels.</p>
+
+    <div class="pekacid-limit-input">
+      <label for="acidify-pekacid-amount" data-i18n="acidifyPekacidAmountLabel">PeKacid amount (grams per liter)</label>
+      <div class="pekacid-input-wrapper">
+        <input type="number" id="acidify-pekacid-amount" v-model.number="acidifyPekacidAmount" min="0.01" step="0.01" required @keydown.enter="calculateAcidifyMix()">
+        <span data-i18n="gramsPerLiter">g/L</span>
+      </div>
+      <p class="pekacid-hint" data-i18n="acidifyPekacidAmountHint">PeKacid (0-60-20) provides P₂O₅ and K₂O. Other fertilizers will be reduced to compensate.</p>
+    </div>
+
+    <div class="wizard-step-buttons">
+      <button class="btn-calculate" @click="calculateAcidifyMix()" data-i18n="calculate">Calculate</button>
+      <button class="btn-back" @click="backToAcidifyGramsStep()" data-i18n="back">← Back</button>
     </div>
   </div>
 
@@ -2367,6 +2452,167 @@ permalink: /fertilizer-calculator/
             </div>
           </div>
         </div>
+      </template>
+
+      <!-- Acidify Mix with PeKacid Results (when wizardResultsSource === 'acidify-pekacid') -->
+      <template v-if="wizardResultsSource === 'acidify-pekacid' && acidifyResultsData.show">
+        <!-- Success Case -->
+        <template v-if="acidifyResultsData.success">
+          <div class="results-section">
+            <div class="results-header">
+              <h2>{{ i18n.t('acidifyResultsTitle') || 'Adjusted Recipe with PeKacid' }}</h2>
+              <div style="display: flex; gap: 10px;">
+                <button class="copy-btn" :class="{ copied: copiedButtonId === 'acidify-pekacid' }" @click="copyAcidifyResultsVue()" :title="i18n.t('copyToClipboard')">
+                  <svg v-if="copiedButtonId !== 'acidify-pekacid'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>{{ copiedButtonId === 'acidify-pekacid' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Success message -->
+            <div style="padding: 15px; background: #d4edda; border-radius: 8px; border-left: 4px solid #28a745; margin-bottom: 20px;">
+              <strong style="color: #155724;">{{ i18n.t('acidifySuccessMessage') || 'Success! Your recipe has been adjusted to include PeKacid while maintaining nutrient balance.' }}</strong>
+            </div>
+
+            <!-- Before/After Comparison - Fertilizers -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+              <!-- Before -->
+              <div style="padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <h4 style="margin: 0 0 15px 0; color: #856404;">{{ i18n.t('acidifyBeforeTitle') || 'Original Recipe' }}</h4>
+                <div v-for="fert in acidifyResultsData.beforeFertilizers" :key="'before-' + fert.id" style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0e6c2;">
+                  <span>{{ i18n.getFertilizerName(fert) }}</span>
+                  <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; margin-top: 8px; border-top: 2px solid #ffc107; font-weight: bold; color: #856404;">
+                  <span>{{ i18n.t('total') || 'Total' }}</span>
+                  <span>{{ i18n.formatNumber(acidifyResultsData.beforeTotalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</span>
+                </div>
+              </div>
+
+              <!-- After -->
+              <div style="padding: 15px; background: #d4edda; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h4 style="margin: 0 0 15px 0; color: #155724;">{{ i18n.t('acidifyAfterTitle') || 'With PeKacid' }}</h4>
+                <div v-for="fert in acidifyResultsData.afterFertilizers" :key="'after-' + fert.id" style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #c3e6cb;" :style="{ color: fert.id === 'icl_pekacid_pk_acid' ? '#155724' : 'inherit', fontWeight: fert.id === 'icl_pekacid_pk_acid' ? 'bold' : 'normal' }">
+                  <span>{{ i18n.getFertilizerName(fert) }}{{ fert.id === 'icl_pekacid_pk_acid' ? ' ✓' : '' }}</span>
+                  <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}{{ fert.adjustment ? ' (' + (fert.adjustment > 0 ? '+' : '') + i18n.formatNumber(fert.adjustment.toFixed(2)) + ')' : '' }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; margin-top: 8px; border-top: 2px solid #28a745; font-weight: bold; color: #155724;">
+                  <span>{{ i18n.t('total') || 'Total' }}</span>
+                  <span>{{ i18n.formatNumber(acidifyResultsData.afterTotalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Adjustments Made -->
+            <div v-if="acidifyResultsData.adjustments && acidifyResultsData.adjustments.length > 0" class="results-section" style="margin-top: 20px;">
+              <h3>{{ i18n.t('acidifyAdjustmentsTitle') || 'Adjustments Made' }}</h3>
+              <div style="padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                <div v-for="adj in acidifyResultsData.adjustments" :key="adj.id" style="padding: 8px 0; border-bottom: 1px solid #bbdefb;">
+                  <strong>{{ i18n.getFertilizerName(adj) }}:</strong>
+                  {{ i18n.formatNumber(adj.originalGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }} →
+                  {{ i18n.formatNumber(adj.newGrams.toFixed(2)) }} {{ i18n.t('gramsShort') }}
+                  <span style="color: #1565c0;">({{ adj.reduction > 0 ? '-' : '+' }}{{ i18n.formatNumber(Math.abs(adj.reduction).toFixed(2)) }} {{ i18n.t('gramsShort') }})</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PPM Values Comparison -->
+            <div class="results-section" style="margin-top: 20px;">
+              <h3>{{ i18n.t('acidifyPpmComparisonTitle') || 'Nutrient Levels (PPM)' }}</h3>
+              <p style="color: #666; font-size: 0.9em;">{{ i18n.t('acidifyPpmComparisonDesc') || 'Values should remain the same before and after PeKacid addition.' }}</p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px;">
+                <div v-for="item in acidifyResultsData.ppmComparison" :key="item.key" class="result-card" :style="{ borderLeft: '4px solid ' + (Math.abs(item.diff) < 0.5 ? '#28a745' : '#ffc107') }">
+                  <div class="result-label">{{ item.label }}</div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.85em; color: #666;">
+                    <span>{{ i18n.t('before') || 'Before' }}: {{ i18n.formatNumber(item.before.toFixed(1)) }}</span>
+                    <span>{{ i18n.t('after') || 'After' }}: {{ i18n.formatNumber(item.after.toFixed(1)) }}</span>
+                  </div>
+                  <div v-if="Math.abs(item.diff) >= 0.5" style="font-size: 0.8em; color: #856404;">
+                    {{ i18n.t('diffLabel') || 'Diff' }}: {{ item.diff > 0 ? '+' : '' }}{{ i18n.formatNumber(item.diff.toFixed(1)) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ion Balance -->
+            <div v-if="acidifyResultsData.afterIonBalance" class="results-section" style="margin-top: 20px;">
+              <h2>
+                <span>{{ i18n.t('ionBalance') }}</span>
+                <span class="info-icon" @click="openIonBalanceExplanation()" :title="i18n.t('clickToLearnIonBalance')">?</span>
+              </h2>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('cations') }} (+)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #1976d2;">{{ i18n.formatNumber(acidifyResultsData.afterIonBalance.totalCations.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="font-size: 1.5em; color: #666;">vs</div>
+                <div style="background: #fce4ec; padding: 10px 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('anions') }} (-)</div>
+                  <div style="font-size: 1.3em; font-weight: bold; color: #c2185b;">{{ i18n.formatNumber(acidifyResultsData.afterIonBalance.totalAnions.toFixed(2)) }}</div>
+                  <div style="font-size: 0.75em; color: #888;">meq/L</div>
+                </div>
+                <div style="padding: 10px 15px; border-radius: 8px; text-align: center;" :style="{ background: acidifyResultsData.afterIonBalance.statusColor + '22', borderLeft: '4px solid ' + acidifyResultsData.afterIonBalance.statusColor }">
+                  <div style="font-size: 0.85em; color: #666;">{{ i18n.t('imbalance') }}</div>
+                  <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: acidifyResultsData.afterIonBalance.statusColor }">{{ i18n.formatNumber(acidifyResultsData.afterIonBalance.imbalance.toFixed(1)) }}%</div>
+                  <div style="font-size: 0.85em;" :style="{ color: acidifyResultsData.afterIonBalance.statusColor }">{{ acidifyResultsData.afterIonBalance.statusText }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- EC Prediction -->
+            <div v-if="acidifyResultsData.afterEcPrediction && acidifyResultsData.afterEcPrediction.ec > 0" class="results-section" style="margin-top: 20px;">
+              <h2>{{ i18n.t('achievedEc') }} <span class="info-icon" @click="openEcExplanation()" :title="i18n.t('showEcBreakdownByIon')">?</span></h2>
+              <div class="ec-display" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                <div class="ec-value" style="padding: 15px 25px; border-radius: 8px; text-align: center;" :style="{ background: acidifyResultsData.afterEcPrediction.color + '22', borderLeft: '4px solid ' + acidifyResultsData.afterEcPrediction.color }">
+                  <div style="font-size: 2em; font-weight: bold;" :style="{ color: acidifyResultsData.afterEcPrediction.color }">{{ i18n.formatNumber(acidifyResultsData.afterEcPrediction.ec.toFixed(2)) }}</div>
+                  <div style="font-size: 0.9em; color: #666;">mS/cm</div>
+                  <div style="font-size: 0.85em; margin-top: 5px;" :style="{ color: acidifyResultsData.afterEcPrediction.color }">{{ acidifyResultsData.afterEcPrediction.text }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Failure Case -->
+        <template v-else>
+          <div class="results-section">
+            <div class="results-header">
+              <h2>{{ i18n.t('acidifyFailedTitle') || 'Adjustment Not Possible' }}</h2>
+            </div>
+
+            <!-- Failure message -->
+            <div style="padding: 15px; background: #f8d7da; border-radius: 8px; border-left: 4px solid #dc3545; margin-bottom: 20px;">
+              <strong style="color: #721c24;">{{ acidifyResultsData.failureReason || i18n.t('acidifyFailedMessage') || 'Cannot maintain the same nutrient profile with the requested PeKacid amount.' }}</strong>
+            </div>
+
+            <!-- Explanation -->
+            <div style="padding: 15px; background: #fff3cd; border-radius: 8px; margin-bottom: 20px;">
+              <h4 style="margin: 0 0 10px 0; color: #856404;">{{ i18n.t('acidifyWhyFailed') || 'Why did this fail?' }}</h4>
+              <p style="margin: 0; color: #856404;">{{ acidifyResultsData.failureDetails || i18n.t('acidifyFailedExplanation') || 'The PeKacid amount requested would add more P or K than can be compensated by reducing other fertilizers in your mix. Your recipe may not have enough P or K sources to reduce.' }}</p>
+            </div>
+
+            <!-- Suggestions -->
+            <div style="padding: 15px; background: #e3f2fd; border-radius: 8px;">
+              <h4 style="margin: 0 0 10px 0; color: #1565c0;">{{ i18n.t('acidifySuggestions') || 'Suggestions' }}</h4>
+              <ul style="margin: 0; padding-left: 20px; color: #1565c0;">
+                <li>{{ i18n.t('acidifySuggestion1') || 'Try a smaller amount of PeKacid' }}</li>
+                <li>{{ i18n.t('acidifySuggestion2') || 'Add more P or K sources to your original recipe' }}</li>
+                <li>{{ i18n.t('acidifySuggestion3') || 'Use the PPM to Grams calculator to build a new recipe with PeKacid included' }}</li>
+              </ul>
+            </div>
+
+            <!-- Original recipe for reference -->
+            <div class="results-section" style="margin-top: 20px;">
+              <h3>{{ i18n.t('acidifyOriginalRecipe') || 'Your Original Recipe' }}</h3>
+              <div v-for="fert in acidifyResultsData.beforeFertilizers" :key="'failed-before-' + fert.id" style="display: flex; justify-content: space-between; padding: 8px 12px; background: #f8f9fa; border-radius: 4px; margin-bottom: 5px;">
+                <span>{{ i18n.getFertilizerName(fert) }}</span>
+                <strong>{{ i18n.formatNumber(fert.grams.toFixed(2)) }} {{ i18n.t('gramsShort') }}</strong>
+              </div>
+            </div>
+          </div>
+        </template>
       </template>
 
       <!-- Two-Tank Results (shown in wizard when twoTankDisplayData.show is true) -->
@@ -4099,7 +4345,8 @@ function getModeName(mode) {
   const modeKeys = {
     'ppm-calc': 'gramsToPpm',
     'formula-builder': 'ppmToGrams',
-    'reverse-calc': 'npkRatioToGrams'
+    'reverse-calc': 'npkRatioToGrams',
+    'acidify-pekacid': 'acidifyMixPekacid'
   };
   return i18n.t(modeKeys[mode]) || mode;
 }
@@ -6128,6 +6375,34 @@ const FertilizerApp = {
     // This is used to cap PeKacid usage for acidification purposes
     const pekacidMaxLimit = ref(0);
 
+    // Acidify Mix with PeKacid state
+    const acidifyGramsFertilizers = reactive({}); // { fertilizer_id: { checked: false, grams: '' } }
+    const acidifyGramsSearchTerm = ref('');
+    const acidifyPekacidAmount = ref(0.5); // Default 0.5 g/L
+    const acidifyResultsData = reactive({
+      show: false,
+      success: false,
+      failureReason: '',
+      failureDetails: '',
+      // Before state
+      beforeFertilizers: [], // { id, name, grams }
+      beforeTotalGrams: 0,
+      beforePpm: {},
+      // After state (with PeKacid and adjustments)
+      afterFertilizers: [], // { id, name, grams, adjustment }
+      afterTotalGrams: 0,
+      afterPpm: {},
+      afterIonBalance: null,
+      afterEcPrediction: null,
+      // Adjustments made
+      adjustments: [], // { id, name, originalGrams, newGrams, reduction }
+      // PPM comparison
+      ppmComparison: [], // { key, label, before, after, diff }
+      // Meta
+      volume: 0,
+      pekacidAmount: 0
+    });
+
     // Stock Solution Maker state
     const stockSettings = reactive({
       concentrationFactor: 100,  // e.g., 100x concentration
@@ -6467,15 +6742,18 @@ const FertilizerApp = {
       const STEP_COUNTS = {
         'ppm-calc': 3,
         'formula-builder': isPekacidSelected ? 5 : 4,  // +1 if PeKacid selected
-        'reverse-calc': isPekacidSelected ? 7 : 6      // +1 if PeKacid selected
+        'reverse-calc': isPekacidSelected ? 7 : 6,     // +1 if PeKacid selected
+        'acidify-pekacid': 4  // Volume, Fertilizers, PeKacid amount, Results
       };
 
       // Step numbers per step and mode
       const STEP_NUMBERS = {
-        'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 },
+        'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2, 'acidify-pekacid': 2 },
         'calc-mode-step': { 'reverse-calc': 3 },  // Only reverse-calc uses this step
         'ec-step': { 'reverse-calc': 4 },
         'grams-input-step': { 'ppm-calc': 3 },
+        'acidify-grams-input-step': { 'acidify-pekacid': 3 },
+        'acidify-pekacid-step': { 'acidify-pekacid': 4 },
         'ppm-targets-step': { 'formula-builder': 3 },  // Was 4, now 3 (no calc-mode-step)
         'npk-ratios-step': { 'reverse-calc': 5 },
         'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 },
@@ -6507,14 +6785,17 @@ const FertilizerApp = {
         'ppm-calc': 3,
         'formula-builder': isPekacidSelected ? 5 : 4,  // +1 if PeKacid selected
         'reverse-calc': isPekacidSelected ? 7 : 6,     // +1 if PeKacid selected
-        'stock-solution': 4    // Settings, Targets, Fertilizers, Calculate
+        'stock-solution': 4,   // Settings, Targets, Fertilizers, Calculate
+        'acidify-pekacid': 4   // Volume, Fertilizers, PeKacid amount, Results
       };
 
       const STEP_NUMBERS = {
-        'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2 },
+        'volume-step': { 'ppm-calc': 2, 'formula-builder': 2, 'reverse-calc': 2, 'acidify-pekacid': 2 },
         'calc-mode-step': { 'reverse-calc': 3 },  // Only reverse-calc uses this step
         'ec-step': { 'reverse-calc': 4 },
         'grams-input-step': { 'ppm-calc': 3 },
+        'acidify-grams-input-step': { 'acidify-pekacid': 3 },
+        'acidify-pekacid-step': { 'acidify-pekacid': 4 },
         'ppm-targets-step': { 'formula-builder': 3 },  // Was 4, now 3 (no calc-mode-step)
         'npk-ratios-step': { 'reverse-calc': 5 },
         'fertilizer-select-step': { 'formula-builder': 4, 'reverse-calc': 6 },
@@ -6628,6 +6909,20 @@ const FertilizerApp = {
       );
     });
 
+    // Acidify: Filter grams fertilizers based on search (excludes PeKacid)
+    const filteredAcidifyGramsFertilizers = computed(() => {
+      // Filter out PeKacid - it's added in the next step
+      const fertilizersWithoutPekacid = FERTILIZERS.filter(f => f.id !== 'icl_pekacid_pk_acid');
+      if (!acidifyGramsSearchTerm.value.trim()) return fertilizersWithoutPekacid;
+      const term = acidifyGramsSearchTerm.value.toLowerCase();
+      return fertilizersWithoutPekacid.filter(f =>
+        f.name.toLowerCase().includes(term) ||
+        i18n.getFertilizerName(f).toLowerCase().includes(term) ||
+        (f.aliases && f.aliases.some(a => a.toLowerCase().includes(term))) ||
+        i18n.getFertilizerAliases(f).toLowerCase().includes(term)
+      );
+    });
+
     // Wizard: Filter available fertilizers based on search
     const filteredWizardAvailFertilizers = computed(() => {
       if (!wizardAvailSearchTerm.value.trim()) return FERTILIZERS;
@@ -6734,6 +7029,86 @@ const FertilizerApp = {
       if (wizardGramsFertilizers[id]) {
         wizardGramsFertilizers[id].checked = !wizardGramsFertilizers[id].checked;
       }
+    }
+
+    // =========================================================================
+    // ACIDIFY MIX WITH PEKACID - State Management Functions
+    // =========================================================================
+
+    // Initialize acidify grams fertilizers (excludes PeKacid)
+    function initAcidifyGramsFertilizers() {
+      FERTILIZERS.forEach(f => {
+        // Exclude PeKacid from the acidify fertilizer list
+        if (f.id !== 'icl_pekacid_pk_acid') {
+          acidifyGramsFertilizers[f.id] = {
+            checked: false,
+            grams: ''
+          };
+        }
+      });
+    }
+
+    // Clear acidify grams selections
+    function clearAcidifyGramsSelectionsVue() {
+      FERTILIZERS.forEach(f => {
+        if (f.id !== 'icl_pekacid_pk_acid' && acidifyGramsFertilizers[f.id]) {
+          acidifyGramsFertilizers[f.id] = {
+            checked: false,
+            grams: ''
+          };
+        }
+      });
+      acidifyGramsSearchTerm.value = '';
+    }
+
+    // Update acidify grams - auto-check when user enters value
+    function updateAcidifyGrams(id, value) {
+      if (acidifyGramsFertilizers[id]) {
+        acidifyGramsFertilizers[id].grams = value;
+        if (parseFloat(value) > 0) {
+          acidifyGramsFertilizers[id].checked = true;
+        }
+      }
+    }
+
+    // Toggle acidify grams fertilizer checkbox
+    function toggleAcidifyGramsFertilizer(id) {
+      if (acidifyGramsFertilizers[id]) {
+        acidifyGramsFertilizers[id].checked = !acidifyGramsFertilizers[id].checked;
+      }
+    }
+
+    // Handle Enter key in acidify grams input
+    function handleAcidifyGramsInputEnter(event) {
+      // Don't proceed if focus is on search input
+      if (event.target.type === 'text') return;
+      proceedToAcidifyPekacidStep();
+    }
+
+    // Proceed from acidify grams input to pekacid amount step
+    function proceedToAcidifyPekacidStep() {
+      // Get active fertilizers
+      const activeFerts = [];
+      Object.entries(acidifyGramsFertilizers).forEach(([fertId, data]) => {
+        if (data.checked && parseFloat(data.grams) > 0) {
+          const fert = FERTILIZERS.find(f => f.id === fertId);
+          if (fert) {
+            activeFerts.push({ ...fert, grams: parseFloat(data.grams) });
+          }
+        }
+      });
+
+      if (activeFerts.length === 0) {
+        alert(i18n.t('alertSelectFertilizer') || 'Please select at least one fertilizer with an amount.');
+        return;
+      }
+
+      showWizardStepVue('acidify-pekacid-step');
+    }
+
+    // Go back from acidify pekacid step to grams input
+    function backToAcidifyGramsStep() {
+      showWizardStepVue('acidify-grams-input-step');
     }
 
     // Toggle wizard available fertilizer checkbox
@@ -8424,6 +8799,9 @@ const FertilizerApp = {
       } else if (mode === 'stock-solution') {
         // Stock Solution Maker: go to stock settings step
         showWizardStepVue('stock-settings-step');
+      } else if (mode === 'acidify-pekacid') {
+        // Acidify Mix with PeKacid: go to fertilizer input step
+        showWizardStepVue('acidify-grams-input-step');
       } else {
         proceedToCalculator();
       }
@@ -8996,6 +9374,349 @@ const FertilizerApp = {
     }
 
     // =========================================================================
+    // ACIDIFY MIX WITH PEKACID - Calculation
+    // =========================================================================
+
+    /**
+     * Calculate PPM results from a list of fertilizers and volume
+     * @param {Array} fertilizers - Array of { ...fert, grams }
+     * @param {number} volume - Volume in liters
+     * @returns {Object} PPM results object
+     */
+    function calculatePpmFromFertilizers(fertilizers, volume) {
+      const results = {};
+      fertilizers.forEach(fert => {
+        Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+          if (!results[nutrient]) results[nutrient] = 0;
+          results[nutrient] += (fert.grams * pct / 100) / volume * 1000;
+        });
+      });
+
+      // Calculate totals
+      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0);
+
+      // Convert oxides to elemental forms
+      if (results.P2O5) {
+        results.P = (results.P || 0) + (results.P2O5 * OXIDE_CONVERSIONS.P2O5_to_P);
+      }
+      if (results.K2O) {
+        results.K = (results.K || 0) + (results.K2O * OXIDE_CONVERSIONS.K2O_to_K);
+      }
+      if (results.CaO) {
+        results.Ca = (results.Ca || 0) + (results.CaO * OXIDE_CONVERSIONS.CaO_to_Ca);
+      }
+      if (results.MgO) {
+        results.Mg = (results.Mg || 0) + (results.MgO * OXIDE_CONVERSIONS.MgO_to_Mg);
+      }
+
+      return results;
+    }
+
+    /**
+     * Calculate Acidify Mix with PeKacid
+     * Adjusts P and K sources to compensate for PeKacid's contribution
+     */
+    async function calculateAcidifyMix() {
+      const vol = parseFloat(wizardVolume.value) || 10;
+      const pekacidGPerL = parseFloat(acidifyPekacidAmount.value) || 0;
+
+      if (pekacidGPerL <= 0) {
+        alert(i18n.t('alertEnterPekacidAmount') || 'Please enter a PeKacid amount greater than 0.');
+        return;
+      }
+
+      // Get active fertilizers from acidify state
+      const originalFerts = [];
+      Object.entries(acidifyGramsFertilizers).forEach(([fertId, data]) => {
+        if (data.checked && parseFloat(data.grams) > 0) {
+          const fert = FERTILIZERS.find(f => f.id === fertId);
+          if (fert) {
+            originalFerts.push({ ...fert, grams: parseFloat(data.grams) });
+          }
+        }
+      });
+
+      if (originalFerts.length === 0) {
+        alert(i18n.t('alertSelectFertilizer') || 'Please select at least one fertilizer.');
+        return;
+      }
+
+      // Get PeKacid fertilizer data
+      const pekacidFert = FERTILIZERS.find(f => f.id === 'icl_pekacid_pk_acid');
+      if (!pekacidFert) {
+        alert('PeKacid fertilizer data not found.');
+        return;
+      }
+
+      // Calculate total PeKacid grams for the volume
+      const pekacidTotalGrams = pekacidGPerL * vol;
+
+      // Calculate P2O5 and K2O contribution from PeKacid
+      const pekacidP2O5 = (pekacidTotalGrams * (pekacidFert.pct.P2O5 || 0) / 100);
+      const pekacidK2O = (pekacidTotalGrams * (pekacidFert.pct.K2O || 0) / 100);
+
+      // Convert to elemental P and K (in grams of nutrient)
+      const pekacidPContribution = pekacidP2O5 * OXIDE_CONVERSIONS.P2O5_to_P;
+      const pekacidKContribution = pekacidK2O * OXIDE_CONVERSIONS.K2O_to_K;
+
+      // Calculate before PPM
+      const beforePpm = calculatePpmFromFertilizers(originalFerts, vol);
+
+      // Now we need to reduce P and K from other sources
+      // Strategy: Prioritize fertilizers that provide both P and K (like MKP),
+      // then single-nutrient sources proportionally
+
+      // Categorize fertilizers by what nutrients they provide
+      const adjustedFerts = JSON.parse(JSON.stringify(originalFerts)); // Deep copy
+      const adjustments = [];
+
+      // Calculate how much P and K we need to remove
+      let pToRemove = pekacidPContribution; // in grams of elemental P
+      let kToRemove = pekacidKContribution; // in grams of elemental K
+
+      // First pass: try to reduce fertilizers that provide both P and K
+      for (const fert of adjustedFerts) {
+        if (pToRemove <= 0 && kToRemove <= 0) break;
+
+        // Calculate elemental P and K contribution per gram of this fertilizer
+        let fertPPerGram = 0; // elemental P per gram
+        let fertKPerGram = 0; // elemental K per gram
+
+        if (fert.pct.P2O5) {
+          fertPPerGram = (fert.pct.P2O5 / 100) * OXIDE_CONVERSIONS.P2O5_to_P;
+        }
+        if (fert.pct.P) {
+          fertPPerGram += fert.pct.P / 100;
+        }
+        if (fert.pct.K2O) {
+          fertKPerGram = (fert.pct.K2O / 100) * OXIDE_CONVERSIONS.K2O_to_K;
+        }
+        if (fert.pct.K) {
+          fertKPerGram += fert.pct.K / 100;
+        }
+
+        // Skip if this fertilizer doesn't provide P or K
+        if (fertPPerGram === 0 && fertKPerGram === 0) continue;
+
+        // If fertilizer provides both P and K, try to reduce it first
+        if (fertPPerGram > 0 && fertKPerGram > 0) {
+          // Calculate how much we can reduce based on each constraint
+          const maxReduceByP = pToRemove > 0 ? pToRemove / fertPPerGram : Infinity;
+          const maxReduceByK = kToRemove > 0 ? kToRemove / fertKPerGram : Infinity;
+          const maxReduce = Math.min(maxReduceByP, maxReduceByK, fert.grams);
+
+          if (maxReduce > 0) {
+            const originalGrams = fert.grams;
+            fert.grams -= maxReduce;
+            pToRemove -= maxReduce * fertPPerGram;
+            kToRemove -= maxReduce * fertKPerGram;
+
+            adjustments.push({
+              ...fert,
+              originalGrams,
+              newGrams: fert.grams,
+              reduction: maxReduce
+            });
+          }
+        }
+      }
+
+      // Second pass: reduce P-only sources
+      for (const fert of adjustedFerts) {
+        if (pToRemove <= 0.001) break; // Small tolerance
+
+        let fertPPerGram = 0;
+        if (fert.pct.P2O5) {
+          fertPPerGram = (fert.pct.P2O5 / 100) * OXIDE_CONVERSIONS.P2O5_to_P;
+        }
+        if (fert.pct.P) {
+          fertPPerGram += fert.pct.P / 100;
+        }
+
+        // Skip if no P or already has K (handled in first pass)
+        const hasK = (fert.pct.K2O || fert.pct.K);
+        if (fertPPerGram === 0 || hasK) continue;
+
+        const maxReduce = Math.min(pToRemove / fertPPerGram, fert.grams);
+        if (maxReduce > 0.001) {
+          const existingAdj = adjustments.find(a => a.id === fert.id);
+          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
+
+          fert.grams -= maxReduce;
+          pToRemove -= maxReduce * fertPPerGram;
+
+          if (existingAdj) {
+            existingAdj.newGrams = fert.grams;
+            existingAdj.reduction = originalGrams - fert.grams;
+          } else {
+            adjustments.push({
+              ...fert,
+              originalGrams,
+              newGrams: fert.grams,
+              reduction: maxReduce
+            });
+          }
+        }
+      }
+
+      // Third pass: reduce K-only sources
+      for (const fert of adjustedFerts) {
+        if (kToRemove <= 0.001) break; // Small tolerance
+
+        let fertKPerGram = 0;
+        if (fert.pct.K2O) {
+          fertKPerGram = (fert.pct.K2O / 100) * OXIDE_CONVERSIONS.K2O_to_K;
+        }
+        if (fert.pct.K) {
+          fertKPerGram += fert.pct.K / 100;
+        }
+
+        // Skip if no K or already has P (may have been handled)
+        const hasP = (fert.pct.P2O5 || fert.pct.P);
+        if (fertKPerGram === 0 || hasP) continue;
+
+        const maxReduce = Math.min(kToRemove / fertKPerGram, fert.grams);
+        if (maxReduce > 0.001) {
+          const existingAdj = adjustments.find(a => a.id === fert.id);
+          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
+
+          fert.grams -= maxReduce;
+          kToRemove -= maxReduce * fertKPerGram;
+
+          if (existingAdj) {
+            existingAdj.newGrams = fert.grams;
+            existingAdj.reduction = originalGrams - fert.grams;
+          } else {
+            adjustments.push({
+              ...fert,
+              originalGrams,
+              newGrams: fert.grams,
+              reduction: maxReduce
+            });
+          }
+        }
+      }
+
+      // Check if we were able to compensate fully
+      const tolerance = 0.5; // grams tolerance
+      const success = (pToRemove < tolerance && kToRemove < tolerance);
+
+      // Prepare after fertilizers list (filtered to non-zero + PeKacid)
+      const afterFerts = adjustedFerts.filter(f => f.grams > 0.001).map(f => {
+        const adj = adjustments.find(a => a.id === f.id);
+        return {
+          ...f,
+          adjustment: adj ? -(adj.originalGrams - adj.newGrams) : 0
+        };
+      });
+
+      // Add PeKacid to the after list
+      afterFerts.push({
+        ...pekacidFert,
+        grams: pekacidTotalGrams,
+        adjustment: pekacidTotalGrams // Positive since it's added
+      });
+
+      // Calculate after PPM
+      const afterPpm = calculatePpmFromFertilizers(afterFerts, vol);
+
+      // Build PPM comparison
+      const ppmComparison = [];
+      const nutrients = ['N_total', 'P', 'K', 'Ca', 'Mg', 'S', 'Si'];
+      const nutrientLabels = {
+        'N_total': 'N (total)',
+        'P': 'P',
+        'K': 'K',
+        'Ca': 'Ca',
+        'Mg': 'Mg',
+        'S': 'S',
+        'Si': 'Si'
+      };
+
+      for (const key of nutrients) {
+        const before = beforePpm[key] || 0;
+        const after = afterPpm[key] || 0;
+        if (before > 0 || after > 0) {
+          ppmComparison.push({
+            key,
+            label: nutrientLabels[key] || key,
+            before,
+            after,
+            diff: after - before
+          });
+        }
+      }
+
+      // Calculate ion balance and EC for after state
+      const afterIonBalance = calculateIonBalanceForFormula(afterFerts, vol);
+      const afterEcData = estimateECFromPPM(afterPpm);
+
+      // Build failure reason if not successful
+      let failureReason = '';
+      let failureDetails = '';
+      if (!success) {
+        if (pToRemove > tolerance && kToRemove > tolerance) {
+          failureReason = i18n.t('acidifyFailedBothPK') || 'Cannot compensate for both P and K from PeKacid.';
+          failureDetails = i18n.t('acidifyFailedBothPKDetails') || `Your recipe doesn't have enough P sources (need to reduce ${pToRemove.toFixed(1)}g more P) and K sources (need to reduce ${kToRemove.toFixed(1)}g more K).`;
+        } else if (pToRemove > tolerance) {
+          failureReason = i18n.t('acidifyFailedP') || 'Cannot compensate for P from PeKacid.';
+          failureDetails = (i18n.t('acidifyFailedPDetails') || `Your recipe doesn't have enough P sources. Need to reduce {amount}g more elemental P.`).replace('{amount}', pToRemove.toFixed(1));
+        } else {
+          failureReason = i18n.t('acidifyFailedK') || 'Cannot compensate for K from PeKacid.';
+          failureDetails = (i18n.t('acidifyFailedKDetails') || `Your recipe doesn't have enough K sources. Need to reduce {amount}g more elemental K.`).replace('{amount}', kToRemove.toFixed(1));
+        }
+      }
+
+      // Update results data
+      acidifyResultsData.show = true;
+      acidifyResultsData.success = success;
+      acidifyResultsData.failureReason = failureReason;
+      acidifyResultsData.failureDetails = failureDetails;
+      acidifyResultsData.beforeFertilizers = originalFerts;
+      acidifyResultsData.beforeTotalGrams = originalFerts.reduce((sum, f) => sum + f.grams, 0);
+      acidifyResultsData.beforePpm = beforePpm;
+      acidifyResultsData.afterFertilizers = afterFerts;
+      acidifyResultsData.afterTotalGrams = afterFerts.reduce((sum, f) => sum + f.grams, 0);
+      acidifyResultsData.afterPpm = afterPpm;
+      acidifyResultsData.afterIonBalance = afterIonBalance;
+      acidifyResultsData.afterEcPrediction = afterEcData;
+      acidifyResultsData.adjustments = adjustments.filter(a => a.reduction > 0.001);
+      acidifyResultsData.ppmComparison = ppmComparison;
+      acidifyResultsData.volume = vol;
+      acidifyResultsData.pekacidAmount = pekacidGPerL;
+
+      // Set wizard results source and show results
+      wizardResultsSource.value = 'acidify-pekacid';
+      wizardResultsModeText.value = i18n.t('currentLabel') + ' <strong>' + getModeName('acidify-pekacid') + '</strong> · ' + vol + i18n.t('litersShort');
+      showWizardStepVue('wizard-results');
+    }
+
+    // Copy acidify results to clipboard
+    function copyAcidifyResultsVue() {
+      if (!acidifyResultsData.show) {
+        alert(i18n.t('alertRunCalculationFirst') || 'Please run a calculation first.');
+        return;
+      }
+
+      let text = '=== ' + (i18n.t('acidifyResultsTitle') || 'Acidify Mix with PeKacid') + ' ===\n\n';
+      text += (i18n.t('volumeLabel') || 'Volume') + ': ' + acidifyResultsData.volume + 'L\n';
+      text += (i18n.t('acidifyPekacidAdded') || 'PeKacid added') + ': ' + acidifyResultsData.pekacidAmount + ' g/L\n\n';
+
+      if (acidifyResultsData.success) {
+        text += '--- ' + (i18n.t('acidifyAfterTitle') || 'Adjusted Recipe') + ' ---\n';
+        acidifyResultsData.afterFertilizers.forEach(f => {
+          text += i18n.getFertilizerName(f) + ': ' + f.grams.toFixed(2) + 'g\n';
+        });
+        text += '\n' + (i18n.t('total') || 'Total') + ': ' + acidifyResultsData.afterTotalGrams.toFixed(2) + 'g\n';
+      } else {
+        text += '--- ' + (i18n.t('acidifyFailedTitle') || 'Adjustment Not Possible') + ' ---\n';
+        text += acidifyResultsData.failureReason + '\n';
+      }
+
+      copyToClipboardVue(text, 'acidify-pekacid');
+    }
+
+    // =========================================================================
     // COPY TO CLIPBOARD (Vue-powered)
     // =========================================================================
     async function copyToClipboardVue(text, buttonId) {
@@ -9157,6 +9878,7 @@ const FertilizerApp = {
       initReverseFertilizers();
       initWizardGramsFertilizers();
       initWizardAvailFertilizers();
+      initAcidifyGramsFertilizers();
     });
 
     // Expose to template
@@ -9219,6 +9941,13 @@ const FertilizerApp = {
       stockFertilizerSearch,
       stockResultsData,
       filteredStockFertilizers,
+
+      // Acidify Mix with PeKacid State
+      acidifyGramsFertilizers,
+      acidifyGramsSearchTerm,
+      acidifyPekacidAmount,
+      acidifyResultsData,
+      filteredAcidifyGramsFertilizers,
 
       // Computed
       filteredFertilizers,
@@ -9336,6 +10065,16 @@ const FertilizerApp = {
       selectCommonStockFertilizers,
       deselectAllStockFertilizers,
       calculateStockSolutions: calculateStockSolutionsVue,
+      // Acidify Mix with PeKacid Methods
+      initAcidifyGramsFertilizers,
+      clearAcidifyGramsSelectionsVue,
+      updateAcidifyGrams,
+      toggleAcidifyGramsFertilizer,
+      handleAcidifyGramsInputEnter,
+      proceedToAcidifyPekacidStep,
+      backToAcidifyGramsStep,
+      calculateAcidifyMix,
+      copyAcidifyResultsVue,
       calculateFromWizardGrams,
       calculateFromWizardFertilizerSelectVue,
       showTwoTankView,
