@@ -9653,60 +9653,96 @@ const FertilizerApp = {
         }
       }
 
-      // Fourth pass: compensate for N loss by increasing N-only sources (no P2O5, no K2O)
-      // Calculate current N in adjusted recipe vs original
-      const adjustedPpmBeforeNFix = calculatePpmFromFertilizers(adjustedFerts, vol);
-      const nLost = (beforePpm.N_total || 0) - (adjustedPpmBeforeNFix.N_total || 0);
+      // Iterative compensation: fix other nutrients (N, Ca, Mg, S) using fertilizers without P2O5/K2O
+      // This preserves P and K balance while minimizing changes to other nutrients
+      const maxIterations = 50;
+      const ppmTolerance = 0.5; // ppm tolerance for convergence
+      const nutrientsToFix = ['N_total', 'Ca', 'Mg', 'S', 'Si']; // Nutrients to try to preserve (not P/K)
 
-      if (nLost > 0.5) { // Only if we lost more than 0.5 ppm N
-        addDevLog('--- Pass 4: Compensating for N loss ---', 'info');
-        addDevLog('N lost from reductions: ' + nLost.toFixed(1) + ' ppm', 'info');
+      addDevLog('--- Iterative Compensation (max ' + maxIterations + ' iterations) ---', 'info');
 
-        let nToAdd = nLost;
+      for (let iteration = 0; iteration < maxIterations; iteration++) {
+        // Calculate current PPM
+        const currentPpm = calculatePpmFromFertilizers(adjustedFerts, vol);
 
+        // Find the nutrient with the largest deficit (we lost it from reductions)
+        let maxDeficit = 0;
+        let nutrientToFix = null;
+
+        for (const nutrient of nutrientsToFix) {
+          const target = beforePpm[nutrient] || 0;
+          const current = currentPpm[nutrient] || 0;
+          const deficit = target - current; // Positive = we need to add more
+
+          if (deficit > ppmTolerance && deficit > maxDeficit) {
+            maxDeficit = deficit;
+            nutrientToFix = nutrient;
+          }
+        }
+
+        // If no significant deficit, we're done
+        if (!nutrientToFix) {
+          addDevLog('  Iteration ' + (iteration + 1) + ': All nutrients within tolerance', 'info');
+          break;
+        }
+
+        addDevLog('  Iteration ' + (iteration + 1) + ': Fixing ' + nutrientToFix + ' (deficit: ' + maxDeficit.toFixed(1) + ' ppm)', 'info');
+
+        // Find a fertilizer that provides this nutrient but NOT P2O5 or K2O
+        let fixed = false;
         for (const fert of adjustedFerts) {
-          if (nToAdd <= 0.1) break;
-
-          // Get N content (total N from all forms)
-          const nPct = (fert.pct.N || 0) + (fert.pct.N_NO3 || 0) + (fert.pct.N_NH4 || 0);
           const p2o5Pct = fert.pct.P2O5 || 0;
           const k2oPct = fert.pct.K2O || 0;
 
-          // Skip if no N or has P or K (we don't want to add back P/K)
-          if (nPct <= 0 || p2o5Pct > 0 || k2oPct > 0) continue;
+          // Skip fertilizers with P or K - we can't use them without affecting P/K balance
+          if (p2o5Pct > 0 || k2oPct > 0) continue;
 
-          // This fertilizer provides N without P or K - we can increase it
-          const nPerGram = getPpmPerGram(fert, 'N') ||
-                          getPpmPerGram(fert, 'N_NO3') ||
-                          getPpmPerGram(fert, 'N_NH4') ||
-                          (nPct / 100) / vol * 1000;
+          // Get the nutrient percentage for this fertilizer
+          let nutrientPct = 0;
+          if (nutrientToFix === 'N_total') {
+            nutrientPct = (fert.pct.N || 0) + (fert.pct.N_NO3 || 0) + (fert.pct.N_NH4 || 0);
+          } else {
+            nutrientPct = fert.pct[nutrientToFix] || 0;
+          }
 
-          if (nPerGram <= 0) continue;
+          if (nutrientPct <= 0) continue;
 
-          const gramsToAdd = nToAdd / nPerGram;
-          const originalGrams = fert.grams;
-          fert.grams += gramsToAdd;
-          nToAdd = 0;
+          // Calculate PPM per gram for this nutrient
+          const ppmPerGram = (nutrientPct / 100) / vol * 1000;
+          if (ppmPerGram <= 0) continue;
 
-          addDevLog('  ' + fert.name + ': increase ' + gramsToAdd.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
+          // Calculate how many grams to add
+          const gramsToAdd = maxDeficit / ppmPerGram;
 
-          // Track this adjustment
+          // Track original grams for this fertilizer
           const existingAdj = adjustments.find(a => a.id === fert.id);
+          const originalGrams = existingAdj ? existingAdj.originalGrams : fert.grams;
+
+          // Apply the adjustment
+          fert.grams += gramsToAdd;
+
+          addDevLog('    ' + fert.name + ': +' + gramsToAdd.toFixed(3) + 'g for ' + nutrientToFix, 'info');
+
+          // Update or add adjustment tracking
           if (existingAdj) {
             existingAdj.newGrams = fert.grams;
-            existingAdj.reduction = existingAdj.originalGrams - fert.grams; // Will be negative (increase)
+            existingAdj.reduction = existingAdj.originalGrams - fert.grams;
           } else {
             adjustments.push({
               ...fert,
               originalGrams,
               newGrams: fert.grams,
-              reduction: -(gramsToAdd) // Negative = increase
+              reduction: originalGrams - fert.grams
             });
           }
+
+          fixed = true;
+          break; // Move to next iteration to recalculate and check convergence
         }
 
-        if (nToAdd > 0.5) {
-          addDevLog('  Could not fully compensate N - no N-only sources available. Remaining: ' + nToAdd.toFixed(1) + ' ppm', 'warn');
+        if (!fixed) {
+          addDevLog('    No suitable fertilizer found for ' + nutrientToFix + ' (needs source without P/K)', 'warn');
+          break; // Can't fix this nutrient, stop iterating
         }
       }
 
