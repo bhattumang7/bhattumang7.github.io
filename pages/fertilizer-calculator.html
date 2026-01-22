@@ -9621,15 +9621,22 @@ const FertilizerApp = {
       const adjustedPpm = calculatePpmFromFertilizers(adjustedFerts, vol);
 
       // Check how well the MILP solution matches the targets
-      const ppmTolerance = 1; // 1 ppm tolerance
+      // Use percentage-based tolerance (5%) to match MILP solver's approach
+      // Also use minimum absolute tolerance of 2 ppm for very small targets
+      const tolerancePct = 0.05; // 5% tolerance
+      const minAbsTolerance = 2; // minimum 2 ppm absolute tolerance
+
       const p2o5Remaining = Math.abs((adjustedPpm.P2O5 || 0) - targetPpm.P2O5);
       const k2oRemaining = Math.abs((adjustedPpm.K2O || 0) - targetPpm.K2O);
       const nRemaining = Math.abs((adjustedPpm.N_total || 0) - targetPpm.N_total);
 
-      addDevLog('MILP result check - P2O5 diff: ' + p2o5Remaining.toFixed(2) + ', K2O diff: ' + k2oRemaining.toFixed(2) + ', N diff: ' + nRemaining.toFixed(2), 'info');
+      const p2o5Tolerance = Math.max(minAbsTolerance, targetPpm.P2O5 * tolerancePct);
+      const k2oTolerance = Math.max(minAbsTolerance, targetPpm.K2O * tolerancePct);
 
-      // Check if we successfully matched targets
-      const success = milpSuccess && p2o5Remaining < ppmTolerance && k2oRemaining < ppmTolerance;
+      addDevLog('MILP result check - P2O5 diff: ' + p2o5Remaining.toFixed(2) + ' (tol: ' + p2o5Tolerance.toFixed(2) + '), K2O diff: ' + k2oRemaining.toFixed(2) + ' (tol: ' + k2oTolerance.toFixed(2) + '), N diff: ' + nRemaining.toFixed(2), 'info');
+
+      // Check if we successfully matched targets within tolerance
+      const success = milpSuccess && p2o5Remaining < p2o5Tolerance && k2oRemaining < k2oTolerance;
 
       addDevLog('--- Result ---', success ? 'success' : 'error');
       addDevLog('Success: ' + success, success ? 'success' : 'error');
@@ -9716,16 +9723,16 @@ const FertilizerApp = {
         if (milpError) {
           failureReason = i18n.t('acidifyFailedMilp') || 'MILP solver could not find a solution.';
           failureDetails = milpError;
-        } else if (p2o5Remaining > ppmTolerance && k2oRemaining > ppmTolerance) {
+        } else if (p2o5Remaining > p2o5Tolerance && k2oRemaining > k2oTolerance) {
           failureReason = i18n.t('acidifyFailedBothPK') || 'Cannot compensate for both P and K from PeKacid.';
           failureDetails = (i18n.t('acidifyCannotReduceDetails') || 'Need to reduce {pAmount} more ppm P₂O₅ and {kAmount} more ppm K₂O but no suitable fertilizers available.')
             .replace('{pAmount}', p2o5Remaining.toFixed(1))
             .replace('{kAmount}', k2oRemaining.toFixed(1));
-        } else if (p2o5Remaining > ppmTolerance) {
+        } else if (p2o5Remaining > p2o5Tolerance) {
           failureReason = i18n.t('acidifyFailedP') || 'Cannot fully compensate for P from PeKacid.';
           failureDetails = (i18n.t('acidifyCannotReducePDetails') || 'Need to reduce {amount} more ppm P₂O₅ but no suitable P sources available.')
             .replace('{amount}', p2o5Remaining.toFixed(1));
-        } else if (k2oRemaining > ppmTolerance) {
+        } else if (k2oRemaining > k2oTolerance) {
           failureReason = i18n.t('acidifyFailedK') || 'Cannot fully compensate for K from PeKacid.';
           failureDetails = (i18n.t('acidifyCannotReduceKDetails') || 'Need to reduce {amount} more ppm K₂O but no suitable K sources available.')
             .replace('{amount}', k2oRemaining.toFixed(1));
