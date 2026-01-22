@@ -2476,9 +2476,9 @@ permalink: /fertilizer-calculator/
             </div>
 
             <!-- Warning about other nutrient changes -->
-            <div v-if="acidifyResultsData.nutrientChangeWarning" style="padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
-              <strong style="color: #856404;">{{ acidifyResultsData.nutrientChangeWarning }}</strong>
-              <p style="margin: 8px 0 0 0; color: #856404; font-size: 0.9em;">{{ acidifyResultsData.nutrientChangeDetails }}</p>
+            <div v-if="acidifyResultsData.nutrientChangesText" style="padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+              <strong style="color: #856404;">{{ i18n.t('acidifyNutrientChangeWarning') || 'Note: Other nutrients changed' }}</strong>
+              <p style="margin: 8px 0 0 0; color: #856404; font-size: 0.9em;">{{ (i18n.t('acidifyNutrientChangeDetails') || 'Reducing fertilizers to compensate for PeKacid also affected: {changes}. This is expected because those fertilizers provided multiple nutrients.').replace('{changes}', acidifyResultsData.nutrientChangesText) }}</p>
             </div>
 
             <!-- Before/After Comparison - Fertilizers -->
@@ -6404,9 +6404,8 @@ const FertilizerApp = {
       adjustments: [], // { id, name, originalGrams, newGrams, reduction }
       // PPM comparison
       ppmComparison: [], // { key, label, before, after, diff }
-      // Warning for other nutrient changes
-      nutrientChangeWarning: '',
-      nutrientChangeDetails: '',
+      // Warning for other nutrient changes (store just the changes text for i18n template)
+      nutrientChangesText: '',
       // Meta
       volume: 0,
       pekacidAmount: 0
@@ -9815,8 +9814,7 @@ const FertilizerApp = {
       addDevLog('=== End Acidify Calculation ===', 'info');
 
       // Check for significant changes in other nutrients (not P or K)
-      let nutrientChangeWarning = '';
-      let nutrientChangeDetails = '';
+      let nutrientChangesText = '';
       const significantChanges = ppmComparison.filter(cmp => {
         // Only warn about nutrients other than P and K
         if (cmp.key === 'P' || cmp.key === 'K') return false;
@@ -9825,13 +9823,10 @@ const FertilizerApp = {
       });
 
       if (significantChanges.length > 0 && success) {
-        nutrientChangeWarning = i18n.t('acidifyNutrientChangeWarning') || 'Note: Other nutrients changed';
-        const changesText = significantChanges.map(cmp => {
+        nutrientChangesText = significantChanges.map(cmp => {
           const sign = cmp.diff > 0 ? '+' : '';
           return cmp.label + ' ' + sign + cmp.diff.toFixed(1) + ' ppm';
         }).join(', ');
-        nutrientChangeDetails = (i18n.t('acidifyNutrientChangeDetails') || 'Reducing fertilizers to compensate for PeKacid also affected: {changes}. This is expected because those fertilizers provided multiple nutrients.')
-          .replace('{changes}', changesText);
       }
 
       // Build failure reason if not successful
@@ -9869,8 +9864,7 @@ const FertilizerApp = {
       acidifyResultsData.afterEcPrediction = afterEcData;
       acidifyResultsData.adjustments = adjustments.filter(a => Math.abs(a.reduction) > 0.001);
       acidifyResultsData.ppmComparison = ppmComparison;
-      acidifyResultsData.nutrientChangeWarning = nutrientChangeWarning;
-      acidifyResultsData.nutrientChangeDetails = nutrientChangeDetails;
+      acidifyResultsData.nutrientChangesText = nutrientChangesText;
       acidifyResultsData.volume = vol;
       acidifyResultsData.pekacidAmount = pekacidGPerL;
 
