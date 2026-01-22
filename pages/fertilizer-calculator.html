@@ -9653,6 +9653,63 @@ const FertilizerApp = {
         }
       }
 
+      // Fourth pass: compensate for N loss by increasing N-only sources (no P2O5, no K2O)
+      // Calculate current N in adjusted recipe vs original
+      const adjustedPpmBeforeNFix = calculatePpmFromFertilizers(adjustedFerts, vol);
+      const nLost = (beforePpm.N_total || 0) - (adjustedPpmBeforeNFix.N_total || 0);
+
+      if (nLost > 0.5) { // Only if we lost more than 0.5 ppm N
+        addDevLog('--- Pass 4: Compensating for N loss ---', 'info');
+        addDevLog('N lost from reductions: ' + nLost.toFixed(1) + ' ppm', 'info');
+
+        let nToAdd = nLost;
+
+        for (const fert of adjustedFerts) {
+          if (nToAdd <= 0.1) break;
+
+          // Get N content (total N from all forms)
+          const nPct = (fert.pct.N || 0) + (fert.pct.N_NO3 || 0) + (fert.pct.N_NH4 || 0);
+          const p2o5Pct = fert.pct.P2O5 || 0;
+          const k2oPct = fert.pct.K2O || 0;
+
+          // Skip if no N or has P or K (we don't want to add back P/K)
+          if (nPct <= 0 || p2o5Pct > 0 || k2oPct > 0) continue;
+
+          // This fertilizer provides N without P or K - we can increase it
+          const nPerGram = getPpmPerGram(fert, 'N') ||
+                          getPpmPerGram(fert, 'N_NO3') ||
+                          getPpmPerGram(fert, 'N_NH4') ||
+                          (nPct / 100) / vol * 1000;
+
+          if (nPerGram <= 0) continue;
+
+          const gramsToAdd = nToAdd / nPerGram;
+          const originalGrams = fert.grams;
+          fert.grams += gramsToAdd;
+          nToAdd = 0;
+
+          addDevLog('  ' + fert.name + ': increase ' + gramsToAdd.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
+
+          // Track this adjustment
+          const existingAdj = adjustments.find(a => a.id === fert.id);
+          if (existingAdj) {
+            existingAdj.newGrams = fert.grams;
+            existingAdj.reduction = existingAdj.originalGrams - fert.grams; // Will be negative (increase)
+          } else {
+            adjustments.push({
+              ...fert,
+              originalGrams,
+              newGrams: fert.grams,
+              reduction: -(gramsToAdd) // Negative = increase
+            });
+          }
+        }
+
+        if (nToAdd > 0.5) {
+          addDevLog('  Could not fully compensate N - no N-only sources available. Remaining: ' + nToAdd.toFixed(1) + ' ppm', 'warn');
+        }
+      }
+
       // Check if we successfully compensated
       const tolerance = 1; // 1 ppm tolerance
       const success = (p2o5Remaining < tolerance && k2oRemaining < tolerance);
@@ -9772,7 +9829,7 @@ const FertilizerApp = {
       acidifyResultsData.afterPpm = afterPpm;
       acidifyResultsData.afterIonBalance = afterIonBalance;
       acidifyResultsData.afterEcPrediction = afterEcData;
-      acidifyResultsData.adjustments = adjustments.filter(a => a.reduction > 0.001);
+      acidifyResultsData.adjustments = adjustments.filter(a => Math.abs(a.reduction) > 0.001);
       acidifyResultsData.ppmComparison = ppmComparison;
       acidifyResultsData.nutrientChangeWarning = nutrientChangeWarning;
       acidifyResultsData.nutrientChangeDetails = nutrientChangeDetails;
