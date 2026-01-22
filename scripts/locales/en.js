@@ -79,6 +79,8 @@ window.i18nLocales.en = {
   acidifyCannotReduceDetails: 'Need to reduce {pAmount} more ppm P₂O₅ and {kAmount} more ppm K₂O but no suitable fertilizers available.',
   acidifyCannotReducePDetails: 'Need to reduce {amount} more ppm P₂O₅ but no suitable P sources available.',
   acidifyCannotReduceKDetails: 'Need to reduce {amount} more ppm K₂O but no suitable K sources available.',
+  acidifyNutrientChangeWarning: 'Note: Other nutrients changed',
+  acidifyNutrientChangeDetails: 'Reducing fertilizers to compensate for PeKacid also affected: {changes}. This is expected because those fertilizers provided multiple nutrients.',
   calculatingAdjustments: 'Calculating adjustments...',
   runningOptimizer: 'Running optimizer...',
   processingResults: 'Processing results...',
