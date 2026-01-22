@@ -9459,13 +9459,13 @@ const FertilizerApp = {
       const pekacidK2Oppm = (pekacidTotalGrams * (pekacidFert.pct.K2O || 0) / 100) / vol * 1000;
 
       // Log input data
-      console.log('=== Acidify Mix with PeKacid Calculation ===');
-      console.log('Volume:', vol, 'L');
-      console.log('PeKacid:', pekacidGPerL, 'g/L (', pekacidTotalGrams, 'g total)');
-      console.log('PeKacid composition: P2O5=' + (pekacidFert.pct.P2O5 || 0) + '%, K2O=' + (pekacidFert.pct.K2O || 0) + '%');
-      console.log('PeKacid PPM contribution: P2O5=' + pekacidP2O5ppm.toFixed(1) + ', K2O=' + pekacidK2Oppm.toFixed(1));
-      console.log('Original recipe fertilizers:', originalFerts.map(f => f.name + ': ' + f.grams + 'g').join(', '));
-      console.log('Original recipe PPM:', JSON.stringify(beforePpm, null, 2));
+      addDevLog('=== Acidify Mix with PeKacid Calculation ===', 'info');
+      addDevLog('Volume: ' + vol + ' L', 'info');
+      addDevLog('PeKacid: ' + pekacidGPerL + ' g/L (' + pekacidTotalGrams + 'g total)', 'info');
+      addDevLog('PeKacid composition: P2O5=' + (pekacidFert.pct.P2O5 || 0) + '%, K2O=' + (pekacidFert.pct.K2O || 0) + '%', 'info');
+      addDevLog('PeKacid PPM contribution: P2O5=' + pekacidP2O5ppm.toFixed(1) + ', K2O=' + pekacidK2Oppm.toFixed(1), 'info');
+      addDevLog('Original recipe fertilizers: ' + originalFerts.map(f => f.name + ': ' + f.grams + 'g').join(', '), 'info');
+      addDevLog('Original recipe PPM: ' + JSON.stringify(beforePpm), 'info');
 
       // Check if PeKacid would contribute more P or K than the original recipe has
       const pekacidExceedsP = pekacidP2O5ppm > (beforePpm.P2O5 || 0) * 1.01; // 1% tolerance
@@ -9536,10 +9536,10 @@ const FertilizerApp = {
         return (pct / 100) / vol * 1000;
       };
 
-      console.log('Need to remove: P2O5=' + p2o5ToRemove.toFixed(1) + ' ppm, K2O=' + k2oToRemove.toFixed(1) + ' ppm');
+      addDevLog('Need to remove: P2O5=' + p2o5ToRemove.toFixed(1) + ' ppm, K2O=' + k2oToRemove.toFixed(1) + ' ppm', 'info');
 
       // First pass: reduce fertilizers that provide BOTH P2O5 and K2O (like MKP)
-      console.log('--- Pass 1: Reducing fertilizers with both P2O5 and K2O ---');
+      addDevLog('--- Pass 1: Reducing fertilizers with both P2O5 and K2O ---', 'info');
       for (const fert of adjustedFerts) {
         if (p2o5Remaining <= 0.1 && k2oRemaining <= 0.1) break;
 
@@ -9560,8 +9560,8 @@ const FertilizerApp = {
           p2o5Remaining -= maxReduce * p2o5PerGram;
           k2oRemaining -= maxReduce * k2oPerGram;
 
-          console.log('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)');
-          console.log('    Remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm, K2O=' + k2oRemaining.toFixed(1) + ' ppm');
+          addDevLog('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
+          addDevLog('    Remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm, K2O=' + k2oRemaining.toFixed(1) + ' ppm', 'info');
 
           adjustments.push({
             ...fert,
@@ -9573,7 +9573,7 @@ const FertilizerApp = {
       }
 
       // Second pass: reduce P2O5-only sources (no K2O)
-      console.log('--- Pass 2: Reducing P2O5-only sources ---');
+      addDevLog('--- Pass 2: Reducing P2O5-only sources ---', 'info');
       for (const fert of adjustedFerts) {
         if (p2o5Remaining <= 0.1) break;
 
@@ -9591,8 +9591,8 @@ const FertilizerApp = {
           fert.grams -= maxReduce;
           p2o5Remaining -= maxReduce * p2o5PerGram;
 
-          console.log('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)');
-          console.log('    Remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm');
+          addDevLog('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
+          addDevLog('    Remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm', 'info');
 
           if (existingAdj) {
             existingAdj.newGrams = fert.grams;
@@ -9609,7 +9609,7 @@ const FertilizerApp = {
       }
 
       // Third pass: reduce K2O-only sources (no P2O5)
-      console.log('--- Pass 3: Reducing K2O-only sources ---');
+      addDevLog('--- Pass 3: Reducing K2O-only sources ---', 'info');
       for (const fert of adjustedFerts) {
         if (k2oRemaining <= 0.1) break;
 
@@ -9627,8 +9627,8 @@ const FertilizerApp = {
           fert.grams -= maxReduce;
           k2oRemaining -= maxReduce * k2oPerGram;
 
-          console.log('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)');
-          console.log('    Remaining: K2O=' + k2oRemaining.toFixed(1) + ' ppm');
+          addDevLog('  ' + fert.name + ': reduce ' + maxReduce.toFixed(2) + 'g (' + originalGrams.toFixed(2) + 'g -> ' + fert.grams.toFixed(2) + 'g)', 'info');
+          addDevLog('    Remaining: K2O=' + k2oRemaining.toFixed(1) + ' ppm', 'info');
 
           if (existingAdj) {
             existingAdj.newGrams = fert.grams;
@@ -9648,10 +9648,10 @@ const FertilizerApp = {
       const tolerance = 1; // 1 ppm tolerance
       const success = (p2o5Remaining < tolerance && k2oRemaining < tolerance);
 
-      console.log('--- Result ---');
-      console.log('Success:', success);
-      console.log('Final remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm, K2O=' + k2oRemaining.toFixed(1) + ' ppm');
-      console.log('Adjustments made:', adjustments.map(a => a.name + ': ' + a.originalGrams.toFixed(2) + 'g -> ' + a.newGrams.toFixed(2) + 'g').join(', '));
+      addDevLog('--- Result ---', success ? 'success' : 'error');
+      addDevLog('Success: ' + success, success ? 'success' : 'error');
+      addDevLog('Final remaining: P2O5=' + p2o5Remaining.toFixed(1) + ' ppm, K2O=' + k2oRemaining.toFixed(1) + ' ppm', 'info');
+      addDevLog('Adjustments made: ' + adjustments.map(a => a.name + ': ' + a.originalGrams.toFixed(2) + 'g -> ' + a.newGrams.toFixed(2) + 'g').join(', '), 'info');
 
       // Prepare the final adjusted fertilizers list (non-zero amounts + PeKacid)
       const finalAdjustedFerts = adjustedFerts.filter(f => f.grams > 0.001).map(f => {
@@ -9703,12 +9703,12 @@ const FertilizerApp = {
       const afterIonBalance = calculateIonBalanceForFormula(finalAdjustedFerts, vol);
       const afterEcData = estimateECFromPPM(afterPpm);
 
-      console.log('Final recipe:', finalAdjustedFerts.map(f => f.name + ': ' + f.grams.toFixed(2) + 'g').join(', '));
-      console.log('PPM comparison:');
+      addDevLog('Final recipe: ' + finalAdjustedFerts.map(f => f.name + ': ' + f.grams.toFixed(2) + 'g').join(', '), 'info');
+      addDevLog('PPM comparison:', 'info');
       for (const cmp of ppmComparison) {
-        console.log('  ' + cmp.label + ': ' + cmp.before.toFixed(1) + ' -> ' + cmp.after.toFixed(1) + ' (diff: ' + cmp.diff.toFixed(1) + ')');
+        addDevLog('  ' + cmp.label + ': ' + cmp.before.toFixed(1) + ' -> ' + cmp.after.toFixed(1) + ' (diff: ' + cmp.diff.toFixed(1) + ')', 'info');
       }
-      console.log('=== End Acidify Calculation ===');
+      addDevLog('=== End Acidify Calculation ===', 'info');
 
       // Build failure reason if not successful
       let failureReason = '';
