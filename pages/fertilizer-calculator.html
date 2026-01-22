@@ -2478,7 +2478,7 @@ permalink: /fertilizer-calculator/
             <!-- Warning about other nutrient changes -->
             <div v-if="acidifyResultsData.nutrientChangesText" style="padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
               <strong style="color: #856404;">{{ i18n.t('acidifyNutrientChangeWarning') || 'Note: Other nutrients changed' }}</strong>
-              <p style="margin: 8px 0 0 0; color: #856404; font-size: 0.9em;">{{ (i18n.t('acidifyNutrientChangeDetails') || 'Reducing fertilizers to compensate for PeKacid also affected: {changes}. This is expected because those fertilizers provided multiple nutrients.').replace('{changes}', acidifyResultsData.nutrientChangesText) }}</p>
+              <p style="margin: 8px 0 0 0; color: #856404; font-size: 0.9em;">{{ i18n.t('acidifyNutrientChangeDetails', { changes: acidifyResultsData.nutrientChangesText }) || ('Reducing fertilizers to compensate for PeKacid also affected: ' + acidifyResultsData.nutrientChangesText + '. This is expected because those fertilizers provided multiple nutrients.') }}</p>
             </div>
 
             <!-- Before/After Comparison - Fertilizers -->
