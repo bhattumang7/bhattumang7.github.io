@@ -470,6 +470,19 @@
       aliases: ["NPK 19:19:19", "19:19:19", "19-19-19", "WSF 19:19:19", "WSF 19-19-19"],
       pct: { N_total: 19.0, N_NO3: 4.0, N_NH4: 4.5, N_Urea: 10.5, P2O5: 19.0, K2O: 19.0 },
       solubility_gL: 350
+    },
+    {
+      id: "nutrivant_fruit_12_5_27",
+      name: "NutriVant Fruit 12:5:27 + 8CaO (12% N, 5% P₂O₅, 27% K₂O, 8% CaO)",
+      aliases: [
+        "NutriVant Fruit",
+        "Nutrivant Fruit",
+        "ICL NutriVant Fruit",
+        "12:5:27+8CaO",
+        "12-5-27+8CaO"
+      ],
+      pct: { N_total: 12.0, N_NO3: 12.0, P2O5: 5.0, K2O: 27.0, CaO: 8.0, Fe: 0.1, Mn: 0.1, B: 0.1, Zn: 0.1 },
+      solubility_gL: 200
     }
   ];
 
