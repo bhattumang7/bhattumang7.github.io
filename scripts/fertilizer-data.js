@@ -463,6 +463,13 @@
 
       solubility_gL: 670
 
+    },
+    {
+      id: "npk_19_19_19",
+      name: "NPK 19:19:19 (100% Water Soluble, Foliar Grade)",
+      aliases: ["NPK 19:19:19", "19:19:19", "19-19-19", "WSF 19:19:19", "WSF 19-19-19"],
+      pct: { N_total: 19.0, N_NO3: 4.0, N_NH4: 4.5, N_Urea: 10.5, P2O5: 19.0, K2O: 19.0 },
+      solubility_gL: 350
     }
   ];
 
@@ -964,7 +971,8 @@
       'ssp_typical',
       'phosphoric_acid_49',
       'urea_phosphate',
-      'icl_pekacid_pk_acid'
+      'icl_pekacid_pk_acid',
+      'npk_19_19_19'
     ],
     silicate_sources: [
       'potassium_silicate_liquid_typical'
