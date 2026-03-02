@@ -10045,15 +10045,26 @@ const FertilizerApp = {
       'ec:1.4','ec:1.6','ec:1.8','ec:2.0','ec:2.2','ec:2.4',
       'ec:2.6','ec:2.8','ec:3.0'
     ];
+    const MODE_CODE = { 'ppm-calc': 'p', 'formula-builder': 'f', 'reverse-calc': 'r' };
+    const MODE_MAP  = { p: 'ppm-calc', f: 'formula-builder', r: 'reverse-calc' };
+    const STEP_CODE = {
+      'volume-step': 'vs', 'calc-mode-step': 'cm', 'ec-step': 'es',
+      'grams-input-step': 'gi', 'ppm-targets-step': 'pt', 'npk-ratios-step': 'nr',
+      'fertilizer-select-step': 'fs', 'pekacid-limit-step': 'pl',
+      'two-tank-question-step': 'tt', 'wizard-results': 'wr'
+    };
+    const STEP_MAP = Object.fromEntries(Object.entries(STEP_CODE).map(([k,v]) => [v,k]));
 
-    function encodeWizardStateToURL() {
-      const base = window.location.href.split('?')[0];
-      const params = new URLSearchParams();
-
-      const modeCode = { 'ppm-calc': 'p', 'formula-builder': 'f', 'reverse-calc': 'r', 'stock-solution': 's' };
+    // Build the common URLSearchParams for the current wizard state.
+    // stepOverride: pass 'wr' when building a shareable link that should jump to results.
+    function buildWizardParams(stepOverride) {
       const mode = currentMode.value;
-      if (!mode || !modeCode[mode]) return null;
-      params.set('m', modeCode[mode]);
+      if (!mode || !MODE_CODE[mode]) return null;
+
+      const params = new URLSearchParams();
+      params.set('m', MODE_CODE[mode]);
+      const stepCode = stepOverride || STEP_CODE[wizardStep.value];
+      if (stepCode) params.set('s', stepCode);
       params.set('v', wizardVolume.value);
 
       if (mode === 'ppm-calc') {
@@ -10064,15 +10075,14 @@ const FertilizerApp = {
             if (code) parts.push(`${code}:${val.grams}`);
           }
         }
-        params.set('f', parts.join(','));
+        if (parts.length) params.set('f', parts.join(','));
       }
 
       if (mode === 'formula-builder') {
         params.set('c', wizardCalcMode.value === 'oxide' ? 'o' : 'e');
         const t = wizardTargets;
-        params.set('t', `${t.N},${t.P},${t.K},${t.Ca},${t.Mg},${t.S},${t.Si}`);
-        const checkedIds = Object.entries(wizardAvailFertilizers)
-          .filter(([, v]) => v).map(([id]) => id);
+        params.set('t', `${t.N},${t.P},${t.K},${t.Ca},${t.Mg},${t.S},${t.Si || 0}`);
+        const checkedIds = Object.entries(wizardAvailFertilizers).filter(([,v]) => v).map(([id]) => id);
         params.set('a', encodeFertBitmask(checkedIds));
       }
 
@@ -10082,11 +10092,20 @@ const FertilizerApp = {
         params.set('ec', ecIdx >= 0 ? ecIdx.toString(16) : '5');
         const r = wizardRatios;
         params.set('t', `${r.N},${r.P},${r.K},${r.Ca},${r.Mg},${r.S},${r.Si ?? 0}`);
-        const checkedIds = Object.entries(wizardAvailFertilizers)
-          .filter(([, v]) => v).map(([id]) => id);
+        const checkedIds = Object.entries(wizardAvailFertilizers).filter(([,v]) => v).map(([id]) => id);
         params.set('a', encodeFertBitmask(checkedIds));
       }
 
+      if (pekacidMaxLimit.value > 0) params.set('pk', pekacidMaxLimit.value);
+
+      return params;
+    }
+
+    // Called by copy buttons — always targets wizard-results so the recipient lands on results.
+    function encodeWizardStateToURL() {
+      const base = window.location.href.split('?')[0];
+      const params = buildWizardParams('wr');
+      if (!params) return null;
       const full = `${base}?${params.toString()}`;
       if (full.length > URL_MAX_LENGTH) {
         return { url: `${base}?fc_err=overflow`, overflow: true };
@@ -10094,6 +10113,27 @@ const FertilizerApp = {
       return { url: full, overflow: false };
     }
 
+    // Pushes the current step + state into the browser URL (no new history entry).
+    let _urlUpdateTimer = null;
+    function updateURL() {
+      const base = window.location.href.split('?')[0];
+      const mode = currentMode.value;
+      const step = wizardStep.value;
+      if (!mode || !MODE_CODE[mode] || step === 'mode-selector' || !STEP_CODE[step]) {
+        history.replaceState(null, '', base);
+        return;
+      }
+      const params = buildWizardParams();
+      if (!params) return;
+      const full = `${base}?${params.toString()}`;
+      if (full.length <= URL_MAX_LENGTH) history.replaceState(null, '', full);
+    }
+    function debouncedUpdateURL() {
+      clearTimeout(_urlUpdateTimer);
+      _urlUpdateTimer = setTimeout(updateURL, 400);
+    }
+
+    // Restore state from URL on page load (handles any step, including mid-wizard).
     function restoreStateFromURL() {
       const params = new URLSearchParams(window.location.search);
 
@@ -10102,50 +10142,67 @@ const FertilizerApp = {
         return;
       }
 
-      const modeMap = { p: 'ppm-calc', f: 'formula-builder', r: 'reverse-calc', s: 'stock-solution' };
       const m = params.get('m');
-      if (!m || !modeMap[m]) return;
+      if (!m || !MODE_MAP[m]) return;
 
-      currentMode.value = modeMap[m];
+      // Target step: default to 'wr' (auto-calculate) for old shared links without s param.
+      const targetStep = STEP_MAP[params.get('s')] || 'wizard-results';
+
+      currentMode.value = MODE_MAP[m];
       wizardVolume.value = parseFloat(params.get('v')) || 10;
 
-      if (currentMode.value === 'ppm-calc') {
-        const fParam = params.get('f') || '';
-        for (const pair of fParam.split(',').filter(Boolean)) {
+      // Calc mode (formula-builder & reverse-calc)
+      if (params.has('c')) {
+        wizardCalcMode.value = params.get('c') === 'o' ? 'oxide' : 'elemental';
+      }
+
+      // ppm-calc: fertilizer grams
+      if (currentMode.value === 'ppm-calc' && params.has('f')) {
+        for (const pair of params.get('f').split(',').filter(Boolean)) {
           const colonIdx = pair.indexOf(':');
           if (colonIdx === -1) continue;
-          const code = pair.slice(0, colonIdx);
-          const grams = pair.slice(colonIdx + 1);
-          const id = fertCodeToId(code);
-          if (id) wizardGramsFertilizers[id] = { checked: true, grams: parseFloat(grams) };
+          const id = fertCodeToId(pair.slice(0, colonIdx));
+          if (id) wizardGramsFertilizers[id] = { checked: true, grams: parseFloat(pair.slice(colonIdx + 1)) };
         }
       }
 
-      if (currentMode.value === 'formula-builder') {
-        wizardCalcMode.value = params.get('c') === 'o' ? 'oxide' : 'elemental';
-        const [N,P,K,Ca,Mg,S,Si] = (params.get('t') || '').split(',');
+      // formula-builder: targets
+      if (currentMode.value === 'formula-builder' && params.has('t')) {
+        const [N,P,K,Ca,Mg,S,Si] = params.get('t').split(',');
         Object.assign(wizardTargets, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
-        const ids = decodeFertBitmask(params.get('a') || '0');
+      }
+
+      // reverse-calc: EC + ratios
+      if (currentMode.value === 'reverse-calc') {
+        if (params.has('ec')) {
+          const ec = EC_VALUES_URL[parseInt(params.get('ec'), 16)] || 'ec:1.2';
+          wizardSelectedEC.value = ec;
+          ratioTargetEC.value = ec;
+        }
+        if (params.has('t')) {
+          const [N,P,K,Ca,Mg,S,Si] = params.get('t').split(',');
+          Object.assign(wizardRatios, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
+        }
+      }
+
+      // Available fertilizers (formula-builder & reverse-calc)
+      if (params.has('a')) {
+        const ids = decodeFertBitmask(params.get('a'));
         for (const id of (window.FERTILIZER_URL_ORDER || [])) wizardAvailFertilizers[id] = ids.includes(id);
       }
 
-      if (currentMode.value === 'reverse-calc') {
-        wizardCalcMode.value = params.get('c') === 'o' ? 'oxide' : 'elemental';
-        const ecIdx = parseInt(params.get('ec') || '5', 16);
-        const restoredEC = EC_VALUES_URL[ecIdx] || 'ec:1.2';
-        wizardSelectedEC.value = restoredEC;
-        ratioTargetEC.value = restoredEC;
-        const [N,P,K,Ca,Mg,S,Si] = (params.get('t') || '').split(',');
-        Object.assign(wizardRatios, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
-        const ids = decodeFertBitmask(params.get('a') || '0');
-        for (const id of (window.FERTILIZER_URL_ORDER || [])) wizardAvailFertilizers[id] = ids.includes(id);
-      }
+      // PeKacid limit
+      if (params.has('pk')) pekacidMaxLimit.value = parseFloat(params.get('pk')) || 0;
 
       nextTick(async () => {
-        if (currentMode.value === 'ppm-calc') {
-          await calculateFromWizardGrams();
-        } else if (currentMode.value === 'formula-builder' || currentMode.value === 'reverse-calc') {
-          await calculateFromWizardFertilizerSelectVue();
+        if (targetStep === 'wizard-results') {
+          if (currentMode.value === 'ppm-calc') {
+            await calculateFromWizardGrams();
+          } else if (currentMode.value === 'formula-builder' || currentMode.value === 'reverse-calc') {
+            await calculateFromWizardFertilizerSelectVue();
+          }
+        } else {
+          showWizardStepVue(targetStep, { scroll: false });
         }
         urlStateRestored.value = true;
       });
@@ -10161,6 +10218,16 @@ const FertilizerApp = {
       initAcidifyGramsFertilizers();
       restoreStateFromURL();
     });
+
+    // Keep URL in sync with wizard state (step change is immediate; inputs are debounced).
+    watch(wizardStep, updateURL);
+    watch(wizardCalcMode, updateURL);
+    watch(wizardSelectedEC, updateURL);
+    watch(wizardVolume, debouncedUpdateURL);
+    watch(wizardTargets, debouncedUpdateURL, { deep: true });
+    watch(wizardRatios, debouncedUpdateURL, { deep: true });
+    watch(wizardGramsFertilizers, debouncedUpdateURL, { deep: true });
+    watch(wizardAvailFertilizers, debouncedUpdateURL, { deep: true });
 
     // Expose to template
     return {
