@@ -94,6 +94,13 @@
       solubility_gL: 1000
     },
     {
+      id: "calcium_ammonium_nitrate_27",
+      name: "Calcium Ammonium Nitrate - CAN 27% (27% N, 8% Ca)",
+      aliases: ["CAN 27", "CAN-27", "Calcium Ammonium Nitrate 27", "27% CAN", "CAN 27N"],
+      pct: { N_total: 27.0, N_NO3: 13.5, N_NH4: 13.5, Ca: 8.0 },
+      solubility_gL: 1000
+    },
+    {
       id: "ammonium_nitrate_common",
       name: "Ammonium Nitrate - Solid (34% N)",
       aliases: ["NH4NO3", "34-0-0 (typical)", "Ammonium Nitrate solid"],
@@ -670,6 +677,16 @@
         // CO₃²⁻ not included — at fertigation pH it reacts to CO₂ + H₂O
       ]
     },
+    calcium_ammonium_nitrate_27: {
+      formula: '5NH₄NO₃·CaCO₃',
+      molarMass: 500.3,
+      ions: [
+        {ion: 'NH₄⁺', charge: 1, count: 5, type: 'cation'},
+        {ion: 'Ca²⁺', charge: 2, count: 1, type: 'cation'},
+        {ion: 'NO₃⁻', charge: 1, count: 5, type: 'anion'}
+        // CO₃²⁻ not included — at fertigation pH it reacts to CO₂ + H₂O
+      ]
+    },
     ammonium_nitrate_common: {
       formula: 'NH₄NO₃',
       molarMass: 80,
@@ -977,6 +994,7 @@
       'calcium_nitrate_anhydrous',
       'calcium_nitrate_liquid',
       'calcium_ammonium_nitrate_26',
+      'calcium_ammonium_nitrate_27',
       'calcium_chloride_dihydrate_common',
       'calcium_chloride_solid',
       'calcium_chloride_liquid'
