@@ -6118,22 +6118,28 @@ const { createApp, ref, computed, reactive, watch, onMounted, nextTick } = Vue;
 const BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function fertIdToCode(id) {
-  const idx = FERTILIZER_URL_ORDER.indexOf(id);
+  const order = window.FERTILIZER_URL_ORDER;
+  if (!order) return null;
+  const idx = order.indexOf(id);
   if (idx === -1) return null;
   if (idx < 62) return BASE62[idx];
   return '10'; // index 62
 }
 
 function fertCodeToId(code) {
+  const order = window.FERTILIZER_URL_ORDER;
+  if (!order) return null;
   const idx = code === '10' ? 62 : BASE62.indexOf(code);
-  if (idx === -1 || idx >= FERTILIZER_URL_ORDER.length) return null;
-  return FERTILIZER_URL_ORDER[idx];
+  if (idx === -1 || idx >= order.length) return null;
+  return order[idx];
 }
 
 function encodeFertBitmask(checkedIds) {
+  const order = window.FERTILIZER_URL_ORDER;
+  if (!order) return '0';
   let bits = 0n;
   for (const id of checkedIds) {
-    const idx = FERTILIZER_URL_ORDER.indexOf(id);
+    const idx = order.indexOf(id);
     if (idx >= 0) bits |= (1n << BigInt(idx));
   }
   if (bits === 0n) return '0';
@@ -6147,6 +6153,8 @@ function encodeFertBitmask(checkedIds) {
 }
 
 function decodeFertBitmask(encoded) {
+  const order = window.FERTILIZER_URL_ORDER;
+  if (!order) return [];
   let bits = 0n;
   for (const ch of encoded) {
     const digit = BASE62.indexOf(ch);
@@ -6154,8 +6162,8 @@ function decodeFertBitmask(encoded) {
     bits = bits * 62n + BigInt(digit);
   }
   const ids = [];
-  for (let i = 0; i < FERTILIZER_URL_ORDER.length; i++) {
-    if (bits & (1n << BigInt(i))) ids.push(FERTILIZER_URL_ORDER[i]);
+  for (let i = 0; i < order.length; i++) {
+    if (bits & (1n << BigInt(i))) ids.push(order[i]);
   }
   return ids;
 }
@@ -10118,7 +10126,7 @@ const FertilizerApp = {
         const [N,P,K,Ca,Mg,S,Si] = (params.get('t') || '').split(',');
         Object.assign(wizardTargets, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
         const ids = decodeFertBitmask(params.get('a') || '0');
-        for (const id of FERTILIZER_URL_ORDER) wizardAvailFertilizers[id] = ids.includes(id);
+        for (const id of (window.FERTILIZER_URL_ORDER || [])) wizardAvailFertilizers[id] = ids.includes(id);
       }
 
       if (currentMode.value === 'reverse-calc') {
@@ -10130,7 +10138,7 @@ const FertilizerApp = {
         const [N,P,K,Ca,Mg,S,Si] = (params.get('t') || '').split(',');
         Object.assign(wizardRatios, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
         const ids = decodeFertBitmask(params.get('a') || '0');
-        for (const id of FERTILIZER_URL_ORDER) wizardAvailFertilizers[id] = ids.includes(id);
+        for (const id of (window.FERTILIZER_URL_ORDER || [])) wizardAvailFertilizers[id] = ids.includes(id);
       }
 
       nextTick(async () => {
