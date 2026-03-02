@@ -97,6 +97,12 @@ permalink: /fertilizer-calculator/
       <button class="progress-cancel-btn" @click="progressBar.cancel()">{{ i18n.t('cancel') }}</button>
     </div>
   </div>
+  <!-- URL Overflow Warning Banner -->
+  <div v-if="urlOverflowWarning" style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <span style="color:#856404;">⚠ {{ i18n.t('urlOverflowBanner') || 'The shared link could not encode all inputs (too long). Calculator opened in default state.' }}</span>
+    <button @click="urlOverflowWarning = false" style="background:none;border:none;cursor:pointer;font-size:1.2em;color:#856404;line-height:1;">✕</button>
+  </div>
+
   <!-- Vue-powered Unified Modal (placed at top for proper rendering) -->
   <div v-if="activeModal" class="modal-overlay active" style="display: flex !important;" @click="closeModal">
     <div class="modal-content" @click.stop>
@@ -1896,12 +1902,13 @@ permalink: /fertilizer-calculator/
         <div class="results-section" id="wizard-selected-fertilizers-section">
           <div class="results-header">
             <h2>{{ i18n.t('selectedFertilizers') }}</h2>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
               <button class="copy-btn" :class="{ copied: copiedButtonId === 'grams-to-ppm' }" @click="copyGramsToPPMResultsVue()" :title="i18n.t('copyToClipboard')">
                 <svg v-if="copiedButtonId !== 'grams-to-ppm'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>{{ copiedButtonId === 'grams-to-ppm' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
               </button>
+              <span v-if="urlCopyOverflowWarning" style="color:#856404;font-size:0.85em;">⚠ {{ i18n.t('urlOverflowCopyWarning') || 'Inputs too large to fit in URL — copied an error link instead.' }}</span>
             </div>
           </div>
           <div>
@@ -2002,12 +2009,13 @@ permalink: /fertilizer-calculator/
         <div class="results-section">
           <div class="results-header">
             <h2>{{ i18n.t('recommendedFormula') }}</h2>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
               <button class="copy-btn" :class="{ copied: copiedButtonId === 'ppm-to-grams' }" @click="copyPPMToGramsResultsVue()" :title="i18n.t('copyToClipboard')">
                 <svg v-if="copiedButtonId !== 'ppm-to-grams'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>{{ copiedButtonId === 'ppm-to-grams' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
               </button>
+              <span v-if="urlCopyOverflowWarning" style="color:#856404;font-size:0.85em;">⚠ {{ i18n.t('urlOverflowCopyWarning') || 'Inputs too large to fit in URL — copied an error link instead.' }}</span>
             </div>
           </div>
           <div>
@@ -2123,12 +2131,13 @@ permalink: /fertilizer-calculator/
         <div class="results-section">
           <div class="results-header">
             <h2>{{ i18n.t('requiredFertilizers') }}</h2>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
               <button class="copy-btn" :class="{ copied: copiedButtonId === 'npk-ratio' }" @click="copyNPKRatioResultsVue()" :title="i18n.t('copyToClipboard')">
                 <svg v-if="copiedButtonId !== 'npk-ratio'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>{{ copiedButtonId === 'npk-ratio' ? i18n.t('copied') || 'Copied!' : i18n.t('copyResults') }}</span>
               </button>
+              <span v-if="urlCopyOverflowWarning" style="color:#856404;font-size:0.85em;">⚠ {{ i18n.t('urlOverflowCopyWarning') || 'Inputs too large to fit in URL — copied an error link instead.' }}</span>
             </div>
           </div>
           <div>
@@ -6100,7 +6109,56 @@ if (document.readyState === 'loading') {
 // This Vue app is being incrementally integrated. During migration, some
 // functionality remains in vanilla JS while new features use Vue reactivity.
 
-const { createApp, ref, computed, reactive, watch, onMounted } = Vue;
+const { createApp, ref, computed, reactive, watch, onMounted, nextTick } = Vue;
+
+// =============================================================================
+// URL STATE ENCODING HELPERS
+// =============================================================================
+
+const BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function fertIdToCode(id) {
+  const idx = FERTILIZER_URL_ORDER.indexOf(id);
+  if (idx === -1) return null;
+  if (idx < 62) return BASE62[idx];
+  return '10'; // index 62
+}
+
+function fertCodeToId(code) {
+  const idx = code === '10' ? 62 : BASE62.indexOf(code);
+  if (idx === -1 || idx >= FERTILIZER_URL_ORDER.length) return null;
+  return FERTILIZER_URL_ORDER[idx];
+}
+
+function encodeFertBitmask(checkedIds) {
+  let bits = 0n;
+  for (const id of checkedIds) {
+    const idx = FERTILIZER_URL_ORDER.indexOf(id);
+    if (idx >= 0) bits |= (1n << BigInt(idx));
+  }
+  if (bits === 0n) return '0';
+  let result = '';
+  let n = bits;
+  while (n > 0n) {
+    result = BASE62[Number(n % 62n)] + result;
+    n /= 62n;
+  }
+  return result;
+}
+
+function decodeFertBitmask(encoded) {
+  let bits = 0n;
+  for (const ch of encoded) {
+    const digit = BASE62.indexOf(ch);
+    if (digit === -1) return [];
+    bits = bits * 62n + BigInt(digit);
+  }
+  const ids = [];
+  for (let i = 0; i < FERTILIZER_URL_ORDER.length; i++) {
+    if (bits & (1n << BigInt(i))) ids.push(FERTILIZER_URL_ORDER[i]);
+  }
+  return ids;
+}
 
 // =============================================================================
 // RATIO CARD COMPONENT - Reusable component for displaying nutrient ratios
@@ -6351,6 +6409,11 @@ const FertilizerApp = {
 
     // Copy button feedback state (Vue-powered)
     const copiedButtonId = ref(null); // Which copy button is showing "Copied!" feedback
+
+    // URL state encoding
+    const urlOverflowWarning = ref(false);   // shown as banner when page opened via overflow error URL
+    const urlCopyOverflowWarning = ref(false); // shown inline near copy button when encoding overflows
+    const urlStateRestored = ref(false);      // true when state was restored from URL params
 
     // Experimental warning banner state (removed - PeKacid feature is now stable)
     const showExperimentalWarning = ref(false);
@@ -9819,13 +9882,24 @@ const FertilizerApp = {
     }
 
     // Copy functions using Vue state for feedback
+    function appendShareURL(text) {
+      urlCopyOverflowWarning.value = false;
+      const linkResult = encodeWizardStateToURL();
+      if (!linkResult) return text;
+      if (linkResult.overflow) {
+        urlCopyOverflowWarning.value = true;
+        return text + `\n\n⚠ ${i18n.t('urlOverflowCopyWarning') || 'Inputs too large to fit in URL — copied an error link instead.'}\n${linkResult.url}`;
+      }
+      return text + `\n\n🔗 ${i18n.t('openInCalculator') || 'Open in calculator'}: ${linkResult.url}`;
+    }
+
     function copyGramsToPPMResultsVue() {
       const lastCalc = lastGramsToPPMCalculation.value;
       if (!lastCalc) {
         alert(i18n.t('alertRunCalculationFirst'));
         return;
       }
-      const text = FertilizerCore.buildGramsToPpmCopyText(lastCalc, getI18nFormatter());
+      const text = appendShareURL(FertilizerCore.buildGramsToPpmCopyText(lastCalc, getI18nFormatter()));
       copyToClipboardVue(text, 'grams-to-ppm');
     }
 
@@ -9844,7 +9918,7 @@ const FertilizerApp = {
         }),
         volume
       );
-      const text = FertilizerCore.buildFormulaCopyText(lastCalc, FERTILIZERS, ionBalance, getI18nFormatter());
+      const text = appendShareURL(FertilizerCore.buildFormulaCopyText(lastCalc, FERTILIZERS, ionBalance, getI18nFormatter()));
       copyToClipboardVue(text, 'ppm-to-grams');
     }
 
@@ -9864,7 +9938,7 @@ const FertilizerApp = {
         volume
       );
       const data = { result, targets, volume, calculationMode: calcMode };
-      const text = FertilizerCore.buildReverseCopyText(data, FERTILIZERS, ionBalance, getI18nFormatter());
+      const text = appendShareURL(FertilizerCore.buildReverseCopyText(data, FERTILIZERS, ionBalance, getI18nFormatter()));
       copyToClipboardVue(text, 'npk-ratio');
     }
 
@@ -9874,7 +9948,7 @@ const FertilizerApp = {
         alert(i18n.t('alertNoTwoTankData'));
         return;
       }
-      const text = FertilizerCore.buildTwoTankCopyText(twoTankData, FERTILIZERS, getI18nFormatter());
+      const text = appendShareURL(FertilizerCore.buildTwoTankCopyText(twoTankData, FERTILIZERS, getI18nFormatter()));
       copyToClipboardVue(text, 'two-tank');
     }
 
@@ -9954,6 +10028,121 @@ const FertilizerApp = {
       }
     };
 
+    // =========================================================================
+    // URL STATE ENCODING / DECODING
+    // =========================================================================
+    const URL_MAX_LENGTH = 2000;
+    const EC_VALUES_URL = [
+      'ec:0.2','ec:0.4','ec:0.6','ec:0.8','ec:1.0','ec:1.2',
+      'ec:1.4','ec:1.6','ec:1.8','ec:2.0','ec:2.2','ec:2.4',
+      'ec:2.6','ec:2.8','ec:3.0'
+    ];
+
+    function encodeWizardStateToURL() {
+      const base = window.location.href.split('?')[0];
+      const params = new URLSearchParams();
+
+      const modeCode = { 'ppm-calc': 'p', 'formula-builder': 'f', 'reverse-calc': 'r', 'stock-solution': 's' };
+      const mode = currentMode.value;
+      if (!mode || !modeCode[mode]) return null;
+      params.set('m', modeCode[mode]);
+      params.set('v', wizardVolume.value);
+
+      if (mode === 'ppm-calc') {
+        const parts = [];
+        for (const [id, val] of Object.entries(wizardGramsFertilizers)) {
+          if (val.checked && parseFloat(val.grams) > 0) {
+            const code = fertIdToCode(id);
+            if (code) parts.push(`${code}:${val.grams}`);
+          }
+        }
+        params.set('f', parts.join(','));
+      }
+
+      if (mode === 'formula-builder') {
+        params.set('c', wizardCalcMode.value === 'oxide' ? 'o' : 'e');
+        const t = wizardTargets;
+        params.set('t', `${t.N},${t.P},${t.K},${t.Ca},${t.Mg},${t.S},${t.Si}`);
+        const checkedIds = Object.entries(wizardAvailFertilizers)
+          .filter(([, v]) => v).map(([id]) => id);
+        params.set('a', encodeFertBitmask(checkedIds));
+      }
+
+      if (mode === 'reverse-calc') {
+        params.set('c', wizardCalcMode.value === 'oxide' ? 'o' : 'e');
+        const ecIdx = EC_VALUES_URL.indexOf(wizardSelectedEC.value || ratioTargetEC.value);
+        params.set('ec', ecIdx >= 0 ? ecIdx.toString(16) : '5');
+        const r = wizardRatios;
+        params.set('t', `${r.N},${r.P},${r.K},${r.Ca},${r.Mg},${r.S},${r.Si ?? 0}`);
+        const checkedIds = Object.entries(wizardAvailFertilizers)
+          .filter(([, v]) => v).map(([id]) => id);
+        params.set('a', encodeFertBitmask(checkedIds));
+      }
+
+      const full = `${base}?${params.toString()}`;
+      if (full.length > URL_MAX_LENGTH) {
+        return { url: `${base}?fc_err=overflow`, overflow: true };
+      }
+      return { url: full, overflow: false };
+    }
+
+    function restoreStateFromURL() {
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.get('fc_err') === 'overflow') {
+        urlOverflowWarning.value = true;
+        return;
+      }
+
+      const modeMap = { p: 'ppm-calc', f: 'formula-builder', r: 'reverse-calc', s: 'stock-solution' };
+      const m = params.get('m');
+      if (!m || !modeMap[m]) return;
+
+      currentMode.value = modeMap[m];
+      wizardVolume.value = parseFloat(params.get('v')) || 10;
+
+      if (currentMode.value === 'ppm-calc') {
+        const fParam = params.get('f') || '';
+        for (const pair of fParam.split(',').filter(Boolean)) {
+          const colonIdx = pair.indexOf(':');
+          if (colonIdx === -1) continue;
+          const code = pair.slice(0, colonIdx);
+          const grams = pair.slice(colonIdx + 1);
+          const id = fertCodeToId(code);
+          if (id) wizardGramsFertilizers[id] = { checked: true, grams: parseFloat(grams) };
+        }
+      }
+
+      if (currentMode.value === 'formula-builder') {
+        wizardCalcMode.value = params.get('c') === 'o' ? 'oxide' : 'elemental';
+        const [N,P,K,Ca,Mg,S,Si] = (params.get('t') || '').split(',');
+        Object.assign(wizardTargets, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
+        const ids = decodeFertBitmask(params.get('a') || '0');
+        for (const id of FERTILIZER_URL_ORDER) wizardAvailFertilizers[id] = ids.includes(id);
+      }
+
+      if (currentMode.value === 'reverse-calc') {
+        wizardCalcMode.value = params.get('c') === 'o' ? 'oxide' : 'elemental';
+        const ecIdx = parseInt(params.get('ec') || '5', 16);
+        const restoredEC = EC_VALUES_URL[ecIdx] || 'ec:1.2';
+        wizardSelectedEC.value = restoredEC;
+        ratioTargetEC.value = restoredEC;
+        const [N,P,K,Ca,Mg,S,Si] = (params.get('t') || '').split(',');
+        Object.assign(wizardRatios, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
+        const ids = decodeFertBitmask(params.get('a') || '0');
+        for (const id of FERTILIZER_URL_ORDER) wizardAvailFertilizers[id] = ids.includes(id);
+      }
+
+      nextTick(async () => {
+        if (currentMode.value === 'ppm-calc') {
+          await calculateFromWizardGrams();
+        } else if (currentMode.value === 'formula-builder' || currentMode.value === 'reverse-calc') {
+          await calculateFromWizardFertilizerSelectVue();
+        }
+        urlStateRestored.value = true;
+      });
+    }
+
     // Initialize on mount
     onMounted(() => {
       initFertilizerAmounts();
@@ -9962,6 +10151,7 @@ const FertilizerApp = {
       initWizardGramsFertilizers();
       initWizardAvailFertilizers();
       initAcidifyGramsFertilizers();
+      restoreStateFromURL();
     });
 
     // Expose to template
@@ -10229,6 +10419,11 @@ const FertilizerApp = {
       copyNPKRatioResultsVue,
       copyTwoTankResultsVue,
       copyStockSolutionResults,
+
+      // URL State Encoding
+      urlOverflowWarning,
+      urlCopyOverflowWarning,
+      urlStateRestored,
 
       // Data references (for template access)
       FERTILIZERS,

@@ -255,6 +255,9 @@ window.i18nLocales.en = {
   changeSettings: 'Change Settings',
   copyResults: 'Copy Results',
   copyResultsToClipboard: 'Copy results to clipboard',
+  openInCalculator: 'Open in calculator',
+  urlOverflowBanner: 'The shared link could not encode all inputs (too long). Calculator opened in default state.',
+  urlOverflowCopyWarning: 'Inputs too large to fit in URL — copied an error link instead.',
   twoTanks: 'Two Tanks',
   twoTanksForStockSolutions: 'Split into two tanks for stock solutions',
 

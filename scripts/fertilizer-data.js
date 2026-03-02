@@ -1046,4 +1046,25 @@
     ]
   };
 
+  // Ordered array for URL encoding — do NOT reorder or insert (only append)
+  window.FERTILIZER_URL_ORDER = [
+    'calcium_nitrate_calcinit_typical', 'hydrospeed_cab_max', 'potassium_nitrate_typical',
+    'map_typical', 'mkp_typical', 'dap_common', 'ssp_common', 'urea_common',
+    'ammonium_sulfate_common', 'calcium_ammonium_nitrate_26', 'calcium_ammonium_nitrate_27',
+    'ammonium_nitrate_common', 'magnesium_sulfate_heptahydrate_common', 'magnesium_sulfate_16mgo',
+    'magnesium_nitrate_hexahydrate_typical', 'potassium_sulfate_common', 'potassium_chloride_common',
+    'calcium_chloride_dihydrate_common', 'langbeinite_common', 'potassium_schoenite',
+    'uan32_solution_typical', 'ammonium_thiosulfate_common', 'potassium_thiosulfate_common',
+    'fe_edta_13', 'boric_acid_common', 'zinc_sulfate_heptahydrate_common', 'nitric_acid_38',
+    'nitric_acid_60', 'phosphoric_acid_49', 'potassium_bicarbonate', 'ammonium_nitrate_liquid',
+    'urea_phosphate', 'calcium_nitrate_4h2o', 'calcium_nitrate_anhydrous', 'calcium_nitrate_liquid',
+    'calcium_chloride_solid', 'calcium_chloride_liquid', 'magnesium_sulfate_anhydrous',
+    'magnesium_nitrate_liquid', 'fe_dtpa_12', 'fe_dtpa_liquid_3', 'fe_dtpa_liquid_6',
+    'fe_eddha_6', 'fe_hbed_6', 'mn_edta_13', 'zn_edta_15', 'cu_edta_15', 'manganese_sulfate',
+    'zinc_sulfate_mono', 'borax', 'copper_sulfate', 'sodium_molybdate', 'ammonium_molybdate',
+    'potassium_silicate_liquid_typical', 'rexolin_cxk', 'utkarsh_double_combi', 'haifa_17_10_27',
+    'wsf_13_40_13', 'wsf_12_6_22_12cao', 'disodium_octaborate_tetrahydrate_20b',
+    'icl_pekacid_pk_acid', 'npk_19_19_19', 'nutrivant_fruit_12_5_27'
+  ];
+
 })();
