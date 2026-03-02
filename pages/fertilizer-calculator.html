@@ -8958,59 +8958,99 @@ const FertilizerApp = {
     }
 
     // Back navigation functions
+    // =========================================================================
+    // CLEAR-ON-BACK: wipe wizard inputs from the destination step onwards
+    // =========================================================================
+    // Step order (parallel paths at indices 2-4; clearing index N also clears N+1, N+2…)
+    const _CLEAR_ORDER = [
+      'mode-selector',          // 0  owns: currentMode
+      'volume-step',            // 1  owns: wizardVolume
+      'calc-mode-step',         // 2  owns: wizardCalcMode        (reverse-calc path)
+      'ppm-targets-step',       // 3  owns: wizardTargets         (formula-builder path)
+      'grams-input-step',       // 4  owns: wizardGramsFertilizers (ppm-calc path)
+      'ec-step',                // 5  owns: wizardSelectedEC
+      'npk-ratios-step',        // 6  owns: wizardRatios
+      'fertilizer-select-step', // 7  owns: wizardAvailFertilizers
+      'pekacid-limit-step',     // 8  owns: pekacidMaxLimit
+    ];
+
+    function clearWizardStateFrom(destStep) {
+      // Clear results/display state — always done on back-navigation
+      gramsToPpmDisplayData.show = false;
+      formulaResultsData.show = false;
+      reverseResultsData.show = false;
+      twoTankDisplayData.show = false;
+      stockResultsData.show = false;
+      pendingWizardCalculation.value = null;
+      wizardResultsSource.value = null;
+
+      const d = _CLEAR_ORDER.indexOf(destStep);
+      if (d < 0) return;
+
+      if (d <= 0) { currentMode.value = null; calculationMode.value = 'oxide'; }
+      if (d <= 1) { wizardVolume.value = 10; }
+      if (d <= 2) { wizardCalcMode.value = 'elemental'; }
+      if (d <= 3) { Object.assign(wizardTargets,  { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
+      if (d <= 4) { initWizardGramsFertilizers(); }
+      if (d <= 5) { wizardSelectedEC.value = 'ec:1.2'; ratioTargetEC.value = 'ec:1.2'; }
+      if (d <= 6) { Object.assign(wizardRatios, { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
+      if (d <= 7) { initWizardAvailFertilizers(); }
+      if (d <= 8) { pekacidMaxLimit.value = 0; }
+    }
+
     function backToECStep() {
+      clearWizardStateFrom('ec-step');
       showWizardStepVue('ec-step');
     }
 
     function backToCalcModeStep() {
+      clearWizardStateFrom('calc-mode-step');
       showWizardStepVue('calc-mode-step');
     }
 
     function backFromPpmTargetsStep() {
-      // PPM to Grams (formula-builder) skips calc-mode-step, so go directly to volume-step
+      clearWizardStateFrom('volume-step');
       showWizardStepVue('volume-step');
     }
 
     function backToVolumeStep() {
+      clearWizardStateFrom('volume-step');
       showWizardStepVue('volume-step');
     }
 
     function backToModeSelector() {
+      clearWizardStateFrom('mode-selector');
       showWizardStepVue('mode-selector');
     }
 
     function backFromCalculator() {
       const mode = currentMode.value;
       if (mode === 'ppm-calc') {
+        clearWizardStateFrom('grams-input-step');
         showWizardStepVue('grams-input-step');
       } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
+        clearWizardStateFrom('fertilizer-select-step');
         showWizardStepVue('fertilizer-select-step');
       } else {
+        clearWizardStateFrom('volume-step');
         showWizardStepVue('volume-step');
       }
     }
 
     function backFromWizardResults() {
       const mode = currentMode.value;
-
-      // Reset two-tank state when going back from results
-      twoTankDisplayData.show = false;
-      stockResultsData.show = false;
-
       if (mode === 'ppm-calc') {
+        clearWizardStateFrom('grams-input-step');
         showWizardStepVue('grams-input-step');
       } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
-        // Go back to PeKacid limit step if PeKacid was selected, otherwise go to fertilizer select
-        if (isPekacidSelected()) {
-          showWizardStepVue('pekacid-limit-step');
-        } else {
-          showWizardStepVue('fertilizer-select-step');
-        }
+        clearWizardStateFrom('fertilizer-select-step');
+        showWizardStepVue('fertilizer-select-step');
       } else if (mode === 'stock-solution') {
         showWizardStepVue('stock-fertilizer-step');
       } else if (mode === 'acidify-pekacid') {
         showWizardStepVue('acidify-pekacid-step');
       } else {
+        clearWizardStateFrom('volume-step');
         showWizardStepVue('volume-step');
       }
     }
@@ -9018,10 +9058,13 @@ const FertilizerApp = {
     function backFromFertilizerSelectStep() {
       const mode = currentMode.value;
       if (mode === 'formula-builder') {
+        clearWizardStateFrom('ppm-targets-step');
         showWizardStepVue('ppm-targets-step');
       } else if (mode === 'reverse-calc') {
+        clearWizardStateFrom('npk-ratios-step');
         showWizardStepVue('npk-ratios-step');
       } else {
+        clearWizardStateFrom('volume-step');
         showWizardStepVue('volume-step');
       }
     }
@@ -9033,7 +9076,6 @@ const FertilizerApp = {
 
     // Proceed from fertilizer select step - show PeKacid limit step if selected, otherwise calculate
     function proceedFromFertilizerSelectStep() {
-      // Check if any fertilizers are selected
       const selectedFerts = Object.entries(wizardAvailFertilizers)
         .filter(([id, checked]) => checked)
         .map(([id]) => id);
@@ -9043,42 +9085,26 @@ const FertilizerApp = {
         return;
       }
 
-      // If PeKacid is selected, show the limit step
       if (isPekacidSelected()) {
         showWizardStepVue('pekacid-limit-step');
       } else {
-        // Otherwise, proceed directly to calculation
         calculateFromWizardFertilizerSelectVue();
       }
     }
 
     // Proceed from PeKacid limit step - run the calculation
     function proceedFromPekacidLimitStep() {
-      // pekacidMaxLimit is already bound via v-model
-      // The value will be used in the calculation
       calculateFromWizardFertilizerSelectVue();
     }
 
-    // Go back from PeKacid limit step to fertilizer select step
     function backFromPekacidLimitStep() {
+      clearWizardStateFrom('fertilizer-select-step');
       showWizardStepVue('fertilizer-select-step');
     }
 
     function goToModeSelector() {
+      clearWizardStateFrom('mode-selector');
       showWizardStepVue('mode-selector');
-      // Reset state
-      currentMode.value = null;
-      calculationMode.value = 'oxide';
-      wizardCalcMode.value = 'elemental';
-      ratioTargetEC.value = 'ec:1.2';
-      pendingWizardCalculation.value = null;
-      gramsToPpmDisplayData.show = false;
-      formulaResultsData.show = false;
-      reverseResultsData.show = false;
-      twoTankDisplayData.show = false;
-      stockResultsData.show = false;
-      wizardResultsSource.value = null;
-      pekacidMaxLimit.value = 0;  // Reset PeKacid limit
     }
 
     // =========================================================================
