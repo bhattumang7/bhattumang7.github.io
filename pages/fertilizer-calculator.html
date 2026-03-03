@@ -8987,15 +8987,19 @@ const FertilizerApp = {
       const d = _CLEAR_ORDER.indexOf(destStep);
       if (d < 0) return;
 
+      // Use `d <` (not `d <=`) so the destination step keeps its own
+      // state — the user can review / tweak what they entered earlier,
+      // while everything downstream is still reset.
+      // Exception: mode-selector (home) wipes its own state for a full restart.
       if (d <= 0) { currentMode.value = null; calculationMode.value = 'oxide'; }
-      if (d <= 1) { wizardVolume.value = 10; }
-      if (d <= 2) { wizardCalcMode.value = 'elemental'; }
-      if (d <= 3) { Object.assign(wizardTargets,  { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
-      if (d <= 4) { initWizardGramsFertilizers(); }
-      if (d <= 5) { wizardSelectedEC.value = 'ec:1.2'; ratioTargetEC.value = 'ec:1.2'; }
-      if (d <= 6) { Object.assign(wizardRatios, { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
-      if (d <= 7) { initWizardAvailFertilizers(); }
-      if (d <= 8) { pekacidMaxLimit.value = 0; }
+      if (d < 1) { wizardVolume.value = 10; }
+      if (d < 2) { wizardCalcMode.value = 'elemental'; }
+      if (d < 3) { Object.assign(wizardTargets,  { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
+      if (d < 4) { initWizardGramsFertilizers(); }
+      if (d < 5) { wizardSelectedEC.value = 'ec:1.2'; ratioTargetEC.value = 'ec:1.2'; }
+      if (d < 6) { Object.assign(wizardRatios, { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
+      if (d < 7) { initWizardAvailFertilizers(); }
+      if (d < 8) { pekacidMaxLimit.value = 0; }
     }
 
     function backToECStep() {
