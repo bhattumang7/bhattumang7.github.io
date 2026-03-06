@@ -5873,7 +5873,7 @@ function calculateTankIonBalance(fertilizers, volume) {
 // Calculate nutrient PPM contributions for a tank
 function calculateTankNutrients(fertilizers, volume) {
   const nutrients = {
-    N_total: 0, N_NO3: 0, N_NH4: 0,
+    N_total: 0, N_NO3: 0, N_NH4: 0, N_Urea: 0,
     P2O5: 0, P: 0, K2O: 0, K: 0,
     Ca: 0, Mg: 0, S: 0
   };
@@ -5890,7 +5890,7 @@ function calculateTankNutrients(fertilizers, volume) {
   });
 
   // Calculate total N
-  nutrients.N_total = nutrients.N_NO3 + nutrients.N_NH4;
+  nutrients.N_total = nutrients.N_NO3 + nutrients.N_NH4 + (nutrients.N_Urea || 0);
 
   // Calculate elemental from oxide if not directly available
   if (nutrients.P2O5 > 0 && nutrients.P === 0) {
@@ -9453,7 +9453,7 @@ const FertilizerApp = {
       });
 
       // Calculate totals
-      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0);
+      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0) + (results.N_Urea || 0);
 
       // Convert oxides to elemental forms
       if (results.P2O5) {
@@ -9504,7 +9504,7 @@ const FertilizerApp = {
       });
 
       // Calculate totals
-      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0);
+      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0) + (results.N_Urea || 0);
 
       // Convert oxides to elemental forms
       if (results.P2O5) {
