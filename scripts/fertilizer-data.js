@@ -118,7 +118,7 @@
       id: "magnesium_sulfate_16mgo",
       name: "Magnesium Sulfate (16% MgO) (~9.6% Mg, ~13% S)",
       aliases: ["MgSO4", "Magnesium Sulphate", "Epsom Salt", "MgSO4·7H2O (if heptahydrate)"],
-      pct: { MgO: 16.0, Mg: 9.6, S: 13.0 },
+      pct: { MgO: 16.0, S: 13.0 },
       solubility_gL: 710
     },
     {
@@ -447,10 +447,7 @@
         N_NH4: 0.0,
         P2O5: 6.0,
         K2O: 22.0,
-        CaO: 12.0,
-        P: 2.62,
-        K: 18.26,
-        Ca: 8.58
+        CaO: 12.0
       },
       solubility_gL: 180
     },

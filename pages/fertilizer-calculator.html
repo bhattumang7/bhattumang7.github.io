@@ -4258,7 +4258,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.7.0
+    v1.7.1
   </div>
 
 </div>
@@ -7277,14 +7277,14 @@ const FertilizerApp = {
             }
 
             // Handle nitrogen forms properly to avoid double counting
-            if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+            if (nutrient === 'N_NO3' || nutrient === 'N_NH4' || nutrient === 'N_Urea') {
               ppmResults[nutrient] += ppm;
               // Also add to N_total
               if (!ppmResults.N_total) ppmResults.N_total = 0;
               ppmResults.N_total += ppm;
             } else if (nutrient === 'N_total') {
               // Only use N_total if there are no specific nitrogen forms
-              if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
+              if (!fert.pct.N_NO3 && !fert.pct.N_NH4 && !fert.pct.N_Urea) {
                 ppmResults[nutrient] += ppm;
               }
             } else {
