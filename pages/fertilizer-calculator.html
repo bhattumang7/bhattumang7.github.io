@@ -4279,7 +4279,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.7.0
+    v1.7.1
   </div>
 
 </div>
@@ -5896,7 +5896,7 @@ function calculateTankIonBalance(fertilizers, volume) {
 // Calculate nutrient PPM contributions for a tank
 function calculateTankNutrients(fertilizers, volume) {
   const nutrients = {
-    N_total: 0, N_NO3: 0, N_NH4: 0,
+    N_total: 0, N_NO3: 0, N_NH4: 0, N_Urea: 0,
     P2O5: 0, P: 0, K2O: 0, K: 0,
     Ca: 0, Mg: 0, S: 0
   };
@@ -5913,7 +5913,7 @@ function calculateTankNutrients(fertilizers, volume) {
   });
 
   // Calculate total N
-  nutrients.N_total = nutrients.N_NO3 + nutrients.N_NH4;
+  nutrients.N_total = nutrients.N_NO3 + nutrients.N_NH4 + (nutrients.N_Urea || 0);
 
   // Calculate elemental from oxide if not directly available
   if (nutrients.P2O5 > 0 && nutrients.P === 0) {
@@ -7303,14 +7303,14 @@ const FertilizerApp = {
             }
 
             // Handle nitrogen forms properly to avoid double counting
-            if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+            if (nutrient === 'N_NO3' || nutrient === 'N_NH4' || nutrient === 'N_Urea') {
               ppmResults[nutrient] += ppm;
               // Also add to N_total
               if (!ppmResults.N_total) ppmResults.N_total = 0;
               ppmResults.N_total += ppm;
             } else if (nutrient === 'N_total') {
               // Only use N_total if there are no specific nitrogen forms
-              if (!fert.pct.N_NO3 && !fert.pct.N_NH4) {
+              if (!fert.pct.N_NO3 && !fert.pct.N_NH4 && !fert.pct.N_Urea) {
                 ppmResults[nutrient] += ppm;
               }
             } else {
@@ -9065,15 +9065,19 @@ const FertilizerApp = {
       const d = _CLEAR_ORDER.indexOf(destStep);
       if (d < 0) return;
 
+      // Use `d <` (not `d <=`) so the destination step keeps its own
+      // state — the user can review / tweak what they entered earlier,
+      // while everything downstream is still reset.
+      // Exception: mode-selector (home) wipes its own state for a full restart.
       if (d <= 0) { currentMode.value = null; calculationMode.value = 'oxide'; }
-      if (d <= 1) { wizardVolume.value = 10; }
-      if (d <= 2) { wizardCalcMode.value = 'elemental'; }
-      if (d <= 3) { Object.assign(wizardTargets,  { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); wizardNH4Pct.value = null; }
-      if (d <= 4) { initWizardGramsFertilizers(); }
-      if (d <= 5) { wizardSelectedEC.value = 'ec:1.2'; ratioTargetEC.value = 'ec:1.2'; }
-      if (d <= 6) { Object.assign(wizardRatios, { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); wizardNH4Pct.value = null; }
-      if (d <= 7) { initWizardAvailFertilizers(); }
-      if (d <= 8) { pekacidMaxLimit.value = 0; }
+      if (d < 1) { wizardVolume.value = 10; }
+      if (d < 2) { wizardCalcMode.value = 'elemental'; }
+      if (d < 3) { Object.assign(wizardTargets,  { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); wizardNH4Pct.value = null; }
+      if (d < 4) { initWizardGramsFertilizers(); }
+      if (d < 5) { wizardSelectedEC.value = 'ec:1.2'; ratioTargetEC.value = 'ec:1.2'; }
+      if (d < 6) { Object.assign(wizardRatios, { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); wizardNH4Pct.value = null; }
+      if (d < 7) { initWizardAvailFertilizers(); }
+      if (d < 8) { pekacidMaxLimit.value = 0; }
     }
 
     function backToECStep() {
@@ -9527,7 +9531,7 @@ const FertilizerApp = {
       });
 
       // Calculate totals
-      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0);
+      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0) + (results.N_Urea || 0);
 
       // Convert oxides to elemental forms
       if (results.P2O5) {
@@ -9578,7 +9582,7 @@ const FertilizerApp = {
       });
 
       // Calculate totals
-      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0);
+      results.N_total = (results.N_NO3 || 0) + (results.N_NH4 || 0) + (results.N_Urea || 0);
 
       // Convert oxides to elemental forms
       if (results.P2O5) {

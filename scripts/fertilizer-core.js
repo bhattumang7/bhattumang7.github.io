@@ -676,10 +676,10 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
 
   function perGramContrib(fert) {
     const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
     Object.entries(fert.pct).forEach(([nutrient, pct]) => {
       const ppm = (1 * 1000 * (pct / 100)) / volume;
-      if (nutrient === 'N_NO3' || nutrient === 'N_NH4') {
+      if (nutrient === 'N_NO3' || nutrient === 'N_NH4' || nutrient === 'N_Urea') {
         c.N_total += ppm;
       } else if (nutrient === 'N_total') {
         if (!hasNForms) c.N_total += ppm;
@@ -793,7 +793,7 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
   Object.entries(formula).forEach(([fid, grams]) => {
     const fert = fertilizers.find(f => f.id === fid);
     if (!fert) return;
-    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
     Object.entries(fert.pct).forEach(([nutrient, pct]) => {
       const ppm = (grams * 1000 * (pct / 100)) / volume;
       if (nutrient === 'N_NO3') {
@@ -801,6 +801,8 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
         achieved.N_total += ppm;
       } else if (nutrient === 'N_NH4') {
         achieved.N_NH4 += ppm;
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_Urea') {
         achieved.N_total += ppm;
       } else if (nutrient === 'N_total') {
         if (!hasNForms) achieved.N_total += ppm;
@@ -1290,7 +1292,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
             const grams = scaledFormula[fert.id] || 0;
             if (grams === 0) return;
 
-            const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+            const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
             Object.entries(fert.pct).forEach(([nutrient, pct]) => {
               const ppm = (grams * 1000 * (pct / 100)) / volume;
               if (nutrient === 'N_NO3') {
@@ -1298,6 +1300,8 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                 scaledAchieved.N_total += ppm;
               } else if (nutrient === 'N_NH4') {
                 scaledAchieved.N_NH4 += ppm;
+                scaledAchieved.N_total += ppm;
+              } else if (nutrient === 'N_Urea') {
                 scaledAchieved.N_total += ppm;
               } else if (nutrient === 'N_total' && !hasNForms) {
                 scaledAchieved.N_total += ppm;
@@ -1414,7 +1418,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
             availableFertilizers.forEach(fert => {
               const grams = scaledFormula[fert.id] || 0;
               if (grams === 0) return;
-              const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+              const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
               Object.entries(fert.pct).forEach(([nutrient, pct]) => {
                 const ppm = (grams * 1000 * (pct / 100)) / volume;
                 if (nutrient === 'N_NO3') {
@@ -1422,6 +1426,8 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                   scaledAchieved.N_total += ppm;
                 } else if (nutrient === 'N_NH4') {
                   scaledAchieved.N_NH4 += ppm;
+                  scaledAchieved.N_total += ppm;
+                } else if (nutrient === 'N_Urea') {
                   scaledAchieved.N_total += ppm;
                 } else if (nutrient === 'N_total' && !hasNForms) {
                   scaledAchieved.N_total += ppm;
@@ -1530,7 +1536,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                   const grams = scaledFormula[fert.id] || 0;
                   if (grams === 0) return;
 
-                  const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
+                  const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
                   Object.entries(fert.pct).forEach(([nutrient, pct]) => {
                     const ppm = (grams * 1000 * (pct / 100)) / volume;
                     if (nutrient === 'N_NO3') {
@@ -1538,6 +1544,8 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                       scaledAchieved.N_total += ppm;
                     } else if (nutrient === 'N_NH4') {
                       scaledAchieved.N_NH4 += ppm;
+                      scaledAchieved.N_total += ppm;
+                    } else if (nutrient === 'N_Urea') {
                       scaledAchieved.N_total += ppm;
                     } else if (nutrient === 'N_total' && !hasNForms) {
                       scaledAchieved.N_total += ppm;
@@ -1707,9 +1715,9 @@ window.FertilizerCore.getElementalContributionPerGram = function(fert) {
   const pct = fert.pct || {};
 
   // Nitrogen: sum all N forms
-  const hasNForms = pct.N_NO3 || pct.N_NH4;
+  const hasNForms = pct.N_NO3 || pct.N_NH4 || pct.N_Urea;
   if (hasNForms) {
-    contrib.N = ((pct.N_NO3 || 0) + (pct.N_NH4 || 0)) * 10; // % * 10 = ppm per g/L
+    contrib.N = ((pct.N_NO3 || 0) + (pct.N_NH4 || 0) + (pct.N_Urea || 0)) * 10; // % * 10 = ppm per g/L
   } else if (pct.N_total) {
     contrib.N = pct.N_total * 10;
   }
