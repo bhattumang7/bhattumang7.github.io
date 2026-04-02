@@ -1592,6 +1592,11 @@ permalink: /fertilizer-calculator/
         <label for="wizard-target-si" data-i18n="silicon">Silicon (Si)</label>
         <input type="number" id="wizard-target-si" v-model="wizardTargets.Si" min="0" step="1" data-i18n-placeholder="optional" placeholder="Optional">
       </div>
+      <div class="input-field" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 12px; margin-top: 4px;">
+        <label for="wizard-target-nh4pct" data-i18n="nh4PctLabel">% of N as Ammonium-NH₄ (optional)</label>
+        <input type="number" id="wizard-target-nh4pct" v-model="wizardNH4Pct" min="0" max="100" step="1" placeholder="e.g., 50 (leave blank to skip)">
+        <small style="color: #888; display: block; margin-top: 4px;" data-i18n="nh4PctHint">Leave blank to let the solver choose the N form split freely.</small>
+      </div>
     </div>
 
     <div class="wizard-step-buttons">
@@ -1634,6 +1639,11 @@ permalink: /fertilizer-calculator/
       <div class="input-field">
         <label for="wizard-ratio-si" data-i18n="siliconPpm">Silicon (Si) PPM</label>
         <input type="number" id="wizard-ratio-si" v-model="wizardRatios.Si" min="0" step="1" data-i18n-placeholder="targetPpm" placeholder="Target PPM">
+      </div>
+      <div class="input-field" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 12px; margin-top: 4px;">
+        <label for="wizard-ratio-nh4pct" data-i18n="nh4PctLabel">% of N as Ammonium-NH₄ (optional)</label>
+        <input type="number" id="wizard-ratio-nh4pct" v-model="wizardNH4Pct" min="0" max="100" step="1" placeholder="e.g., 50 (leave blank to skip)">
+        <small style="color: #888; display: block; margin-top: 4px;" data-i18n="nh4PctHint">Leave blank to let the solver choose the N form split freely.</small>
       </div>
     </div>
 
@@ -2052,6 +2062,17 @@ permalink: /fertilizer-calculator/
           <ul>
             <li v-for="(w, idx) in formulaResultsData.warnings" :key="idx">{{ w }}</li>
           </ul>
+        </div>
+        <!-- Nitrogen Forms Breakdown -->
+        <div class="conversion-note" style="margin-top: 15px;" v-if="formulaResultsData.result && formulaResultsData.result.achieved">
+          <strong>{{ i18n.t('nitrogenFormLabel') }}</strong>
+          {{ i18n.formatNumber(formulaResultsData.result.achieved.N_NH4.toFixed(1)) }} ppm NH₄-N
+          ({{ i18n.formatNumber(formulaResultsData.nh4Percent.toFixed(1)) }}% {{ i18n.t('ofTotalN') }}),
+          {{ i18n.formatNumber(formulaResultsData.result.achieved.N_NO3.toFixed(1)) }} ppm NO₃-N
+          ({{ i18n.formatNumber((100 - formulaResultsData.nh4Percent).toFixed(1)) }}% {{ i18n.t('ofTotalN') }})
+          <span v-if="formulaResultsData.result.achieved.N_Urea > 0">
+            , {{ i18n.formatNumber(formulaResultsData.result.achieved.N_Urea.toFixed(1)) }} ppm {{ i18n.t('ureaN') || 'Urea-N' }}
+          </span>
         </div>
         <div class="results-section" style="margin-top: 20px;">
           <h2>{{ i18n.t('targetVsAchieved') || 'Target vs Achieved' }}</h2>
@@ -4746,6 +4767,7 @@ function clearWizardPPMTargets() {
       window.vueApp.wizardTargets[key] = '';
     });
   }
+  if (window.vueApp) window.vueApp.wizardNH4Pct = null;
 }
 
 function proceedToFormulaFertilizerStep() {
@@ -4774,6 +4796,7 @@ function clearWizardNPKRatios() {
       window.vueApp.wizardRatios[key] = '';
     });
   }
+  if (window.vueApp) window.vueApp.wizardNH4Pct = null;
 }
 
 function proceedToReverseFertilizerStep() {
@@ -6440,6 +6463,9 @@ const FertilizerApp = {
       N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0'
     });
 
+    // Optional NH4% target (null = no constraint, 0-100 = desired % of total N as ammonium)
+    const wizardNH4Pct = ref(null);
+
     // Wizard Grams Fertilizer List state
     const wizardGramsFertilizers = reactive({}); // { fertilizer_id: { checked: false, grams: '' } }
     const wizardGramsSearchTerm = ref('');
@@ -7465,6 +7491,12 @@ const FertilizerApp = {
         // Run optimization with progress callback
         // Include pekacidMaxLimit if PeKacid is selected
         const pekacidLimit = pekacidMaxLimit.value || 0;
+        const nh4PctRaw = wizardNH4Pct.value;
+        const nh4PctTarget = (typeof nh4PctRaw === 'number' && nh4PctRaw >= 0 && nh4PctRaw <= 100)
+          ? nh4PctRaw
+          : (nh4PctRaw !== null && nh4PctRaw !== '' && !isNaN(parseFloat(nh4PctRaw))
+              ? Math.min(100, Math.max(0, parseFloat(nh4PctRaw)))
+              : null);
         const result = await optimizeFormula(
           targets,
           formulaVolume.value,
@@ -7475,6 +7507,7 @@ const FertilizerApp = {
             useAbsoluteTargets: true,
             useMilp: true,
             pekacidMaxLimit: pekacidLimit,
+            nh4PctTarget,
             onProgress: (status) => {
               if (status === 'ready') {
                 progressBar.setIndeterminate(i18n.t('optimizingCombination'));
@@ -7650,6 +7683,12 @@ const FertilizerApp = {
         // Run optimization with progress callback
         // Include pekacidMaxLimit if PeKacid is selected
         const pekacidLimit = pekacidMaxLimit.value || 0;
+        const nh4PctRaw = wizardNH4Pct.value;
+        const nh4PctTarget = (typeof nh4PctRaw === 'number' && nh4PctRaw >= 0 && nh4PctRaw <= 100)
+          ? nh4PctRaw
+          : (nh4PctRaw !== null && nh4PctRaw !== '' && !isNaN(parseFloat(nh4PctRaw))
+              ? Math.min(100, Math.max(0, parseFloat(nh4PctRaw)))
+              : null);
         const result = await optimizeFormula(
           targets,
           volume,
@@ -7660,6 +7699,7 @@ const FertilizerApp = {
             targetEC,
             useMilp: true,
             pekacidMaxLimit: pekacidLimit,
+            nh4PctTarget,
             onProgress: (status) => {
               if (status === 'ready') {
                 progressBar.setIndeterminate(i18n.t('optimizingCombination'));
@@ -7862,6 +7902,25 @@ const FertilizerApp = {
       // NH4 percentage
       reverseResultsData.nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
 
+      // NH4% constraint satisfaction warning
+      const nh4PctConstraintR = wizardNH4Pct.value !== null && wizardNH4Pct.value !== ''
+        ? parseFloat(wizardNH4Pct.value) : null;
+      if (nh4PctConstraintR !== null && !isNaN(nh4PctConstraintR) && result.achieved.N_total > 0) {
+        const deviation = Math.abs(reverseResultsData.nh4Percent - nh4PctConstraintR);
+        if (deviation > 10) {
+          reverseResultsData.warnings.push(i18n.t('nh4PctNotAchieved', {
+            target: nh4PctConstraintR.toFixed(0),
+            achieved: reverseResultsData.nh4Percent.toFixed(1)
+          }));
+          reverseResultsData.allGood = false;
+        } else if (deviation > 5) {
+          reverseResultsData.warnings.push(i18n.t('nh4PctPartiallyAchieved', {
+            target: nh4PctConstraintR.toFixed(0),
+            achieved: reverseResultsData.nh4Percent.toFixed(1)
+          }));
+        }
+      }
+
       // Ion balance
       const activeFerts = Object.entries(result.formula).map(([fertId, grams]) => {
         const fert = FERTILIZERS.find(f => f.id === fertId);
@@ -7987,6 +8046,25 @@ const FertilizerApp = {
 
       // NH4 percentage
       formulaResultsData.nh4Percent = result.achieved.N_total > 0 ? (result.achieved.N_NH4 / result.achieved.N_total * 100) : 0;
+
+      // NH4% constraint satisfaction warning
+      const nh4PctConstraint = wizardNH4Pct.value !== null && wizardNH4Pct.value !== ''
+        ? parseFloat(wizardNH4Pct.value) : null;
+      if (nh4PctConstraint !== null && !isNaN(nh4PctConstraint) && result.achieved.N_total > 0) {
+        const deviation = Math.abs(formulaResultsData.nh4Percent - nh4PctConstraint);
+        if (deviation > 10) {
+          formulaResultsData.warnings.push(i18n.t('nh4PctNotAchieved', {
+            target: nh4PctConstraint.toFixed(0),
+            achieved: formulaResultsData.nh4Percent.toFixed(1)
+          }));
+          formulaResultsData.allGood = false;
+        } else if (deviation > 5) {
+          formulaResultsData.warnings.push(i18n.t('nh4PctPartiallyAchieved', {
+            target: nh4PctConstraint.toFixed(0),
+            achieved: formulaResultsData.nh4Percent.toFixed(1)
+          }));
+        }
+      }
 
       // Ion balance
       const activeFerts = Object.entries(result.formula).map(([fertId, grams]) => {
@@ -8990,10 +9068,10 @@ const FertilizerApp = {
       if (d <= 0) { currentMode.value = null; calculationMode.value = 'oxide'; }
       if (d <= 1) { wizardVolume.value = 10; }
       if (d <= 2) { wizardCalcMode.value = 'elemental'; }
-      if (d <= 3) { Object.assign(wizardTargets,  { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
+      if (d <= 3) { Object.assign(wizardTargets,  { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); wizardNH4Pct.value = null; }
       if (d <= 4) { initWizardGramsFertilizers(); }
       if (d <= 5) { wizardSelectedEC.value = 'ec:1.2'; ratioTargetEC.value = 'ec:1.2'; }
-      if (d <= 6) { Object.assign(wizardRatios, { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); }
+      if (d <= 6) { Object.assign(wizardRatios, { N: '', P: '', K: '', Ca: '', Mg: '', S: '', Si: '0' }); wizardNH4Pct.value = null; }
       if (d <= 7) { initWizardAvailFertilizers(); }
       if (d <= 8) { pekacidMaxLimit.value = 0; }
     }
@@ -10278,6 +10356,7 @@ const FertilizerApp = {
       wizardCalcMode,
       wizardTargets,
       wizardRatios,
+      wizardNH4Pct,
       wizardGramsFertilizers,
       wizardGramsSearchTerm,
       wizardAvailFertilizers,

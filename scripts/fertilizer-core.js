@@ -530,7 +530,7 @@ window.FertilizerCore.calculateNutrientRatios = function(results) {
  * @param {number} params.pekacidMaxLimit - Optional max limit for PeKacid in g/L (0 = no limit)
  * @returns {Object} {formula, achieved}
  */
-window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0 }) {
+window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0, nh4PctTarget = null }) {
   // Helper to log to both console and UI dev logs
   // Queue logs if addDevLog isn't ready yet, flush when it becomes available
   const devLog = (msg, type = 'info') => {
@@ -643,6 +643,37 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     devLog('WARNING: PeKacid limit set but PeKacid not in selected fertilizers!', 'warn');
   }
 
+  // --- NH4 fraction constraint ---
+  // If nh4PctTarget is set (0–100), add a soft constraint: Sum((nh4_i - tau*ntotal_i)*x_i) ≈ 0
+  // Implemented as slack variables with a high penalty so the solver tries hard but won't become infeasible
+  let sNH4Plus = null, sNH4Minus = null;
+  const hasNH4Target = typeof nh4PctTarget === 'number' && nh4PctTarget >= 0 && nh4PctTarget <= 100
+    && (targets.N_total || 0) > 0;
+  if (hasNH4Target) {
+    devLog(`NH4 fraction target: ${nh4PctTarget}% of total N`);
+    const tau = nh4PctTarget / 100;
+    sNH4Plus  = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_nh4_plus' });
+    sNH4Minus = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_nh4_minus' });
+    const nh4Terms = [];
+    fertilizers.forEach(f => {
+      const hasNForms = f.pct.N_NO3 || f.pct.N_NH4;
+      const nh4PerGram = ((f.pct.N_NH4 || 0) / 100 * 1000) / volume;
+      let ntPerGram;
+      if (hasNForms) {
+        ntPerGram = (((f.pct.N_NO3 || 0) + (f.pct.N_NH4 || 0) + (f.pct.N_Urea || 0)) / 100 * 1000) / volume;
+      } else {
+        ntPerGram = ((f.pct.N_total || 0) / 100 * 1000) / volume;
+      }
+      const coeff = nh4PerGram - tau * ntPerGram;
+      if (Math.abs(coeff) > 1e-9) {
+        nh4Terms.push([coeff, x[f.id]]);
+      }
+    });
+    if (nh4Terms.length > 0) {
+      model.addConstr([...nh4Terms, [-1, sNH4Plus], [1, sNH4Minus]], '=', 0);
+    }
+  }
+
   function perGramContrib(fert) {
     const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
     const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4;
@@ -728,6 +759,12 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     objective.push([slackPenalty, slackPlus[n]]);
     objective.push([slackPenalty, slackMinus[n]]);
   });
+  // NH4 fraction slack penalty — higher than nutrient slack (100) but lower than PeKacid (10000)
+  if (hasNH4Target && sNH4Plus && sNH4Minus) {
+    objective.push([500, sNH4Plus]);
+    objective.push([500, sNH4Minus]);
+  }
+
   model.setObjective(objective, 'MINIMIZE');
 
   const lp = model.toLPFormat();
@@ -1016,9 +1053,11 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
     };
   }
 
-  // Pass pekacidMaxLimit to the MILP solver if specified
+  // Pass pekacidMaxLimit and nh4PctTarget to the MILP solver if specified
   const pekacidMaxLimit = options.pekacidMaxLimit || 0;
-  let milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit });
+  const nh4PctTarget = (typeof options.nh4PctTarget === 'number' && options.nh4PctTarget >= 0 && options.nh4PctTarget <= 100)
+    ? options.nh4PctTarget : null;
+  let milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit, nh4PctTarget });
 
   // Apply EC scaling if targetEC is specified
   if (options.targetEC && options.targetEC > 0) {
