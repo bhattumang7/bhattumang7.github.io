@@ -961,9 +961,10 @@
     },
     icl_pekacid_pk_acid: {
       formula: 'KH₅(PO₄)₂',
-      molarMass: 229.04,
+      molarMass: 234.078,
       ions: [
         {ion: 'K⁺', charge: 1, count: 1, type: 'cation'},
+        {ion: 'H⁺', charge: 1, count: 1, type: 'cation'},
         {ion: 'H₂PO₄⁻', charge: 1, count: 2, type: 'anion'}
       ]
     }
