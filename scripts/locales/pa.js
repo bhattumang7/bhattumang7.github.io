@@ -137,6 +137,10 @@ window.i18nLocales.pa = {
   totalAnions: 'ਕੁੱਲ ਐਨਾਇਨ',
   whatIsIonBalance: 'ਆਇਨ ਸੰਤੁਲਨ ਕੀ ਹੈ?',
   ionBalanceExplanation: 'ਖਾਦਾਂ ਚਾਰਜਡ ਆਇਨਾਂ (K⁺, Ca²⁺, NH₄⁺ ਵਰਗੇ ਕੈਟਾਇਨ ਅਤੇ NO₃⁻, SO₄²⁻, H₂PO₄⁻ ਵਰਗੇ ਐਨਾਇਨ) ਵਿੱਚ ਘੁਲ ਜਾਂਦੀਆਂ ਹਨ। ≤10% ਅਸੰਤੁਲਨ ਚੰਗਾ ਹੈ; ਉੱਚੇ ਮੁੱਲ pH ਬਦਲਾਅ ਦਾ ਕਾਰਨ ਬਣ ਸਕਦੇ ਹਨ।',
+  phTendencyOnUptake: 'ਪੌਦੇ ਦੇ ਸੋਖਣ ਤੇ pH ਰੁਝਾਨ',
+  phTendencyAcidic: '↓ pH ਤੇਜ਼ਾਬੀ ਵੱਲ ਖਿੱਚਦਾ ਹੈ',
+  phTendencyAlkaline: '↑ pH ਖਾਰੀ ਵੱਲ ਖਿੱਚਦਾ ਹੈ',
+  phTendencyNeutral: '≈ pH ਨਿਰਪੱਖ',
 
   // Input steps
   selectFertilizersAndEnterAmounts: 'ਖਾਦਾਂ ਚੁਣੋ ਅਤੇ ਮਾਤਰਾ ਦਰਜ ਕਰੋ',

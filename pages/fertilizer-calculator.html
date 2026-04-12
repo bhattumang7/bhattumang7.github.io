@@ -1977,6 +1977,12 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 0.85em;" :style="{ color: gramsToPpmDisplayData.ionBalance.statusColor }">{{ gramsToPpmDisplayData.ionBalance.statusText }}</div>
             </div>
           </div>
+          <div v-if="gramsToPpmDisplayData.ionBalance.phTendency" style="margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.8em; color: #888;">{{ i18n.t('phTendencyOnUptake') }}:</span>
+            <span style="padding: 3px 12px; border-radius: 12px; font-size: 0.85em; font-weight: 600;" :style="{ background: gramsToPpmDisplayData.ionBalance.phTendencyColor + '18', color: gramsToPpmDisplayData.ionBalance.phTendencyColor, border: '1px solid ' + gramsToPpmDisplayData.ionBalance.phTendencyColor + '55' }">
+              {{ gramsToPpmDisplayData.ionBalance.phTendencyText }}
+            </span>
+          </div>
         </div>
         <div class="results-section" v-if="gramsToPpmDisplayData.ratios && gramsToPpmDisplayData.ratios.length > 0" style="margin-top: 20px;">
           <h2>{{ i18n.t('nutrientRatioAnalysis') }}</h2>
@@ -4279,7 +4285,7 @@ permalink: /fertilizer-calculator/
 
   <!-- Version footer -->
   <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #eee; color: #999; font-size: 0.8em;">
-    v1.7.1
+    v1.8.0
   </div>
 
 </div>
@@ -5705,6 +5711,27 @@ function calculateIonBalance(activeFertilizers, volume) {
   // Use unified core calculation
   const ionBalance = calculateIonBalanceCore(activeFertilizers, volume, { useSymbols: true });
 
+  // Determine pH tendency based on cation vs anion dominance.
+  // When plants absorb more cations than anions they release H⁺ to maintain
+  // charge balance → solution/rhizosphere pulls acidic.
+  // When plants absorb more anions they release OH⁻ → pulls alkaline.
+  const diff = ionBalance.totalCations - ionBalance.totalAnions;
+  const total = ionBalance.totalCations + ionBalance.totalAnions;
+  let phTendency, phTendencyText, phTendencyColor;
+  if (total < 0.01 || Math.abs(diff) < 0.01) {
+    phTendency = 'neutral';
+    phTendencyText = i18n.t('phTendencyNeutral');
+    phTendencyColor = '#2e7d32';
+  } else if (diff > 0) {
+    phTendency = 'acidic';
+    phTendencyText = i18n.t('phTendencyAcidic');
+    phTendencyColor = '#d84315';
+  } else {
+    phTendency = 'alkaline';
+    phTendencyText = i18n.t('phTendencyAlkaline');
+    phTendencyColor = '#1565c0';
+  }
+
   // Return ion balance data for copy function and Vue display (with clean status text)
   return {
     totalCations: ionBalance.totalCations,
@@ -5712,7 +5739,10 @@ function calculateIonBalance(activeFertilizers, volume) {
     imbalance: ionBalance.imbalance,
     statusText: ionBalance.statusText.replace(/[✓⚠✗]/g, '').trim(),
     statusColor: ionBalance.statusColor,
-    ionDetails: ionBalance.ionDetails
+    ionDetails: ionBalance.ionDetails,
+    phTendency,
+    phTendencyText,
+    phTendencyColor
   };
 }
 

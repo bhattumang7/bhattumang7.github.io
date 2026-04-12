@@ -137,6 +137,10 @@ window.i18nLocales.ml = {
   totalAnions: 'മൊത്തം ആനയോണുകൾ',
   whatIsIonBalance: 'അയോൺ ബാലൻസ് എന്താണ്?',
   ionBalanceExplanation: 'വളങ്ങൾ ചാർജ്ജ്ഡ് അയോണുകളായി (K⁺, Ca²⁺, NH₄⁺ പോലുള്ള കാറ്റയോണുകളും NO₃⁻, SO₄²⁻, H₂PO₄⁻ പോലുള്ള ആനയോണുകളും) ലയിക്കുന്നു. ≤10% അസന്തുലിതാവസ്ഥ നല്ലതാണ്; ഉയർന്ന മൂല്യങ്ങൾ pH ചാഞ്ചാട്ടങ്ങൾക്ക് കാരണമാകാം.',
+  phTendencyOnUptake: 'സസ്യ ആഗിരണത്തിൽ pH പ്രവണത',
+  phTendencyAcidic: '↓ pH അമ്ലത്തിലേക്ക് വലിക്കുന്നു',
+  phTendencyAlkaline: '↑ pH ക്ഷാരത്തിലേക്ക് വലിക്കുന്നു',
+  phTendencyNeutral: '≈ pH നിഷ്പക്ഷം',
 
   // Input steps
   selectFertilizersAndEnterAmounts: 'വളങ്ങൾ തിരഞ്ഞെടുത്ത് അളവുകൾ നൽകുക',

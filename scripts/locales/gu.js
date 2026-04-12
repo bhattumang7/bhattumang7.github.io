@@ -130,6 +130,10 @@ window.i18nLocales.gu = {
   totalAnions: 'કુલ ઋણાયન',
   whatIsIonBalance: 'આયન સંતુલન શું છે?',
   ionBalanceExplanation: 'ખાતર ચાર્જ થયેલા આયનોમાં ઓગળે છે (ધનાયન જેમ કે K⁺, Ca²⁺, NH₄⁺ અને ઋણાયન જેમ કે NO₃⁻, SO₄²⁻, H₂PO₄⁻). અસંતુલન ≤10% સારું છે; વધારે મૂલ્યો pH માં ફેરફાર કરી શકે છે.',
+  phTendencyOnUptake: 'છોડ શોષણ પર pH વૃત્તિ',
+  phTendencyAcidic: '↓ pH એસિડિક તરફ',
+  phTendencyAlkaline: '↑ pH ક્ષારીય તરફ',
+  phTendencyNeutral: '≈ pH તટસ્થ',
 
   selectFertilizersAndEnterAmounts: 'ખાતર પસંદ કરો અને માત્રા દાખલ કરો',
   selectFertilizersDescription: 'તમે કયાં ખાતર વાપરી રહ્યા છો તે પસંદ કરો અને દ્રાવણમાં ઉમેરવાની ગ્રામ માત્રા દાખલ કરો.',

@@ -232,6 +232,10 @@ window.i18nLocales.en = {
   totalAnions: 'Total Anions',
   whatIsIonBalance: 'What is ion balance?',
   ionBalanceExplanation: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). Imbalance ≤10% is good; higher values may cause pH swings.',
+  phTendencyOnUptake: 'pH tendency on plant uptake',
+  phTendencyAcidic: '↓ Pulls pH acidic',
+  phTendencyAlkaline: '↑ Pulls pH alkaline',
+  phTendencyNeutral: '≈ pH neutral',
 
   // Input steps
   selectFertilizersAndEnterAmounts: 'Select Fertilizers & Enter Amounts',
