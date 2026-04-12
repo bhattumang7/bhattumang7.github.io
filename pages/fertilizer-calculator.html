@@ -2113,6 +2113,12 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 0.85em;" :style="{ color: formulaResultsData.ionBalance.statusColor }">{{ formulaResultsData.ionBalance.statusText }}</div>
             </div>
           </div>
+          <div v-if="formulaResultsData.ionBalance.phTendency" style="margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.8em; color: #888;">{{ i18n.t('phTendencyOnUptake') }}:</span>
+            <span style="padding: 3px 12px; border-radius: 12px; font-size: 0.85em; font-weight: 600;" :style="{ background: formulaResultsData.ionBalance.phTendencyColor + '18', color: formulaResultsData.ionBalance.phTendencyColor, border: '1px solid ' + formulaResultsData.ionBalance.phTendencyColor + '55' }">
+              {{ formulaResultsData.ionBalance.phTendencyText }}
+            </span>
+          </div>
         </div>
         <!-- EC Prediction Section -->
         <div class="results-section" v-if="formulaResultsData.ecPrediction && formulaResultsData.ecPrediction.ec > 0" style="margin-top: 20px;">
@@ -2991,6 +2997,12 @@ permalink: /fertilizer-calculator/
                   <div style="font-size: 1.3em; font-weight: bold;" :style="{ color: gramsToPpmDisplayData.ionBalance.statusColor }">{{ i18n.formatNumber(gramsToPpmDisplayData.ionBalance.imbalance.toFixed(1)) }}%</div>
                   <div style="font-size: 0.85em;" :style="{ color: gramsToPpmDisplayData.ionBalance.statusColor }">{{ gramsToPpmDisplayData.ionBalance.statusText }}</div>
                 </div>
+              </div>
+              <div v-if="gramsToPpmDisplayData.ionBalance.phTendency" style="margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 0.8em; color: #888;">{{ i18n.t('phTendencyOnUptake') }}:</span>
+                <span style="padding: 3px 12px; border-radius: 12px; font-size: 0.85em; font-weight: 600;" :style="{ background: gramsToPpmDisplayData.ionBalance.phTendencyColor + '18', color: gramsToPpmDisplayData.ionBalance.phTendencyColor, border: '1px solid ' + gramsToPpmDisplayData.ionBalance.phTendencyColor + '55' }">
+                  {{ gramsToPpmDisplayData.ionBalance.phTendencyText }}
+                </span>
               </div>
             </div>
           </template>
@@ -5781,7 +5793,24 @@ async function buildFormula() {
 
 // Calculate ion balance for formula (returns summary data) - uses unified core
 function calculateIonBalanceForFormula(activeFertilizers, volume) {
-  return calculateIonBalanceCore(activeFertilizers, volume, { useSymbols: true });
+  const result = calculateIonBalanceCore(activeFertilizers, volume, { useSymbols: true });
+  const diff = result.totalCations - result.totalAnions;
+  const total = result.totalCations + result.totalAnions;
+  let phTendency, phTendencyText, phTendencyColor;
+  if (total < 0.01 || Math.abs(diff) < 0.01) {
+    phTendency = 'neutral';
+    phTendencyText = i18n.t('phTendencyNeutral');
+    phTendencyColor = '#2e7d32';
+  } else if (diff > 0) {
+    phTendency = 'acidic';
+    phTendencyText = i18n.t('phTendencyAcidic');
+    phTendencyColor = '#d84315';
+  } else {
+    phTendency = 'alkaline';
+    phTendencyText = i18n.t('phTendencyAlkaline');
+    phTendencyColor = '#1565c0';
+  }
+  return { ...result, phTendency, phTendencyText, phTendencyColor };
 }
 
 // ============================================================================
