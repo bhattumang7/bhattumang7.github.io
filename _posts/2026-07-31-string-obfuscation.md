@@ -1,5 +1,5 @@
 ---
-title: Building a Fertilizer Calculator with AI - Sonnet vs Codex
+title: How products hide their strings
 tags: [Reverse Engineering, String Obfuscation]
 style: border
 color: light
