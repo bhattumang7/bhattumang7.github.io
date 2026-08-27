@@ -64,6 +64,65 @@
     return text + '\n';
   }
 
+  function buildActiveFertilizersListText(result, fertilizers, fmt) {
+    const activeFertilizers = Object.entries(result.formula)
+      .filter(([, grams]) => grams > 0.01)
+      .map(([id, grams]) => {
+        const fert = fertilizers.find(f => f.id === id);
+        return { name: fert ? fert.name : id, grams };
+      });
+
+    if (activeFertilizers.length === 0) {
+      return `_${fmt.t('shareNoSuitableFormula')}_\n`;
+    }
+    return activeFertilizers
+      .map(fert => `${fmt.t('shareFertilizerGrams', {name: fert.name, grams: fmt.formatNumber(fert.grams.toFixed(2))})}\n`)
+      .join('');
+  }
+
+  function getAchievedPpmOrder(mode) {
+    return mode === 'elemental'
+      ? [
+          { key: 'N_total', label: 'N' },
+          { key: 'P', label: 'P' },
+          { key: 'K', label: 'K' },
+          { key: 'Ca', label: 'Ca' },
+          { key: 'Mg', label: 'Mg' },
+          { key: 'S', label: 'S' },
+          { key: 'Si', label: 'Si' }
+        ]
+      : [
+          { key: 'N_total', label: 'N' },
+          { key: 'P2O5', label: 'P₂O₅' },
+          { key: 'K2O', label: 'K₂O' },
+          { key: 'Ca', label: 'Ca' },
+          { key: 'Mg', label: 'Mg' },
+          { key: 'S', label: 'S' },
+          { key: 'Si', label: 'Si' }
+        ];
+  }
+
+  function buildAchievedPpmShareText(result, mode, fmt) {
+    let text = '';
+    getAchievedPpmOrder(mode).forEach(item => {
+      const value = result.achieved[item.key];
+      if (value !== undefined && value > 0.01) {
+        text += `${fmt.t('shareLabelValuePpm', {label: item.label, value: fmt.formatNumber(value.toFixed(1))})}\n`;
+      }
+    });
+    return text;
+  }
+
+  function buildIonBalanceShareText(ionBalance, fmt) {
+    if (!ionBalance) return '';
+    let text = `*${fmt.t('shareIonBalance')}*\n`;
+    text += `${fmt.t('shareCationsValue', {value: fmt.formatNumber(ionBalance.totalCations.toFixed(2))})}\n`;
+    text += `${fmt.t('shareAnionsValue', {value: fmt.formatNumber(ionBalance.totalAnions.toFixed(2))})}\n`;
+    text += `${fmt.t('shareImbalanceValue', {value: fmt.formatNumber(ionBalance.imbalance.toFixed(1)), status: ionBalance.statusText})}\n`;
+    text += `\n`;
+    return text;
+  }
+
   globalThis.FertilizerCore.buildTankCopyText = function(tank, letter, mode, fertilizers, fmt) {
     const pLabel = mode === 'elemental' ? 'P' : 'P₂O₅';
     const kLabel = mode === 'elemental' ? 'K' : 'K₂O';
@@ -297,60 +356,16 @@
 
     // Fertilizers to add
     text += `*${fmt.t('shareFertilizersToAddVolume', {volume: fmt.formatNumber(volume)})}*\n`;
-    const activeFertilizers = Object.entries(result.formula)
-      .filter(([, grams]) => grams > 0.01)
-      .map(([id, grams]) => {
-        const fert = fertilizers.find(f => f.id === id);
-        return { name: fert ? fert.name : id, grams };
-      });
-
-    if (activeFertilizers.length === 0) {
-      text += `_${fmt.t('shareNoSuitableFormula')}_\n`;
-    } else {
-      activeFertilizers.forEach(fert => {
-        text += `${fmt.t('shareFertilizerGrams', {name: fert.name, grams: fmt.formatNumber(fert.grams.toFixed(2))})}\n`;
-      });
-    }
+    text += buildActiveFertilizersListText(result, fertilizers, fmt);
     text += `\n`;
 
     // Achieved values
     text += `*${fmt.t('shareAchievedPpm')}*\n`;
-    const achievedOrder = mode === 'elemental'
-      ? [
-          { key: 'N_total', label: 'N' },
-          { key: 'P', label: 'P' },
-          { key: 'K', label: 'K' },
-          { key: 'Ca', label: 'Ca' },
-          { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' },
-          { key: 'Si', label: 'Si' }
-        ]
-      : [
-          { key: 'N_total', label: 'N' },
-          { key: 'P2O5', label: 'P₂O₅' },
-          { key: 'K2O', label: 'K₂O' },
-          { key: 'Ca', label: 'Ca' },
-          { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' },
-          { key: 'Si', label: 'Si' }
-        ];
-
-    achievedOrder.forEach(item => {
-      const value = result.achieved[item.key];
-      if (value !== undefined && value > 0.01) {
-        text += `${fmt.t('shareLabelValuePpm', {label: item.label, value: fmt.formatNumber(value.toFixed(1))})}\n`;
-      }
-    });
+    text += buildAchievedPpmShareText(result, mode, fmt);
     text += `\n`;
 
     // Ion Balance
-    if (ionBalance) {
-      text += `*${fmt.t('shareIonBalance')}*\n`;
-      text += `${fmt.t('shareCationsValue', {value: fmt.formatNumber(ionBalance.totalCations.toFixed(2))})}\n`;
-      text += `${fmt.t('shareAnionsValue', {value: fmt.formatNumber(ionBalance.totalAnions.toFixed(2))})}\n`;
-      text += `${fmt.t('shareImbalanceValue', {value: fmt.formatNumber(ionBalance.imbalance.toFixed(1)), status: ionBalance.statusText})}\n`;
-      text += `\n`;
-    }
+    text += buildIonBalanceShareText(ionBalance, fmt);
 
     text += `━━━━━━━━━━━━━━━━━━━━━\n`;
     text += `_${fmt.t('shareGeneratedBy')}_`;
@@ -389,50 +404,12 @@
 
     // Fertilizers to add
     text += `*${fmt.t('shareFertilizersToAddVolume', {volume: fmt.formatNumber(volume)})}*\n`;
-    const activeFertilizers = Object.entries(result.formula)
-      .filter(([, grams]) => grams > 0.01)
-      .map(([id, grams]) => {
-        const fert = fertilizers.find(f => f.id === id);
-        return { name: fert ? fert.name : id, grams };
-      });
-
-    if (activeFertilizers.length === 0) {
-      text += `_${fmt.t('shareNoSuitableFormula')}_\n`;
-    } else {
-      activeFertilizers.forEach(fert => {
-        text += `${fmt.t('shareFertilizerGrams', {name: fert.name, grams: fmt.formatNumber(fert.grams.toFixed(2))})}\n`;
-      });
-    }
+    text += buildActiveFertilizersListText(result, fertilizers, fmt);
     text += `\n`;
 
     // Achieved PPM values
     text += `*${fmt.t('shareAchievedPpm')}*\n`;
-    const achievedOrder = calculationMode === 'elemental'
-      ? [
-          { key: 'N_total', label: 'N' },
-          { key: 'P', label: 'P' },
-          { key: 'K', label: 'K' },
-          { key: 'Ca', label: 'Ca' },
-          { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' },
-          { key: 'Si', label: 'Si' }
-        ]
-      : [
-          { key: 'N_total', label: 'N' },
-          { key: 'P2O5', label: 'P₂O₅' },
-          { key: 'K2O', label: 'K₂O' },
-          { key: 'Ca', label: 'Ca' },
-          { key: 'Mg', label: 'Mg' },
-          { key: 'S', label: 'S' },
-          { key: 'Si', label: 'Si' }
-        ];
-
-    achievedOrder.forEach(item => {
-      const value = result.achieved[item.key];
-      if (value !== undefined && value > 0.01) {
-        text += `${fmt.t('shareLabelValuePpm', {label: item.label, value: fmt.formatNumber(value.toFixed(1))})}\n`;
-      }
-    });
+    text += buildAchievedPpmShareText(result, calculationMode, fmt);
     text += `\n`;
 
     // Nitrogen breakdown
@@ -446,13 +423,7 @@
     }
 
     // Ion Balance
-    if (ionBalance) {
-      text += `*${fmt.t('shareIonBalance')}*\n`;
-      text += `${fmt.t('shareCationsValue', {value: fmt.formatNumber(ionBalance.totalCations.toFixed(2))})}\n`;
-      text += `${fmt.t('shareAnionsValue', {value: fmt.formatNumber(ionBalance.totalAnions.toFixed(2))})}\n`;
-      text += `${fmt.t('shareImbalanceValue', {value: fmt.formatNumber(ionBalance.imbalance.toFixed(1)), status: ionBalance.statusText})}\n`;
-      text += `\n`;
-    }
+    text += buildIonBalanceShareText(ionBalance, fmt);
 
     text += `━━━━━━━━━━━━━━━━━━━━━\n`;
     text += `_${fmt.t('shareGeneratedBy')}_`;
