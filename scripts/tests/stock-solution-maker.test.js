@@ -52,6 +52,20 @@
     }
   }
 
+  // Reconstructs grams-dosed-per-liter-of-final-solution from tank stock concentrations
+  // (g/L) and per-tank dosing (mL/L), so calculateIonBalanceCore (which expects a formula
+  // in grams, not tank/dosing pairs) can be run against the same scenario a test set up.
+  function finalFormulaFromTanksDosing(tanks, dosingMLPerL) {
+    const formula = {};
+    for (const [tankId, tankFerts] of Object.entries(tanks)) {
+      const mLPerL = dosingMLPerL[tankId] || 0;
+      for (const [fertId, stockGPerL] of Object.entries(tankFerts)) {
+        formula[fertId] = (formula[fertId] || 0) + stockGPerL * (mLPerL / 1000);
+      }
+    }
+    return formula;
+  }
+
   async function runTests() {
     console.log('='.repeat(60));
     console.log('Stock Solution Maker - Unit Tests');
@@ -291,6 +305,14 @@
     // N: 15.5% × 10 = 155 ppm per g/L → 155 ppm
     assertApprox(achieved.Ca, 190, 1, 'Ca ppm');
     assertApprox(achieved.N, 155, 1, 'N ppm');
+
+    // Ion balance: Ca2+ (9.26 meq) + NH4+ (0.93 meq, from the 1.1% NH4-N fraction) should
+    // exactly balance the NO3- from all of calcium nitrate's N (10.19 meq).
+    const formula = finalFormulaFromTanksDosing(tanks, dosing);
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(formula, 1);
+    assertApprox(ionBalance.totalCations, 10.19, 0.05, 'Total cations meq/L');
+    assertApprox(ionBalance.totalAnions, 10.19, 0.05, 'Total anions meq/L');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0 (single N-only fertilizer)');
   });
 
   test('calculateAchievedPPM: Two tanks', () => {
@@ -308,6 +330,74 @@
     assertApprox(achieved.Ca, 190, 1, 'Ca ppm from Tank A');
     assertApprox(achieved.P, 113.48, 1, 'P ppm from Tank B');
     assertApprox(achieved.K, 141.12, 1, 'K ppm from Tank B');
+
+    // Ion balance: Ca2+ + NH4+ (from CaNO3) + K+ (from MKP) as cations, NO3- + H2PO4- as
+    // anions - two independent fertilizers, so this also checks cross-tank ion accounting.
+    const formula = finalFormulaFromTanksDosing(tanks, dosing);
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(formula, 1);
+    assertApprox(ionBalance.totalCations, 13.86, 0.05, 'Total cations meq/L (Ca2+ + NH4+ + K+)');
+    assertApprox(ionBalance.totalAnions, 13.86, 0.05, 'Total anions meq/L (NO3- + H2PO4-)');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0');
+  });
+
+  // ==========================================================================
+  // accumulateAchievedPPM Tests (grams-to-ppm / "PPM Calculator" mode)
+  // ==========================================================================
+
+  test('accumulateAchievedPPM: 6-fertilizer blend matches real calculator output', async () => {
+    // Reproduces the PPM Calculator tab's grams-to-ppm mode: 6 fertilizers (including
+    // ICL PeKacid, an acidifying PK source with its own H+/H2PO4- ion contribution) dosed
+    // by fixed gram amounts into 10L. Checked against a known-good calculator run: achieved
+    // PPM per nutrient, N forms, ion balance, and the derived N:P:K / N:P2O5:K2O / N:K /
+    // NO3:NH4 ratios - not just that the function returns *an* object.
+    const formula = {
+      calcium_nitrate_calcinit_typical: 7.35,
+      potassium_nitrate_typical: 2.39,
+      ammonium_nitrate_common: 0.37,
+      magnesium_sulfate_heptahydrate_common: 3.94,
+      potassium_sulfate_common: 1.42,
+      icl_pekacid_pk_acid: 1.48
+    };
+    const volume = 10;
+    const fertilizerList = Object.keys(formula).map(
+      id => window.FertilizerCore.FERTILIZERS.find(f => f.id === id)
+    );
+    assert(fertilizerList.every(Boolean), 'All 6 fertilizers should be found');
+
+    const achieved = window.FertilizerCore.accumulateAchievedPPM(fertilizerList, formula, volume);
+
+    // Nutrient Concentrations (PPM)
+    assertApprox(achieved.N_total, 159.25, 1, 'N ppm');
+    assertApprox(achieved.N_NO3, 144.87, 1, 'NO3-N ppm');
+    assertApprox(achieved.N_NH4, 14.38, 1, 'NH4-N ppm');
+    assertApprox(achieved.P, 38.76, 1, 'P ppm');
+    assertApprox(achieved.K, 175.37, 1, 'K ppm');
+    assertApprox(achieved.Ca, 139.65, 1, 'Ca ppm');
+    assertApprox(achieved.Mg, 38.85, 1, 'Mg ppm');
+    assertApprox(achieved.S, 75.36, 1, 'S ppm');
+
+    // Ion Balance: Cations 16.40 meq/L, Anions 16.40 meq/L, balanced (PeKacid contributes
+    // both H+ cation and H2PO4- anion, on top of the usual Ca2+/NH4+/K+/Mg2+/NO3-/SO4^2-)
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(formula, volume);
+    assertApprox(ionBalance.totalCations, 16.40, 0.1, 'Total cations meq/L');
+    assertApprox(ionBalance.totalAnions, 16.40, 0.1, 'Total anions meq/L');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0 (balanced)');
+
+    // Key Ratios
+    const ratios = window.FertilizerCore.calculateNutrientRatios(achieved);
+    const npk = ratios.find(r => r.name === 'N : P : K');
+    const npkOxide = ratios.find(r => r.name === 'N : P₂O₅ : K₂O');
+    const nk = ratios.find(r => r.name === 'N : K');
+    const no3nh4 = ratios.find(r => r.name === 'NO₃ : NH₄');
+
+    assert(npk, 'Should have N:P:K ratio');
+    assertEqual(npk.ratio, '4.11 : 1 : 4.52', 'N:P:K ratio string');
+    assert(npkOxide, 'Should have N:P2O5:K2O ratio');
+    assertEqual(npkOxide.ratio, '1.79 : 1 : 2.38', 'N:P2O5:K2O ratio string');
+    assert(nk, 'Should have N:K ratio');
+    assertEqual(nk.ratio, '1 : 1.1', 'N:K ratio string');
+    assert(no3nh4, 'Should have NO3:NH4 ratio');
+    assertEqual(no3nh4.ratio, '10.08 : 1', 'NO3:NH4 ratio string');
   });
 
   // ==========================================================================
@@ -331,6 +421,16 @@
     assert(result.feasible, 'Should be feasible');
     assertApprox(result.predictedEC, 1.5, 0.2, 'EC should be close to target');
     assert(result.dosing.A > 0, 'Tank A dosing > 0');
+
+    // At this EC, calcium nitrate's fixed N:Ca composition should land on N~436.7, Ca~535.3.
+    assertApprox(result.achieved.N, 436.7, 15, 'Achieved N ppm');
+    assertApprox(result.achieved.Ca, 535.3, 15, 'Achieved Ca ppm');
+
+    const formula = finalFormulaFromTanksDosing(tanks, result.dosing);
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(formula, 1);
+    assertApprox(ionBalance.totalCations, 28.7, 1, 'Total cations meq/L');
+    assertApprox(ionBalance.totalAnions, 28.7, 1, 'Total anions meq/L');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0 (single N-only fertilizer)');
   });
 
   test('solveDosing: Fails when EC below baseline', () => {
@@ -380,6 +480,26 @@
         assert(fertData.solubility_pct > 0, 'Solubility pct > 0');
       }
     }
+
+    // KNO3 alone at this target EC: achieved N~393.1, K~1102.7 (its fixed 1:2.8 N:K).
+    const dosing = result.dosing.find(d => d.targetId === 'test');
+    assertApprox(dosing.predicted.nutrients.N, 393.1, 15, 'Achieved N ppm');
+    assertApprox(dosing.predicted.nutrients.K, 1102.7, 30, 'Achieved K ppm');
+
+    const tanks = {};
+    const dosingML = {};
+    for (const [tankId, tank] of Object.entries(result.tanks)) {
+      tanks[tankId] = {};
+      for (const [fertId, fertData] of Object.entries(tank.fertilizers)) {
+        tanks[tankId][fertId] = fertData.grams_per_L;
+      }
+      dosingML[tankId] = dosing.tanks[tankId].mL_per_L;
+    }
+    const formula = finalFormulaFromTanksDosing(tanks, dosingML);
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(formula, 1);
+    assertApprox(ionBalance.totalCations, 28.4, 1, 'Total cations meq/L (K+)');
+    assertApprox(ionBalance.totalAnions, 28.4, 1, 'Total anions meq/L (NO3-)');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0 (single N-only source)');
   });
 
   test('calculateStockSolutions: 1:6:6 (N-P2O5-K2O) ratio via AN + MKP + K2SO4', async () => {
@@ -427,12 +547,20 @@
     assertApprox(achievedKN, elementalRatio.K / elementalRatio.N, 0.3, 'K:N ratio should match target closely (±0.3)');
     assertApprox(achievedPN, elementalRatio.P / elementalRatio.N, 0.3, 'P:N ratio should match target closely (±0.3)');
 
+    // Also check absolute achieved PPM (ratios alone can't catch an overall-scale bug).
+    assertApprox(achieved.N, 137.4, 10, 'Achieved N ppm');
+    assertApprox(achieved.P, 367.0, 25, 'Achieved P ppm');
+    assertApprox(achieved.K, 684.2, 40, 'Achieved K ppm');
+    assertApprox(achieved.S, 93.3, 15, 'Achieved S ppm (from K2SO4)');
+
     // Flatten grams_per_L across tanks (fertilizer -> tank assignment can shift with the solver).
     const gramsById = {};
-    for (const tank of Object.values(result.tanks)) {
+    const dosingML = {};
+    for (const [tankId, tank] of Object.entries(result.tanks)) {
       for (const [fertId, fertData] of Object.entries(tank.fertilizers)) {
         gramsById[fertId] = fertData.grams_per_L;
       }
+      dosingML[tankId] = dosing.tanks[tankId].mL_per_L;
     }
 
     const anGrams = gramsById['ammonium_nitrate_common'] || 0;
@@ -445,6 +573,108 @@
     assertApprox(anGrams, 43.7, 10, 'Ammonium Nitrate dosing should be ~43.7 g/L (±10)');
     assertApprox(mkpGrams, 174.8, 25, 'MKP dosing should be ~174.8 g/L (±25)');
     assertApprox(k2so4Grams, 59.3, 15, 'K2SO4 dosing should be ~59.3 g/L (±15)');
+
+    // Ion balance: NH4+ (AN) + K+ (MKP + K2SO4) as cations vs. NO3- (AN) + H2PO4- (MKP) +
+    // SO4^2- (K2SO4) as anions.
+    const finalFormula = finalFormulaFromTanksDosing(
+      Object.fromEntries(Object.entries(result.tanks).map(([id, t]) =>
+        [id, Object.fromEntries(Object.entries(t.fertilizers).map(([fid, fd]) => [fid, fd.grams_per_L]))]
+      )),
+      dosingML
+    );
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(finalFormula, 1);
+    assertApprox(ionBalance.totalCations, 23.2, 2, 'Total cations meq/L (NH4+ + K+)');
+    assertApprox(ionBalance.totalAnions, 23.2, 2, 'Total anions meq/L (NO3- + H2PO4- + SO4^2-)');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0');
+  });
+
+  test('optimizeFormula (oxide mode): 3:20:20 N-P2O5-K2O matches real calculator output', async () => {
+    // Reproduces the reverse-calc wizard's actual call shape (mode='oxide', volume=100L,
+    // concentration=100, targetEC via options) for KNO3 + MAP + MKP, and checks the result
+    // against a known-good calculator run (grams, achieved PPM, N forms, ion balance) -
+    // not just success/structure.
+    const ratio = { N: 3, P: 20, K: 20 };
+    const fertObjects = [
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'map_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'mkp_typical')
+    ].filter(Boolean);
+    assertEqual(fertObjects.length, 3, 'All 3 fertilizers should be found');
+
+    const result = await window.FertilizerCore.optimizeFormula(
+      ratio, 100, fertObjects, 100, 'oxide', { targetEC: 2.0, useMilp: true }
+    );
+
+    assertHasKey(result, 'formula', 'Should have formula');
+    assertHasKey(result, 'achieved', 'Should have achieved');
+
+    // Fertilizers to Add (100L): KNO3 69.71g, MAP 15.15g, MKP 127.97g
+    assertApprox(result.formula.potassium_nitrate_typical, 69.71, 2, 'Potassium Nitrate grams');
+    assertApprox(result.formula.map_typical, 15.15, 2, 'MAP grams');
+    assertApprox(result.formula.mkp_typical, 127.97, 3, 'MKP grams');
+
+    // Achieved PPM: N 113.7, P2O5 757.8, K2O 757.8
+    const a = result.achieved;
+    assertApprox(a.N_total, 113.7, 2, 'Achieved N ppm');
+    assertApprox(a.P2O5, 757.8, 5, 'Achieved P2O5 ppm');
+    assertApprox(a.K2O, 757.8, 5, 'Achieved K2O ppm');
+
+    // Nitrogen Forms: NO3-N 95.5, NH4-N 18.2 (~16% NH4)
+    assertApprox(a.N_NO3, 95.5, 2, 'Achieved NO3-N ppm');
+    assertApprox(a.N_NH4, 18.2, 2, 'Achieved NH4-N ppm');
+    assertApprox(a.N_NH4 / a.N_total, 0.16, 0.02, 'NH4 ratio should be ~16%');
+
+    // Ion Balance: Cations 17.61 meq/L, Anions 17.61 meq/L, balanced
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(result.formula, 100);
+    assertApprox(ionBalance.totalCations, 17.61, 0.1, 'Total cations meq/L');
+    assertApprox(ionBalance.totalAnions, 17.61, 0.1, 'Total anions meq/L');
+    assertApprox(ionBalance.imbalance, 0, 0.05, 'Ion balance should be ~0% (balanced)');
+  });
+
+  test('optimizeFormula: nh4PctTarget solves across a range with this 8-fertilizer set', async () => {
+    // Regression guard for a real HiGHS WASM crash ("null function or function signature
+    // mismatch") previously triggered by this exact combination: COMMON_FERTILIZERS plus
+    // Ammonium Nitrate, Potassium Sulfate (0-0-50), and Magnesium Nitrate (8 fertilizers
+    // total), with nh4PctTarget set to 15/20/30/35 - a mathematically feasible problem
+    // (verified by hand-solving the LP relaxation) that the solver nonetheless choked on.
+    // Root cause: our vendored highs.js/highs.wasm traced back to npm `highs@1.8.0`
+    // (HiGHS core ~1.8.x, from Nov 2024) - ~7 minor releases and a known MIP-presolve
+    // instability window behind. Fixed by updating the vendored solver to `highs@1.15.2`.
+    const targets = { N: 159.25, P: 38.76, K: 175.37, Ca: 139.65, Mg: 38.85, S: 75.36 };
+    const volume = 10;
+    const fertIds = [
+      ...window.FertilizerCore.COMMON_FERTILIZERS,
+      'ammonium_nitrate_common',
+      'potassium_sulfate_common',
+      'magnesium_nitrate_hexahydrate_typical'
+    ];
+    const fertObjects = fertIds.map(id => window.FertilizerCore.FERTILIZERS.find(f => f.id === id)).filter(Boolean);
+    assertEqual(fertObjects.length, 8, 'All 8 fertilizers should be found');
+
+    for (const nh4PctTarget of [15, 20, 25, 30, 35]) {
+      const result = await window.FertilizerCore.optimizeFormula(
+        targets, volume, fertObjects, 100, 'elemental', { useAbsoluteTargets: true, useMilp: true, nh4PctTarget }
+      );
+
+      assertHasKey(result, 'formula', `nh4=${nh4PctTarget}: should have formula`);
+      assert(Object.keys(result.formula).length > 0, `nh4=${nh4PctTarget}: should have fertilizers in formula`);
+
+      // Independently recompute NH4% from raw formula grams + fertilizer pct data,
+      // rather than trusting result.achieved - confirms the solver actually reached the
+      // requested NH4 fraction, not just that it returned without throwing.
+      let manualNH4 = 0, manualNtotal = 0;
+      for (const [fertId, grams] of Object.entries(result.formula)) {
+        const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
+        const nh4 = ((fert.pct.N_NH4 || 0) / 100 * 1000 * grams) / volume;
+        const no3 = ((fert.pct.N_NO3 || 0) / 100 * 1000 * grams) / volume;
+        const urea = ((fert.pct.N_Urea || 0) / 100 * 1000 * grams) / volume;
+        const hasForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
+        const nTotal = hasForms ? nh4 + no3 + urea : ((fert.pct.N_total || 0) / 100 * 1000 * grams) / volume;
+        manualNH4 += nh4;
+        manualNtotal += nTotal;
+      }
+      assertApprox(manualNH4 / manualNtotal * 100, nh4PctTarget, 1, `nh4=${nh4PctTarget}: achieved NH4% should match target (±1%)`);
+    }
   });
 
   // ==========================================================================
@@ -482,6 +712,19 @@
     assertApprox(a.Mg / a.N_total, 0.5 / 3, 0.02, 'Mg:N should match target closely (Mg has no conflicting source)');
     assertApprox(a.Ca / a.N_total, 0.98, 0.15, 'Ca:N overshoots target 2/3 by ~47% since CaNO3 is the only Ca source');
     assertApprox(a.K / a.N_total, 0.98, 0.15, 'K:N overshoots target 2/3 in lockstep with Ca (shared KNO3/CaNO3 constraint)');
+
+    // Absolute achieved PPM (ratios alone can't catch an overall-scale bug).
+    assertApprox(a.N_total, 729.1, 20, 'Achieved N ppm');
+    assertApprox(a.P, 243.0, 15, 'Achieved P ppm');
+    assertApprox(a.K, 713.9, 40, 'Achieved K ppm');
+    assertApprox(a.Ca, 713.9, 40, 'Achieved Ca ppm');
+    assertApprox(a.Mg, 121.5, 10, 'Achieved Mg ppm');
+
+    // Ion balance: Ca2+ + NH4+ + K+ + Mg2+ cations vs. NO3- + H2PO4- + SO4^2- anions.
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(result.formula, 1);
+    assertApprox(ionBalance.totalCations, 66.7, 5, 'Total cations meq/L');
+    assertApprox(ionBalance.totalAnions, 66.7, 5, 'Total anions meq/L');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0');
   });
 
   test('Regression: getElementalContributionPerGram works correctly', () => {
@@ -549,6 +792,23 @@
     const dosing = result.dosing.find(d => d.targetId === 'test');
     const achieved = dosing.predicted.nutrients;
     assertApprox(achieved.K / achieved.N, 2.8, 0.1, 'K:N ratio should match KNO3s fixed composition (±0.1)');
+    assertApprox(achieved.N, 196.5, 15, 'Achieved N ppm');
+    assertApprox(achieved.K, 551.4, 30, 'Achieved K ppm');
+
+    const tanks = {};
+    const dosingML = {};
+    for (const [tankId, tank] of Object.entries(result.tanks)) {
+      tanks[tankId] = {};
+      for (const [fertId, fertData] of Object.entries(tank.fertilizers)) {
+        tanks[tankId][fertId] = fertData.grams_per_L;
+      }
+      dosingML[tankId] = dosing.tanks[tankId].mL_per_L;
+    }
+    const finalFormula = finalFormulaFromTanksDosing(tanks, dosingML);
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(finalFormula, 1);
+    assertApprox(ionBalance.totalCations, 14.2, 1.5, 'Total cations meq/L (K+)');
+    assertApprox(ionBalance.totalAnions, 14.2, 1.5, 'Total anions meq/L (NO3-)');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0 (single N-only source)');
   });
 
   // ==========================================================================
@@ -632,6 +892,22 @@
     assert(result !== null, 'Result should not be null');
     assertHasKey(result, 'formula', 'Should have formula');
     assertHasKey(result, 'achieved', 'Should have achieved');
+
+    // Same scenario as "optimizeFormula still works for single ratio" above - see that test
+    // for why Ca/K overshoot ~47% while P/Mg match exactly. Checked again here since this
+    // test exists as its own regression guard against optimizeFormula returning malformed
+    // results (e.g. NaNs) independent of that one.
+    const a = result.achieved;
+    assertApprox(a.N_total, 729.1, 20, 'Achieved N ppm');
+    assertApprox(a.P, 243.0, 15, 'Achieved P ppm');
+    assertApprox(a.K, 713.9, 40, 'Achieved K ppm');
+    assertApprox(a.Ca, 713.9, 40, 'Achieved Ca ppm');
+    assertApprox(a.Mg, 121.5, 10, 'Achieved Mg ppm');
+
+    const ionBalance = window.FertilizerCore.calculateIonBalanceCore(result.formula, 1);
+    assertApprox(ionBalance.totalCations, 66.7, 5, 'Total cations meq/L');
+    assertApprox(ionBalance.totalAnions, 66.7, 5, 'Total anions meq/L');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0');
   });
 
   test('Regression: OXIDE_CONVERSIONS are accurate', () => {
