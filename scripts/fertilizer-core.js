@@ -19,6 +19,21 @@ globalThis.FertilizerCore = globalThis.FertilizerCore || {};
 let _cachedHighsInstance = null;
 let _highsLoadingPromise = null;
 
+// Determine base path for a HiGHS WASM asset - handle both file:// and http(s):// protocols.
+// Exposed on the namespace (rather than kept as a closure) so it's directly unit-testable
+// without needing a real fallback file on disk to exercise it through an actual solver load.
+globalThis.FertilizerCore._getWasmPath = function(filename) {
+  // Try to find the highs.js script and get its directory
+  const scripts = document.getElementsByTagName('script');
+  for (const script of scripts) {
+    if (script.src?.includes('highs.js')) {
+      return script.src.replace('highs.js', filename);
+    }
+  }
+  // Fallback to absolute path for web server
+  return `/assets/vendor/highs/${filename}`;
+};
+
 /**
  * Get or initialize the HiGHS solver instance (with caching)
  * @param {Function} onProgress - Optional callback for progress updates: (status: string) => void
@@ -46,21 +61,8 @@ globalThis.FertilizerCore.getHighsInstance = async function(onProgress) {
     onProgress('downloading');
   }
 
-  // Determine base path for WASM file - handle both file:// and http(s):// protocols
-  const getWasmPath = (filename) => {
-    // Try to find the highs.js script and get its directory
-    const scripts = document.getElementsByTagName('script');
-    for (const script of scripts) {
-      if (script.src?.includes('highs.js')) {
-        return script.src.replace('highs.js', filename);
-      }
-    }
-    // Fallback to absolute path for web server
-    return `/assets/vendor/highs/${filename}`;
-  };
-
   _highsLoadingPromise = highsFactory({
-    locateFile: (f) => getWasmPath(f)
+    locateFile: (f) => globalThis.FertilizerCore._getWasmPath(f)
   }).then(instance => {
     _cachedHighsInstance = instance;
     _highsLoadingPromise = null;
