@@ -2660,84 +2660,6 @@ globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
   };
 };
 
-/**
- * Mode A (alternative): Optimize separately for each target, then try to merge
- * @param {Object} options - Same as calculateStockSolutions
- * @returns {Promise<Object>} StockPlan
- */
-globalThis.FertilizerCore.calculateStockSolutionsModeA = async function(options) {
-  const {
-    targets,
-    availableFertilizers,
-    stockConcentration = 100,
-    stockTankVolumeL = 20,
-    baselineEC: defaultBaselineEC = 0
-  } = options;
-
-  // For each target, optimize independently
-  const perTargetResults = [];
-  const fertObjects = availableFertilizers
-    .map(id => this.FERTILIZERS.find(f => f.id === id))
-    .filter(Boolean);
-
-  for (const target of targets) {
-    const baselineEC = target.baselineEC ?? defaultBaselineEC;
-    const effectiveEC = target.targetEC - baselineEC;
-
-    const optimResult = await this.optimizeFormula(
-      target.ratio,
-      1,
-      fertObjects,
-      effectiveEC * 50,
-      'elemental',
-      { useMilp: true, targetEC: effectiveEC }
-    );
-
-    perTargetResults.push({
-      target,
-      formula: optimResult.formula,
-      achieved: optimResult.achieved
-    });
-  }
-
-  // For Mode A, we return separate stock plans per target
-  const plans = [];
-  for (const result of perTargetResults) {
-    const tankAssignment = this.assignToTanks(result.formula, 2);
-    const tanks = {};
-
-    for (const [tankId, tankFormula] of Object.entries(tankAssignment)) {
-      if (!tankFormula || Object.keys(tankFormula).length === 0) continue;
-
-      tanks[tankId] = { id: tankId, fertilizers: {} };
-      for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
-        const stock_gL = gramsPerFinalL * stockConcentration;
-        tanks[tankId].fertilizers[fertId] = {
-          grams_per_L: stock_gL,
-          grams_total: stock_gL * stockTankVolumeL
-        };
-      }
-    }
-
-    plans.push({
-      targetId: result.target.id,
-      tanks,
-      dosing: { A: { mL_per_L: 1000 / stockConcentration }, B: { mL_per_L: 1000 / stockConcentration } }
-    });
-  }
-
-  return {
-    success: true,
-    mode: 'A',
-    plans,
-    meta: {
-      concentrationFactor: stockConcentration,
-      tankVolumeL: stockTankVolumeL,
-      baselineEC: defaultBaselineEC
-    }
-  };
-};
-
 // =============================================================================
 // EXPORTS SUMMARY
 // =============================================================================
@@ -2751,7 +2673,7 @@ globalThis.FertilizerCore.calculateStockSolutionsModeA = async function(options)
 // Ratios: calculateNutrientRatios
 // Optimization: solveMilpBrowser, solveNonNegativeLeastSquares, pruneSolution, optimizeFormula
 // Stock Solutions: assignToTanks, checkTankFeasibility, calculateAchievedPPM, checkRatioMatch,
-//                  solveDosing, calculateStockSolutions, calculateStockSolutionsModeA
+//                  solveDosing, calculateStockSolutions
 //
 // Copy Text Builders (in fertilizer-copy.js):
 //   buildTankCopyText, buildTwoTankCopyText, buildGramsToPpmCopyText, buildFormulaCopyText, buildReverseCopyText
