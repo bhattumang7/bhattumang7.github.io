@@ -466,6 +466,29 @@ function getRatio(values, names, decimals = 2) {
   };
 }
 
+function _pushRatioIfApplicable(ratios, condition, values, labels) {
+  if (!condition) return;
+  const r = getRatio(values, labels);
+  if (r) ratios.push(r);
+}
+
+// K:Ca:Mg expressed on a meq/L (charge-equivalent) basis rather than mass basis.
+function _pushKCaMgMeqRatio(ratios, results) {
+  if (!((results.K || 0) > 0 && (results.Ca || 0) > 0 && (results.Mg || 0) > 0)) return;
+
+  const kMeq = (results.K || 0) / 39.1;
+  const caMeq = (results.Ca || 0) * 2 / 40.08;
+  const mgMeq = (results.Mg || 0) * 2 / 24.31;
+
+  const kcamgMeq = getRatio([kMeq, caMeq, mgMeq], ['K', 'Ca', 'Mg']);
+  if (kcamgMeq) {
+    kcamgMeq.name = 'K : Ca : Mg (meq/L basis)';
+    kcamgMeq.values = [kMeq, caMeq, mgMeq];
+    kcamgMeq.unit = 'meq/L';
+    ratios.push(kcamgMeq);
+  }
+}
+
 globalThis.FertilizerCore.calculateNutrientRatios = function(results) {
   const ratios = [];
 
@@ -477,44 +500,16 @@ globalThis.FertilizerCore.calculateNutrientRatios = function(results) {
   const npkOxide = getRatio([results.N_total || 0, results.P2O5 || 0, results.K2O || 0], ['N', 'P₂O₅', 'K₂O']);
   if (npkOxide) ratios.push(npkOxide);
 
-  // N:K ratio
-  if ((results.N_total || 0) > 0 && (results.K || 0) > 0) {
-    const nk = getRatio([results.N_total || 0, results.K || 0], ['N', 'K']);
-    if (nk) ratios.push(nk);
-  }
+  _pushRatioIfApplicable(ratios, (results.N_total || 0) > 0 && (results.K || 0) > 0,
+    [results.N_total || 0, results.K || 0], ['N', 'K']);
+  _pushRatioIfApplicable(ratios, (results.N_NO3 || 0) > 0 || (results.N_NH4 || 0) > 0,
+    [results.N_NO3 || 0, results.N_NH4 || 0], ['NO₃', 'NH₄']);
+  _pushRatioIfApplicable(ratios, (results.Ca || 0) > 0 && (results.Mg || 0) > 0,
+    [results.Ca || 0, results.Mg || 0], ['Ca', 'Mg']);
+  _pushRatioIfApplicable(ratios, (results.K || 0) > 0 && (results.Ca || 0) > 0,
+    [results.K || 0, results.Ca || 0], ['K', 'Ca']);
 
-  // NO3:NH4 ratio
-  if ((results.N_NO3 || 0) > 0 || (results.N_NH4 || 0) > 0) {
-    const no3nh4 = getRatio([results.N_NO3 || 0, results.N_NH4 || 0], ['NO₃', 'NH₄']);
-    if (no3nh4) ratios.push(no3nh4);
-  }
-
-  // Ca:Mg ratio
-  if ((results.Ca || 0) > 0 && (results.Mg || 0) > 0) {
-    const camg = getRatio([results.Ca || 0, results.Mg || 0], ['Ca', 'Mg']);
-    if (camg) ratios.push(camg);
-  }
-
-  // K:Ca ratio
-  if ((results.K || 0) > 0 && (results.Ca || 0) > 0) {
-    const kca = getRatio([results.K || 0, results.Ca || 0], ['K', 'Ca']);
-    if (kca) ratios.push(kca);
-  }
-
-  // K:Ca:Mg ratio in meq/L
-  if ((results.K || 0) > 0 && (results.Ca || 0) > 0 && (results.Mg || 0) > 0) {
-    const kMeq = (results.K || 0) / 39.1;
-    const caMeq = (results.Ca || 0) * 2 / 40.08;
-    const mgMeq = (results.Mg || 0) * 2 / 24.31;
-
-    const kcamgMeq = getRatio([kMeq, caMeq, mgMeq], ['K', 'Ca', 'Mg']);
-    if (kcamgMeq) {
-      kcamgMeq.name = 'K : Ca : Mg (meq/L basis)';
-      kcamgMeq.values = [kMeq, caMeq, mgMeq];
-      kcamgMeq.unit = 'meq/L';
-      ratios.push(kcamgMeq);
-    }
-  }
+  _pushKCaMgMeqRatio(ratios, results);
 
   return ratios;
 };
@@ -522,6 +517,42 @@ globalThis.FertilizerCore.calculateNutrientRatios = function(results) {
 // =============================================================================
 // OPTIMIZATION ALGORITHMS
 // =============================================================================
+
+// Per-1-gram nutrient contribution in the LP model's own units (N_total, oxide P2O5/K2O, plus
+// Si) - a different shape than getElementalContributionPerGram (elemental only, no Si), used
+// only to build the MILP's per-fertilizer coefficients.
+// Dispatch table mirroring ACHIEVED_PPM_HANDLERS's classification rules, but for the LP
+// model's own per-gram coefficient shape (N_total/oxide P2O5,K2O only, no separate P/K/NO3/NH4).
+const MILP_PER_GRAM_HANDLERS = {
+  N_NO3: (c, ppm) => { c.N_total += ppm; },
+  N_NH4: (c, ppm) => { c.N_total += ppm; },
+  N_Urea: (c, ppm) => { c.N_total += ppm; },
+  N_total: (c, ppm, ctx) => { if (!ctx.hasNForms) c.N_total += ppm; },
+  P2O5: (c, ppm) => { c.P2O5 += ppm; },
+  P: (c, ppm, ctx) => { c.P2O5 += ppm * ctx.P_to_P2O5; },
+  K2O: (c, ppm) => { c.K2O += ppm; },
+  K: (c, ppm, ctx) => { c.K2O += ppm * ctx.K_to_K2O; },
+  Ca: (c, ppm) => { c.Ca += ppm; },
+  CaO: (c, ppm, ctx) => { c.Ca += ppm * ctx.OXIDE_CONVERSIONS.CaO_to_Ca; },
+  Mg: (c, ppm) => { c.Mg += ppm; },
+  MgO: (c, ppm, ctx) => { c.Mg += ppm * ctx.OXIDE_CONVERSIONS.MgO_to_Mg; },
+  S: (c, ppm) => { c.S += ppm; },
+  SO3: (c, ppm, ctx) => { c.S += ppm * ctx.OXIDE_CONVERSIONS.SO3_to_S; },
+  SiO2: (c, ppm) => { c.Si += ppm * 0.46744; },
+  SiOH4: (c, ppm) => { c.Si += ppm * 0.2922; },
+  Si: (c, ppm) => { c.Si += ppm; }
+};
+
+function _milpPerGramContrib(fert, volume, OXIDE_CONVERSIONS, P_to_P2O5, K_to_K2O) {
+  const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+  const ctx = { OXIDE_CONVERSIONS, P_to_P2O5, K_to_K2O, hasNForms: Boolean(fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea) };
+  Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+    const ppm = (1 * 1000 * (pct / 100)) / volume;
+    const handler = MILP_PER_GRAM_HANDLERS[nutrient];
+    if (handler) handler(c, ppm, ctx);
+  });
+  return c;
+}
 
 /**
  * MILP solver helper using highs.js + lp-model
@@ -630,15 +661,19 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
     model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
   });
 
-  // Add PeKacid limit constraint if specified (and > 0)
-  // The limit is in g/L, so target grams = limit * volume
-  // We add BOTH a max constraint AND a minimum incentive via slack variable
-  let pekacidSlack = null;
-  let pekacidTargetGrams = 0;
-  const hasPekacid = x[PEKACID_ID] !== undefined;
-  devLog(`PeKacid in fertilizers: ${hasPekacid}, limit > 0: ${pekacidMaxLimit > 0}`);
-  if (pekacidMaxLimit > 0 && hasPekacid) {
-    pekacidTargetGrams = pekacidMaxLimit * volume;
+  // Add PeKacid limit constraint if specified (and > 0): a max constraint AND a minimum
+  // incentive via slack variable. Returns { pekacidSlack, pekacidTargetGrams }.
+  function addPekacidConstraint() {
+    const hasPekacid = x[PEKACID_ID] !== undefined;
+    devLog(`PeKacid in fertilizers: ${hasPekacid}, limit > 0: ${pekacidMaxLimit > 0}`);
+    if (!(pekacidMaxLimit > 0 && hasPekacid)) {
+      if (!hasPekacid && pekacidMaxLimit > 0) {
+        devLog('WARNING: PeKacid limit set but PeKacid not in selected fertilizers!', 'warn');
+      }
+      return { pekacidSlack: null, pekacidTargetGrams: 0 };
+    }
+
+    const pekacidTargetGrams = pekacidMaxLimit * volume;
     devLog(`Adding PeKacid constraints: maxGrams = ${pekacidTargetGrams}g`);
     // Maximum constraint - PeKacid can be used up to the limit
     // The low priority coefficient (0.01) in the objective encourages using it first
@@ -646,34 +681,32 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
     model.addConstr([[1, x[PEKACID_ID]]], '<=', pekacidTargetGrams);
     // Slack variable to encourage filling PeKacid up to the cap.
     // x + slack = target, minimize slack to push x toward the cap when feasible.
-    pekacidSlack = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_pekacid' });
+    const pekacidSlack = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_pekacid' });
     model.addConstr([[1, x[PEKACID_ID]], [1, pekacidSlack]], '=', pekacidTargetGrams);
     devLog('PeKacid capped at maximum (can use less if needed for ratios)');
-  } else if (!hasPekacid && pekacidMaxLimit > 0) {
-    devLog('WARNING: PeKacid limit set but PeKacid not in selected fertilizers!', 'warn');
+    return { pekacidSlack, pekacidTargetGrams };
   }
+  const { pekacidSlack, pekacidTargetGrams } = addPekacidConstraint();
 
-  // --- NH4 fraction constraint ---
-  // If nh4PctTarget is set (0–100), add a soft constraint: Sum((nh4_i - tau*ntotal_i)*x_i) ≈ 0
-  // Implemented as slack variables with a high penalty so the solver tries hard but won't become infeasible
-  let sNH4Plus = null, sNH4Minus = null;
-  const hasNH4Target = typeof nh4PctTarget === 'number' && nh4PctTarget >= 0 && nh4PctTarget <= 100
-    && (targets.N_total || 0) > 0;
-  if (hasNH4Target) {
+  // If nh4PctTarget is set (0-100), add a soft constraint: Sum((nh4_i - tau*ntotal_i)*x_i) ~ 0,
+  // implemented as slack variables with a high penalty so the solver tries hard but won't
+  // become infeasible. Returns { sNH4Plus, sNH4Minus } (both null if it doesn't apply).
+  function addNh4FractionConstraint() {
+    const hasNH4Target = typeof nh4PctTarget === 'number' && nh4PctTarget >= 0 && nh4PctTarget <= 100
+      && (targets.N_total || 0) > 0;
+    if (!hasNH4Target) return { sNH4Plus: null, sNH4Minus: null };
+
     devLog(`NH4 fraction target: ${nh4PctTarget}% of total N`);
     const tau = nh4PctTarget / 100;
-    sNH4Plus  = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_nh4_plus' });
-    sNH4Minus = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_nh4_minus' });
+    const sNH4Plus  = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_nh4_plus' });
+    const sNH4Minus = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 's_nh4_minus' });
     const nh4Terms = [];
     fertilizers.forEach(f => {
       const hasNForms = f.pct.N_NO3 || f.pct.N_NH4;
       const nh4PerGram = ((f.pct.N_NH4 || 0) / 100 * 1000) / volume;
-      let ntPerGram;
-      if (hasNForms) {
-        ntPerGram = (((f.pct.N_NO3 || 0) + (f.pct.N_NH4 || 0) + (f.pct.N_Urea || 0)) / 100 * 1000) / volume;
-      } else {
-        ntPerGram = ((f.pct.N_total || 0) / 100 * 1000) / volume;
-      }
+      const ntPerGram = hasNForms
+        ? (((f.pct.N_NO3 || 0) + (f.pct.N_NH4 || 0) + (f.pct.N_Urea || 0)) / 100 * 1000) / volume
+        : ((f.pct.N_total || 0) / 100 * 1000) / volume;
       const coeff = nh4PerGram - tau * ntPerGram;
       if (Math.abs(coeff) > 1e-9) {
         nh4Terms.push([coeff, x[f.id]]);
@@ -682,47 +715,12 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
     if (nh4Terms.length > 0) {
       model.addConstr([...nh4Terms, [-1, sNH4Plus], [1, sNH4Minus]], '=', 0);
     }
+    return { sNH4Plus, sNH4Minus };
   }
+  const { sNH4Plus, sNH4Minus } = addNh4FractionConstraint();
+  const hasNH4Target = sNH4Plus !== null;
 
-  function perGramContrib(fert) {
-    const c = { N_total: 0, P2O5: 0, K2O: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
-    Object.entries(fert.pct).forEach(([nutrient, pct]) => {
-      const ppm = (1 * 1000 * (pct / 100)) / volume;
-      if (nutrient === 'N_NO3' || nutrient === 'N_NH4' || nutrient === 'N_Urea') {
-        c.N_total += ppm;
-      } else if (nutrient === 'N_total') {
-        if (!hasNForms) c.N_total += ppm;
-      } else if (nutrient === 'P2O5') {
-        c.P2O5 += ppm;
-      } else if (nutrient === 'P') {
-        c.P2O5 += ppm * P_to_P2O5;
-      } else if (nutrient === 'K2O') {
-        c.K2O += ppm;
-      } else if (nutrient === 'K') {
-        c.K2O += ppm * K_to_K2O;
-      } else if (nutrient === 'Ca') {
-        c.Ca += ppm;
-      } else if (nutrient === 'CaO') {
-        c.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
-      } else if (nutrient === 'Mg') {
-        c.Mg += ppm;
-      } else if (nutrient === 'MgO') {
-        c.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
-      } else if (nutrient === 'S') {
-        c.S += ppm;
-      } else if (nutrient === 'SO3') {
-        c.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
-      } else if (nutrient === 'SiO2') {
-        c.Si += ppm * 0.46744;
-      } else if (nutrient === 'SiOH4') {
-        c.Si += ppm * 0.2922;
-      } else if (nutrient === 'Si') {
-        c.Si += ppm;
-      }
-    });
-    return c;
-  }
+  const perGramContrib = (fert) => _milpPerGramContrib(fert, volume, OXIDE_CONVERSIONS, P_to_P2O5, K_to_K2O);
 
   nutrients.forEach(n => {
     const terms = [];
@@ -836,7 +834,7 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
   }
 
   // Log PeKacid result if it was constrained
-  if (pekacidMaxLimit > 0 && hasPekacid) {
+  if (pekacidTargetGrams > 0) {
     const pekacidGrams = formula[PEKACID_ID] || 0;
     const pekacidGPerL = pekacidGrams / volume;
     devLog(`RESULT: PeKacid = ${pekacidGrams.toFixed(3)}g (${pekacidGPerL.toFixed(4)} g/L), max allowed was ${pekacidTargetGrams}g (${pekacidMaxLimit} g/L)`);
@@ -852,6 +850,57 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
 /**
  * Simple weighted projected gradient NNLS solver for fertilizer grams
  */
+function _nnlsResidual(matrix, x, target, w) {
+  const rows = matrix.length;
+  const cols = target.length;
+  const Ax = new Array(cols).fill(0);
+  for (let i = 0; i < rows; i++) {
+    const xi = x[i];
+    if (xi === 0) continue;
+    const row = matrix[i];
+    for (let j = 0; j < cols; j++) {
+      Ax[j] += row[j] * xi;
+    }
+  }
+
+  const residual = new Array(cols);
+  let error = 0;
+  for (let j = 0; j < cols; j++) {
+    residual[j] = Ax[j] - target[j];
+    const scaled = residual[j] * w[j];
+    error += scaled * scaled;
+  }
+  return { residual, error };
+}
+
+function _nnlsLearningRate(iter, iterations) {
+  if (iter < iterations * 0.5) return 0.0006;
+  if (iter < iterations * 0.8) return 0.0003;
+  return 0.00015;
+}
+
+function _nnlsGradientStep(matrix, x, residual, w2, lr) {
+  const rows = matrix.length;
+  const cols = residual.length;
+  const reg = 1e-4;
+
+  const grad = new Array(rows).fill(0);
+  for (let i = 0; i < rows; i++) {
+    const row = matrix[i];
+    let g = 0;
+    for (let j = 0; j < cols; j++) {
+      g += row[j] * residual[j] * w2[j];
+    }
+    grad[i] = g + reg * x[i];
+  }
+
+  const next = new Array(rows);
+  for (let i = 0; i < rows; i++) {
+    next[i] = Math.max(0, x[i] - lr * grad[i]);
+  }
+  return next;
+}
+
 globalThis.FertilizerCore.solveNonNegativeLeastSquares = function(matrix, target, iterations = 1500, weights = []) {
   const rows = matrix.length;
   const cols = target.length;
@@ -867,52 +916,15 @@ globalThis.FertilizerCore.solveNonNegativeLeastSquares = function(matrix, target
   const w2 = w.map(v => v * v);
 
   for (let iter = 0; iter < iterations; iter++) {
-    const Ax = new Array(cols).fill(0);
-    for (let i = 0; i < rows; i++) {
-      const xi = x[i];
-      if (xi === 0) continue;
-      const row = matrix[i];
-      for (let j = 0; j < cols; j++) {
-        Ax[j] += row[j] * xi;
-      }
-    }
-
-    const residual = new Array(cols);
-    let error = 0;
-    for (let j = 0; j < cols; j++) {
-      residual[j] = Ax[j] - target[j];
-      const scaled = residual[j] * w[j];
-      error += scaled * scaled;
-    }
+    const { residual, error } = _nnlsResidual(matrix, x, target, w);
 
     if (error < bestError) {
       bestError = error;
       bestX = x.slice();
     }
 
-    let lr;
-    if (iter < iterations * 0.5) {
-      lr = 0.0006;
-    } else if (iter < iterations * 0.8) {
-      lr = 0.0003;
-    } else {
-      lr = 0.00015;
-    }
-    const reg = 1e-4;
-
-    const grad = new Array(rows).fill(0);
-    for (let i = 0; i < rows; i++) {
-      const row = matrix[i];
-      let g = 0;
-      for (let j = 0; j < cols; j++) {
-        g += row[j] * residual[j] * w2[j];
-      }
-      grad[i] = g + reg * x[i];
-    }
-
-    for (let i = 0; i < rows; i++) {
-      x[i] = Math.max(0, x[i] - lr * grad[i]);
-    }
+    const lr = _nnlsLearningRate(iter, iterations);
+    x = _nnlsGradientStep(matrix, x, residual, w2, lr);
   }
 
   return { x: bestX, error: bestError };
@@ -1626,6 +1638,45 @@ globalThis.FertilizerCore.getCompatibilityTag = function(fertId) {
  * @param {string} input - Ratio string
  * @returns {Object} { ratio: {N,P,K,Ca,Mg,S}, error?: string }
  */
+// Labeled format: "N2:P1:K3:Ca0.5". Mutates `ratio` in place; returns an { error } object if
+// a part is malformed, otherwise undefined.
+function _parseLabeledRatio(cleaned, ratio) {
+  const labelMap = { N: 'N', P: 'P', K: 'K', CA: 'Ca', MG: 'Mg', S: 'S' };
+  const parts = cleaned.split(':').filter(Boolean);
+  for (const part of parts) {
+    const match = /^([A-Za-z]+)([\d.]+)$/.exec(part);
+    if (!match) {
+      return { error: `Invalid labeled format: ${part}` };
+    }
+    const label = match[1].toUpperCase();
+    const value = Number.parseFloat(match[2]);
+    if (Number.isNaN(value)) {
+      return { error: `Invalid number: ${match[2]}` };
+    }
+    const key = labelMap[label];
+    if (!key) {
+      return { error: `Unknown nutrient label: ${label}` };
+    }
+    ratio[key] = value;
+  }
+  return undefined;
+}
+
+// Positional format: "2:1:3" or "2:1:3:1:0.5" (N:P:K:Ca:Mg:S). Mutates `ratio` in place;
+// returns an { error } object if a part is malformed, otherwise undefined.
+function _parsePositionalRatio(cleaned, ratio) {
+  const parts = cleaned.split(':');
+  const order = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
+  for (let i = 0; i < parts.length && i < order.length; i++) {
+    const value = Number.parseFloat(parts[i]);
+    if (Number.isNaN(value)) {
+      return { error: `Invalid number at position ${i + 1}: ${parts[i]}` };
+    }
+    ratio[order[i]] = value;
+  }
+  return undefined;
+}
+
 globalThis.FertilizerCore.parseRatio = function(input) {
   if (!input || typeof input !== 'string') {
     return { error: 'Invalid input: expected ratio string' };
@@ -1638,45 +1689,11 @@ globalThis.FertilizerCore.parseRatio = function(input) {
 
   const ratio = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
 
-  // Check if labeled format (contains letters before numbers)
-  const labeledPattern = /^([A-Za-z]+[\d.]+:?)+$/;
-  const isLabeled = labeledPattern.test(cleaned);
+  // Labeled format has letters before numbers; positional format is just numbers.
+  const isLabeled = /^([A-Za-z]+[\d.]+:?)+$/.test(cleaned);
+  const parseError = isLabeled ? _parseLabeledRatio(cleaned, ratio) : _parsePositionalRatio(cleaned, ratio);
 
-  if (isLabeled) {
-    // Labeled format: "N2:P1:K3:Ca0.5"
-    const parts = cleaned.split(':').filter(Boolean);
-    for (const part of parts) {
-      const match = /^([A-Za-z]+)([\d.]+)$/.exec(part);
-      if (!match) {
-        return { error: `Invalid labeled format: ${part}` };
-      }
-      const label = match[1].toUpperCase();
-      const value = Number.parseFloat(match[2]);
-      if (Number.isNaN(value)) {
-        return { error: `Invalid number: ${match[2]}` };
-      }
-      // Map common labels
-      const labelMap = { N: 'N', P: 'P', K: 'K', CA: 'Ca', MG: 'Mg', S: 'S' };
-      const key = labelMap[label];
-      if (!key) {
-        return { error: `Unknown nutrient label: ${label}` };
-      }
-      ratio[key] = value;
-    }
-  } else {
-    // Positional format: "2:1:3" or "2:1:3:1:0.5"
-    const parts = cleaned.split(':');
-    const order = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
-    for (let i = 0; i < parts.length && i < order.length; i++) {
-      const value = Number.parseFloat(parts[i]);
-      if (Number.isNaN(value)) {
-        return { error: `Invalid number at position ${i + 1}: ${parts[i]}` };
-      }
-      ratio[order[i]] = value;
-    }
-  }
-
-  return { ratio };
+  return parseError || { ratio };
 };
 
 /**
@@ -1689,58 +1706,48 @@ globalThis.FertilizerCore.parseRatio = function(input) {
  * @param {number} volume - Liters
  * @returns {Object} achieved PPM by nutrient key
  */
+// Dispatch table for accumulateAchievedPPM: how each raw fert.pct key contributes to the
+// achieved-PPM accumulator. Replaces a 15-branch if/else-if chain with an O(1) lookup so the
+// nutrient-classification rules read as data rather than control flow.
+const ACHIEVED_PPM_HANDLERS = {
+  N_NO3: (achieved, ppm) => { achieved.N_NO3 += ppm; achieved.N_total += ppm; },
+  N_NH4: (achieved, ppm) => { achieved.N_NH4 += ppm; achieved.N_total += ppm; },
+  N_Urea: (achieved, ppm) => { achieved.N_total += ppm; },
+  N_total: (achieved, ppm, ctx) => { if (!ctx.hasNForms) achieved.N_total += ppm; },
+  P2O5: (achieved, ppm, ctx) => { achieved.P2O5 += ppm; achieved.P += ppm * ctx.OXIDE_CONVERSIONS.P2O5_to_P; },
+  P: (achieved, ppm, ctx) => { achieved.P += ppm; achieved.P2O5 += ppm * ctx.P_to_P2O5; },
+  K2O: (achieved, ppm, ctx) => { achieved.K2O += ppm; achieved.K += ppm * ctx.OXIDE_CONVERSIONS.K2O_to_K; },
+  K: (achieved, ppm, ctx) => { achieved.K += ppm; achieved.K2O += ppm * ctx.K_to_K2O; },
+  Ca: (achieved, ppm) => { achieved.Ca += ppm; },
+  CaO: (achieved, ppm, ctx) => { achieved.Ca += ppm * ctx.OXIDE_CONVERSIONS.CaO_to_Ca; },
+  Mg: (achieved, ppm) => { achieved.Mg += ppm; },
+  MgO: (achieved, ppm, ctx) => { achieved.Mg += ppm * ctx.OXIDE_CONVERSIONS.MgO_to_Mg; },
+  S: (achieved, ppm) => { achieved.S += ppm; },
+  SO3: (achieved, ppm, ctx) => { achieved.S += ppm * ctx.OXIDE_CONVERSIONS.SO3_to_S; },
+  SiO2: (achieved, ppm) => { achieved.Si += ppm * 0.46744; },
+  SiOH4: (achieved, ppm) => { achieved.Si += ppm * 0.2922; },
+  Si: (achieved, ppm) => { achieved.Si += ppm; }
+};
+
 globalThis.FertilizerCore.accumulateAchievedPPM = function(fertilizerList, formula, volume) {
   const OXIDE_CONVERSIONS = this.OXIDE_CONVERSIONS;
-  const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
-  const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
+  const ctx = {
+    OXIDE_CONVERSIONS,
+    P_to_P2O5: 1 / OXIDE_CONVERSIONS.P2O5_to_P,
+    K_to_K2O: 1 / OXIDE_CONVERSIONS.K2O_to_K,
+    hasNForms: false
+  };
 
   const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
   fertilizerList.forEach(fert => {
     const grams = formula[fert.id] || 0;
     if (!grams) return;
-    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
+    ctx.hasNForms = Boolean(fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea);
     Object.entries(fert.pct).forEach(([nutrient, pct]) => {
       const ppm = (grams * 1000 * (pct / 100)) / volume;
-      if (nutrient === 'N_NO3') {
-        achieved.N_NO3 += ppm;
-        achieved.N_total += ppm;
-      } else if (nutrient === 'N_NH4') {
-        achieved.N_NH4 += ppm;
-        achieved.N_total += ppm;
-      } else if (nutrient === 'N_Urea') {
-        achieved.N_total += ppm;
-      } else if (nutrient === 'N_total') {
-        if (!hasNForms) achieved.N_total += ppm;
-      } else if (nutrient === 'P2O5') {
-        achieved.P2O5 += ppm;
-        achieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-      } else if (nutrient === 'P') {
-        achieved.P += ppm;
-        achieved.P2O5 += ppm * P_to_P2O5;
-      } else if (nutrient === 'K2O') {
-        achieved.K2O += ppm;
-        achieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-      } else if (nutrient === 'K') {
-        achieved.K += ppm;
-        achieved.K2O += ppm * K_to_K2O;
-      } else if (nutrient === 'Ca') {
-        achieved.Ca += ppm;
-      } else if (nutrient === 'CaO') {
-        achieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
-      } else if (nutrient === 'Mg') {
-        achieved.Mg += ppm;
-      } else if (nutrient === 'MgO') {
-        achieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
-      } else if (nutrient === 'S') {
-        achieved.S += ppm;
-      } else if (nutrient === 'SO3') {
-        achieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
-      } else if (nutrient === 'SiO2') {
-        achieved.Si += ppm * 0.46744;
-      } else if (nutrient === 'SiOH4') {
-        achieved.Si += ppm * 0.2922;
-      } else if (nutrient === 'Si') {
-        achieved.Si += ppm;
+      const handler = ACHIEVED_PPM_HANDLERS[nutrient];
+      if (handler) {
+        handler(achieved, ppm, ctx);
       } else if (achieved[nutrient] !== undefined) {
         achieved[nutrient] += ppm;
       }
@@ -1813,6 +1820,43 @@ globalThis.FertilizerCore.getElementalContributionPerGram = function(fert) {
  * @param {boolean} options.separateMg - If true, place Mg sources in Tank D when available
  * @returns {Object} { A: {...}, B: {...}, C?: {...}, D?: {...} }
  */
+// Assign one fertilizer's grams into the appropriate tank, mutating `tanks` in place.
+function _assignOneFertilizerToTank(tanks, fertId, grams, tag, numTanks, fertFlags) {
+  const { hasSignificantK, hasP } = fertFlags;
+
+  switch (tag) {
+    case 'calcium':
+      // Ca goes to Tank A (isolated from phosphate/sulfate)
+      tanks.A[fertId] = grams;
+      break;
+    case 'phosphate':
+      // Phosphate goes to Tank B
+      tanks.B[fertId] = grams;
+      break;
+    case 'silicate':
+      // Silicate goes to Tank D if 4 tanks, Tank C if 3 tanks, otherwise B
+      if (numTanks >= 4) {
+        tanks.D[fertId] = grams;
+      } else if (numTanks >= 3) {
+        tanks.C[fertId] = grams;
+      } else {
+        tanks.B[fertId] = grams;
+      }
+      break;
+    case 'sulfate':
+    case 'neutral':
+    default:
+      // With 3+ tanks, K-heavy sources (like K2SO4, KNO3) go to Tank C for independent
+      // control of P:K ratios across targets; everything else goes to Tank B
+      if (numTanks >= 3 && hasSignificantK && !hasP) {
+        tanks.C[fertId] = grams;
+      } else {
+        tanks.B[fertId] = grams;
+      }
+      break;
+  }
+}
+
 globalThis.FertilizerCore.assignToTanks = function(formula, numTanks = 2, options = {}) {
   const { separateMg = false } = options;
   const tanks = { A: {}, B: {} };
@@ -1836,37 +1880,7 @@ globalThis.FertilizerCore.assignToTanks = function(formula, numTanks = 2, option
       continue;
     }
 
-    switch (tag) {
-      case 'calcium':
-        // Ca goes to Tank A (isolated from phosphate/sulfate)
-        tanks.A[fertId] = grams;
-        break;
-      case 'phosphate':
-        // Phosphate goes to Tank B
-        tanks.B[fertId] = grams;
-        break;
-      case 'silicate':
-        // Silicate goes to Tank D if 4 tanks, Tank C if 3 tanks, otherwise B
-        if (numTanks >= 4) {
-          tanks.D[fertId] = grams;
-        } else if (numTanks >= 3) {
-          tanks.C[fertId] = grams;
-        } else {
-          tanks.B[fertId] = grams;
-        }
-        break;
-      case 'sulfate':
-      case 'neutral':
-      default:
-        // With 3+ tanks, K-heavy sources (like K2SO4, KNO3) go to Tank C for independent
-        // control of P:K ratios across targets; everything else goes to Tank B
-        if (numTanks >= 3 && hasSignificantK && !hasP) {
-          tanks.C[fertId] = grams;
-        } else {
-          tanks.B[fertId] = grams;
-        }
-        break;
-    }
+    _assignOneFertilizerToTank(tanks, fertId, grams, tag, numTanks, { hasSignificantK, hasP });
   }
 
   return tanks;
