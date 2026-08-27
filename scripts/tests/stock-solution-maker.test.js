@@ -302,9 +302,12 @@
 
     const achieved = window.FertilizerCore.calculateAchievedPPM(tanks, dosing);
 
-    assert(achieved.Ca > 0, 'Has Ca from Tank A');
-    assert(achieved.P > 0, 'Has P from Tank B');
-    assert(achieved.K > 0, 'Has K from Tank B');
+    // Tank A: 100 g/L CaNO3 stock × 10 mL/L dosing = 1 g/L equivalent -> N=155, Ca=190
+    // Tank B: 50 g/L MKP stock × 10 mL/L dosing = 0.5 g/L equivalent -> P=113.48, K=141.12
+    assertApprox(achieved.N, 155, 1, 'N ppm from Tank A');
+    assertApprox(achieved.Ca, 190, 1, 'Ca ppm from Tank A');
+    assertApprox(achieved.P, 113.48, 1, 'P ppm from Tank B');
+    assertApprox(achieved.K, 141.12, 1, 'K ppm from Tank B');
   });
 
   // ==========================================================================
@@ -379,6 +382,71 @@
     }
   });
 
+  test('calculateStockSolutions: 1:6:6 (N-P2O5-K2O) ratio via AN + MKP + K2SO4', async () => {
+    // "1:6:6" as a grower would write it is the standard N-P2O5-K2O (oxide) label - that's
+    // what the target ratio means in optimizeFormula's default 'oxide' mode. solveDosing
+    // (which calculateStockSolutions uses) has no such mode: it treats ratio.P/K as
+    // ELEMENTAL P/K directly. So the oxide ratio must be converted before use here, or the
+    // solver ends up targeting a very different (much more P/K-heavy) composition.
+    const P2O5_to_P = window.FertilizerCore.OXIDE_CONVERSIONS.P2O5_to_P;
+    const K2O_to_K = window.FertilizerCore.OXIDE_CONVERSIONS.K2O_to_K;
+    const elementalRatio = { N: 1, P: 6 * P2O5_to_P, K: 6 * K2O_to_K };
+
+    const options = {
+      targets: [
+        {
+          id: 'bloom',
+          ratio: elementalRatio,
+          targetEC: 2.0
+        }
+      ],
+      availableFertilizers: [
+        'ammonium_nitrate_common',
+        'mkp_typical',
+        'potassium_sulfate_common'
+      ],
+      stockConcentration: 100,
+      stockTankVolumeL: 20
+    };
+
+    const result = await window.FertilizerCore.calculateStockSolutions(options);
+
+    assert(result.success, 'Should succeed');
+
+    const dosing = result.dosing.find(d => d.targetId === 'bloom');
+    assert(dosing, 'Should have dosing for bloom target');
+
+    // This is a well-known bloom fertigation recipe (MKP + AN + K2SO4 for 1:6:6), so unlike
+    // ratios that are structurally unreachable with their fertilizer set, this one is
+    // achievable close to exactly - a modest tolerance is still used since it's MILP output,
+    // not a hand-solved linear system.
+    const achieved = dosing.predicted.nutrients;
+    const achievedKN = achieved.K / achieved.N;
+    const achievedPN = achieved.P / achieved.N;
+
+    assertApprox(achievedKN, elementalRatio.K / elementalRatio.N, 0.3, 'K:N ratio should match target closely (±0.3)');
+    assertApprox(achievedPN, elementalRatio.P / elementalRatio.N, 0.3, 'P:N ratio should match target closely (±0.3)');
+
+    // Flatten grams_per_L across tanks (fertilizer -> tank assignment can shift with the solver).
+    const gramsById = {};
+    for (const tank of Object.values(result.tanks)) {
+      for (const [fertId, fertData] of Object.entries(tank.fertilizers)) {
+        gramsById[fertId] = fertData.grams_per_L;
+      }
+    }
+
+    const anGrams = gramsById['ammonium_nitrate_common'] || 0;
+    const mkpGrams = gramsById['mkp_typical'] || 0;
+    const k2so4Grams = gramsById['potassium_sulfate_common'] || 0;
+
+    // Measured stock-solution dosing at this stockConcentration/volume/targetEC is
+    // ~43.7 g/L AN, ~174.8 g/L MKP, ~59.3 g/L K2SO4. Allow a tolerance band around each
+    // rather than pinning the exact MILP output.
+    assertApprox(anGrams, 43.7, 10, 'Ammonium Nitrate dosing should be ~43.7 g/L (±10)');
+    assertApprox(mkpGrams, 174.8, 25, 'MKP dosing should be ~174.8 g/L (±25)');
+    assertApprox(k2so4Grams, 59.3, 15, 'K2SO4 dosing should be ~59.3 g/L (±15)');
+  });
+
   // ==========================================================================
   // Regression Tests
   // ==========================================================================
@@ -403,6 +471,17 @@
     assertHasKey(result, 'formula', 'Should have formula');
     assertHasKey(result, 'achieved', 'Should have achieved');
     assert(Object.keys(result.formula).length > 0, 'Should have fertilizers in formula');
+
+    // These 4 fertilizers can't hit N:P:K:Ca:Mg = 3:1:2:2:0.5 exactly - Ca and N share a
+    // single source (CaNO3), so hitting N=3 exactly forces Ca (and, via KNO3, K) above their
+    // 2:1 target. The minimax objective spreads that error onto Ca and K equally (~47% over
+    // each) while still hitting P and Mg exactly - verify that documented trade-off rather
+    // than just checking the formula is non-empty.
+    const a = result.achieved;
+    assertApprox(a.P / a.N_total, 1 / 3, 0.05, 'P:N should match target closely (P has no conflicting source)');
+    assertApprox(a.Mg / a.N_total, 0.5 / 3, 0.02, 'Mg:N should match target closely (Mg has no conflicting source)');
+    assertApprox(a.Ca / a.N_total, 0.98, 0.15, 'Ca:N overshoots target 2/3 by ~47% since CaNO3 is the only Ca source');
+    assertApprox(a.K / a.N_total, 0.98, 0.15, 'K:N overshoots target 2/3 in lockstep with Ca (shared KNO3/CaNO3 constraint)');
   });
 
   test('Regression: getElementalContributionPerGram works correctly', () => {
@@ -464,6 +543,12 @@
 
     // Should still work with valid fertilizer (invalid ID is filtered out)
     assert(result.success, 'Should succeed with valid fertilizer');
+
+    // Confirm it actually solved with KNO3 (not just "success" with an empty/garbage formula) -
+    // KNO3's own K:N is fixed at ~2.8, so this should match almost exactly.
+    const dosing = result.dosing.find(d => d.targetId === 'test');
+    const achieved = dosing.predicted.nutrients;
+    assertApprox(achieved.K / achieved.N, 2.8, 0.1, 'K:N ratio should match KNO3s fixed composition (±0.1)');
   });
 
   // ==========================================================================
@@ -484,10 +569,10 @@
 
     const ecResult = window.FertilizerCore.estimateECFromPPM(ppm);
 
-    assert(ecResult.ec_mS_cm > 0, 'EC should be positive');
-    assert(ecResult.ec_mS_cm < 5, 'EC should be reasonable (< 5 mS/cm)');
-    assertHasKey(ecResult, 'ec_mS_cm', 'Should have ec_mS_cm');
+    // Measured value for this exact ion mix via the sum-of-ionic-conductivities model.
+    assertApprox(ecResult.ec_mS_cm, 1.78, 0.05, 'EC should match the ionic-conductivity model (±0.05)');
     assertHasKey(ecResult, 'contributions', 'Should have contributions');
+    assertHasKey(ecResult.contributions, 'Ca2+', 'Contributions should break down by ion');
   });
 
   test('Regression: estimateECFromPPM scales with concentration', () => {
@@ -513,12 +598,12 @@
 
     const ionBalance = window.FertilizerCore.calculateIonBalanceCore(formula, 1);
 
-    assertHasKey(ionBalance, 'totalCations', 'Should have totalCations');
-    assertHasKey(ionBalance, 'totalAnions', 'Should have totalAnions');
-    assertHasKey(ionBalance, 'imbalance', 'Should have imbalance');
-    assert(ionBalance.totalCations > 0, 'Cations should be positive');
-    assert(ionBalance.totalAnions > 0, 'Anions should be positive');
-    assert(ionBalance.imbalance >= 0, 'Imbalance should be non-negative');
+    // 1g CaNO3 -> Ca2+ 9.26 meq/L, NH4+ 0.93 meq/L; 0.5g KNO3 -> K+ 4.95 meq/L; both -> NO3-.
+    // Cations and anions must balance exactly since every N atom here is either NO3- (anion)
+    // or NH4+ (cation) - there's no independent anion source, so imbalance should be ~0.
+    assertApprox(ionBalance.totalCations, 15.13, 0.05, 'Total cations should match Ca2+ + NH4+ + K+ meq');
+    assertApprox(ionBalance.totalAnions, 15.13, 0.05, 'Total anions should match NO3- meq (equals cations)');
+    assertApprox(ionBalance.imbalance, 0, 0.01, 'Imbalance should be ~0 (all N is NO3-/NH4+, no external anion)');
   });
 
   test('Regression: optimizeFormula returns valid structure', async () => {
@@ -609,25 +694,28 @@
     }
   });
 
-  test('Regression: ppmFromGrams calculation', () => {
-    // 1g of calcium nitrate (15.5% N, 19% Ca) in 1L water
-    const calciumNitrate = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'calcium_nitrate_calcinit_typical');
+  test('Regression: ppm-from-grams via calculateAchievedPPM', () => {
+    // 1g of calcium nitrate (15.5% N, 19% Ca) dosed into 1L of final solution.
+    // This exercises the real FertilizerCore code path (calculateAchievedPPM), rather than
+    // recomputing the expected value from raw pct data and comparing it to itself.
+    const tanks = { A: { 'calcium_nitrate_calcinit_typical': 1 } }; // 1 g/L "stock"
+    const dosing = { A: 1000 }; // 1000 mL/L -> 1 g/L equivalent in final solution
 
-    // N: 15.5% means 0.155g N per gram of fertilizer
-    // 0.155g in 1L = 155 ppm (mg/L)
-    const expectedN = calciumNitrate.pct.N_total * 10; // × 10 for g/L → ppm
-    const expectedCa = calciumNitrate.pct.Ca * 10;
+    const achieved = window.FertilizerCore.calculateAchievedPPM(tanks, dosing);
 
-    assertApprox(expectedN, 155, 5, 'N calculation from calcium nitrate');
-    assertApprox(expectedCa, 190, 5, 'Ca calculation from calcium nitrate');
+    assertApprox(achieved.N, 155, 1, 'N ppm from 1 g/L calcium nitrate');
+    assertApprox(achieved.Ca, 190, 1, 'Ca ppm from 1 g/L calcium nitrate');
   });
 
-  test('Regression: checkWarnings returns array', () => {
+  test('Regression: checkWarnings flags real incompatibilities', () => {
     if (!window.FertilizerWarnings?.checkWarnings) {
       console.log('  (skipped - FertilizerWarnings not available)');
       return;
     }
 
+    // This ppm mix has Ca alongside both S (sulfate) and P (phosphate) - both are classic
+    // precipitation risks (CaSO4, Ca3(PO4)2), so the warnings engine should flag them by name,
+    // not just return "an array" that could be empty and still pass.
     const ppm = {
       N_NO3: 150,
       N_NH4: 10,
@@ -651,6 +739,8 @@
     );
 
     assert(Array.isArray(warnings), 'Should return an array');
+    assert(warnings.some(w => w.category === 'warningCategoryCaSulfate'), 'Should warn about Ca+Sulfate precipitation risk');
+    assert(warnings.some(w => w.category === 'warningCategoryCaPhosphate'), 'Should warn about Ca+Phosphate precipitation risk');
   });
 
   // ==========================================================================
