@@ -11,4 +11,8 @@ Gemfile.lock
 # Log Files
 *.log
 
+# Node / coverage
+node_modules/
+coverage/
+
 hydrobuddy-master/**

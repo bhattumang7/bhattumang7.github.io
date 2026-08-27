@@ -44,6 +44,11 @@ if (-not $tokenResponse.token) {
 
 Push-Location $repoRoot
 try {
+    npm run coverage
+    if ($LASTEXITCODE -ne 0) {
+        throw "npm run coverage exited with code $LASTEXITCODE"
+    }
+
     docker run --rm --network $network `
         -v "${repoRoot}:/usr/src" `
         -e "SONAR_HOST_URL=$networkAlias" `

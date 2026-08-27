@@ -1,0 +1,12 @@
+{
+  "name": "bhattumang7-github-io",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node scripts/tests/run-tests.js && node scripts/tests/run-stock-solution-tests.js",
+    "coverage": "c8 npm test"
+  },
+  "devDependencies": {
+    "c8": "^10.1.3"
+  }
+}

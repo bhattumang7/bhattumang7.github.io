@@ -1,0 +1,7 @@
+{
+  "all": true,
+  "include": ["scripts/*.js"],
+  "exclude": ["scripts/tests/**", "scripts/locales/**"],
+  "reporter": ["lcov", "text"],
+  "reports-dir": "coverage"
+}
