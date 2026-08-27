@@ -478,9 +478,10 @@ function _pushRatioIfApplicable(ratios, condition, values, labels) {
 function _pushKCaMgMeqRatio(ratios, results) {
   if (!((results.K || 0) > 0 && (results.Ca || 0) > 0 && (results.Mg || 0) > 0)) return;
 
-  const kMeq = (results.K || 0) / 39.1;
-  const caMeq = (results.Ca || 0) * 2 / 40.08;
-  const mgMeq = (results.Mg || 0) * 2 / 24.31;
+  // K/Ca/Mg are all guaranteed truthy positive numbers by the guard above.
+  const kMeq = results.K / 39.1;
+  const caMeq = results.Ca * 2 / 40.08;
+  const mgMeq = results.Mg * 2 / 24.31;
 
   const kcamgMeq = getRatio([kMeq, caMeq, mgMeq], ['K', 'Ca', 'Mg']);
   if (kcamgMeq) {
@@ -1751,7 +1752,8 @@ function _makeRatioErrorFn(tanks, ratio, targetNutrients, targetMin) {
     const achievedNonZero = targetNutrients.filter(n => achieved[n] > 0);
     if (achievedNonZero.length === 0) return Infinity;
 
-    const achievedMin = Math.min(...achievedNonZero.map(n => achieved[n])) || 0.001;
+    // achievedNonZero is already filtered to >0 values, so this minimum is always truthy.
+    const achievedMin = Math.min(...achievedNonZero.map(n => achieved[n]));
 
     let ratioError = 0;
     for (const n of targetNutrients) {
@@ -1959,7 +1961,9 @@ globalThis.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
 
   // Get nutrients specified in target ratio
   const targetNutrients = ['N', 'P', 'K', 'Ca', 'Mg', 'S'].filter(n => ratio[n] > 0);
-  const targetMin = Math.min(...targetNutrients.map(n => ratio[n]).filter(v => v > 0)) || 1;
+  // targetNutrients is already filtered to ratio[n] > 0, so Math.min over their values needs no
+  // further filtering; an empty targetNutrients yields Math.min() === Infinity (always truthy).
+  const targetMin = Math.min(...targetNutrients.map(n => ratio[n]));
 
   const bestDosing = _searchBestDosingRatios(tanks, tankIds, ratio, targetNutrients, targetMin);
   const { dosing, achieved, predictedEC } = _scaleDosingToTargetEC(tanks, bestDosing, tankIds, effectiveTargetEC, baselineEC);
@@ -2067,14 +2071,9 @@ function _detectVaryingRatios(targets) {
 function _filterFertilizersForKTanks(fertObjects, numTanks, hasVaryingNP, hasVaryingPK) {
   if (numTanks < 3) return fertObjects;
 
-  const hasSignificant = (fert, keys) => {
-    const pct = fert.pct || {};
-    return keys.some(key => (pct[key] || 0) > 5);
-  };
-  const hasAny = (fert, keys) => {
-    const pct = fert.pct || {};
-    return keys.some(key => (pct[key] || 0) > 0);
-  };
+  // Only ever called with entries from the real FERTILIZERS array, which always have .pct.
+  const hasSignificant = (fert, keys) => keys.some(key => (fert.pct[key] || 0) > 5);
+  const hasAny = (fert, keys) => keys.some(key => (fert.pct[key] || 0) > 0);
   const hasSignificantN = fert => hasSignificant(fert, ['N_total', 'N_NO3', 'N_NH4', 'N_Urea']);
   const hasSignificantP = fert => hasSignificant(fert, ['P2O5', 'P']);
   const hasSignificantK = fert => hasSignificant(fert, ['K2O', 'K']);
@@ -2110,7 +2109,8 @@ function _filterFertilizersForKTanks(fertObjects, numTanks, hasVaryingNP, hasVar
 // calcium nitrate is preferred for supplying N when the lowest target N:P ratio is small.
 function _deprioritizeNWithoutCa(fertObjects, lowestNP) {
   return fertObjects.map(f => {
-    const pct = f.pct || {};
+    // Only ever called with entries from the real FERTILIZERS array, which always have .pct.
+    const pct = f.pct;
     const hasN = pct.N_total > 0 || pct.N_NO3 > 0 || pct.N_NH4 > 0 || pct.N_Urea > 0;
     const hasCa = pct.Ca > 0 || pct.CaO > 0;
     if (hasN && !hasCa && lowestNP < 1.5) {
