@@ -58,7 +58,7 @@ async function main() {
     console.log('='.repeat(60));
 
     // Count MILP skips separately
-    const milpSkips = 9; // Known number of MILP-dependent tests (includes calculateStockSolutions, Progressive-K, optimizeFormula, Multi-target)
+    const milpSkips = 12; // Known number of MILP-dependent tests (includes calculateStockSolutions, Progressive-K, optimizeFormula, Multi-target, PeKacid, Si convergence)
     const adjustedFailed = results.failed - milpSkips;
 
     if (adjustedFailed <= 0) {

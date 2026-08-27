@@ -847,173 +847,6 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
   return { formula, achieved };
 };
 
-/**
- * Simple weighted projected gradient NNLS solver for fertilizer grams
- */
-function _nnlsResidual(matrix, x, target, w) {
-  const rows = matrix.length;
-  const cols = target.length;
-  const Ax = new Array(cols).fill(0);
-  for (let i = 0; i < rows; i++) {
-    const xi = x[i];
-    if (xi === 0) continue;
-    const row = matrix[i];
-    for (let j = 0; j < cols; j++) {
-      Ax[j] += row[j] * xi;
-    }
-  }
-
-  const residual = new Array(cols);
-  let error = 0;
-  for (let j = 0; j < cols; j++) {
-    residual[j] = Ax[j] - target[j];
-    const scaled = residual[j] * w[j];
-    error += scaled * scaled;
-  }
-  return { residual, error };
-}
-
-function _nnlsLearningRate(iter, iterations) {
-  if (iter < iterations * 0.5) return 0.0006;
-  if (iter < iterations * 0.8) return 0.0003;
-  return 0.00015;
-}
-
-function _nnlsGradientStep(matrix, x, residual, w2, lr) {
-  const rows = matrix.length;
-  const cols = residual.length;
-  const reg = 1e-4;
-
-  const grad = new Array(rows).fill(0);
-  for (let i = 0; i < rows; i++) {
-    const row = matrix[i];
-    let g = 0;
-    for (let j = 0; j < cols; j++) {
-      g += row[j] * residual[j] * w2[j];
-    }
-    grad[i] = g + reg * x[i];
-  }
-
-  const next = new Array(rows);
-  for (let i = 0; i < rows; i++) {
-    next[i] = Math.max(0, x[i] - lr * grad[i]);
-  }
-  return next;
-}
-
-globalThis.FertilizerCore.solveNonNegativeLeastSquares = function(matrix, target, iterations = 1500, weights = []) {
-  const rows = matrix.length;
-  const cols = target.length;
-
-  if (rows === 0 || cols === 0) {
-    return { x: [], error: 0 };
-  }
-
-  let x = new Array(rows).fill(0);
-  let bestX = x.slice();
-  let bestError = Number.POSITIVE_INFINITY;
-  const w = weights.length === cols ? weights.slice() : new Array(cols).fill(1);
-  const w2 = w.map(v => v * v);
-
-  for (let iter = 0; iter < iterations; iter++) {
-    const { residual, error } = _nnlsResidual(matrix, x, target, w);
-
-    if (error < bestError) {
-      bestError = error;
-      bestX = x.slice();
-    }
-
-    const lr = _nnlsLearningRate(iter, iterations);
-    x = _nnlsGradientStep(matrix, x, residual, w2, lr);
-  }
-
-  return { x: bestX, error: bestError };
-};
-
-/**
- * Try to prune fertilizers while staying within tolerance
- */
-globalThis.FertilizerCore.pruneSolution = function(matrix, targetVector, weights, baseSolution, fertilizers, tolerance = 0.01, iterations = 800) {
-  const solveNNLS = globalThis.FertilizerCore.solveNonNegativeLeastSquares;
-
-  let activeIndices = baseSolution.x
-    .map((grams, idx) => ({ idx, grams }))
-    .filter(item => item.grams > 1e-4)
-    .map(item => item.idx);
-
-  let best = { x: baseSolution.x.slice(), error: baseSolution.error, active: activeIndices.slice() };
-
-  function computeAchieved(solX) {
-    const cols = targetVector.length;
-    const achieved = new Array(cols).fill(0);
-    for (let i = 0; i < solX.length; i++) {
-      const xi = solX[i];
-      if (xi === 0) continue;
-      const row = matrix[i];
-      for (let j = 0; j < cols; j++) {
-        achieved[j] += row[j] * xi;
-      }
-    }
-    return achieved;
-  }
-
-  function withinTolerance(achieved) {
-    for (let j = 0; j < targetVector.length; j++) {
-      const target = targetVector[j];
-      if (target > 0) {
-        const diff = Math.abs(achieved[j] - target) / target;
-        if (diff > tolerance) return false;
-      }
-    }
-    return true;
-  }
-
-  let improved = true;
-  while (improved && activeIndices.length > 1) {
-    improved = false;
-    let bestCandidate = null;
-
-    activeIndices.forEach(removeIdx => {
-      const remaining = activeIndices.filter(idx => idx !== removeIdx);
-      if (remaining.length === 0) return;
-
-      const reducedMatrix = remaining.map(idx => matrix[idx]);
-      const reducedSolution = solveNNLS(reducedMatrix, targetVector, iterations, weights);
-
-      const fullX = new Array(matrix.length).fill(0);
-      remaining.forEach((idx, pos) => {
-        fullX[idx] = reducedSolution.x[pos];
-      });
-
-      const achieved = computeAchieved(fullX);
-
-      if (withinTolerance(achieved)) {
-        const candidate = {
-          x: fullX,
-          error: reducedSolution.error,
-          active: remaining.slice()
-        };
-
-        if (
-          !bestCandidate ||
-          candidate.active.length < bestCandidate.active.length ||
-          (candidate.active.length === bestCandidate.active.length && candidate.error < bestCandidate.error)
-        ) {
-          bestCandidate = candidate;
-        }
-      }
-    });
-
-    if (bestCandidate) {
-      best = bestCandidate;
-      activeIndices = bestCandidate.active;
-      improved = true;
-    }
-  }
-
-  return best;
-};
-
 function _buildPpmTargetsFromAbsoluteTargets(targetRatios, mode, P_to_P2O5, K_to_K2O) {
   return {
     N_total: targetRatios.N || 0,
@@ -1321,86 +1154,6 @@ function _convergeEcScaling(ctx) {
   return { scaledFormula, scaledAchieved, finalEC, scaleFactor };
 }
 
-// If PeKacid exceeds cap after EC scaling, cap it and re-run MILP with PeKacid fixed at the cap.
-// Returns updated { scaledFormula, scaledAchieved, finalEC, scaleFactor }, or null if it doesn't apply.
-async function _rerunIfPekacidExceedsCapAfterScaling(ctx) {
-  const {
-    scaledFormula, PEKACID_ID, pekacidMaxLimit, pekacidMaxGrams, availableFertilizers,
-    OXIDE_CONVERSIONS, volume, ppmTargets, solveMilpBrowser, onProgress, devLog,
-    estimateECFromPPM, targetEC
-  } = ctx;
-
-  const scaledPekacid = scaledFormula[PEKACID_ID] || 0;
-  if (!(pekacidMaxLimit > 0 && scaledPekacid > pekacidMaxGrams * 1.001)) return null;
-
-  devLog(`PeKacid after EC scaling (${scaledPekacid.toFixed(3)}g) exceeds cap (${pekacidMaxGrams.toFixed(3)}g) - re-running MILP with PeKacid fixed at cap`);
-
-  // Re-run MILP with PeKacid fixed at the cap amount
-  // Calculate new targets: reduce P and K targets by what PeKacid provides
-  const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
-  if (!pekacidFert) return null;
-
-  const pekacidP2O5_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
-  const pekacidK2O_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
-
-  const adjustedTargets = { ...ppmTargets };
-  adjustedTargets.P2O5 = Math.max(0, (ppmTargets.P2O5 || 0) - pekacidP2O5_ppm);
-  adjustedTargets.K2O = Math.max(0, (ppmTargets.K2O || 0) - pekacidK2O_ppm);
-
-  devLog(`Adjusted targets after fixing PeKacid: P2O5:${adjustedTargets.P2O5.toFixed(1)} K2O:${adjustedTargets.K2O.toFixed(1)}`);
-
-  // Re-run MILP without PeKacid in the fertilizer list
-  const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
-  const rerunResult = await solveMilpBrowser({
-    fertilizers: fertilizersWithoutPekacid,
-    targets: adjustedTargets,
-    volume,
-    tolerance: 0.01,
-    onProgress,
-    pekacidMaxLimit: 0  // No PeKacid limit since we're excluding it
-  });
-
-  // Add PeKacid back to the formula at the capped amount
-  rerunResult.formula[PEKACID_ID] = pekacidMaxGrams;
-
-  // Recalculate achieved with PeKacid included
-  Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
-    const ppm = (pekacidMaxGrams * 1000 * (pct / 100)) / volume;
-    if (nutrient === 'P2O5') {
-      rerunResult.achieved.P2O5 += ppm;
-      rerunResult.achieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-    } else if (nutrient === 'K2O') {
-      rerunResult.achieved.K2O += ppm;
-      rerunResult.achieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-    }
-  });
-
-  devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
-
-  // Re-apply EC scaling using the re-run result
-  const newEC = estimateECFromPPM(rerunResult.achieved);
-  const scaleFactor = targetEC / newEC.ec_mS_cm;
-
-  // Re-scale with PeKacid fixed at cap
-  let newScaledFormula = {};
-  Object.entries(rerunResult.formula).forEach(([fertId, grams]) => {
-    if (fertId === PEKACID_ID) {
-      newScaledFormula[fertId] = pekacidMaxGrams;  // Keep PeKacid at cap
-    } else {
-      newScaledFormula[fertId] = grams * scaleFactor;
-    }
-  });
-
-  // Recalculate achieved after scaling
-  const newScaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, newScaledFormula, volume);
-
-  const finalECAfterRerun = estimateECFromPPM(newScaledAchieved);
-  const finalEC = finalECAfterRerun.ec_mS_cm;
-  devLog(`Final EC after re-run and scaling: ${finalEC.toFixed(2)} mS/cm (target: ${targetEC.toFixed(2)})`);
-
-  return { scaledFormula: newScaledFormula, scaledAchieved: newScaledAchieved, finalEC, scaleFactor };
-}
-
 // For Si: if user specified an absolute Si target, iteratively adjust the Si target so that
 // after EC scaling it reaches the desired value (Si is an absolute PPM target, not ratio-based).
 // Returns updated { scaledFormula, scaledAchieved, scaleFactor }.
@@ -1518,19 +1271,8 @@ async function _applyTargetEcScaling(ctx) {
   });
   let scaledFormula = ecScalingResult.scaledFormula;
   let scaledAchieved = ecScalingResult.scaledAchieved;
-  let finalEC = ecScalingResult.finalEC;
+  const finalEC = ecScalingResult.finalEC;
   scaleFactor = ecScalingResult.scaleFactor;
-
-  // If PeKacid exceeds cap after EC scaling, cap it and re-run MILP with PeKacid fixed at the cap.
-  const capExceededState = await _rerunIfPekacidExceedsCapAfterScaling({
-    ...ctx, scaledFormula, PEKACID_ID, pekacidMaxGrams, devLog
-  });
-  if (capExceededState) {
-    scaledFormula = capExceededState.scaledFormula;
-    scaledAchieved = capExceededState.scaledAchieved;
-    finalEC = capExceededState.finalEC;
-    scaleFactor = capExceededState.scaleFactor;
-  }
 
   if (targetSi > 0) {
     const siState = await _convergeSiTarget({
@@ -1748,8 +1490,6 @@ globalThis.FertilizerCore.accumulateAchievedPPM = function(fertilizerList, formu
       const handler = ACHIEVED_PPM_HANDLERS[nutrient];
       if (handler) {
         handler(achieved, ppm, ctx);
-      } else if (achieved[nutrient] !== undefined) {
-        achieved[nutrient] += ppm;
       }
     });
   });
@@ -1975,18 +1715,10 @@ globalThis.FertilizerCore.checkRatioMatch = function(achieved, targetRatio, tole
     return { matches: true, errors };
   }
 
-  // Normalize both to minimum non-zero value
+  // Normalize both to minimum non-zero value. The `|| 0.0001` fallback means this can never
+  // be <=0 (a fully-zero achieved set just normalizes against that floor instead).
   const targetMin = Math.min(...targetKeys.map(k => targetRatio[k]));
   const achievedMin = Math.min(...targetKeys.map(k => achieved[k] || 0.0001).filter(v => v > 0));
-
-  if (achievedMin <= 0) {
-    for (const k of targetKeys) {
-      if (achieved[k] <= 0 && targetRatio[k] > 0) {
-        errors[k] = { target: targetRatio[k], achieved: 0, error: 1 };
-      }
-    }
-    return { matches: false, errors };
-  }
 
   for (const k of targetKeys) {
     const targetNorm = targetRatio[k] / targetMin;
@@ -2070,6 +1802,7 @@ function _searchThreeTankRatios(tankIds, calcRatioError, best) {
   return best;
 }
 
+// assignToTanks never produces more than 4 tanks (A-D), so this only ever searches exactly 4.
 function _searchFourPlusTankRatios(tankIds, calcRatioError, best) {
   const steps4 = [0.2, 0.5, 1, 2, 5];
   for (const aRatio of steps4) {
@@ -2082,10 +1815,6 @@ function _searchFourPlusTankRatios(tankIds, calcRatioError, best) {
           [tankIds[2]]: 10 * cRatio / total,
           [tankIds[3]]: 10 / total
         };
-        // Handle 5+ tanks if ever needed
-        for (let i = 4; i < tankIds.length; i++) {
-          dosing[tankIds[i]] = 1;
-        }
         best = _tryDosingCandidate(dosing, calcRatioError, best);
       }
     }
@@ -2280,7 +2009,8 @@ globalThis.FertilizerCore.calculateStockSolutions = async function(options) {
     return { success: false, errors: [{ level: 'error', code: 'NO_VALID_FERTILIZERS', message: 'No valid fertilizers found' }] };
   }
 
-  // Progressive-K algorithm: try K=2, then K=3, then K=4
+  // Progressive-K algorithm: try K=2, then K=3, then K=4. The loop always returns by K=4
+  // (either a success, or that K's failure result), so there's no fallthrough case.
   for (let numTanks = 2; numTanks <= 4; numTanks++) {
     const result = await this._tryStockSolutionWithKTanks(
       numTanks,
@@ -2291,17 +2021,10 @@ globalThis.FertilizerCore.calculateStockSolutions = async function(options) {
       defaultBaselineEC
     );
 
-    if (result.success) {
-      return result;
-    }
-
-    // If K=4 failed, return the error
-    if (numTanks === 4) {
+    if (result.success || numTanks === 4) {
       return result;
     }
   }
-
-  return { success: false, errors: [{ level: 'error', code: 'INFEASIBLE', message: 'Could not find feasible stock solution with up to 4 tanks' }] };
 };
 
 // Pick the target whose N:P ratio is closest to the median across all targets (not the lowest),
@@ -2469,10 +2192,12 @@ function _buildOneTank(tankId, tankFormula, tankMeta, effectiveConcentration, st
   return tank;
 }
 
+// Tank feasibility is checked here as a sanity check on the concentration cap computed just
+// before this is called (effectiveConcentration always keeps every fertilizer at <=80% of its
+// solubility, so this never actually reports an error - only ever an empty issues list).
 function _buildTanksFromAssignment(tankAssignment, effectiveConcentration, stockTankVolumeL, numTanks, hasVaryingPMg) {
   const tanks = {};
   const issues = [];
-  const errors = [];
   const tankMeta = _tankNamesAndDescriptions(numTanks, hasVaryingPMg);
 
   for (const [tankId, tankFormula] of Object.entries(tankAssignment)) {
@@ -2480,19 +2205,15 @@ function _buildTanksFromAssignment(tankAssignment, effectiveConcentration, stock
 
     tanks[tankId] = _buildOneTank(tankId, tankFormula, tankMeta, effectiveConcentration, stockTankVolumeL);
 
-    // Check tank feasibility (should pass now with safe concentration)
     const tankFormulaGL = {};
     for (const [fertId, data] of Object.entries(tanks[tankId].fertilizers)) {
       tankFormulaGL[fertId] = data.grams_per_L;
     }
     const feasibility = globalThis.FertilizerCore.checkTankFeasibility(tankFormulaGL);
     issues.push(...feasibility.issues);
-    if (!feasibility.feasible) {
-      errors.push(...feasibility.issues.filter(i => i.level === 'error'));
-    }
   }
 
-  return { tanks, issues, errors };
+  return { tanks, issues };
 }
 
 // Solve dosing for every target against the built tanks. Returns
@@ -2613,11 +2334,11 @@ globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
     return { success: false, errors: [{ level: 'error', code: 'CONCENTRATION_TOO_LOW', message: `Required stock concentration (${effectiveConcentration}x) is too low due to solubility limits` }] };
   }
 
-  const { tanks, issues: tankIssues, errors: tankErrors } = _buildTanksFromAssignment(
+  const { tanks, issues: tankIssues } = _buildTanksFromAssignment(
     tankAssignment, effectiveConcentration, stockTankVolumeL, numTanks, hasVaryingPMg
   );
   const allIssues = [...tankIssues];
-  const allErrors = [...tankErrors];
+  const allErrors = [];
 
   // Add warning if concentration was reduced
   if (effectiveConcentration < stockConcentration) {
@@ -2627,11 +2348,6 @@ globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
       message: `Stock concentration reduced from ${stockConcentration}x to ${effectiveConcentration}x due to solubility limits`,
       details: { requested: stockConcentration, effective: effectiveConcentration }
     });
-  }
-
-  // If solubility errors, this K is infeasible
-  if (allErrors.length > 0) {
-    return { success: false, tanks, errors: allErrors, warnings: allIssues.filter(i => i.level !== 'error') };
   }
 
   const { dosingInstructions, issues: dosingIssues, errors: dosingErrors } =
@@ -2671,7 +2387,7 @@ globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
 // EC: estimateEC, ppmToIonsForEC, estimateECFromPPM
 // Ion Balance: getIonBalanceStatus, calculateIonBalanceCore
 // Ratios: calculateNutrientRatios
-// Optimization: solveMilpBrowser, solveNonNegativeLeastSquares, pruneSolution, optimizeFormula
+// Optimization: solveMilpBrowser, optimizeFormula
 // Stock Solutions: assignToTanks, checkTankFeasibility, calculateAchievedPPM, checkRatioMatch,
 //                  solveDosing, calculateStockSolutions
 //

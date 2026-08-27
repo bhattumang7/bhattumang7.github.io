@@ -52,6 +52,15 @@
     }
   }
 
+  // Node.js without the real HiGHS/LPModel WASM solver (run-tests.js's mocked environment)
+  // can't run MILP-backed calls at all - solveMilpBrowser throws before doing any real work.
+  // Tests that only care about MILP-adjacent behavior (dev-log hooks, cache state) skip
+  // cleanly here instead of failing; run-stock-solution-tests.js (real WASM) always has
+  // LPModel loaded, so it runs them for real and is what coverage is measured from.
+  function milpAvailable() {
+    return typeof globalThis.LPModel !== 'undefined';
+  }
+
   // Reconstructs grams-dosed-per-liter-of-final-solution from tank stock concentrations
   // (g/L) and per-tank dosing (mL/L), so calculateIonBalanceCore (which expects a formula
   // in grams, not tank/dosing pairs) can be run against the same scenario a test set up.
@@ -168,6 +177,29 @@
   test('parseRatio: Invalid input - null', () => {
     const result = window.FertilizerCore.parseRatio(null);
     assert(result.error, 'Should have error');
+  });
+
+  test('parseRatio: Labeled format - unrecognized nutrient label', () => {
+    // Real scenario: a grower tries to add an iron ratio the same way they add N/P/K,
+    // not realizing micros aren't part of the labeled-ratio grammar.
+    const result = window.FertilizerCore.parseRatio('Fe2:N3:K2');
+    assert(result.error, 'Should have error');
+    assert(/Unknown nutrient label/.test(result.error), 'Error should name the bad label');
+  });
+
+  test('parseRatio: Labeled format - missing colon separators', () => {
+    // Real scenario: a grower copies a feed label like "N5P3K2" and forgets the colons
+    // parseRatio expects between labeled values.
+    const result = window.FertilizerCore.parseRatio('N5P3K2');
+    assert(result.error, 'Should have error');
+    assert(/Invalid labeled format/.test(result.error), 'Error should flag the malformed token');
+  });
+
+  test('parseRatio: Positional format - non-numeric value', () => {
+    // Real scenario: a stray character survives a copy-paste from a PDF feed chart.
+    const result = window.FertilizerCore.parseRatio('2:1:abc');
+    assert(result.error, 'Should have error');
+    assert(/Invalid number/.test(result.error), 'Error should flag the invalid number');
   });
 
   // ==========================================================================
@@ -449,6 +481,125 @@
     assert(result.issues.some(i => i.code === 'EC_UNACHIEVABLE'), 'Should have EC error');
   });
 
+  test('solveDosing: 3-tank system (Ca / P+Mg / K) solves a veg ratio', async () => {
+    // Real 3-tank rig: Tank A isolates Calcium Nitrate (precipitates with phosphate/sulfate),
+    // Tank B combines MKP + Epsom salt (both compatible with each other), Tank C carries
+    // Potassium Nitrate for independent K control. This exercises the 3-tank dosing search
+    // (_searchThreeTankRatios), not just the 2-tank path the other solveDosing tests cover.
+    const formula = {
+      calcium_nitrate_calcinit_typical: 200,
+      mkp_typical: 80,
+      potassium_nitrate_typical: 150,
+      magnesium_sulfate_heptahydrate_common: 100
+    };
+    const tanks = window.FertilizerCore.assignToTanks(formula, 3);
+    assertHasKey(tanks.A, 'calcium_nitrate_calcinit_typical', 'Ca source isolated in Tank A');
+    assertHasKey(tanks.B, 'mkp_typical', 'MKP in Tank B');
+    assertHasKey(tanks.B, 'magnesium_sulfate_heptahydrate_common', 'Epsom salt shares Tank B with MKP');
+    assertHasKey(tanks.C, 'potassium_nitrate_typical', 'KNO3 isolated in Tank C for K control');
+
+    const target = { ratio: { N: 1, P: 0.35, K: 1.2, Ca: 1.2 }, targetEC: 1.8 };
+    const result = window.FertilizerCore.solveDosing(tanks, target, { maxDosing: 50 });
+
+    assert(result.feasible, 'Should be feasible with this 3-tank layout and ratio');
+    assertApprox(result.predictedEC, 1.8, 0.15, 'EC should be close to target');
+    assertApprox(result.achieved.N, 276.6, 20, 'Achieved N ppm');
+    assertApprox(result.achieved.K, 278.9, 20, 'Achieved K ppm');
+    assertApprox(result.achieved.Ca, 264.8, 20, 'Achieved Ca ppm');
+  });
+
+  test('solveDosing: 4-tank system separates Mg from P for independent Cal-Mag control', async () => {
+    // Real 4-tank rig used when P:Mg needs to vary independently across grow stages: the
+    // separateMg option pulls Epsom salt into its own Tank D instead of sharing Tank B with
+    // MKP. Exercises the 4+-tank dosing search (_searchFourPlusTankRatios).
+    const formula = {
+      calcium_nitrate_calcinit_typical: 200,
+      mkp_typical: 80,
+      potassium_nitrate_typical: 150,
+      magnesium_sulfate_heptahydrate_common: 100
+    };
+    const tanks = window.FertilizerCore.assignToTanks(formula, 4, { separateMg: true });
+    assertHasKey(tanks.A, 'calcium_nitrate_calcinit_typical', 'Ca source in Tank A');
+    assertHasKey(tanks.B, 'mkp_typical', 'MKP alone in Tank B');
+    assertHasKey(tanks.C, 'potassium_nitrate_typical', 'KNO3 in Tank C');
+    assertHasKey(tanks.D, 'magnesium_sulfate_heptahydrate_common', 'Epsom salt separated into Tank D');
+
+    const target = { ratio: { N: 1.5, P: 0.4, K: 1.8, Ca: 1.8, Mg: 0.25 }, targetEC: 2.0 };
+    const result = window.FertilizerCore.solveDosing(tanks, target, { maxDosing: 50 });
+
+    assert(result.feasible, 'Should be feasible with independent Mg control');
+    assertApprox(result.predictedEC, 2.0, 0.15, 'EC should be close to target');
+    assertApprox(result.achieved.Mg, 47.6, 10, 'Achieved Mg ppm');
+    assertApprox(result.achieved.Ca, 297.0, 25, 'Achieved Ca ppm');
+  });
+
+  test('solveDosing: 2-tank system hits an achievable K:Ca ratio', () => {
+    // Real 2-tank rig: Tank A isolates Calcium Nitrate, Tank B is Potassium Nitrate alone.
+    // A K:Ca-only ratio target has exactly 1 degree of freedom (the A:B dosing ratio), which
+    // 2 tanks can satisfy exactly. Exercises the 2-tank dosing search (_searchTwoTankRatios),
+    // which none of the other solveDosing tests reach (the EC-only test uses 1 tank; the 3-
+    // and 4-tank tests use 3+ tanks).
+    const formula = { calcium_nitrate_calcinit_typical: 200, potassium_nitrate_typical: 150 };
+    const tanks = window.FertilizerCore.assignToTanks(formula, 2);
+    assertHasKey(tanks.A, 'calcium_nitrate_calcinit_typical', 'Ca source in Tank A');
+    assertHasKey(tanks.B, 'potassium_nitrate_typical', 'KNO3 in Tank B');
+
+    const target = { ratio: { K: 1, Ca: 1 }, targetEC: 1.6 };
+    const result = window.FertilizerCore.solveDosing(tanks, target, { maxDosing: 50 });
+
+    assert(result.feasible, 'A pure K:Ca ratio is achievable with 2 tanks');
+    assertApprox(result.predictedEC, 1.6, 0.1, 'EC should be close to target');
+    assertApprox(result.achieved.K, 352.1, 15, 'Achieved K ppm');
+    assertApprox(result.achieved.Ca, 348.2, 15, 'Achieved Ca ppm');
+  });
+
+  test('solveDosing: 2-tank system flags RATIO_MISMATCH when P and K cannot be independently controlled', () => {
+    // Real limitation: MKP and Potassium Nitrate combined into Tank B means P and K can only be
+    // scaled together, not independently. A 3-nutrient target (N/K from KNO3 side, P from MKP,
+    // Ca fixed) has 2 independent ratios to satisfy but only 1 free dosing parameter (A:B), so
+    // it's structurally unreachable with 2 tanks - this is exactly why the real 3-tank test
+    // above isolates KNO3 into its own tank instead.
+    const formula = {
+      calcium_nitrate_calcinit_typical: 200,
+      mkp_typical: 80,
+      potassium_nitrate_typical: 150
+    };
+    const tanks = window.FertilizerCore.assignToTanks(formula, 2);
+    assertHasKey(tanks.B, 'mkp_typical', 'MKP in Tank B');
+    assertHasKey(tanks.B, 'potassium_nitrate_typical', 'KNO3 shares Tank B with MKP at 2 tanks');
+
+    const target = { ratio: { N: 1, P: 0.35, K: 1.2, Ca: 1.2 }, targetEC: 1.8 };
+    const result = window.FertilizerCore.solveDosing(tanks, target, { maxDosing: 50 });
+
+    assert(!result.feasible, '2 tanks cannot hit this 3-nutrient ratio independently');
+    assert(result.issues.some(i => i.code === 'RATIO_MISMATCH'), 'Should flag a ratio mismatch');
+  });
+
+  test('solveDosing: dosing-volume warnings and errors scale with maxDosing', () => {
+    // Same achievable K:Ca scenario as above (~15.3 mL/L total dosing at this target EC), but
+    // sweeping maxDosing across the HIGH_DOSING_VOLUME (>80%) and DOSING_EXCEEDS_MAX thresholds.
+    const formula = { calcium_nitrate_calcinit_typical: 200, potassium_nitrate_typical: 150 };
+    const tanks = window.FertilizerCore.assignToTanks(formula, 2);
+    const target = { ratio: { K: 1, Ca: 1 }, targetEC: 1.6 };
+
+    const nearLimit = window.FertilizerCore.solveDosing(tanks, target, { maxDosing: 16 });
+    assert(nearLimit.feasible, 'Still feasible when just under the max');
+    assert(nearLimit.issues.some(i => i.code === 'HIGH_DOSING_VOLUME'), 'Should warn when dosing is >80% of max');
+
+    const overLimit = window.FertilizerCore.solveDosing(tanks, target, { maxDosing: 10 });
+    assert(!overLimit.feasible, 'Infeasible once required dosing exceeds the max');
+    assert(overLimit.issues.some(i => i.code === 'DOSING_EXCEEDS_MAX'), 'Should error when dosing exceeds max');
+  });
+
+  test('solveDosing: NO_FERTILIZERS when every tank is empty', () => {
+    const result = window.FertilizerCore.solveDosing(
+      { A: {}, B: {} },
+      { ratio: { K: 1, Ca: 1 }, targetEC: 1.6 }
+    );
+    assert(!result.feasible, 'Should be infeasible with no fertilizers in any tank');
+    assert(result.issues.some(i => i.code === 'NO_FERTILIZERS'), 'Should report NO_FERTILIZERS');
+  });
+
   // ==========================================================================
   // calculateStockSolutions Tests (Full Integration)
   // ==========================================================================
@@ -588,6 +739,145 @@
     assertApprox(ionBalance.imbalance, 0, 0.01, 'Ion balance should be ~0');
   });
 
+  test('calculateStockSolutions: reduces stock concentration when it would exceed solubility', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // Real scenario: a grower asks for a very concentrated stock (300x) but Potassium Nitrate's
+    // solubility (320 g/L) caps how concentrated any single stock tank can safely be. Exercises
+    // the CONCENTRATION_REDUCED path in _calculateEffectiveConcentration/_tryStockSolutionWithKTanks.
+    const options = {
+      targets: [
+        { id: 'test', ratio: { N: 1, P: 0, K: 2.8, Ca: 0, Mg: 0 }, targetEC: 2.0 }
+      ],
+      availableFertilizers: ['potassium_nitrate_typical'],
+      stockConcentration: 300,
+      stockTankVolumeL: 20
+    };
+
+    const result = await window.FertilizerCore.calculateStockSolutions(options);
+
+    assert(result.success, 'Should still succeed at a reduced concentration');
+    assertEqual(result.meta.concentrationFactor, 300, 'Requested concentration is recorded as-is');
+    const reducedWarning = result.warnings.find(w => w.code === 'CONCENTRATION_REDUCED');
+    assert(reducedWarning, 'Should warn that concentration was reduced');
+    assertEqual(reducedWarning.details.requested, 300, 'Warning records the requested concentration');
+    assert(reducedWarning.details.effective < 300, 'Effective concentration should be capped below the request');
+  });
+
+  test('calculateStockSolutions: CONCENTRATION_TOO_LOW for a low-solubility fertilizer at high EC', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // Real scenario: Single Super Phosphate (SSP) is the only fertilizer providing P/Ca/S
+    // together, but it has very low solubility (20 g/L - it's essentially calcium phosphate).
+    // At a real target EC, the required stock concentration collapses below the practical
+    // (10x) floor. Exercises the CONCENTRATION_TOO_LOW failure path.
+    const options = {
+      targets: [
+        { id: 'test', ratio: { P: 0.7, Ca: 1, S: 0.5 }, targetEC: 3.0 }
+      ],
+      availableFertilizers: ['ssp_common'],
+      stockConcentration: 100,
+      stockTankVolumeL: 20
+    };
+
+    const result = await window.FertilizerCore.calculateStockSolutions(options);
+
+    assert(!result.success, 'SSP alone cannot reach this EC at a usable stock concentration');
+    assert(result.errors.some(e => e.code === 'CONCENTRATION_TOO_LOW'), 'Should report CONCENTRATION_TOO_LOW');
+  });
+
+  test('calculateStockSolutions: incompatible veg/bloom targets exhaust Progressive-K (2→3→4 tanks) and report infeasible', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // Real scenario: sharing one set of stock tanks across a veg-stage target (high N:K, low P)
+    // and a bloom-stage target (lower N, higher P and K) using only 4 fixed fertilizers. This
+    // exercises the multi-target path end-to-end: _detectVaryingRatios (N:P and P:K spread
+    // trigger hasVaryingNP/hasVaryingPK), _filterFertilizersForKTanks, and the full
+    // Progressive-K escalation loop in calculateStockSolutions failing at K=2, K=3, and finally
+    // K=4 (the maximum), returning the overall INFEASIBLE result.
+    const options = {
+      targets: [
+        { id: 'veg', ratio: { N: 1, P: 0.2, K: 1, Ca: 1, Mg: 0.3 }, targetEC: 1.5 },
+        { id: 'bloom', ratio: { N: 0.5, P: 0.6, K: 1.3, Ca: 0.8, Mg: 0.3 }, targetEC: 1.8 }
+      ],
+      availableFertilizers: [
+        'calcium_nitrate_calcinit_typical',
+        'mkp_typical',
+        'potassium_nitrate_typical',
+        'magnesium_sulfate_heptahydrate_common'
+      ],
+      stockConcentration: 100,
+      stockTankVolumeL: 20
+    };
+
+    const result = await window.FertilizerCore.calculateStockSolutions(options);
+
+    assert(!result.success, 'These 2 targets cannot both be matched by dosing alone from a fixed formula');
+    assert(!result.meta, 'No successful tank configuration was found');
+    assert(result.errors.length > 0, 'Should report why it failed');
+    assert(
+      result.errors.some(e => e.code === 'RATIO_MISMATCH' || e.code === 'OPTIMIZATION_FAILED'),
+      'Failure should be a ratio-matching or optimization error, not a silent empty result'
+    );
+  });
+
+  test('calculateStockSolutions: veg/bloom targets with independent P and K sources still fail dosing at every K', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // Same varying-ratio veg/bloom setup as above, but swapping MKP for two single-nutrient
+    // sources (Phosphoric Acid for P, Potassium Sulfate for K). Since no fertilizer here
+    // carries both P and K (or both N and P), _filterFertilizersForKTanks's N/P/K coverage
+    // check passes and it returns its filtered (here, unfiltered) list rather than falling
+    // back to the original - exercising that success path, not just its fallback.
+    const options = {
+      targets: [
+        { id: 'veg', ratio: { N: 1, P: 0.2, K: 1, Ca: 1 }, targetEC: 1.5 },
+        { id: 'bloom', ratio: { N: 0.5, P: 0.6, K: 1.3, Ca: 0.8 }, targetEC: 1.8 }
+      ],
+      availableFertilizers: [
+        'calcium_nitrate_calcinit_typical',
+        'potassium_nitrate_typical',
+        'phosphoric_acid_49',
+        'potassium_sulfate_common'
+      ],
+      stockConcentration: 100,
+      stockTankVolumeL: 20
+    };
+
+    const result = await window.FertilizerCore.calculateStockSolutions(options);
+
+    assert(!result.success, 'These 2 targets still cannot both be matched by dosing alone');
+    assert(result.errors.some(e => e.code === 'RATIO_MISMATCH'), 'Should fail on ratio matching');
+  });
+
+  test('calculateStockSolutions: NO_VALID_FERTILIZERS when none of the requested IDs exist', async () => {
+    const result = await window.FertilizerCore.calculateStockSolutions({
+      targets: [{ id: 'test', ratio: { N: 1, K: 1 }, targetEC: 1.5 }],
+      availableFertilizers: ['not_a_real_fertilizer_id', 'also_fake'],
+      stockConcentration: 100,
+      stockTankVolumeL: 20
+    });
+
+    assert(!result.success, 'Should fail with no valid fertilizers');
+    assert(result.errors.some(e => e.code === 'NO_VALID_FERTILIZERS'), 'Should report NO_VALID_FERTILIZERS');
+  });
+
+  test('assignToTanks: Silicate goes to Tank C with 3 tanks and Tank D with 4 tanks', () => {
+    // Real scenario: dosing Potassium Silicate alongside Calcium Nitrate. With only 2 tanks,
+    // silicate shares Tank B (assignToTanks: Neutral goes to Tank B is already covered
+    // elsewhere); with 3+ tanks it gets its own tank so it isn't mixed with phosphate sources.
+    const formula = {
+      calcium_nitrate_calcinit_typical: 100,
+      potassium_silicate_liquid_typical: 50
+    };
+
+    const twoTanks = window.FertilizerCore.assignToTanks(formula, 2);
+    assertHasKey(twoTanks.B, 'potassium_silicate_liquid_typical', 'Silicate falls back to shared Tank B at 2 tanks');
+
+    const threeTanks = window.FertilizerCore.assignToTanks(formula, 3);
+    assertHasKey(threeTanks.C, 'potassium_silicate_liquid_typical', 'Silicate isolated in Tank C at 3 tanks');
+    assertEqual(Object.keys(threeTanks.B).length, 0, 'Tank B should be empty (nothing else to put there)');
+
+    const fourTanks = window.FertilizerCore.assignToTanks(formula, 4);
+    assertHasKey(fourTanks.D, 'potassium_silicate_liquid_typical', 'Silicate isolated in Tank D at 4 tanks');
+  });
+
   test('optimizeFormula (oxide mode): 3:20:20 N-P2O5-K2O matches real calculator output', async () => {
     // Reproduces the reverse-calc wizard's actual call shape (mode='oxide', volume=100L,
     // concentration=100, targetEC via options) for KNO3 + MAP + MKP, and checks the result
@@ -677,6 +967,217 @@
     }
   });
 
+  test('optimizeFormula: PeKacid capped in ratio mode is fixed and re-solved against the rest of the ratio', async () => {
+    // Real scenario: a grower running a concentrated 3:20:20 bloom feed wants to acidify RO
+    // water with ICL PeKacid (0-60-20) but caps it at 0.05 g/L (0.5g/10L) to avoid over-acidifying.
+    // Exercises _trySolveWithFixedPekacidRatios - once the MILP pushes PeKacid to its cap, the
+    // solver re-runs for the remaining fertilizers so the overall N:P:K ratio stays aligned.
+    const ratio = { N: 3, P: 20, K: 20 };
+    const fertObjects = [
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'icl_pekacid_pk_acid'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'mkp_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'calcium_nitrate_calcinit_typical')
+    ].filter(Boolean);
+    assertEqual(fertObjects.length, 4, 'All 4 fertilizers should be found');
+
+    const result = await window.FertilizerCore.optimizeFormula(
+      ratio, 10, fertObjects, 100, 'oxide', { targetEC: 2.2, pekacidMaxLimit: 0.05, useMilp: true }
+    );
+
+    assert(result.pekacidFixed, 'Should take the fixed-PeKacid-ratios path');
+    assertApprox(result.formula.icl_pekacid_pk_acid, 0.5, 0.01, 'PeKacid should be fixed at its 0.05 g/L cap (0.5g/10L)');
+    assertApprox(result.ecScaling.achievedEC, 2.2, 0.1, 'Achieved EC should be close to target');
+    assertApprox(result.achieved.P2O5, 794.4, 15, 'Achieved P2O5 ppm');
+    assertApprox(result.achieved.K2O, 810.0, 15, 'Achieved K2O ppm');
+  });
+
+  test('optimizeFormula: PeKacid capped with absolute targets stays at cap when EC scaling would drop it', async () => {
+    // Real scenario: a grower dials in an absolute-PPM recipe (N:150 P2O5:250 K2O:250 Ca:150)
+    // with a generous PeKacid cap for acidification, then also requests a lower target EC for
+    // an early-veg dilution of the same recipe. Naively scaling everything down would also
+    // scale PeKacid below its cap, undermining the acidification. Exercises
+    // _rerunKeepingPekacidAtCapIfScalingWouldDropIt, which fixes PeKacid at its cap and
+    // re-solves the rest of the fertilizers instead of letting it shrink.
+    const fertObjects = [
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'icl_pekacid_pk_acid'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'mkp_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'calcium_nitrate_calcinit_typical')
+    ].filter(Boolean);
+
+    const targets = { N: 150, P: 250, K: 250, Ca: 150 };
+    const result = await window.FertilizerCore.optimizeFormula(
+      targets, 10, fertObjects, 100, 'oxide',
+      { useAbsoluteTargets: true, pekacidMaxLimit: 0.15, targetEC: 0.969178696654033, useMilp: true }
+    );
+
+    assertApprox(result.formula.icl_pekacid_pk_acid, 1.5, 0.01, 'PeKacid should stay pinned at its 0.15 g/L cap (1.5g/10L)');
+    assertApprox(result.ecScaling.achievedEC, 0.974, 0.05, 'Achieved EC should land near the lowered target');
+    assert(result.ecScaling.scaleFactor < 0.99, 'EC scaling should have wanted to scale everything down');
+  });
+
+  test('optimizeFormula: Si target converges using Potassium Silicate', async () => {
+    // Real scenario: a grower dosing Potassium Silicate (Pro-TeKt style, 12% Si/18% K2O) for
+    // cell-wall strength alongside a standard 3:1:2 veg ratio, targeting 30ppm Si. Exercises
+    // _convergeSiTarget, which iteratively re-solves the MILP with an adjusted Si target until
+    // the achieved Si lands within 10% of what was requested.
+    const ratio = { N: 3, P: 1, K: 2, Ca: 1, Mg: 0.4, Si: 30 };
+    const fertObjects = [
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'calcium_nitrate_calcinit_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'mkp_typical'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'magnesium_sulfate_heptahydrate_common'),
+      window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_silicate_liquid_typical')
+    ].filter(Boolean);
+    assertEqual(fertObjects.length, 5, 'All 5 fertilizers should be found');
+
+    const result = await window.FertilizerCore.optimizeFormula(
+      ratio, 10, fertObjects, 100, 'oxide', { targetEC: 1.8, useMilp: true }
+    );
+
+    assert(result.formula.potassium_silicate_liquid_typical > 0, 'Should use Potassium Silicate');
+    assertApprox(result.achieved.Si, 30, 3, 'Achieved Si should converge within 10% of target (±3ppm)');
+    assertApprox(result.ecScaling.achievedEC, 1.8, 0.1, 'Achieved EC should be close to target');
+  });
+
+  // ==========================================================================
+  // MILP Robustness / Dev-Log Tests
+  // ==========================================================================
+
+  test('solveMilpBrowser: dev-log hook receives messages and flushes ones queued before it existed', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // The UI's dev-log panel installs globalThis.addDevLog after the app boots; any solver
+    // calls made before that (or when the panel is closed) queue into _pendingDevLogs and get
+    // flushed the next time addDevLog is available. Real hook used by the calculator's debug
+    // console, not test-only scaffolding.
+    const kno3 = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical');
+    delete globalThis.addDevLog;
+    globalThis._pendingDevLogs = [];
+
+    await window.FertilizerCore.solveMilpBrowser({
+      fertilizers: [kno3], targets: { N_total: 150, K2O: 500 }, volume: 1
+    });
+    assert(globalThis._pendingDevLogs.length > 0, 'Logs should queue when addDevLog is not set');
+
+    const captured = [];
+    globalThis.addDevLog = (msg, type) => captured.push({ msg, type });
+    try {
+      await window.FertilizerCore.solveMilpBrowser({
+        fertilizers: [kno3], targets: { N_total: 150, K2O: 500 }, volume: 1
+      });
+      assert(captured.length > 0, 'Queued + new logs should flush through addDevLog');
+      assertEqual(globalThis._pendingDevLogs.length, 0, 'Pending queue should be drained after flush');
+    } finally {
+      delete globalThis.addDevLog;
+      delete globalThis._pendingDevLogs;
+    }
+  });
+
+  test('solveMilpBrowser: warns when a PeKacid cap is set but PeKacid is not among the selected fertilizers', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    const kno3 = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical');
+    const captured = [];
+    globalThis.addDevLog = (msg, type) => captured.push({ msg, type });
+    try {
+      await window.FertilizerCore.solveMilpBrowser({
+        fertilizers: [kno3], targets: { N_total: 150, K2O: 500 }, volume: 1, pekacidMaxLimit: 5
+      });
+      assert(
+        captured.some(l => l.msg.includes('PeKacid limit set but PeKacid not in selected fertilizers')),
+        'Should warn that the PeKacid cap has no effect without PeKacid selected'
+      );
+    } finally {
+      delete globalThis.addDevLog;
+    }
+  });
+
+  test('solveMilpBrowser: throws when the LPModel dependency is not loaded', async () => {
+    const kno3 = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical');
+    const savedLPModel = globalThis.LPModel;
+    delete globalThis.LPModel;
+    try {
+      let threw = false;
+      try {
+        await window.FertilizerCore.solveMilpBrowser({
+          fertilizers: [kno3], targets: { N_total: 150, K2O: 500 }, volume: 1
+        });
+      } catch (e) {
+        threw = true;
+        assert(e.message.includes('MILP dependencies not loaded'), 'Should identify the missing dependency');
+      }
+      assert(threw, 'Should throw without LPModel');
+    } finally {
+      globalThis.LPModel = savedLPModel;
+    }
+  });
+
+  test('optimizeFormula: throws a clear error when solveMilpBrowser is unavailable', async () => {
+    const savedSolveMilp = window.FertilizerCore.solveMilpBrowser;
+    delete window.FertilizerCore.solveMilpBrowser;
+    try {
+      let threw = false;
+      try {
+        await window.FertilizerCore.optimizeFormula({ N: 1, P: 1, K: 1 }, 10, [window.FertilizerCore.FERTILIZERS[0]], 100, 'oxide', {});
+      } catch (e) {
+        threw = true;
+        assert(e.message.includes('MILP solver'), 'Error should name the missing solver');
+      }
+      assert(threw, 'Should throw without solveMilpBrowser');
+    } finally {
+      window.FertilizerCore.solveMilpBrowser = savedSolveMilp;
+    }
+  });
+
+  test('optimizeFormula: dev-log hook receives messages and flushes ones queued before it existed', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // optimizeFormula has its own devLog closure (separate from solveMilpBrowser's), which
+    // queues into the same globalThis._pendingDevLogs when no UI hook is installed yet.
+    const kno3 = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical');
+    delete globalThis.addDevLog;
+    globalThis._pendingDevLogs = [];
+
+    await window.FertilizerCore.optimizeFormula({ N: 1, K: 2.8 }, 1, [kno3], 100, 'oxide', {});
+    assert(globalThis._pendingDevLogs.length > 0, 'Logs should queue when addDevLog is not set');
+
+    const captured = [];
+    globalThis.addDevLog = (msg, type) => captured.push({ msg, type });
+    try {
+      await window.FertilizerCore.optimizeFormula({ N: 1, K: 2.8 }, 1, [kno3], 100, 'oxide', {});
+      assert(captured.length > 0, 'Queued + new logs should flush through addDevLog');
+
+      // optimizeFormula's OWN devLog closure (as opposed to solveMilpBrowser's, exercised
+      // above) is only ever invoked from the targetEC-scaling helpers - specifically here,
+      // _rerunKeepingPekacidAtCapIfScalingWouldDropIt, using the same real PeKacid-at-cap
+      // scenario as the "stays at cap when EC scaling would drop it" test above.
+      captured.length = 0;
+      const fertObjects = [
+        window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_nitrate_typical'),
+        window.FertilizerCore.FERTILIZERS.find(f => f.id === 'icl_pekacid_pk_acid'),
+        window.FertilizerCore.FERTILIZERS.find(f => f.id === 'mkp_typical'),
+        window.FertilizerCore.FERTILIZERS.find(f => f.id === 'calcium_nitrate_calcinit_typical')
+      ].filter(Boolean);
+      await window.FertilizerCore.optimizeFormula(
+        { N: 150, P: 250, K: 250, Ca: 150 }, 10, fertObjects, 100, 'oxide',
+        { useAbsoluteTargets: true, pekacidMaxLimit: 0.15, targetEC: 0.969178696654033, useMilp: true }
+      );
+      assert(
+        captured.some(l => l.msg.includes('Re-running MILP with PeKacid fixed at cap')),
+        'optimizeFormula devLog should report the PeKacid-at-cap re-run'
+      );
+    } finally {
+      delete globalThis.addDevLog;
+      delete globalThis._pendingDevLogs;
+    }
+  });
+
+  test('FertilizerCore.isHighsLoaded: reports true once the WASM solver has been used', () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // By this point in the suite, multiple MILP-backed tests above have already run, so the
+    // HiGHS instance is cached (module-level cache, not reset between tests).
+    assert(window.FertilizerCore.isHighsLoaded(), 'Solver should be cached after prior MILP calls');
+  });
+
   // ==========================================================================
   // Regression Tests
   // ==========================================================================
@@ -750,6 +1251,168 @@
     assertApprox(contrib.P, 227, 2, 'P contribution from P2O5');
     // K: 34 × 10 × 0.83013 = 282.24 → ~282 ppm per g/L
     assertApprox(contrib.K, 282, 2, 'K contribution from K2O');
+  });
+
+  test('getElementalContributionPerGram: MgO-form fertilizer (Kieserite-style Magnesium Sulfate)', () => {
+    // Real product sold with Mg expressed as MgO rather than elemental Mg on the label.
+    const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'magnesium_sulfate_16mgo');
+    assert(fert, 'Fertilizer should exist');
+    const contrib = window.FertilizerCore.getElementalContributionPerGram(fert);
+
+    // 16% MgO × 10 × 0.60317 = 96.5 ppm per g/L
+    assertApprox(contrib.Mg, 96.5, 1, 'Mg contribution from MgO');
+    // 13% S × 10 = 130 ppm per g/L (this product's S is already elemental, not SO3)
+    assertApprox(contrib.S, 130, 1, 'S contribution');
+  });
+
+  test('getElementalContributionPerGram: CaO-form NPK blend (ICL WSF 12:6:22+12CaO)', () => {
+    // Real compound fertilizer that carries N, P2O5, K2O, and CaO all in one product.
+    const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'wsf_12_6_22_12cao');
+    assert(fert, 'Fertilizer should exist');
+    const contrib = window.FertilizerCore.getElementalContributionPerGram(fert);
+
+    assertApprox(contrib.N, 120, 1, 'N contribution (N_NO3 form)');
+    assertApprox(contrib.P, 26.2, 1, 'P contribution from P2O5');
+    assertApprox(contrib.K, 182.6, 1, 'K contribution from K2O');
+    assertApprox(contrib.Ca, 85.8, 1, 'Ca contribution from CaO');
+  });
+
+  test('getElementalContributionPerGram: elemental-P fertilizer (Phosphoric Acid 49%)', () => {
+    // Real product where P is labeled directly (18.6% P), not as P2O5.
+    const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'phosphoric_acid_49');
+    assert(fert, 'Fertilizer should exist');
+    const contrib = window.FertilizerCore.getElementalContributionPerGram(fert);
+
+    // 18.6% P × 10 = 186 ppm per g/L (elemental P branch, not the P2O5 conversion branch)
+    assertApprox(contrib.P, 186, 0.5, 'P contribution from elemental P');
+    assertEqual(contrib.N, 0, 'N contribution');
+    assertEqual(contrib.K, 0, 'K contribution');
+  });
+
+  test('getElementalContributionPerGram: elemental-K fertilizer (Potassium Bicarbonate)', () => {
+    // Real product where K is labeled directly (39% K), not as K2O.
+    const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === 'potassium_bicarbonate');
+    assert(fert, 'Fertilizer should exist');
+    const contrib = window.FertilizerCore.getElementalContributionPerGram(fert);
+
+    // 39% K × 10 = 390 ppm per g/L (elemental K branch, not the K2O conversion branch)
+    assertApprox(contrib.K, 390, 0.5, 'K contribution from elemental K');
+    assertEqual(contrib.P, 0, 'P contribution');
+  });
+
+  test('getElementalContributionPerGram: N_total-only and SO3-form branches (no current DB fertilizer exercises these)', () => {
+    // No fertilizer in FERTILIZERS currently reports N with only N_total (all real entries also
+    // set N_NO3/N_NH4/N_Urea), and none reports S as SO3 (all real S entries are elemental).
+    // These branches are still part of the function's documented contract, so exercise them
+    // directly against the function rather than against fabricated FERTILIZERS entries.
+    const contrib = window.FertilizerCore.getElementalContributionPerGram({
+      pct: { N_total: 20, SO3: 30 }
+    });
+
+    assertApprox(contrib.N, 200, 0.5, 'N contribution falls back to N_total when no N form is set');
+    // 30% SO3 × 10 × 0.40059 = 120.18 ppm per g/L
+    assertApprox(contrib.S, 120.18, 0.5, 'S contribution from SO3');
+  });
+
+  // ==========================================================================
+  // Fertilizer Compatibility Helper Tests
+  // ==========================================================================
+
+  test('hasCaContent / hasSulfateContent / hasPhosphateContent / hasSilicateContent: real fertilizer IDs', () => {
+    const FC = window.FertilizerCore;
+    assert(FC.hasCaContent('calcium_nitrate_calcinit_typical'), 'Calcium Nitrate should have Ca');
+    assert(!FC.hasCaContent('potassium_nitrate_typical'), 'Potassium Nitrate should not have Ca');
+
+    assert(FC.hasSulfateContent('ammonium_sulfate_common'), 'Ammonium Sulfate should have S');
+    assert(!FC.hasSulfateContent('potassium_nitrate_typical'), 'Potassium Nitrate should not have S');
+
+    assert(FC.hasPhosphateContent('mkp_typical'), 'MKP should have phosphate');
+    assert(!FC.hasPhosphateContent('potassium_nitrate_typical'), 'Potassium Nitrate should not have phosphate');
+
+    assert(FC.hasSilicateContent('potassium_silicate_liquid_typical'), 'Potassium Silicate should have Si');
+    assert(!FC.hasSilicateContent('potassium_nitrate_typical'), 'Potassium Nitrate should not have Si');
+  });
+
+  test('hasIncompatibleFertilizers: Ca + phosphate flags incompatible, Ca alone does not', () => {
+    const FC = window.FertilizerCore;
+    assert(
+      FC.hasIncompatibleFertilizers({ calcium_nitrate_calcinit_typical: 100, mkp_typical: 50 }),
+      'Calcium Nitrate + MKP should be flagged as incompatible (Ca + phosphate precipitation risk)'
+    );
+    assert(
+      !FC.hasIncompatibleFertilizers({ calcium_nitrate_calcinit_typical: 100, potassium_nitrate_typical: 50 }),
+      'Calcium Nitrate + Potassium Nitrate should not be flagged'
+    );
+    assert(
+      !FC.hasIncompatibleFertilizers({ calcium_nitrate_calcinit_typical: 100 }),
+      'A single fertilizer can never be "incompatible" with itself'
+    );
+  });
+
+  // ==========================================================================
+  // Ion Balance Tests
+  // ==========================================================================
+
+  test('getIonBalanceStatus: caution and imbalanced thresholds', () => {
+    const FC = window.FertilizerCore;
+    assertEqual(FC.getIonBalanceStatus(15).statusLevel, 'caution', '15% imbalance should be caution');
+    assertEqual(FC.getIonBalanceStatus(15).statusColor, '#ffc107', 'caution color');
+    assertEqual(FC.getIonBalanceStatus(25).statusLevel, 'imbalanced', '25% imbalance should be imbalanced');
+    assertEqual(FC.getIonBalanceStatus(25).statusColor, '#dc3545', 'imbalanced color');
+  });
+
+  test('calculateIonBalanceCore: includeBreakdown returns per-fertilizer ion detail', () => {
+    // 100g Potassium Nitrate (KNO3, molar mass 101.1) in 1L: perfectly balanced 1:1 K+/NO3-.
+    const result = window.FertilizerCore.calculateIonBalanceCore(
+      { potassium_nitrate_typical: 100 },
+      1,
+      { includeBreakdown: true }
+    );
+
+    assertApprox(result.totalCations, 989.1, 0.5, 'total cations (K+)');
+    assertApprox(result.totalAnions, 989.1, 0.5, 'total anions (NO3-)');
+    assertEqual(result.statusLevel, 'balanced', 'KNO3 alone is perfectly ion-balanced');
+    assertHasKey(result, 'fertilizerBreakdown', 'should include breakdown when requested');
+    assertEqual(result.fertilizerBreakdown.length, 1, 'one fertilizer in the breakdown');
+
+    const entry = result.fertilizerBreakdown[0];
+    assertEqual(entry.fert.id, 'potassium_nitrate_typical', 'breakdown entry identifies the fertilizer');
+    assertEqual(entry.ions.length, 2, 'KNO3 dissociates into 2 ion species (K+, NO3-)');
+    const kIon = entry.ions.find(i => i.ion === 'K⁺');
+    assertApprox(kIon.meq, 989.1, 0.5, 'K+ meq/L for this entry');
+    assertApprox(kIon.calculation.moles, 0.9891, 0.001, 'moles of KNO3 dissolved');
+  });
+
+  // ==========================================================================
+  // checkRatioMatch Tests
+  // ==========================================================================
+
+  test('checkRatioMatch: no positive targets always matches', () => {
+    const result = window.FertilizerCore.checkRatioMatch({ N: 100 }, {});
+    assertEqual(result.matches, true, 'empty target ratio trivially matches');
+  });
+
+  test('checkRatioMatch: zero achieved nutrients fails with per-nutrient errors', () => {
+    const result = window.FertilizerCore.checkRatioMatch({ N: 0, K: 0 }, { N: 2, K: 1 });
+    assertEqual(result.matches, false, 'zero achieved cannot match a positive target ratio');
+    assertEqual(result.errors.N.error, 1, 'N is 100% off target');
+    assertEqual(result.errors.K.error, 1, 'K is 100% off target');
+  });
+
+  // ==========================================================================
+  // parseRatio Edge Case Tests
+  // ==========================================================================
+
+  test('parseRatio: whitespace-only input is treated as empty', () => {
+    const result = window.FertilizerCore.parseRatio('   ');
+    assertHasKey(result, 'error', 'whitespace-only input should error');
+    assertEqual(result.error, 'Empty ratio string', 'specific empty-string error message');
+  });
+
+  test('parseRatio: labeled format with malformed number', () => {
+    const result = window.FertilizerCore.parseRatio('N.:P3');
+    assertHasKey(result, 'error', 'a bare decimal point is not a valid number');
+    assert(result.error.includes('Invalid number'), 'error should identify the bad number');
   });
 
   // ==========================================================================
