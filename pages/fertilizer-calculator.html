@@ -5497,6 +5497,8 @@ function getCaMgWarningStatus(ratio) {
 
 /**
  * Core ion balance calculation - unified function for all modes
+ * Delegates the math to FertilizerCore.calculateIonBalanceCore and layers
+ * i18n-aware status text on top (the core function is i18n-agnostic).
  * @param {Object|Array} fertilizers - Either array of {id, grams} or object {fertId: grams}
  * @param {number} volume - Solution volume in liters
  * @param {Object} options - Optional settings
@@ -5505,82 +5507,11 @@ function getCaMgWarningStatus(ratio) {
  * @returns {Object} Complete ion balance data
  */
 function calculateIonBalanceCore(fertilizers, volume, options = {}) {
-  const { includeBreakdown = false, useSymbols = true } = options;
+  const { useSymbols = true } = options;
+  const result = FertilizerCore.calculateIonBalanceCore(fertilizers, volume, options);
+  const { statusColor, statusText } = getIonBalanceStatus(result.imbalance, useSymbols);
 
-  let totalCations = 0;
-  let totalAnions = 0;
-  const ionDetails = {};
-  const fertilizerBreakdown = [];
-
-  // Normalize input: convert object to array if needed
-  const fertArray = Array.isArray(fertilizers)
-    ? fertilizers
-    : Object.entries(fertilizers).map(([fertId, grams]) => {
-        const fert = FERTILIZERS.find(f => f.id === fertId);
-        return fert ? { ...fert, grams } : { id: fertId, grams };
-      });
-
-  fertArray.forEach(fert => {
-    const ionData = ION_DATA[fert.id];
-    if (!ionData || !fert.grams || fert.grams <= 0) return;
-
-    const moles = fert.grams / ionData.molarMass;
-    const fertIons = [];
-
-    ionData.ions.forEach(ionInfo => {
-      const meq = moles * ionInfo.count * ionInfo.charge * 1000;
-      const meqPerLiter = meq / volume;
-
-      if (includeBreakdown) {
-        fertIons.push({
-          ...ionInfo,
-          meq: meqPerLiter,
-          calculation: { moles, meq, meqPerLiter }
-        });
-      }
-
-      // Track by ion name
-      if (!ionDetails[ionInfo.ion]) {
-        ionDetails[ionInfo.ion] = { meq: 0, type: ionInfo.type };
-      }
-      ionDetails[ionInfo.ion].meq += meqPerLiter;
-
-      // Add to totals
-      if (ionInfo.type === 'cation') {
-        totalCations += meqPerLiter;
-      } else {
-        totalAnions += meqPerLiter;
-      }
-    });
-
-    if (includeBreakdown) {
-      fertilizerBreakdown.push({
-        fert,
-        ionData,
-        moles,
-        ions: fertIons
-      });
-    }
-  });
-
-  const average = (totalCations + totalAnions) / 2;
-  const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
-  const { statusColor, statusText } = getIonBalanceStatus(imbalance, useSymbols);
-
-  const result = {
-    totalCations,
-    totalAnions,
-    imbalance,
-    statusColor,
-    statusText,
-    ionDetails
-  };
-
-  if (includeBreakdown) {
-    result.fertilizerBreakdown = fertilizerBreakdown;
-  }
-
-  return result;
+  return { ...result, statusColor, statusText };
 }
 
 /**
