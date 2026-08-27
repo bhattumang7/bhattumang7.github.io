@@ -2,9 +2,9 @@
  * Odia (or) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.or = {
+globalThis.i18nLocales.or = {
   // Page title
   pageTitle: 'ସାର କ୍ୟାଲକୁଲେଟର',
 

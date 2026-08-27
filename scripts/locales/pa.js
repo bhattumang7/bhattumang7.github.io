@@ -2,9 +2,9 @@
  * Punjabi Gurmukhi (pa) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.pa = {
+globalThis.i18nLocales.pa = {
   // Page title
   pageTitle: 'ਖਾਦ ਕੈਲਕੁਲੇਟਰ',
 

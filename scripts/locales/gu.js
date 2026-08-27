@@ -2,9 +2,9 @@
  * Gujarati (gu) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.gu = {
+globalThis.i18nLocales.gu = {
 
   pageTitle: 'ખાતર ગણક',
   whatWouldYouLikeToDo: 'તમે શું કરવા માંગો છો?',
@@ -110,7 +110,6 @@ window.i18nLocales.gu = {
   nitrogenFormLabel: 'નાઇટ્રોજન રૂપ:',
   nitrogenFormsLabel: 'નાઇટ્રોજન રૂપો:',
   ofTotalN: 'કુલ N નો',
-  clickToLearnIonBalance: 'આયન સંતુલન ગણતરી કેવી રીતે થાય છે તે જાણવા ક્લિક કરો',
   meqPerLiter: 'meq/L',
   cations: 'ધનાયન',
   anions: 'ઋણાયન',
@@ -128,8 +127,6 @@ window.i18nLocales.gu = {
   ionBalanceDetails: 'આયન સંતુલન વિગતો',
   totalCations: 'કુલ ધનાયન',
   totalAnions: 'કુલ ઋણાયન',
-  whatIsIonBalance: 'આયન સંતુલન શું છે?',
-  ionBalanceExplanation: 'ખાતર ચાર્જ થયેલા આયનોમાં ઓગળે છે (ધનાયન જેમ કે K⁺, Ca²⁺, NH₄⁺ અને ઋણાયન જેમ કે NO₃⁻, SO₄²⁻, H₂PO₄⁻). અસંતુલન ≤10% સારું છે; વધારે મૂલ્યો pH માં ફેરફાર કરી શકે છે.',
   phTendencyOnUptake: 'છોડ શોષણ પર pH વૃત્તિ',
   phTendencyAcidic: '↓ pH એસિડિક તરફ',
   phTendencyAlkaline: '↑ pH ક્ષારીય તરફ',
@@ -180,9 +177,6 @@ window.i18nLocales.gu = {
   nitrateN: 'નાઇટ્રેટ-N (NO₃-N)',
   ammoniumN: 'એમોનિયમ-N (NH₄-N)',
   phosphorusOxide: 'ફોસ્ફરસ (P₂O₅)',
-  phosphorusElemental: 'ફોસ્ફરસ (P)',
-  potassiumOxide: 'પોટેશિયમ (K₂O)',
-  potassiumElemental: 'પોટેશિયમ (K)',
   calcium: 'કેલ્શિયમ (Ca)',
   magnesium: 'મેગ્નેશિયમ (Mg)',
   sulfur: 'ગંધક (S)',
@@ -231,7 +225,6 @@ window.i18nLocales.gu = {
   nutrientOffTargetAcceptable: '{nutrient} લક્ષ્ય કરતાં {percent}% દૂર છે (સ્વીકાર્ય શ્રેણી)',
 
   // Warnings section
-  warningsAndRecommendations: 'ચેતવણીઓ અને ભલામણો',
   cannotAchieveExactTargets: 'ચોક્કસ લક્ષ્યો પ્રાપ્ત કરી શકાતા નથી',
   cannotAchieveExactTargetsDescription: 'ઉપલબ્ધ ખાતર સાથે આ સૌથી નજીકનું ફોર્મ્યુલા છે. તમારા લક્ષ્યો સમાયોજિત કરવાનું અથવા બતાવેલ વિચલનો સ્વીકારવાનું વિચારો.',
   cannotAchieveExactTargetsConsider: 'પસંદ કરેલ ખાતર સાથે આ સૌથી નજીકનું ફોર્મ્યુલા છે. વિચારો:',
@@ -311,8 +304,6 @@ window.i18nLocales.gu = {
   selectedFertilizers: 'પસંદ કરેલ ખાતર',
   resultsPpm: 'પરિણામો (PPM)',
   ionBalance: 'આયન સંતુલન',
-  nutrientRatioAnalysis: 'પોષક અનુપાત વિશ્લેષણ',
-  ecPrediction: 'EC અનુમાન',
   predictedEc: 'અનુમાનિત EC',
   electricalConductivity25C: 'વિદ્યુત વાહકતા (25°C)',
   whatIsPpm: 'PPM શું છે?',
@@ -340,9 +331,7 @@ window.i18nLocales.gu = {
   howEachFertilizerContributesToPpm: 'દરેક ખાતર PPM મૂલ્યોમાં કેવી રીતે યોગદાન આપે છે તે અહીં છે:',
   addFertilizersToSeeBreakdown: 'થોડાં ખાતર ઉમેરો અને અહીં તમારું વ્યક્તિગત ગણતરી વિગતવાર જોવા માટે "Calculate" પર ક્લિક કરો!',
   calculatorShowsStepByStep: 'તમારા પસંદ કરેલા ખાતરો અને તેમની માત્રાના આધારે, દરેક PPM મૂલ્ય સુધી આપણે કેવી રીતે પહોંચ્યાં તે કેલ્ક્યુલેટર તમને પગલાંવાર બતાવશે.',
-  noCalculationYet: 'હજી કોઈ ગણતરી નથી',
   nutrientPpmValues: 'પોષક તત્વ PPM મૂલ્યો',
-  clickToLearnPpm: 'PPM ગણતરી કેવી રીતે થાય છે તે જાણવા ક્લિક કરો',
   nutrientRatiosRelative: 'પોષક અનુપાત (તમારા ઇનપુટની સરખામણીમાં)',
   nutrientHeader: 'પોષક તત્ત્વ',
   percentInFertilizerHeader: 'ખાતરમાં %',
@@ -375,11 +364,6 @@ window.i18nLocales.gu = {
   multiplyBy0830: '0.830 વડે ગુણો',
   multiplyBy0603: '0.603 વડે ગુણો',
   multiplyBy0715: '0.715 વડે ગુણો',
-  tip1PpmEquals: '1 PPM = 1 mg/L (એક લિટર દીઠ 1 મિલિગ્રામ)',
-  tip2StartLower: 'નીચા PPM મૂલ્યોથી શરૂઆત કરો અને ધીમે ધીમે વધારો',
-  tip3DifferentPlants: 'વિવિધ છોડને પોષક તત્ત્વોની અલગ અલગ જરૂરિયાત હોય છે',
-  tip4BalanceIsKey: 'વધુ ખાતર ≠ વધુ સારો વિકાસ; બેલેન્સ સૌથી મહત્વનું છે',
-  tip5CheckWater: 'શક્ય હોય તો તમારા પાણીમાં પહેલેથી રહેલા પોષક તત્ત્વોનું પ્રમાણ ચકાસો',
   quickTips: 'ઝડપી ટિપ્સ',
   whatIsIonBalance: 'આયન બેલેન્સ શું છે?',
   ionBalanceExplanation: 'જ્યારે ખાતર પાણીમાં ઓગળે છે, ત્યારે તે તૂટી ને <strong>આયન કહેવાતા વિદ્યુત આવેશિત કણોમાં</strong> વહેંચાય છે:',
@@ -403,7 +387,6 @@ window.i18nLocales.gu = {
   howEachFertilizerContributesIons: 'તમારા દ્રાવણમાં દરેક ખાતર કેવી રીતે આયનોનું યોગદાન આપે છે તે અહીં બતાવ્યું છે:',
   nutrientTotalsSummary: 'પોષક તત્ત્વોનો કુલ સારાંશ',
   whenNutrientsFromMultiple: 'જ્યારે પોષક તત્ત્વો અનેક ખાતરોમાંથી આવે છે, ત્યારે અમે તેમને સાથે ઉમેરીએ છીએ:',
-  noteLabel: 'નોંધ:',
   ppmCalculationNote: 'PPM (parts per million) = mg/L. ગણતરી: (ગ્રામ × પોષક%) ÷ વોલ્યુમ(L) × ૧૦૦૦',
   amountLabel: 'માત્રા:',
   amountUsedLabel: 'વપરાયેલી માત્રા:',
@@ -431,7 +414,6 @@ window.i18nLocales.gu = {
   aboutEcLabel: 'EC વિશે:',
   aboutEcDescription: 'EC (Electrical Conductivity) દ્રાવણની વીજળી વહન કરવાની ક્ષમતા માપે છે, જે કુલ ઓગળેલા ક્ષારોનું સૂચક છે. મોટાભાગના હાઇડ્રોપોનિક પાકો માટે 1.5-2.5 mS/cm વચ્ચેનું EC યોગ્ય ગણાય છે. ગણતરી HydroBuddy ના LMCv2 મોડેલ પરથી કરવામાં આવે છે.',
   showEcBreakdownByIon: 'આયન દ્વારા EC વિભાજન જુઓ',
-  ionHeader: 'આયન',
   concMmolLHeader: 'સાંદ્રતા (mmol/L)',
   lambdaHeader: 'λ (S·cm²/mol)',
   ecContribHeader: 'EC યોગદાન',

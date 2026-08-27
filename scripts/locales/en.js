@@ -2,9 +2,9 @@
  * English (en) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.en = {
+globalThis.i18nLocales.en = {
   // Page title
   pageTitle: 'Fertilizer Calculator',
 
@@ -89,7 +89,6 @@ window.i18nLocales.en = {
   before: 'Before',
   after: 'After',
   diffLabel: 'Diff',
-  total: 'Total',
 
   // Stock Solution Settings step
   stockSettingsTitle: 'Stock Solution Settings',
@@ -185,7 +184,6 @@ window.i18nLocales.en = {
   twoTankSeparationNote: 'Fertilizers separated to prevent calcium sulfate precipitation. Mix each tank with water separately, then combine in final solution.',
   fertilizersToAddPer: 'Fertilizers to Add (per {volume}{unit})',
   gramsShort: 'g',
-  gramsPerLiter: 'g/L',
   totalConcentration: 'total concentration',
   totalFertilizers: 'TOTAL ({count} fertilizers)',
   targetVsAchieved: 'Target vs Achieved',
@@ -212,7 +210,6 @@ window.i18nLocales.en = {
   nh4PctHint: 'Leave blank to let the solver choose the N form split freely.',
   nh4PctNotAchieved: 'NH₄-N target of {target}% could not be achieved with selected fertilizers (got {achieved}%). Try adding fertilizers with ammonium-N (MAP, DAP, ammonium sulfate) or a pure-K source (SOP) to the selection.',
   nh4PctPartiallyAchieved: 'NH₄-N target of {target}% approximately achieved ({achieved}%). Selected fertilizers limit the achievable split.',
-  clickToLearnIonBalance: 'Click to learn how we calculate Ion Balance',
   meqPerLiter: 'meq/L',
   cations: 'Cations',
   anions: 'Anions',
@@ -230,8 +227,6 @@ window.i18nLocales.en = {
   ionBalanceDetails: 'Ion Balance Details',
   totalCations: 'Total Cations',
   totalAnions: 'Total Anions',
-  whatIsIonBalance: 'What is ion balance?',
-  ionBalanceExplanation: 'Fertilizers dissolve into charged ions (cations like K⁺, Ca²⁺, NH₄⁺ and anions like NO₃⁻, SO₄²⁻, H₂PO₄⁻). Imbalance ≤10% is good; higher values may cause pH swings.',
   phTendencyOnUptake: 'pH tendency on plant uptake',
   phTendencyAcidic: '↓ Pulls pH acidic',
   phTendencyAlkaline: '↑ Pulls pH alkaline',
@@ -297,9 +292,6 @@ window.i18nLocales.en = {
   nitrateN: 'Nitrate-N (NO₃-N)',
   ammoniumN: 'Ammonium-N (NH₄-N)',
   phosphorusOxide: 'Phosphorus (P₂O₅)',
-  phosphorusElemental: 'Phosphorus (P)',
-  potassiumOxide: 'Potassium (K₂O)',
-  potassiumElemental: 'Potassium (K)',
   calcium: 'Calcium (Ca)',
   magnesium: 'Magnesium (Mg)',
   sulfur: 'Sulfur (S)',
@@ -353,7 +345,6 @@ window.i18nLocales.en = {
   nutrientOffTargetAcceptable: '{nutrient} is {percent}% off target (acceptable range)',
 
   // Warnings section
-  warningsAndRecommendations: 'Warnings & Recommendations',
   cannotAchieveExactTargets: 'Cannot achieve exact targets',
   cannotAchieveExactTargetsDescription: 'This is the closest formula achievable with available fertilizers. Consider adjusting your targets or accepting the shown deviations.',
   cannotAchieveExactTargetsConsider: 'This is the closest formula achievable with selected fertilizers. Consider:',
@@ -434,8 +425,6 @@ window.i18nLocales.en = {
   selectedFertilizers: 'Selected Fertilizers',
   resultsPpm: 'Results (PPM)',
   ionBalance: 'Ion Balance',
-  nutrientRatioAnalysis: 'Nutrient Ratio Analysis',
-  ecPrediction: 'EC Prediction',
   estimatedEC: 'Estimated EC',
   targetEC: 'Target EC',
   scaledToMatch: 'Scaled to match',
@@ -469,9 +458,7 @@ window.i18nLocales.en = {
   howEachFertilizerContributesToPpm: 'Here\'s exactly how each fertilizer contributes to the PPM values:',
   addFertilizersToSeeBreakdown: 'Add some fertilizers and click "Calculate" to see your personalized calculation breakdown here!',
   calculatorShowsStepByStep: 'The calculator will show you step-by-step how we arrived at each PPM value based on your specific fertilizer selections and amounts.',
-  noCalculationYet: 'No Calculation Yet',
   nutrientPpmValues: 'Nutrient PPM Values',
-  clickToLearnPpm: 'Click to learn how we calculate PPM',
   nutrientRatiosRelative: 'Nutrient Ratios (relative to your input)',
   nutrientHeader: 'Nutrient',
   percentInFertilizerHeader: '% in Fertilizer',
@@ -532,7 +519,6 @@ window.i18nLocales.en = {
   howEachFertilizerContributesIons: 'Here\'s how each fertilizer contributes ions to your solution:',
   nutrientTotalsSummary: 'Nutrient Totals Summary',
   whenNutrientsFromMultiple: 'When nutrients come from multiple fertilizers, we add them together:',
-  noteLabel: 'Note:',
   ppmCalculationNote: 'PPM (parts per million) = mg/L. Calculated as: (grams × nutrient%) ÷ volume(L) × 1000',
   amountLabel: 'Amount:',
   amountUsedLabel: 'Amount used:',
@@ -560,7 +546,6 @@ window.i18nLocales.en = {
   aboutEcLabel: 'About EC:',
   aboutEcDescription: 'EC (Electrical Conductivity) measures the solution\'s ability to conduct electricity, indicating total dissolved salts. Most hydroponic crops prefer EC between 1.5-2.5 mS/cm. Calculation uses the LMCv2 model from HydroBuddy.',
   showEcBreakdownByIon: 'Show EC breakdown by ion',
-  ionHeader: 'Ion',
   concMmolLHeader: 'Conc. (mmol/L)',
   lambdaHeader: 'λ (S·cm²/mol)',
   ecContribHeader: 'EC Contrib.',

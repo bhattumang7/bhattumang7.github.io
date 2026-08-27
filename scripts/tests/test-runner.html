@@ -101,8 +101,8 @@
       // Wait a bit for scripts to initialize
       await new Promise(r => setTimeout(r, 100));
 
-      if (window.StockSolutionMakerTests) {
-        const results = await window.StockSolutionMakerTests.runTests();
+      if (globalThis.StockSolutionMakerTests) {
+        const results = await globalThis.StockSolutionMakerTests.runTests();
 
         summary.textContent = `Tests completed: ${results.passed} passed, ${results.failed} failed`;
         summary.className = 'summary ' + (results.failed === 0 ? 'success' : 'failure');

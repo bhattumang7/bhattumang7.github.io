@@ -2,9 +2,9 @@
  * Assamese (as) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.as = {
+globalThis.i18nLocales.as = {
   // Page title
   pageTitle: 'সাৰ কেলকুলেটৰ',
 

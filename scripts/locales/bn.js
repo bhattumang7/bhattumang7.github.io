@@ -2,9 +2,9 @@
  * Bengali (Cholito Bhasha) (bn) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.bn = {
+globalThis.i18nLocales.bn = {
   pageTitle: 'সার ক্যালকুলেটর',
   whatWouldYouLikeToDo: 'আপনি কি করতে চান?',
   chooseModeDescription: 'আপনার কাছে কী তথ্য আছে তার উপর ভিত্তি করে একটি ক্যালকুলেটর মোড বেছে নিন।',

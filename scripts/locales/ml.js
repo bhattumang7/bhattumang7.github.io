@@ -2,9 +2,9 @@
  * Malayalam (ml) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.ml = {
+globalThis.i18nLocales.ml = {
   // Page title
   pageTitle: 'വളം കാൽക്കുലേറ്റർ',
 
@@ -194,7 +194,6 @@ window.i18nLocales.ml = {
   phosphorusOxide: 'ഫോസ്ഫറസ് (P₂O₅)',
   phosphorusElemental: 'ഫോസ്ഫറസ് (P)',
   potassiumOxide: 'പൊട്ടാസ്യം (K₂O)',
-  potassiumElemental: 'പൊട്ടാസ്യം (K)',
   calcium: 'കാൽസ്യം (Ca)',
   magnesium: 'മഗ്നീഷ്യം (Mg)',
   sulfur: 'സൾഫർ (S)',
@@ -220,15 +219,9 @@ window.i18nLocales.ml = {
   // Alert messages
   alertSelectFertilizerAndAmount: 'ദയവായി കുറഞ്ഞത് ഒരു വളമെങ്കിലും തിരഞ്ഞെടുത്ത് അളവ് നൽകുക.',
   alertEnterTargetPpm: 'ദയവായി കുറഞ്ഞത് ഒരു ലക്ഷ്യ PPM മൂല്യമെങ്കിലും നൽകുക.',
-  alertEnterRatioValue: 'ദയവായി പൂജ്യത്തിൽ കൂടുതലുള്ള ഒരു അനുപാത മൂല്യമെങ്കിലും നൽകുക.',
   alertSelectFertilizer: 'ദയവായി കുറഞ്ഞത് ഒരു വളമെങ്കിലും തിരഞ്ഞെടുക്കുക.',
   alertNoCalculationData: 'കണക്കുകൂട്ടൽ ഡാറ്റ ലഭ്യമല്ല.',
   alertEnterValidVolume: 'ദയവായി 0-ൽ കൂടുതലുള്ള സാധുവായ അളവ് നൽകുക',
-  alertFixInvalidInputs: 'ദയവായി അസാധുവായ ഇൻപുട്ട് മൂല്യങ്ങൾ (ചുവപ്പിൽ ഹൈലൈറ്റ് ചെയ്തത്) ശരിയാക്കുക',
-  alertSelectFertilizerWithAmount: 'ദയവായി 0-ൽ കൂടുതൽ അളവുള്ള ഒരു വളമെങ്കിലും തിരഞ്ഞെടുക്കുക',
-  alertEnterValidSolutionVolume: 'ദയവായി 0-ൽ കൂടുതലുള്ള സാധുവായ സൊല്യൂഷൻ വോള്യം നൽകുക',
-  alertEnterPositiveNutrientTarget: 'ദയവായി ഒരു പോഷക ലക്ഷ്യത്തിനെങ്കിലും പോസിറ്റീവ് മൂല്യം നൽകുക',
-  alertSelectAvailableFertilizer: 'ദയവായി ലഭ്യമായ ഒരു വളമെങ്കിലും തിരഞ്ഞെടുക്കുക',
   alertCalculationError: 'കണക്കുകൂട്ടലിൽ ഒരു പിശക് സംഭവിച്ചു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
   alertNoFormulaResults: 'വിഭജിക്കാൻ ഫോർമുല ഫലങ്ങളില്ല. ദയവായി ആദ്യം ഒരു ഫോർമുല നിർമ്മിക്കുക.',
   alertNoCalculationResults: 'വിഭജിക്കാൻ കണക്കുകൂട്ടൽ ഫലങ്ങളില്ല. ദയവായി ആദ്യം വളങ്ങൾ കണക്കാക്കുക.',
@@ -247,10 +240,6 @@ window.i18nLocales.ml = {
   warningsAndRecommendations: 'മുന്നറിയിപ്പുകളും ശുപാർശകളും',
   cannotAchieveExactTargets: 'കൃത്യമായ ലക്ഷ്യങ്ങൾ നേടാൻ കഴിയുന്നില്ല',
   cannotAchieveExactTargetsDescription: 'ലഭ്യമായ വളങ്ങൾ ഉപയോഗിച്ച് നേടാവുന്ന ഏറ്റവും അടുത്ത ഫോർമുലയാണിത്.',
-  cannotAchieveExactTargetsConsider: 'തിരഞ്ഞെടുത്ത വളങ്ങൾ ഉപയോഗിച്ച് നേടാവുന്ന ഏറ്റവും അടുത്ത ഫോർമുലയാണിത്. പരിഗണിക്കുക:',
-  considerSelectingAdditionalFertilizers: 'അധിക വളങ്ങൾ തിരഞ്ഞെടുക്കൽ',
-  considerAdjustingTargetValues: 'നിങ്ങളുടെ ലക്ഷ്യ മൂല്യങ്ങൾ ക്രമീകരിക്കൽ',
-  considerAcceptingDeviations: 'കാണിച്ചിരിക്കുന്ന വ്യതിയാനങ്ങൾ സ്വീകരിക്കൽ',
   targetsSuccessfullyAchieved: 'ലക്ഷ്യങ്ങൾ വിജയകരമായി നേടി!',
   allNutrientValuesWithinRange: 'എല്ലാ പോഷക മൂല്യങ്ങളും സ്വീകാര്യ പരിധിയിലാണ്.',
   targetRatioLabel: 'ലക്ഷ്യം ({ratio})',
@@ -263,7 +252,6 @@ window.i18nLocales.ml = {
   warningCategoryCaSilicate: 'സ്റ്റോക്ക് സൊല്യൂഷൻ: Ca + സിലിക്കേറ്റ്',
   warningCategoryHighAmmonium: 'ഉയർന്ന അമോണിയം',
   warningCategoryZeroAmmonium: 'അമോണിയം ഇല്ല',
-  warningCategoryVeryLowAmmonium: 'വളരെ കുറഞ്ഞ അമോണിയം',
   warningCategoryLowCalcium: 'കുറഞ്ഞ കാൽസ്യം',
   warningCategoryLowMagnesium: 'കുറഞ്ഞ മഗ്നീഷ്യം',
   warningCategoryMissingMicronutrients: 'വിട്ടുപോയ സൂക്ഷ്മപോഷകങ്ങൾ',
@@ -272,16 +260,8 @@ window.i18nLocales.ml = {
   warningCategoryHighChloride: 'ഉയർന്ന ക്ലോറൈഡ്',
   warningCategoryHighSodium: 'ഉയർന്ന സോഡിയം',
   warningCategoryIonImbalance: 'അയോൺ അസന്തുലിതാവസ്ഥ',
-  warningCategoryKMgRatio: 'K:Mg അനുപാതം',
-  warningCategoryCaMgKBalance: '(Ca+Mg):K ബാലൻസ്',
-  warningCategoryNKRatio: 'N:K അനുപാതം',
   warningCategoryHighEC: 'ഉയർന്ന EC',
   warningCategoryLowEC: 'കുറഞ്ഞ EC',
-  warningCategoryHighBoron: 'ഉയർന്ന ബോറോൺ',
-  warningCategoryHighCopper: 'ഉയർന്ന ചെമ്പ്',
-  warningCategoryHighZinc: 'ഉയർന്ന സിങ്ക്',
-  warningCategoryHighManganese: 'ഉയർന്ന മാംഗനീസ്',
-  warningCategoryChargeBalance: 'ചാർജ് ബാലൻസ്',
 
   // Warning messages
   warningMsgCaSulfate: 'കാൽസ്യവും സൾഫേറ്റും ഉണ്ട്. സ്റ്റോക്ക് സൊല്യൂഷനുകൾ ഉണ്ടാക്കുമ്പോൾ, കാൽസ്യം സൾഫേറ്റ് അവക്ഷേപം (ജിപ്സം) തടയാൻ കാൽസ്യം സ്രോതസ്സുകൾ ({caFertilizers}) സൾഫേറ്റ് സ്രോതസ്സുകളിൽ ({sFertilizers}) നിന്ന് വേർതിരിച്ച് സൂക്ഷിക്കുക.',
@@ -329,11 +309,7 @@ window.i18nLocales.ml = {
   ecPrediction: 'EC പ്രവചനം',
   estimatedEC: 'കണക്കാക്കിയ EC',
   targetEC: 'ലക്ഷ്യ EC',
-  scaledToMatch: 'പൊരുത്തപ്പെടുത്താൻ സ്കെയിൽ ചെയ്തു',
   nutrientRatios: 'പോഷക അനുപാതങ്ങൾ',
-  nutritionalConsiderations: 'പോഷക പരിഗണനകൾ',
-  predictedEc: 'പ്രവചിച്ച EC',
-  electricalConductivity25C: 'ഇലക്ട്രിക്കൽ കണ്ടക്റ്റിവിറ്റി (25°C)',
 
   // Step indicators
   stepOf: 'ഘട്ടം {current} / {total}',

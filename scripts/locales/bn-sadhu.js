@@ -2,9 +2,9 @@
  * Bengali (Sadhu Bhasha) (bn-sadhu) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales['bn-sadhu'] = {
+globalThis.i18nLocales['bn-sadhu'] = {
   pageTitle: 'সার ক্যালকুলেটর',
   whatWouldYouLikeToDo: 'আপনি কি করতে চান?',
   chooseModeDescription: 'আপনার কাছে কী তথ্য আছে তার উপর ভিত্তি করে একটি ক্যালকুলেটর মোড বেছে নিন।',

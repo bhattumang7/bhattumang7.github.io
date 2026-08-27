@@ -158,7 +158,7 @@ permalink: /fertilizer-calculator/
               <template v-for="(fert, index) in modalData.activeFertilizers" :key="fert?.id || index">
                 <div v-if="fert && fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
                 <h4 style="margin: 0 0 15px 0; color: #007bff; display: flex; align-items: center; gap: 10px;">
-                  <span class="step-number" style="background: #007bff; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
+                  <span class="step-number" style="background: #006ee5; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
                   {{ i18n.getFertilizerName(fert) }}
                 </h4>
 
@@ -270,7 +270,7 @@ permalink: /fertilizer-calculator/
               <template v-for="(fert, index) in modalData.activeFertilizers" :key="fert?.id || index">
                 <div v-if="fert && fert.id" class="step" style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
                 <h4 style="margin: 0 0 15px 0; color: #007bff; display: flex; align-items: center; gap: 10px;">
-                  <span class="step-number" style="background: #007bff; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
+                  <span class="step-number" style="background: #006ee5; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em;">{{ index + 1 }}</span>
                   {{ i18n.getFertilizerName(fert) }}
                 </h4>
 
@@ -600,7 +600,7 @@ permalink: /fertilizer-calculator/
               </div>
             </div>
             <p style="margin-top: 10px; color: #666;">{{ i18n.t('kCaOptimalRange') }}</p>
-            <p v-if="modalData.kCaStatus?.level === 'kLeaning'" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #e65100; font-size: 0.9em;">
+            <p v-if="modalData.kCaStatus?.level === 'kLeaning'" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #b84000; font-size: 0.9em;">
               {{ i18n.t('kCaContextualWarning') }}
             </p>
           </div>
@@ -730,7 +730,7 @@ permalink: /fertilizer-calculator/
               </div>
             </div>
             <p style="margin-top: 10px; color: #666;">{{ i18n.t('no3Nh4OptimalRange') }}</p>
-            <p v-if="modalData.no3Nh4Status?.level === 'watch'" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #e65100; font-size: 0.9em;">
+            <p v-if="modalData.no3Nh4Status?.level === 'watch'" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #b84000; font-size: 0.9em;">
               {{ i18n.t('no3Nh4ContextualWarning') }}
             </p>
           </div>
@@ -742,7 +742,7 @@ permalink: /fertilizer-calculator/
               <div style="font-size: 2em; font-weight: bold; color: #0097a7;">
                 100% NO₃
               </div>
-              <div style="padding: 6px 12px; border-radius: 20px; font-weight: 500; background: #17a2b8; color: white;">
+              <div style="padding: 6px 12px; border-radius: 20px; font-weight: 500; background: #128193; color: white;">
                 {{ i18n.t('no3Nh4StatusVeryHigh') }}
               </div>
             </div>
@@ -890,7 +890,7 @@ permalink: /fertilizer-calculator/
               </div>
             </div>
             <p style="margin-top: 10px; color: #666;">{{ i18n.t('nkOptimalRange') }}</p>
-            <p v-if="modalData.nkStatus?.showWarning" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #e65100; font-size: 0.9em;">
+            <p v-if="modalData.nkStatus?.showWarning" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #b84000; font-size: 0.9em;">
               {{ i18n.t('nkContextualWarning') }}
             </p>
           </div>
@@ -1038,7 +1038,7 @@ permalink: /fertilizer-calculator/
               </div>
             </div>
             <p style="margin-top: 10px; color: #666;">{{ i18n.t('caMgOptimalRange') }}</p>
-            <p v-if="modalData.caMgStatus?.showWarning" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #e65100; font-size: 0.9em;">
+            <p v-if="modalData.caMgStatus?.showWarning" style="margin-top: 8px; padding: 8px 12px; background: #fff3e0; border-radius: 4px; color: #b84000; font-size: 0.9em;">
               {{ i18n.t('caMgContextualWarning') }}
             </p>
           </div>
@@ -1749,36 +1749,36 @@ permalink: /fertilizer-calculator/
 
     <div class="stock-settings-grid">
       <div class="stock-setting-item">
-        <label data-i18n="stockConcentrationLabel">Concentration Factor</label>
+        <label for="stockConcentrationFactor" data-i18n="stockConcentrationLabel">Concentration Factor</label>
         <div class="stock-setting-input">
-          <input type="number" v-model.number="stockSettings.concentrationFactor" min="10" max="500" step="10">
+          <input id="stockConcentrationFactor" type="number" v-model.number="stockSettings.concentrationFactor" min="10" max="500" step="10">
           <span>×</span>
         </div>
         <span class="stock-setting-hint" data-i18n="stockConcentrationHint">How many times concentrated (typically 100× or 200×)</span>
       </div>
 
       <div class="stock-setting-item">
-        <label data-i18n="stockTankVolumeLabel">Stock Tank Volume</label>
+        <label for="stockTankVolume" data-i18n="stockTankVolumeLabel">Stock Tank Volume</label>
         <div class="stock-setting-input">
-          <input type="number" v-model.number="stockSettings.tankVolume" min="1" max="1000" step="1">
+          <input id="stockTankVolume" type="number" v-model.number="stockSettings.tankVolume" min="1" max="1000" step="1">
           <span data-i18n="liters">liters</span>
         </div>
         <span class="stock-setting-hint" data-i18n="stockTankVolumeHint">Volume of each stock tank you'll prepare</span>
       </div>
 
       <div class="stock-setting-item">
-        <label data-i18n="stockBaselineECLabel">Baseline Water EC (optional)</label>
+        <label for="stockBaselineEC" data-i18n="stockBaselineECLabel">Baseline Water EC (optional)</label>
         <div class="stock-setting-input">
-          <input type="number" v-model.number="stockSettings.baselineEC" min="0" max="2" step="0.1" placeholder="0.0">
+          <input id="stockBaselineEC" type="number" v-model.number="stockSettings.baselineEC" min="0" max="2" step="0.1" placeholder="0.0">
           <span>mS/cm</span>
         </div>
         <span class="stock-setting-hint" data-i18n="stockBaselineECHint">EC of your source water (leave 0 for RO water)</span>
       </div>
 
       <div class="stock-setting-item">
-        <label data-i18n="stockMaxDosingLabel">Max Dosing Volume</label>
+        <label for="stockMaxDosing" data-i18n="stockMaxDosingLabel">Max Dosing Volume</label>
         <div class="stock-setting-input">
-          <input type="number" v-model.number="stockSettings.maxDosing" min="1" max="50" step="1">
+          <input id="stockMaxDosing" type="number" v-model.number="stockSettings.maxDosing" min="1" max="50" step="1">
           <span data-i18n="mlPerLiter">mL/L</span>
         </div>
         <span class="stock-setting-hint" data-i18n="stockMaxDosingHint">Maximum dosing per tank (affects concentration)</span>
@@ -1805,31 +1805,31 @@ permalink: /fertilizer-calculator/
         </div>
         <div class="stock-target-row stock-target-ratio-row">
           <div class="stock-target-field stock-ratio-field">
-            <label>N</label>
-            <input type="number" v-model.number="target.n" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+            <label :for="'stock-target-' + index + '-n'">N</label>
+            <input :id="'stock-target-' + index + '-n'" type="number" v-model.number="target.n" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
           </div>
           <div class="stock-target-field stock-ratio-field">
-            <label>P</label>
-            <input type="number" v-model.number="target.p" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+            <label :for="'stock-target-' + index + '-p'">P</label>
+            <input :id="'stock-target-' + index + '-p'" type="number" v-model.number="target.p" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
           </div>
           <div class="stock-target-field stock-ratio-field">
-            <label>K</label>
-            <input type="number" v-model.number="target.k" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+            <label :for="'stock-target-' + index + '-k'">K</label>
+            <input :id="'stock-target-' + index + '-k'" type="number" v-model.number="target.k" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
           </div>
           <div class="stock-target-field stock-ratio-field">
-            <label>Ca</label>
-            <input type="number" v-model.number="target.ca" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+            <label :for="'stock-target-' + index + '-ca'">Ca</label>
+            <input :id="'stock-target-' + index + '-ca'" type="number" v-model.number="target.ca" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
           </div>
           <div class="stock-target-field stock-ratio-field">
-            <label>Mg</label>
-            <input type="number" v-model.number="target.mg" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
+            <label :for="'stock-target-' + index + '-mg'">Mg</label>
+            <input :id="'stock-target-' + index + '-mg'" type="number" v-model.number="target.mg" min="0" step="0.1" placeholder="0" @input="validateStockRatio(index)">
           </div>
           <span v-if="target.ratioError" class="stock-target-error">{{ target.ratioError }}</span>
         </div>
         <div class="stock-target-row">
           <div class="stock-target-field">
-            <label>{{ i18n.t('targetECLabel') || 'Target EC' }}</label>
-            <select v-model="target.ec">
+            <label :for="'stock-target-' + index + '-ec'">{{ i18n.t('targetECLabel') || 'Target EC' }}</label>
+            <select :id="'stock-target-' + index + '-ec'" v-model="target.ec">
               <option value="0.6">0.6 mS/cm</option>
               <option value="0.8">0.8 mS/cm</option>
               <option value="1.0">1.0 mS/cm</option>
@@ -1842,8 +1842,8 @@ permalink: /fertilizer-calculator/
             </select>
           </div>
           <div class="stock-target-field">
-            <label>{{ i18n.t('targetNameLabel') || 'Name (optional)' }}</label>
-            <input type="text" v-model="target.name" :placeholder="i18n.t('targetNamePlaceholder') || 'e.g., Veg, Flower'">
+            <label :for="'stock-target-' + index + '-name'">{{ i18n.t('targetNameLabel') || 'Name (optional)' }}</label>
+            <input :id="'stock-target-' + index + '-name'" type="text" v-model="target.name" :placeholder="i18n.t('targetNamePlaceholder') || 'e.g., Veg, Flower'">
           </div>
         </div>
       </div>
@@ -2325,7 +2325,7 @@ permalink: /fertilizer-calculator/
           <!-- Tank Recipes -->
           <div v-for="(tank, tankIdx) in stockResultsData.tanks" :key="tankIdx" class="stock-tank-section" :style="{ marginBottom: '20px', padding: '20px', background: tankIdx === 0 ? '#f0f7ff' : '#fff7f0', borderRadius: '8px', borderLeft: '4px solid ' + (tankIdx === 0 ? '#007bff' : '#fd7e14') }">
             <h4 :style="{ margin: '0 0 15px 0', color: tankIdx === 0 ? '#007bff' : '#fd7e14' }">
-              {{ tank.name || ('Tank ' + String.fromCharCode(65 + tankIdx)) }}
+              {{ tank.name || ('Tank ' + String.fromCodePoint(65 + tankIdx)) }}
               <span style="font-weight: normal; font-size: 0.85em; color: #666;"> ({{ tank.description || '' }})</span>
             </h4>
 
@@ -2362,7 +2362,7 @@ permalink: /fertilizer-calculator/
                   <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">{{ i18n.t('target') || 'Target' }}</th>
                   <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">{{ i18n.t('targetEC') || 'EC' }}</th>
                   <th v-for="(tank, idx) in stockResultsData.tanks" :key="idx" style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;" :style="{ color: idx === 0 ? '#007bff' : '#fd7e14' }">
-                    {{ tank.name || ('Tank ' + String.fromCharCode(65 + idx)) }}
+                    {{ tank.name || ('Tank ' + String.fromCodePoint(65 + idx)) }}
                   </th>
                 </tr>
               </thead>
@@ -2687,7 +2687,7 @@ permalink: /fertilizer-calculator/
           <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #007bff;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
               <h4 style="margin: 0; color: #007bff;">{{ twoTankDisplayData.tankA.name }}</h4>
-              <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #006ee5; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 {{ twoTankDisplayData.tankA.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
               </button>
             </div>
@@ -2780,7 +2780,7 @@ permalink: /fertilizer-calculator/
           <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #fff7f0; border-radius: 8px; border-left: 4px solid #fd7e14;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
               <h4 style="margin: 0; color: #fd7e14;">{{ twoTankDisplayData.tankB.name }}</h4>
-              <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #fd7e14; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #b1580e; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 {{ twoTankDisplayData.tankB.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
               </button>
             </div>
@@ -3335,7 +3335,7 @@ permalink: /fertilizer-calculator/
     <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #007bff;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
         <h4 style="margin: 0; color: #007bff;">{{ twoTankDisplayData.tankA.name }}</h4>
-        <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #006ee5; color: white; border: none; border-radius: 4px; cursor: pointer;">
           {{ twoTankDisplayData.tankA.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
         </button>
       </div>
@@ -3428,7 +3428,7 @@ permalink: /fertilizer-calculator/
     <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #fff7f0; border-radius: 8px; border-left: 4px solid #fd7e14;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
         <h4 style="margin: 0; color: #fd7e14;">{{ twoTankDisplayData.tankB.name }}</h4>
-        <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #fd7e14; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #b1580e; color: white; border: none; border-radius: 4px; cursor: pointer;">
           {{ twoTankDisplayData.tankB.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
         </button>
       </div>
@@ -3739,7 +3739,7 @@ permalink: /fertilizer-calculator/
       <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #007bff;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
           <h4 style="margin: 0; color: #007bff;">{{ twoTankDisplayData.tankA.name }}</h4>
-          <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #006ee5; color: white; border: none; border-radius: 4px; cursor: pointer;">
             {{ twoTankDisplayData.tankA.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
           </button>
         </div>
@@ -3774,7 +3774,7 @@ permalink: /fertilizer-calculator/
       <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #fff7f0; border-radius: 8px; border-left: 4px solid #fd7e14;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
           <h4 style="margin: 0; color: #fd7e14;">{{ twoTankDisplayData.tankB.name }}</h4>
-          <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #fd7e14; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #b1580e; color: white; border: none; border-radius: 4px; cursor: pointer;">
             {{ twoTankDisplayData.tankB.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
           </button>
         </div>
@@ -4071,7 +4071,7 @@ permalink: /fertilizer-calculator/
       <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #007bff;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
           <h4 style="margin: 0; color: #007bff;">{{ twoTankDisplayData.tankA.name }}</h4>
-          <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          <button v-if="twoTankDisplayData.tankA.fertilizers.length > 0" @click="toggleTankDetailsVue('A')" style="padding: 5px 12px; font-size: 12px; background: #006ee5; color: white; border: none; border-radius: 4px; cursor: pointer;">
             {{ twoTankDisplayData.tankA.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
           </button>
         </div>
@@ -4162,7 +4162,7 @@ permalink: /fertilizer-calculator/
       <div class="tank-section" style="margin-bottom: 20px; padding: 20px; background: #fff7f0; border-radius: 8px; border-left: 4px solid #fd7e14;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
           <h4 style="margin: 0; color: #fd7e14;">{{ twoTankDisplayData.tankB.name }}</h4>
-          <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #fd7e14; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          <button v-if="twoTankDisplayData.tankB.fertilizers.length > 0" @click="toggleTankDetailsVue('B')" style="padding: 5px 12px; font-size: 12px; background: #b1580e; color: white; border: none; border-radius: 4px; cursor: pointer;">
             {{ twoTankDisplayData.tankB.detailsExpanded ? (i18n.t('hideDetails') || 'Hide Details') : (i18n.t('showDetails') || 'Show Details') }}
           </button>
         </div>
@@ -4347,15 +4347,15 @@ const {
   estimateECFromPPM,
   calculateNutrientRatios,
   optimizeFormula
-} = window.FertilizerCore;
+} = globalThis.FertilizerCore;
 // Note: getIonBalanceStatus and calculateIonBalanceCore are defined locally as they use i18n
 
 // Reference to i18n module (loaded from /scripts/i18n.js)
-const i18n = window.i18n;
+const i18n = globalThis.i18n;
 
 // Wrapper for checkWarnings that passes local dependencies
 function checkWarnings(results, activeFertilizers, ionBalance = null) {
-  return window.FertilizerWarnings.checkWarnings(results, activeFertilizers, ionBalance, {
+  return globalThis.FertilizerWarnings.checkWarnings(results, activeFertilizers, ionBalance, {
     i18n,
     estimateECFromPPM
   });
@@ -4366,7 +4366,7 @@ function checkWarnings(results, activeFertilizers, ionBalance = null) {
 // This getter provides backwards compatibility for existing code
 const progressBar = {
   get _vueProgressBar() {
-    return window.vueApp?.progressBar;
+    return globalThis.vueApp?.progressBar;
   },
   show(title) {
     this._vueProgressBar?.show(title);
@@ -4407,10 +4407,10 @@ function getModeName(mode) {
 
 // Modes that need the calculation mode step (step 3)
 // formula-builder always uses elemental, so no selection needed
-const MODES_WITH_CALC_MODE = ['reverse-calc'];
+const MODES_WITH_CALC_MODE = new Set(['reverse-calc']);
 
 // Modes that need the EC step (step 4)
-const MODES_WITH_EC = ['reverse-calc'];
+const MODES_WITH_EC = new Set(['reverse-calc']);
 
 // EC descriptions for the dropdown (maps to i18n translation keys)
 const EC_DESCRIPTIONS = {
@@ -4429,30 +4429,30 @@ const EC_DESCRIPTIONS = {
 
 // State accessor functions - always read from Vue state (single source of truth)
 function getSelectedMode() {
-  return window.vueApp?.currentMode ?? null;
+  return globalThis.vueApp?.currentMode ?? null;
 }
 function getSelectedCalcMode() {
   // Use mode-specific calc mode based on current mode
   const mode = getSelectedMode();
   if (mode === 'formula-builder') {
-    return window.vueApp?.formulaCalcMode ?? 'oxide';
+    return globalThis.vueApp?.formulaCalcMode ?? 'oxide';
   } else if (mode === 'reverse-calc') {
-    return window.vueApp?.ratioCalcMode ?? 'oxide';
+    return globalThis.vueApp?.ratioCalcMode ?? 'oxide';
   }
-  return window.vueApp?.wizardCalcMode ?? 'oxide';
+  return globalThis.vueApp?.wizardCalcMode ?? 'oxide';
 }
 function getSelectedEC() {
-  return window.vueApp?.ratioTargetEC ?? 'ec:1.2';
+  return globalThis.vueApp?.ratioTargetEC ?? 'ec:1.2';
 }
 // Setter functions - update Vue state directly (use .value for refs)
 function setSelectedMode(mode) {
-  if (window.vueApp) window.vueApp.currentMode = mode;
+  if (globalThis.vueApp) globalThis.vueApp.currentMode = mode;
 }
 function setSelectedCalcMode(mode) {
-  if (window.vueApp) window.vueApp.wizardCalcMode = mode;
+  if (globalThis.vueApp) globalThis.vueApp.wizardCalcMode = mode;
 }
 function setSelectedEC(ec) {
-  if (window.vueApp) window.vueApp.ratioTargetEC = ec;
+  if (globalThis.vueApp) globalThis.vueApp.ratioTargetEC = ec;
 }
 
 // getStepCount removed - step counts now in Vue computed (getStepIndicator, getTwoTankStepIndicator)
@@ -4470,8 +4470,8 @@ function setSelectedEC(ec) {
  */
 function showWizardStep(stepId, options = {}) {
   // Delegate to Vue method for proper reactivity
-  if (window.vueApp?.showWizardStepVue) {
-    window.vueApp.showWizardStepVue(stepId, options);
+  if (globalThis.vueApp?.showWizardStepVue) {
+    globalThis.vueApp.showWizardStepVue(stepId, options);
   }
 }
 
@@ -4493,20 +4493,20 @@ function selectMode(tabId) {
   showWizardStep('volume-step');
 
   // Focus on the volume input via Vue
-  if (window.vueApp?.focusWizardVolume) {
-    window.vueApp.focusWizardVolume();
+  if (globalThis.vueApp?.focusWizardVolume) {
+    globalThis.vueApp.focusWizardVolume();
   }
 }
 
 function proceedFromVolumeStep() {
   // Validate volume via Vue
-  if (window.vueApp?.validateWizardVolume && !window.vueApp.validateWizardVolume()) {
+  if (globalThis.vueApp?.validateWizardVolume && !globalThis.vueApp.validateWizardVolume()) {
     return;
   }
 
   // Route to appropriate next step based on mode
   const mode = getSelectedMode();
-  if (MODES_WITH_CALC_MODE.includes(mode)) {
+  if (MODES_WITH_CALC_MODE.has(mode)) {
     showWizardStep('calc-mode-step');
   } else if (mode === 'ppm-calc') {
     showWizardStep('grams-input-step');
@@ -4527,7 +4527,7 @@ function selectCalcMode(mode) {
 function proceedFromCalcModeStep() {
   // Check if this mode needs the EC step (NPK Ratio → Grams)
   const mode = getSelectedMode();
-  if (MODES_WITH_EC.includes(mode)) {
+  if (MODES_WITH_EC.has(mode)) {
     showWizardStep('ec-step');
   } else if (mode === 'formula-builder') {
     // P and K labels are now handled by Vue computed properties (wizardPLabel, wizardKLabel)
@@ -4549,7 +4549,7 @@ function proceedFromECStep() {
 
 function proceedToCalculator() {
   // Get the volume from Vue state (use .value since it's a ref)
-  const wizardVolumeValue = window.vueApp?.wizardVolume || 10;
+  const wizardVolumeValue = globalThis.vueApp?.wizardVolume || 10;
 
   // Get current mode and calc mode from Vue state
   const mode = getSelectedMode();
@@ -4558,25 +4558,25 @@ function proceedToCalculator() {
 
   // Update volume in all calculator tabs via Vue state
   // Use .value since these are Vue refs accessed from outside the setup function
-  if (window.vueApp) {
-    window.vueApp.volume = wizardVolumeValue;
-    window.vueApp.formulaVolume = wizardVolumeValue;
-    window.vueApp.ratioVolume = wizardVolumeValue;
+  if (globalThis.vueApp) {
+    globalThis.vueApp.volume = wizardVolumeValue;
+    globalThis.vueApp.formulaVolume = wizardVolumeValue;
+    globalThis.vueApp.ratioVolume = wizardVolumeValue;
   }
 
   // Apply calculation mode if applicable via Vue state
   // Use .value since these are Vue refs accessed from outside the setup function
-  if (MODES_WITH_CALC_MODE.includes(mode) && window.vueApp) {
+  if (MODES_WITH_CALC_MODE.has(mode) && globalThis.vueApp) {
     if (mode === 'formula-builder') {
-      window.vueApp.formulaCalcMode = calcMode;
+      globalThis.vueApp.formulaCalcMode = calcMode;
     } else if (mode === 'reverse-calc') {
-      window.vueApp.ratioCalcMode = calcMode;
+      globalThis.vueApp.ratioCalcMode = calcMode;
     }
   }
 
   // Apply EC setting if applicable via Vue state
-  if (MODES_WITH_EC.includes(mode) && window.vueApp) {
-    window.vueApp.ratioTargetEC = ec;
+  if (MODES_WITH_EC.has(mode) && globalThis.vueApp) {
+    globalThis.vueApp.ratioTargetEC = ec;
   }
 
   // Show the calculator content (hides all wizard steps)
@@ -4622,15 +4622,8 @@ function backFromCalculator() {
 }
 
 function backFromWizardResults() {
-  // Go back to the appropriate step based on mode
-  const mode = getSelectedMode();
-  if (mode === 'ppm-calc') {
-    showWizardStep('grams-input-step');
-  } else if (mode === 'formula-builder' || mode === 'reverse-calc') {
-    showWizardStep('fertilizer-select-step');
-  } else {
-    showWizardStep('volume-step');
-  }
+  // Same navigation as backFromCalculator (both go back based on mode)
+  backFromCalculator();
 }
 
 // Go to mode selector (callable from anywhere, e.g., clicking the title)
@@ -4640,43 +4633,43 @@ function goToModeSelector() {
 
   // Reset all Vue state (single source of truth)
   // Use .value for refs, direct assignment for reactive objects
-  if (window.vueApp) {
-    window.vueApp.currentMode = null;
-    window.vueApp.calculationMode = 'oxide';
-    window.vueApp.wizardCalcMode = 'elemental';
-    window.vueApp.ratioTargetEC = 'ec:1.2';
+  if (globalThis.vueApp) {
+    globalThis.vueApp.currentMode = null;
+    globalThis.vueApp.calculationMode = 'oxide';
+    globalThis.vueApp.wizardCalcMode = 'elemental';
+    globalThis.vueApp.ratioTargetEC = 'ec:1.2';
     // Clear pending two-tank calculation
-    window.vueApp.pendingWizardCalculation = null;
+    globalThis.vueApp.pendingWizardCalculation = null;
     // Reset results display state (controls v-if visibility - reactive objects, no .value needed)
-    window.vueApp.gramsToPpmDisplayData.show = false;
-    window.vueApp.formulaResultsData.show = false;
-    window.vueApp.reverseResultsData.show = false;
-    window.vueApp.twoTankDisplayData.show = false;
+    globalThis.vueApp.gramsToPpmDisplayData.show = false;
+    globalThis.vueApp.formulaResultsData.show = false;
+    globalThis.vueApp.reverseResultsData.show = false;
+    globalThis.vueApp.twoTankDisplayData.show = false;
     // Clear wizard results source
-    window.vueApp.wizardResultsSource = null;
+    globalThis.vueApp.wizardResultsSource = null;
   }
 }
 
 function backToModeSelector() {
   // Clear pending two-tank calculation
-  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
+  if (globalThis.vueApp) globalThis.vueApp.pendingWizardCalculation = null;
 
   // Show the mode selector (updates wizardStep via Vue)
   showWizardStep('mode-selector');
 
   // Reset all Vue state (single source of truth)
   // Use .value for refs
-  if (window.vueApp) {
-    window.vueApp.currentMode = null;
-    window.vueApp.wizardCalcMode = 'elemental';
-    window.vueApp.ratioTargetEC = 'ec:1.2';
+  if (globalThis.vueApp) {
+    globalThis.vueApp.currentMode = null;
+    globalThis.vueApp.wizardCalcMode = 'elemental';
+    globalThis.vueApp.ratioTargetEC = 'ec:1.2';
     // Clear wizard results source
-    window.vueApp.wizardResultsSource = null;
+    globalThis.vueApp.wizardResultsSource = null;
   }
 
   // Reset wizard inputs
-  if (window.vueApp && window.vueApp.clearWizardGramsSelectionsVue) {
-    window.vueApp.clearWizardGramsSelectionsVue();
+  if (globalThis.vueApp && globalThis.vueApp.clearWizardGramsSelectionsVue) {
+    globalThis.vueApp.clearWizardGramsSelectionsVue();
   }
   clearWizardPPMTargets();
   clearWizardNPKRatios();
@@ -4697,18 +4690,18 @@ function backToModeSelector() {
 
 async function calculateFromWizardGrams() {
   // Get the volume from wizard input (use .value since it's a ref)
-  const wizardVolume = window.vueApp?.wizardVolume || 10;
+  const wizardVolume = globalThis.vueApp?.wizardVolume || 10;
 
   // Update volume in Vue state (use .value for ref)
-  if (window.vueApp) {
-    window.vueApp.volume = wizardVolume;
+  if (globalThis.vueApp) {
+    globalThis.vueApp.volume = wizardVolume;
   }
 
   // Clear all existing fertilizer selections via Vue state
-  if (window.vueApp && window.vueApp.fertilizerAmounts) {
-    Object.keys(window.vueApp.fertilizerAmounts).forEach(id => {
-      window.vueApp.fertilizerAmounts[id].checked = false;
-      window.vueApp.fertilizerAmounts[id].grams = 0;
+  if (globalThis.vueApp && globalThis.vueApp.fertilizerAmounts) {
+    Object.keys(globalThis.vueApp.fertilizerAmounts).forEach(id => {
+      globalThis.vueApp.fertilizerAmounts[id].checked = false;
+      globalThis.vueApp.fertilizerAmounts[id].grams = 0;
     });
   }
 
@@ -4717,16 +4710,16 @@ async function calculateFromWizardGrams() {
   const formula = {};
 
   // Use Vue state directly if available
-  if (window.vueApp && window.vueApp.wizardGramsFertilizers) {
+  if (globalThis.vueApp && globalThis.vueApp.wizardGramsFertilizers) {
     FERTILIZERS.forEach(fert => {
-      const wizardState = window.vueApp.wizardGramsFertilizers[fert.id];
+      const wizardState = globalThis.vueApp.wizardGramsFertilizers[fert.id];
       if (wizardState && wizardState.checked) {
-        const grams = parseFloat(wizardState.grams) || 0;
+        const grams = Number.parseFloat(wizardState.grams) || 0;
         if (grams > 0) {
           // Update Vue state for main calculator
-          if (window.vueApp.fertilizerAmounts && window.vueApp.fertilizerAmounts[fert.id]) {
-            window.vueApp.fertilizerAmounts[fert.id].checked = true;
-            window.vueApp.fertilizerAmounts[fert.id].grams = grams;
+          if (globalThis.vueApp.fertilizerAmounts && globalThis.vueApp.fertilizerAmounts[fert.id]) {
+            globalThis.vueApp.fertilizerAmounts[fert.id].checked = true;
+            globalThis.vueApp.fertilizerAmounts[fert.id].grams = grams;
           }
           hasSelection = true;
           formula[fert.id] = grams;
@@ -4744,8 +4737,8 @@ async function calculateFromWizardGrams() {
   await calculate();
 
   // Set wizard results source to show results via Vue template (use .value for ref)
-  if (window.vueApp) {
-    window.vueApp.wizardResultsSource = 'ppm-calc';
+  if (globalThis.vueApp) {
+    globalThis.vueApp.wizardResultsSource = 'ppm-calc';
   }
 
   // Build mode indicator text
@@ -4755,8 +4748,8 @@ async function calculateFromWizardGrams() {
   // Check for incompatible fertilizers
   if (hasIncompatibleFertilizers(formula)) {
     // Store pending calculation for later (via Vue ref - use .value)
-    if (window.vueApp) {
-      window.vueApp.pendingWizardCalculation = {
+    if (globalThis.vueApp) {
+      globalThis.vueApp.pendingWizardCalculation = {
         type: 'grams-to-ppm',
         formula: formula,
         volume: wizardVolume,
@@ -4769,8 +4762,8 @@ async function calculateFromWizardGrams() {
     showWizardStep('two-tank-question-step');
   } else {
     // No incompatibilities - show results directly
-    if (window.vueApp) {
-      window.vueApp.wizardResultsModeText = indicatorText;
+    if (globalThis.vueApp) {
+      globalThis.vueApp.wizardResultsModeText = indicatorText;
     }
     showWizardStep('wizard-results', { updateIndicator: false });
   }
@@ -4780,19 +4773,19 @@ async function calculateFromWizardGrams() {
 
 function clearWizardPPMTargets() {
   // Clear via Vue state
-  if (window.vueApp?.wizardTargets) {
-    Object.keys(window.vueApp.wizardTargets).forEach(key => {
-      window.vueApp.wizardTargets[key] = '';
+  if (globalThis.vueApp?.wizardTargets) {
+    Object.keys(globalThis.vueApp.wizardTargets).forEach(key => {
+      globalThis.vueApp.wizardTargets[key] = '';
     });
   }
-  if (window.vueApp) window.vueApp.wizardNH4Pct = null;
+  if (globalThis.vueApp) globalThis.vueApp.wizardNH4Pct = null;
 }
 
 function proceedToFormulaFertilizerStep() {
   // Validate that at least one target is entered (via Vue state)
-  const targets = window.vueApp?.wizardTargets || {};
+  const targets = globalThis.vueApp?.wizardTargets || {};
   const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
-  const hasTarget = fields.some(field => parseFloat(targets[field]) > 0);
+  const hasTarget = fields.some(field => Number.parseFloat(targets[field]) > 0);
 
   if (!hasTarget) {
     alert(i18n.t('alertEnterTargetPpm'));
@@ -4809,19 +4802,19 @@ function proceedToFormulaFertilizerStep() {
 
 function clearWizardNPKRatios() {
   // Clear via Vue state
-  if (window.vueApp?.wizardRatios) {
-    Object.keys(window.vueApp.wizardRatios).forEach(key => {
-      window.vueApp.wizardRatios[key] = '';
+  if (globalThis.vueApp?.wizardRatios) {
+    Object.keys(globalThis.vueApp.wizardRatios).forEach(key => {
+      globalThis.vueApp.wizardRatios[key] = '';
     });
   }
-  if (window.vueApp) window.vueApp.wizardNH4Pct = null;
+  if (globalThis.vueApp) globalThis.vueApp.wizardNH4Pct = null;
 }
 
 function proceedToReverseFertilizerStep() {
   // Validate that at least one ratio is entered (via Vue state)
-  const ratios = window.vueApp?.wizardRatios || {};
+  const ratios = globalThis.vueApp?.wizardRatios || {};
   const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
-  const hasRatio = fields.some(field => parseFloat(ratios[field]) > 0);
+  const hasRatio = fields.some(field => Number.parseFloat(ratios[field]) > 0);
 
   if (!hasRatio) {
     alert(i18n.t('alertEnterRatioValue'));
@@ -4852,21 +4845,21 @@ function backFromFertilizerSelectStep() {
 
 async function calculateFromWizardFertilizerSelect() {
   // Get the volume from Vue state (use .value since it's a ref)
-  const wizardVolume = window.vueApp?.wizardVolume || 10;
+  const wizardVolume = globalThis.vueApp?.wizardVolume || 10;
 
   // Get current mode, calc mode, and EC from Vue state
   const mode = getSelectedMode();
   // Use wizardCalcMode directly since we're in wizard flow
   // (getSelectedCalcMode() would return mode-specific calc mode which hasn't been synced yet)
   // Use .value since wizardCalcMode is a Vue ref
-  const calcMode = window.vueApp?.wizardCalcMode ?? 'oxide';
+  const calcMode = globalThis.vueApp?.wizardCalcMode ?? 'oxide';
   const ec = getSelectedEC();
 
   // Get selected fertilizers from Vue state
   const selectedFerts = [];
-  if (window.vueApp && window.vueApp.wizardAvailFertilizers) {
+  if (globalThis.vueApp && globalThis.vueApp.wizardAvailFertilizers) {
     FERTILIZERS.forEach(fert => {
-      if (window.vueApp.wizardAvailFertilizers[fert.id]) {
+      if (globalThis.vueApp.wizardAvailFertilizers[fert.id]) {
         selectedFerts.push(fert.id);
       }
     });
@@ -4891,30 +4884,30 @@ async function calculateFromWizardFertilizerSelect() {
   if (mode === 'formula-builder') {
     // PPM → Grams calculation
     // Transfer target PPM values from wizard Vue state to main calculator Vue state
-    const wTargets = window.vueApp?.wizardTargets || {};
+    const wTargets = globalThis.vueApp?.wizardTargets || {};
 
     // Sync to Vue state (v-model syncs to DOM automatically)
-    if (window.vueApp && window.vueApp.formulaTargets) {
-      window.vueApp.formulaTargets.N = wTargets.N || '';
-      window.vueApp.formulaTargets.P = wTargets.P || '';
-      window.vueApp.formulaTargets.K = wTargets.K || '';
-      window.vueApp.formulaTargets.Ca = wTargets.Ca || '';
-      window.vueApp.formulaTargets.Mg = wTargets.Mg || '';
-      window.vueApp.formulaTargets.S = wTargets.S || '';
-      window.vueApp.formulaTargets.Si = wTargets.Si || '0';
+    if (globalThis.vueApp && globalThis.vueApp.formulaTargets) {
+      globalThis.vueApp.formulaTargets.N = wTargets.N || '';
+      globalThis.vueApp.formulaTargets.P = wTargets.P || '';
+      globalThis.vueApp.formulaTargets.K = wTargets.K || '';
+      globalThis.vueApp.formulaTargets.Ca = wTargets.Ca || '';
+      globalThis.vueApp.formulaTargets.Mg = wTargets.Mg || '';
+      globalThis.vueApp.formulaTargets.S = wTargets.S || '';
+      globalThis.vueApp.formulaTargets.Si = wTargets.Si || '0';
     }
 
     // Sync volume and calculation mode to Vue state
     // Use .value since these are Vue refs accessed from outside the setup function
-    if (window.vueApp) {
-      window.vueApp.formulaVolume = wizardVolume;
-      window.vueApp.formulaCalcMode = calcMode;
+    if (globalThis.vueApp) {
+      globalThis.vueApp.formulaVolume = wizardVolume;
+      globalThis.vueApp.formulaCalcMode = calcMode;
     }
 
     // Transfer fertilizer selections to main calculator Vue state
-    if (window.vueApp && window.vueApp.availableFertilizers) {
+    if (globalThis.vueApp && globalThis.vueApp.availableFertilizers) {
       FERTILIZERS.forEach(fert => {
-        window.vueApp.availableFertilizers[fert.id] = selectedFerts.includes(fert.id);
+        globalThis.vueApp.availableFertilizers[fert.id] = selectedFerts.includes(fert.id);
       });
     }
 
@@ -4922,12 +4915,12 @@ async function calculateFromWizardFertilizerSelect() {
     await buildFormula();
 
     // Set wizard results source to show results via Vue template (use .value for ref)
-    if (window.vueApp) {
-      window.vueApp.wizardResultsSource = 'formula-builder';
+    if (globalThis.vueApp) {
+      globalThis.vueApp.wizardResultsSource = 'formula-builder';
     }
 
     // Get the calculated formula for incompatibility check
-    const lastFormula = window.vueApp?.lastFormulaCalculation;
+    const lastFormula = globalThis.vueApp?.lastFormulaCalculation;
     if (lastFormula && lastFormula.result) {
       calculatedFormula = lastFormula.result.formula;
     }
@@ -4935,33 +4928,33 @@ async function calculateFromWizardFertilizerSelect() {
   } else if (mode === 'reverse-calc') {
     // NPK Ratio → Grams calculation
     // Transfer ratio values from wizard Vue state to main calculator Vue state
-    const wRatios = window.vueApp?.wizardRatios || {};
+    const wRatios = globalThis.vueApp?.wizardRatios || {};
 
     // Sync to Vue state (v-model syncs to DOM automatically)
-    if (window.vueApp && window.vueApp.ratioTargets) {
-      window.vueApp.ratioTargets.N = wRatios.N || '';
-      window.vueApp.ratioTargets.P = wRatios.P || '';
-      window.vueApp.ratioTargets.K = wRatios.K || '';
-      window.vueApp.ratioTargets.Ca = wRatios.Ca || '';
-      window.vueApp.ratioTargets.Mg = wRatios.Mg || '';
-      window.vueApp.ratioTargets.S = wRatios.S || '';
-      window.vueApp.ratioTargets.Si = wRatios.Si || '0';
+    if (globalThis.vueApp && globalThis.vueApp.ratioTargets) {
+      globalThis.vueApp.ratioTargets.N = wRatios.N || '';
+      globalThis.vueApp.ratioTargets.P = wRatios.P || '';
+      globalThis.vueApp.ratioTargets.K = wRatios.K || '';
+      globalThis.vueApp.ratioTargets.Ca = wRatios.Ca || '';
+      globalThis.vueApp.ratioTargets.Mg = wRatios.Mg || '';
+      globalThis.vueApp.ratioTargets.S = wRatios.S || '';
+      globalThis.vueApp.ratioTargets.Si = wRatios.Si || '0';
     }
 
     // Sync volume, EC, and calculation mode to Vue state
     // Use .value since these are Vue refs accessed from outside the setup function
-    if (window.vueApp) {
-      window.vueApp.ratioVolume = wizardVolume;
-      window.vueApp.ratioTargetEC = ec;
-      window.vueApp.ratioCalcMode = calcMode;
+    if (globalThis.vueApp) {
+      globalThis.vueApp.ratioVolume = wizardVolume;
+      globalThis.vueApp.ratioTargetEC = ec;
+      globalThis.vueApp.ratioCalcMode = calcMode;
     }
 
     // Transfer fertilizer selections to main calculator Vue state
-    if (window.vueApp && window.vueApp.reverseFertilizers) {
+    if (globalThis.vueApp && globalThis.vueApp.reverseFertilizers) {
       FERTILIZERS.forEach(fert => {
         // reverseFertilizers uses { checked: boolean, priority: number } structure
-        if (window.vueApp.reverseFertilizers[fert.id]) {
-          window.vueApp.reverseFertilizers[fert.id].checked = selectedFerts.includes(fert.id);
+        if (globalThis.vueApp.reverseFertilizers[fert.id]) {
+          globalThis.vueApp.reverseFertilizers[fert.id].checked = selectedFerts.includes(fert.id);
         }
       });
     }
@@ -4974,12 +4967,12 @@ async function calculateFromWizardFertilizerSelect() {
     await calculateReverse();
 
     // Set wizard results source to show results via Vue template (use .value for ref)
-    if (window.vueApp) {
-      window.vueApp.wizardResultsSource = 'reverse-calc';
+    if (globalThis.vueApp) {
+      globalThis.vueApp.wizardResultsSource = 'reverse-calc';
     }
 
     // Get the calculated formula for incompatibility check
-    const lastReverse = window.vueApp?.lastReverseCalculation;
+    const lastReverse = globalThis.vueApp?.lastReverseCalculation;
     if (lastReverse && lastReverse.result) {
       calculatedFormula = lastReverse.result.formula;
     }
@@ -4988,8 +4981,8 @@ async function calculateFromWizardFertilizerSelect() {
   // Check for incompatible fertilizers
   if (calculatedFormula && hasIncompatibleFertilizers(calculatedFormula)) {
     // Store pending calculation for later (via Vue ref - use .value)
-    if (window.vueApp) {
-      window.vueApp.pendingWizardCalculation = {
+    if (globalThis.vueApp) {
+      globalThis.vueApp.pendingWizardCalculation = {
         type: mode === 'formula-builder' ? 'ppm-to-grams' : 'npk-ratio-to-grams',
         formula: calculatedFormula,
         volume: wizardVolume,
@@ -5002,8 +4995,8 @@ async function calculateFromWizardFertilizerSelect() {
     showWizardStep('two-tank-question-step');
   } else {
     // No incompatibilities - show results directly
-    if (window.vueApp) {
-      window.vueApp.wizardResultsModeText = indicatorText;
+    if (globalThis.vueApp) {
+      globalThis.vueApp.wizardResultsModeText = indicatorText;
     }
     showWizardStep('wizard-results', { updateIndicator: false });
   }
@@ -5013,19 +5006,19 @@ async function calculateFromWizardFertilizerSelect() {
 
 // Skip two-tank view and show regular results
 function skipTwoTankView() {
-  const pendingCalc = window.vueApp?.pendingWizardCalculation;
+  const pendingCalc = globalThis.vueApp?.pendingWizardCalculation;
   // Update the mode indicator in wizard results
-  if (pendingCalc && window.vueApp) {
-    window.vueApp.wizardResultsModeText = pendingCalc.indicatorText;
+  if (pendingCalc && globalThis.vueApp) {
+    globalThis.vueApp.wizardResultsModeText = pendingCalc.indicatorText;
 
     // Set wizard results source based on calculation type (Vue template handles rendering)
     if (pendingCalc.type === 'grams-to-ppm') {
-      window.vueApp.wizardResultsSource = 'ppm-calc';
+      globalThis.vueApp.wizardResultsSource = 'ppm-calc';
     }
   }
 
   // Clear pending calculation
-  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
+  if (globalThis.vueApp) globalThis.vueApp.pendingWizardCalculation = null;
 
   // Show wizard results
   showWizardStep('wizard-results', { updateIndicator: false });
@@ -5033,7 +5026,7 @@ function skipTwoTankView() {
 
 // Show two-tank view
 function showTwoTankView() {
-  const pendingCalc = window.vueApp?.pendingWizardCalculation;
+  const pendingCalc = globalThis.vueApp?.pendingWizardCalculation;
   if (!pendingCalc) {
     alert(i18n.t('alertNoCalculationData'));
     return;
@@ -5051,20 +5044,20 @@ function showTwoTankView() {
   }
 
   // Set wizard results source based on calculation type (Vue template handles rendering)
-  if (window.vueApp) {
+  if (globalThis.vueApp) {
     if (type === 'grams-to-ppm') {
-      window.vueApp.wizardResultsSource = 'ppm-calc';
+      globalThis.vueApp.wizardResultsSource = 'ppm-calc';
     } else if (type === 'ppm-to-grams') {
-      window.vueApp.wizardResultsSource = 'formula-builder';
+      globalThis.vueApp.wizardResultsSource = 'formula-builder';
     } else if (type === 'npk-ratio-to-grams') {
-      window.vueApp.wizardResultsSource = 'reverse-calc';
+      globalThis.vueApp.wizardResultsSource = 'reverse-calc';
     }
     // Update the mode indicator in wizard results via Vue state
-    window.vueApp.wizardResultsModeText = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
+    globalThis.vueApp.wizardResultsModeText = indicatorText + ' · <span style="color: #17a2b8;">' + i18n.t('twoTankView') + '</span>';
   }
 
   // Clear pending calculation
-  if (window.vueApp) window.vueApp.pendingWizardCalculation = null;
+  if (globalThis.vueApp) globalThis.vueApp.pendingWizardCalculation = null;
 
   // Show wizard results
   showWizardStep('wizard-results', { updateIndicator: false });
@@ -5080,7 +5073,7 @@ function refreshWizardResults() {
 }
 
 // Expose refreshWizardResults globally for i18n backwards compatibility
-window.refreshWizardResults = refreshWizardResults;
+globalThis.refreshWizardResults = refreshWizardResults;
 
 // ==========================================
 // END WIZARD STEP FUNCTIONS
@@ -5112,8 +5105,8 @@ function init() {
 // Main calculation function
 async function calculate() {
   // Now handled by Vue
-  if (window.vueApp && window.vueApp.calculatePPM) {
-    window.vueApp.calculatePPM();
+  if (globalThis.vueApp && globalThis.vueApp.calculatePPM) {
+    globalThis.vueApp.calculatePPM();
     // Wait for Vue to render the results
     await new Promise(resolve => setTimeout(resolve, 100));
   }
@@ -5214,7 +5207,7 @@ function getEcStatus(ecValue) {
  * @returns {Object} {color, text, description, level, showWarning} - Status info
  */
 function getBoronWarningStatus(boronPpm) {
-  if (boronPpm === null || boronPpm === undefined || isNaN(boronPpm)) {
+  if (boronPpm === null || boronPpm === undefined || Number.isNaN(boronPpm)) {
     return { color: '#6c757d', text: '', description: '', level: 'unknown', showWarning: false };
   }
 
@@ -5239,7 +5232,7 @@ function getBoronWarningStatus(boronPpm) {
     };
   }
   // Too High: Exceeds upper limit (>0.8 to <1.0 ppm)
-  if (boronPpm < 1.0) {
+  if (boronPpm < 1) {
     return {
       color: '#fd7e14',
       text: i18n.t('boronStatusHigh'),
@@ -5297,7 +5290,7 @@ function getIonBalanceStatus(imbalance, useSymbols = true) {
  * @returns {Object} {color, text, level, showWarning} - Status info
  */
 function getKCaWarningStatus(ratio) {
-  if (ratio === null || ratio === undefined || isNaN(ratio)) {
+  if (ratio === null || ratio === undefined || Number.isNaN(ratio)) {
     return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
   }
 
@@ -5329,7 +5322,7 @@ function getKCaWarningStatus(ratio) {
     };
   }
   // K-leaning (1.5 - 2.0) - Watch quality/new growth
-  if (ratio <= 2.0) {
+  if (ratio <= 2) {
     return {
       color: '#ffc107',
       text: i18n.t('kCaRatioStatusKLeaning'),
@@ -5358,7 +5351,7 @@ function getKCaWarningStatus(ratio) {
  * @returns {Object} {color, text, level, showWarning} - Status info
  */
 function getNo3Nh4WarningStatus(ratio) {
-  if (ratio === null || ratio === undefined || isNaN(ratio)) {
+  if (ratio === null || ratio === undefined || Number.isNaN(ratio)) {
     return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
   }
 
@@ -5405,7 +5398,7 @@ function getNo3Nh4WarningStatus(ratio) {
  * @returns {Object} {color, text, level, showWarning} - Status info
  */
 function getNKWarningStatus(ratio) {
-  if (ratio === null || ratio === undefined || isNaN(ratio)) {
+  if (ratio === null || ratio === undefined || Number.isNaN(ratio)) {
     return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
   }
 
@@ -5419,7 +5412,7 @@ function getNKWarningStatus(ratio) {
     };
   }
   // N-leaning (1.0:1 to 1.5:1) - Vegetative push
-  if (ratio >= 1.0) {
+  if (ratio >= 1) {
     return {
       color: '#17a2b8',
       text: i18n.t('nkStatusNLeaning'),
@@ -5462,7 +5455,7 @@ function getNKWarningStatus(ratio) {
  * @returns {Object} {color, text, level, showWarning} - Status info
  */
 function getCaMgWarningStatus(ratio) {
-  if (ratio === null || ratio === undefined || isNaN(ratio)) {
+  if (ratio === null || ratio === undefined || Number.isNaN(ratio)) {
     return { color: '#6c757d', text: '', level: 'unknown', showWarning: false };
   }
 
@@ -5749,7 +5742,7 @@ function calculateIonBalance(activeFertilizers, volume) {
     totalCations: ionBalance.totalCations,
     totalAnions: ionBalance.totalAnions,
     imbalance: ionBalance.imbalance,
-    statusText: ionBalance.statusText.replace(/[✓⚠✗]/g, '').trim(),
+    statusText: ionBalance.statusText.replaceAll(/[✓⚠✗]/g, '').trim(),
     statusColor: ionBalance.statusColor,
     ionDetails: ionBalance.ionDetails,
     phTendency,
@@ -5761,8 +5754,8 @@ function calculateIonBalance(activeFertilizers, volume) {
 // Clear all selections and reset the form
 function clearAll() {
   // Now handled by Vue
-  if (window.vueApp && window.vueApp.clearAll) {
-    window.vueApp.clearAll();
+  if (globalThis.vueApp && globalThis.vueApp.clearAll) {
+    globalThis.vueApp.clearAll();
   }
 }
 
@@ -5770,9 +5763,9 @@ function clearAll() {
 function switchTab(tabId) {
   // Update Vue state - visibility is handled by :class bindings
   // Mode indicator is updated via Vue computed property (modeIndicatorText)
-  if (window.vueApp) {
-    window.vueApp.currentTab = tabId;
-    window.vueApp.currentMode = tabId;
+  if (globalThis.vueApp) {
+    globalThis.vueApp.currentTab = tabId;
+    globalThis.vueApp.currentMode = tabId;
   }
 }
 
@@ -5781,8 +5774,8 @@ function switchTab(tabId) {
 // Formula builder - main function
 async function buildFormula() {
   // Now handled by Vue
-  if (window.vueApp && window.vueApp.buildFormulaVue) {
-    await window.vueApp.buildFormulaVue();
+  if (globalThis.vueApp && globalThis.vueApp.buildFormulaVue) {
+    await globalThis.vueApp.buildFormulaVue();
   }
 }
 
@@ -5898,7 +5891,6 @@ function splitIntoTwoTanks(formula, volume) {
         // Check if this fertilizer contributes more cations or anions
         let fertCations = 0, fertAnions = 0;
         if (ionData) {
-          const testFert = [{ id: fertId, grams: grams }];
           const testBalance = calculateTankIonBalance({ [fertId]: grams }, volume);
           fertCations = testBalance.totalCations;
           fertAnions = testBalance.totalAnions;
@@ -5915,13 +5907,11 @@ function splitIntoTwoTanks(formula, volume) {
           tankA.fertilizers[fertId] = grams;
         } else if (tankBExcess < 0 && fertExcess > 0) {
           tankB.fertilizers[fertId] = grams;
-        } else {
+        } else if (tankAImbalance >= tankBImbalance) {
           // Can't help balance either way - put in tank with higher imbalance
-          if (tankAImbalance >= tankBImbalance) {
-            tankA.fertilizers[fertId] = grams;
-          } else {
-            tankB.fertilizers[fertId] = grams;
-          }
+          tankA.fertilizers[fertId] = grams;
+        } else {
+          tankB.fertilizers[fertId] = grams;
         }
       } else if (tankAImbalance > tankBImbalance) {
         tankA.fertilizers[fertId] = grams;
@@ -5987,7 +5977,7 @@ function calculateTankNutrients(fertilizers, volume) {
 
 // Display two-tank results for formula builder
 function displayTwoTankFormulaResults() {
-  const lastCalc = window.vueApp?.lastFormulaCalculation;
+  const lastCalc = globalThis.vueApp?.lastFormulaCalculation;
   if (!lastCalc) {
     alert(i18n.t('alertNoFormulaResults'));
     return;
@@ -6000,14 +5990,14 @@ function displayTwoTankFormulaResults() {
   // (hides when twoTankDisplayData.show && twoTankDisplayData.sourceType === 'formula')
 
   // Use Vue-powered display
-  if (window.vueApp && window.vueApp.setTwoTankResults) {
-    window.vueApp.setTwoTankResults(tankA, tankB, volume, mode, 'formula', result.achieved, targets);
+  if (globalThis.vueApp && globalThis.vueApp.setTwoTankResults) {
+    globalThis.vueApp.setTwoTankResults(tankA, tankB, volume, mode, 'formula', result.achieved, targets);
   }
 }
 
 // Display two-tank results for reverse calculator
 function displayTwoTankReverseResults() {
-  const lastCalc = window.vueApp?.lastReverseCalculation;
+  const lastCalc = globalThis.vueApp?.lastReverseCalculation;
   if (!lastCalc) {
     alert(i18n.t('alertNoCalculationResults'));
     return;
@@ -6020,14 +6010,14 @@ function displayTwoTankReverseResults() {
   // (hides when twoTankDisplayData.show && twoTankDisplayData.sourceType === 'reverse')
 
   // Use Vue-powered display
-  if (window.vueApp && window.vueApp.setTwoTankResults) {
-    window.vueApp.setTwoTankResults(tankA, tankB, volume, mode, 'reverse', result.achieved, targets);
+  if (globalThis.vueApp && globalThis.vueApp.setTwoTankResults) {
+    globalThis.vueApp.setTwoTankResults(tankA, tankB, volume, mode, 'reverse', result.achieved, targets);
   }
 }
 
 // Display two-tank results for Grams to PPM calculator (Tab 1)
 function displayTwoTankGramsToPPMResults() {
-  const lastCalc = window.vueApp?.lastGramsToPPMCalculation;
+  const lastCalc = globalThis.vueApp?.lastGramsToPPMCalculation;
   if (!lastCalc) {
     alert(i18n.t('alertNoCalculationResultsPpm'));
     return;
@@ -6048,8 +6038,8 @@ function displayTwoTankGramsToPPMResults() {
 
   // Use Vue-powered display
   // For Grams to PPM, we use elemental mode and no specific targets
-  if (window.vueApp && window.vueApp.setTwoTankResults) {
-    window.vueApp.setTwoTankResults(tankA, tankB, volume, 'elemental', 'grams-to-ppm', results, null);
+  if (globalThis.vueApp && globalThis.vueApp.setTwoTankResults) {
+    globalThis.vueApp.setTwoTankResults(tankA, tankB, volume, 'elemental', 'grams-to-ppm', results, null);
   }
 }
 
@@ -6079,8 +6069,8 @@ function getI18nFormatter() {
 // Main reverse calculator function
 async function calculateReverse() {
   // Now handled by Vue
-  if (window.vueApp && window.vueApp.calculateReverseVue) {
-    await window.vueApp.calculateReverseVue();
+  if (globalThis.vueApp && globalThis.vueApp.calculateReverseVue) {
+    await globalThis.vueApp.calculateReverseVue();
   }
 }
 
@@ -6090,8 +6080,8 @@ async function calculateReverse() {
 
 // PPM Explanation Modal Functions - Now uses Vue modal
 function openPPMExplanation() {
-  if (window.vueApp && window.vueApp.openModal) {
-    window.vueApp.openModal('ppm');
+  if (globalThis.vueApp && globalThis.vueApp.openModal) {
+    globalThis.vueApp.openModal('ppm');
   }
 }
 
@@ -6099,8 +6089,8 @@ function openPPMExplanation() {
 
 // Ion Balance Explanation Modal Functions - Now uses Vue modal
 function openIonBalanceExplanation() {
-  if (window.vueApp && window.vueApp.openModal) {
-    window.vueApp.openModal('ion-balance');
+  if (globalThis.vueApp && globalThis.vueApp.openModal) {
+    globalThis.vueApp.openModal('ion-balance');
   }
 }
 
@@ -6113,9 +6103,9 @@ function openIonBalanceExplanation() {
 // ==========================================
 
 function openReversePPMExplanation() {
-  if (window.vueApp && window.vueApp.openModal) {
+  if (globalThis.vueApp && globalThis.vueApp.openModal) {
     // Pass reverse calculation data to Vue modal
-    const lastCalc = window.vueApp.lastReverseCalculation;
+    const lastCalc = globalThis.vueApp.lastReverseCalculation;
     const data = lastCalc ? {
       volume: lastCalc.volume,
       activeFertilizers: lastCalc.result?.fertilizers?.map(f => ({
@@ -6124,14 +6114,13 @@ function openReversePPMExplanation() {
       })).filter(Boolean) || [],
       calculationType: 'ratio-to-grams'
     } : {};
-    window.vueApp.openModal('ppm', data);
-    return;
+    globalThis.vueApp.openModal('ppm', data);
   }
 }
 
 function openReverseIonBalanceExplanation() {
-  if (window.vueApp && window.vueApp.openModal) {
-    const lastCalc = window.vueApp.lastReverseCalculation;
+  if (globalThis.vueApp && globalThis.vueApp.openModal) {
+    const lastCalc = globalThis.vueApp.lastReverseCalculation;
     const data = lastCalc ? {
       volume: lastCalc.volume,
       activeFertilizers: lastCalc.result?.fertilizers?.map(f => ({
@@ -6140,8 +6129,7 @@ function openReverseIonBalanceExplanation() {
       })).filter(Boolean) || [],
       calculationType: 'ratio-to-grams'
     } : {};
-    window.vueApp.openModal('ion-balance', data);
-    return;
+    globalThis.vueApp.openModal('ion-balance', data);
   }
 }
 
@@ -6156,8 +6144,8 @@ function openReverseIonBalanceExplanation() {
 // Formula Builder (PPM to Grams) explanation functions
 // Open Ion Balance explanation for formula builder - Now uses Vue modal
 function openFormulaIonBalanceExplanation() {
-  const lastCalc = window.vueApp?.lastFormulaCalculation;
-  if (window.vueApp && window.vueApp.openModal && lastCalc) {
+  const lastCalc = globalThis.vueApp?.lastFormulaCalculation;
+  if (globalThis.vueApp && globalThis.vueApp.openModal && lastCalc) {
     const { result, volume } = lastCalc;
     const activeFertilizers = Object.entries(result.formula)
       .filter(([fertId, grams]) => grams > 0.01)
@@ -6166,7 +6154,7 @@ function openFormulaIonBalanceExplanation() {
         return fert ? { ...fert, grams } : null;
       })
       .filter(Boolean);
-    window.vueApp.openModal('ion-balance', {
+    globalThis.vueApp.openModal('ion-balance', {
       volume: volume,
       activeFertilizers: activeFertilizers,
       calculationType: 'formula-builder'
@@ -6200,7 +6188,7 @@ const { createApp, ref, computed, reactive, watch, onMounted, nextTick } = Vue;
 const BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function fertIdToCode(id) {
-  const order = window.FERTILIZER_URL_ORDER;
+  const order = globalThis.FERTILIZER_URL_ORDER;
   if (!order) return null;
   const idx = order.indexOf(id);
   if (idx === -1) return null;
@@ -6209,7 +6197,7 @@ function fertIdToCode(id) {
 }
 
 function fertCodeToId(code) {
-  const order = window.FERTILIZER_URL_ORDER;
+  const order = globalThis.FERTILIZER_URL_ORDER;
   if (!order) return null;
   const idx = code === '10' ? 62 : BASE62.indexOf(code);
   if (idx === -1 || idx >= order.length) return null;
@@ -6217,7 +6205,7 @@ function fertCodeToId(code) {
 }
 
 function encodeFertBitmask(checkedIds) {
-  const order = window.FERTILIZER_URL_ORDER;
+  const order = globalThis.FERTILIZER_URL_ORDER;
   if (!order) return '0';
   let bits = 0n;
   for (const id of checkedIds) {
@@ -6235,7 +6223,7 @@ function encodeFertBitmask(checkedIds) {
 }
 
 function decodeFertBitmask(encoded) {
-  const order = window.FERTILIZER_URL_ORDER;
+  const order = globalThis.FERTILIZER_URL_ORDER;
   if (!order) return [];
   let bits = 0n;
   for (const ch of encoded) {
@@ -6248,6 +6236,33 @@ function decodeFertBitmask(encoded) {
     if (bits & (1n << BigInt(i))) ids.push(order[i]);
   }
   return ids;
+}
+
+// Helper function to get ION_DATA for a fertilizer
+function getIonDataForFert(fert) {
+  if (!fert || !fert.id) return null;
+  return ION_DATA[fert.id] || null;
+}
+
+// Scroll wizard step into view (Vue-powered replacement for getElementById scroll)
+function scrollToWizardStep(stepId) {
+  Vue.nextTick(() => {
+    const step = document.getElementById(stepId);
+    if (step) {
+      step.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+
+// Check if event target is a search input (for @keydown.enter handlers)
+function isSearchInput(event) {
+  return event?.target?.classList?.contains('wizard-fertilizer-search') || false;
+}
+
+// Wrapper for global calculateFromWizardFertilizerSelect
+async function calculateFromWizardFertilizerSelectVue() {
+  // Call the global function which handles the complex logic
+  await calculateFromWizardFertilizerSelect();
 }
 
 // =============================================================================
@@ -6629,11 +6644,9 @@ const FertilizerApp = {
         subtitleInterval = setInterval(() => {
           currentSubtitleIndex.value = (currentSubtitleIndex.value + 1) % subtitleTranslations.length;
         }, 2500);
-      } else {
-        if (subtitleInterval) {
-          clearInterval(subtitleInterval);
-          subtitleInterval = null;
-        }
+      } else if (subtitleInterval) {
+        clearInterval(subtitleInterval);
+        subtitleInterval = null;
       }
     }, { immediate: true });
 
@@ -6811,7 +6824,7 @@ const FertilizerApp = {
     // Oxide conversion data for templates
     const oxideConversions = [
       { key: 'P2O5', oxideLabel: 'phosphateOxide', oxideName: 'P₂O₅', elementalLabel: 'phosphorusElemental', elementalName: 'P', factor: 0.436 },
-      { key: 'K2O', oxideLabel: 'potassiumOxide', oxideName: 'K₂O', elementalLabel: 'potassiumElemental', elementalName: 'K', factor: 0.830 },
+      { key: 'K2O', oxideLabel: 'potassiumOxide', oxideName: 'K₂O', elementalLabel: 'potassiumElemental', elementalName: 'K', factor: 0.83 },
       { key: 'MgO', oxideLabel: 'magnesiumOxide', oxideName: 'MgO', elementalLabel: 'magnesiumElemental', elementalName: 'Mg', factor: 0.603 },
       { key: 'CaO', oxideLabel: 'calciumOxide', oxideName: 'CaO', elementalLabel: 'calciumElemental', elementalName: 'Ca', factor: 0.715 }
     ];
@@ -6832,7 +6845,7 @@ const FertilizerApp = {
     // EC description based on selected EC level
     // Note: language.value is included to trigger recomputation on language change
     const wizardECDescription = computed(() => {
-      const _lang = language.value; // Reactive dependency on language
+      Boolean(language.value); // Reactive dependency: forces recompute on language change
       const descKey = EC_DESCRIPTIONS[wizardSelectedEC.value];
       return descKey ? i18n.t(descKey) : '';
     });
@@ -6840,19 +6853,19 @@ const FertilizerApp = {
     // P and K labels based on calculation mode
     // Note: language.value is included to trigger recomputation on language change
     const wizardPLabel = computed(() => {
-      const _lang = language.value; // Reactive dependency on language
+      Boolean(language.value); // Reactive dependency: forces recompute on language change
       return wizardCalcMode.value === 'elemental' ? i18n.t('phosphorusElemental') : i18n.t('phosphorusOxide');
     });
 
     const wizardKLabel = computed(() => {
-      const _lang = language.value; // Reactive dependency on language
+      Boolean(language.value); // Reactive dependency: forces recompute on language change
       return wizardCalcMode.value === 'elemental' ? i18n.t('potassiumElemental') : i18n.t('potassiumOxide');
     });
 
     // Mode indicator text for wizard header (computed from Vue state)
     // Note: language.value is included to trigger recomputation on language change
     const modeIndicatorText = computed(() => {
-      const _lang = language.value; // Reactive dependency on language
+      Boolean(language.value); // Reactive dependency: forces recompute on language change
       if (!currentMode.value) return '';
 
       const modeKeys = {
@@ -6894,7 +6907,7 @@ const FertilizerApp = {
     // Step indicator text computed from current step and mode
     // Note: language.value is included to trigger recomputation on language change
     const stepIndicatorText = computed(() => {
-      const _lang = language.value; // Reactive dependency on language
+      Boolean(language.value); // Reactive dependency: forces recompute on language change
       const step = wizardStep.value;
       const mode = currentMode.value;
       if (!mode) return '';
@@ -7103,10 +7116,10 @@ const FertilizerApp = {
     const activeWizardGramsFertilizers = computed(() => {
       return FERTILIZERS.filter(f => {
         const state = wizardGramsFertilizers[f.id];
-        return state && state.checked && parseFloat(state.grams) > 0;
+        return state && state.checked && Number.parseFloat(state.grams) > 0;
       }).map(f => ({
         ...f,
-        grams: parseFloat(wizardGramsFertilizers[f.id].grams)
+        grams: Number.parseFloat(wizardGramsFertilizers[f.id].grams)
       }));
     });
 
@@ -7167,22 +7180,16 @@ const FertilizerApp = {
       wizardAvailSearchTerm.value = '';
     }
 
-    // Clear wizard grams selections
+    // Clear wizard grams selections (same as the initial state)
     function clearWizardGramsSelectionsVue() {
-      FERTILIZERS.forEach(f => {
-        wizardGramsFertilizers[f.id] = {
-          checked: false,
-          grams: ''
-        };
-      });
-      wizardGramsSearchTerm.value = '';
+      initWizardGramsFertilizers();
     }
 
     // Update wizard grams - auto-check when user enters value
     function updateWizardGrams(id, value) {
       if (wizardGramsFertilizers[id]) {
         wizardGramsFertilizers[id].grams = value;
-        if (parseFloat(value) > 0) {
+        if (Number.parseFloat(value) > 0) {
           wizardGramsFertilizers[id].checked = true;
         }
       }
@@ -7229,7 +7236,7 @@ const FertilizerApp = {
     function updateAcidifyGrams(id, value) {
       if (acidifyGramsFertilizers[id]) {
         acidifyGramsFertilizers[id].grams = value;
-        if (parseFloat(value) > 0) {
+        if (Number.parseFloat(value) > 0) {
           acidifyGramsFertilizers[id].checked = true;
         }
       }
@@ -7254,10 +7261,10 @@ const FertilizerApp = {
       // Get active fertilizers
       const activeFerts = [];
       Object.entries(acidifyGramsFertilizers).forEach(([fertId, data]) => {
-        if (data.checked && parseFloat(data.grams) > 0) {
+        if (data.checked && Number.parseFloat(data.grams) > 0) {
           const fert = FERTILIZERS.find(f => f.id === fertId);
           if (fert) {
-            activeFerts.push({ ...fert, grams: parseFloat(data.grams) });
+            activeFerts.push({ ...fert, grams: Number.parseFloat(data.grams) });
           }
         }
       });
@@ -7311,7 +7318,7 @@ const FertilizerApp = {
     // Update fertilizer grams
     function updateGrams(id, value) {
       if (fertilizerAmounts[id]) {
-        fertilizerAmounts[id].grams = parseFloat(value) || 0;
+        fertilizerAmounts[id].grams = Number.parseFloat(value) || 0;
       }
     }
 
@@ -7486,9 +7493,7 @@ const FertilizerApp = {
 
     // Select only common fertilizers
     function selectCommonAvailable() {
-      FERTILIZERS.forEach(f => {
-        availableFertilizers[f.id] = COMMON_FERTILIZERS.includes(f.id);
-      });
+      initAvailableFertilizers();
     }
 
     // Build formula (PPM to Grams calculation)
@@ -7504,13 +7509,13 @@ const FertilizerApp = {
 
       // Build targets object
       const targets = {
-        N: parseFloat(formulaTargets.N) || 0,
-        P: parseFloat(formulaTargets.P) || 0,
-        K: parseFloat(formulaTargets.K) || 0,
-        Ca: parseFloat(formulaTargets.Ca) || 0,
-        Mg: parseFloat(formulaTargets.Mg) || 0,
-        S: parseFloat(formulaTargets.S) || 0,
-        Si: parseFloat(formulaTargets.Si) || 0
+        N: Number.parseFloat(formulaTargets.N) || 0,
+        P: Number.parseFloat(formulaTargets.P) || 0,
+        K: Number.parseFloat(formulaTargets.K) || 0,
+        Ca: Number.parseFloat(formulaTargets.Ca) || 0,
+        Mg: Number.parseFloat(formulaTargets.Mg) || 0,
+        S: Number.parseFloat(formulaTargets.S) || 0,
+        Si: Number.parseFloat(formulaTargets.Si) || 0
       };
 
       addDevLog(`Volume: ${formulaVolume.value}L, PeKacid limit: ${pekacidMaxLimit.value} g/L`);
@@ -7541,21 +7546,24 @@ const FertilizerApp = {
         progressBar.update(50, i18n.t('runningSolver'));
 
         // Show download message if solver not yet loaded
-        if (!window.FertilizerCore.isHighsLoaded()) {
-          progressBar.setIndeterminate(i18n.t('downloadingSolver'));
-        } else {
+        if (globalThis.FertilizerCore.isHighsLoaded()) {
           progressBar.setIndeterminate(i18n.t('optimizingCombination'));
+        } else {
+          progressBar.setIndeterminate(i18n.t('downloadingSolver'));
         }
 
         // Run optimization with progress callback
         // Include pekacidMaxLimit if PeKacid is selected
         const pekacidLimit = pekacidMaxLimit.value || 0;
         const nh4PctRaw = wizardNH4Pct.value;
-        const nh4PctTarget = (typeof nh4PctRaw === 'number' && nh4PctRaw >= 0 && nh4PctRaw <= 100)
-          ? nh4PctRaw
-          : (nh4PctRaw !== null && nh4PctRaw !== '' && !isNaN(parseFloat(nh4PctRaw))
-              ? Math.min(100, Math.max(0, parseFloat(nh4PctRaw)))
-              : null);
+        let nh4PctTarget;
+        if (typeof nh4PctRaw === 'number' && nh4PctRaw >= 0 && nh4PctRaw <= 100) {
+          nh4PctTarget = nh4PctRaw;
+        } else if (nh4PctRaw !== null && nh4PctRaw !== '' && !Number.isNaN(Number.parseFloat(nh4PctRaw))) {
+          nh4PctTarget = Math.min(100, Math.max(0, Number.parseFloat(nh4PctRaw)));
+        } else {
+          nh4PctTarget = null;
+        }
         const result = await optimizeFormula(
           targets,
           formulaVolume.value,
@@ -7632,7 +7640,7 @@ const FertilizerApp = {
     // Update reverse fertilizer priority
     function updateReversePriority(id, priority) {
       if (reverseFertilizers[id]) {
-        reverseFertilizers[id].priority = parseInt(priority) || 5;
+        reverseFertilizers[id].priority = Number.parseInt(priority) || 5;
       }
     }
 
@@ -7670,13 +7678,13 @@ const FertilizerApp = {
 
       // Build targets object
       const targets = {
-        N: parseFloat(ratioTargets.N) || 0,
-        P: parseFloat(ratioTargets.P) || 0,
-        K: parseFloat(ratioTargets.K) || 0,
-        Ca: parseFloat(ratioTargets.Ca) || 0,
-        Mg: parseFloat(ratioTargets.Mg) || 0,
-        S: parseFloat(ratioTargets.S) || 0,
-        Si: parseFloat(ratioTargets.Si) || 0
+        N: Number.parseFloat(ratioTargets.N) || 0,
+        P: Number.parseFloat(ratioTargets.P) || 0,
+        K: Number.parseFloat(ratioTargets.K) || 0,
+        Ca: Number.parseFloat(ratioTargets.Ca) || 0,
+        Mg: Number.parseFloat(ratioTargets.Mg) || 0,
+        S: Number.parseFloat(ratioTargets.S) || 0,
+        Si: Number.parseFloat(ratioTargets.Si) || 0
       };
 
       const volume = ratioVolume.value;
@@ -7716,9 +7724,9 @@ const FertilizerApp = {
       let targetEC = null;
       let concentration = 100;
       if (concentrationValue.startsWith('ec:')) {
-        targetEC = parseFloat(concentrationValue.substring(3));
+        targetEC = Number.parseFloat(concentrationValue.substring(3));
       } else {
-        concentration = parseFloat(concentrationValue) || 75;
+        concentration = Number.parseFloat(concentrationValue) || 75;
       }
 
       ratioIsCalculating.value = true;
@@ -7733,21 +7741,24 @@ const FertilizerApp = {
         progressBar.update(50, i18n.t('runningSolver'));
 
         // Show download message if solver not yet loaded
-        if (!window.FertilizerCore.isHighsLoaded()) {
-          progressBar.setIndeterminate(i18n.t('downloadingSolver'));
-        } else {
+        if (globalThis.FertilizerCore.isHighsLoaded()) {
           progressBar.setIndeterminate(i18n.t('optimizingCombination'));
+        } else {
+          progressBar.setIndeterminate(i18n.t('downloadingSolver'));
         }
 
         // Run optimization with progress callback
         // Include pekacidMaxLimit if PeKacid is selected
         const pekacidLimit = pekacidMaxLimit.value || 0;
         const nh4PctRaw = wizardNH4Pct.value;
-        const nh4PctTarget = (typeof nh4PctRaw === 'number' && nh4PctRaw >= 0 && nh4PctRaw <= 100)
-          ? nh4PctRaw
-          : (nh4PctRaw !== null && nh4PctRaw !== '' && !isNaN(parseFloat(nh4PctRaw))
-              ? Math.min(100, Math.max(0, parseFloat(nh4PctRaw)))
-              : null);
+        let nh4PctTarget;
+        if (typeof nh4PctRaw === 'number' && nh4PctRaw >= 0 && nh4PctRaw <= 100) {
+          nh4PctTarget = nh4PctRaw;
+        } else if (nh4PctRaw !== null && nh4PctRaw !== '' && !Number.isNaN(Number.parseFloat(nh4PctRaw))) {
+          nh4PctTarget = Math.min(100, Math.max(0, Number.parseFloat(nh4PctRaw)));
+        } else {
+          nh4PctTarget = null;
+        }
         const result = await optimizeFormula(
           targets,
           volume,
@@ -7963,8 +7974,8 @@ const FertilizerApp = {
 
       // NH4% constraint satisfaction warning
       const nh4PctConstraintR = wizardNH4Pct.value !== null && wizardNH4Pct.value !== ''
-        ? parseFloat(wizardNH4Pct.value) : null;
-      if (nh4PctConstraintR !== null && !isNaN(nh4PctConstraintR) && result.achieved.N_total > 0) {
+        ? Number.parseFloat(wizardNH4Pct.value) : null;
+      if (nh4PctConstraintR !== null && !Number.isNaN(nh4PctConstraintR) && result.achieved.N_total > 0) {
         const deviation = Math.abs(reverseResultsData.nh4Percent - nh4PctConstraintR);
         if (deviation > 10) {
           reverseResultsData.warnings.push(i18n.t('nh4PctNotAchieved', {
@@ -8108,8 +8119,8 @@ const FertilizerApp = {
 
       // NH4% constraint satisfaction warning
       const nh4PctConstraint = wizardNH4Pct.value !== null && wizardNH4Pct.value !== ''
-        ? parseFloat(wizardNH4Pct.value) : null;
-      if (nh4PctConstraint !== null && !isNaN(nh4PctConstraint) && result.achieved.N_total > 0) {
+        ? Number.parseFloat(wizardNH4Pct.value) : null;
+      if (nh4PctConstraint !== null && !Number.isNaN(nh4PctConstraint) && result.achieved.N_total > 0) {
         const deviation = Math.abs(formulaResultsData.nh4Percent - nh4PctConstraint);
         if (deviation > 10) {
           formulaResultsData.warnings.push(i18n.t('nh4PctNotAchieved', {
@@ -8423,29 +8434,24 @@ const FertilizerApp = {
         // Build ratio label and values based on what user entered
         let ratioLabel = 'N';
         let targetRatioValues = i18n.formatNumber(nTarget);
-        const targetParts = [nTarget];
 
         if (pTarget > 0) {
           const pLbl = mode === 'elemental' ? 'P' : 'P₂O₅';
           ratioLabel += `:${pLbl}`;
           targetRatioValues += ` : ${i18n.formatNumber(pTarget)}`;
-          targetParts.push(pTarget);
         }
         if (kTarget > 0) {
           const kLbl = mode === 'elemental' ? 'K' : 'K₂O';
           ratioLabel += `:${kLbl}`;
           targetRatioValues += ` : ${i18n.formatNumber(kTarget)}`;
-          targetParts.push(kTarget);
         }
         if (caTarget > 0) {
           ratioLabel += ':Ca';
           targetRatioValues += ` : ${i18n.formatNumber(caTarget)}`;
-          targetParts.push(caTarget);
         }
         if (mgTarget > 0) {
           ratioLabel += ':Mg';
           targetRatioValues += ` : ${i18n.formatNumber(mgTarget)}`;
-          targetParts.push(mgTarget);
         }
 
         displayTank.ratios.target = { label: ratioLabel, values: targetRatioValues };
@@ -8567,7 +8573,7 @@ const FertilizerApp = {
     // Get modal title based on type
     // Note: language.value is included to trigger recomputation on language change
     const modalTitle = computed(() => {
-      const _lang = language.value; // Reactive dependency on language
+      Boolean(language.value); // Reactive dependency: forces recompute on language change
       const titles = {
         'ppm': i18n.t('understandingPpmCalculations') || 'Understanding PPM Calculations',
         'ion-balance': i18n.t('understandingIonBalance') || 'Understanding Ion Balance',
@@ -8625,12 +8631,6 @@ const FertilizerApp = {
       return null;
     }
 
-    // Helper function to get ION_DATA for a fertilizer
-    function getIonDataForFert(fert) {
-      if (!fert || !fert.id) return null;
-      return ION_DATA[fert.id] || null;
-    }
-
     // Calculate meq/L for a specific ion from a fertilizer
     function calculateIonMeq(fert, ionInfo) {
       const ionData = getIonDataForFert(fert);
@@ -8680,7 +8680,7 @@ const FertilizerApp = {
 
     function validateWizardVolume() {
       const volume = wizardVolume.value;
-      if (isNaN(volume) || volume <= 0) {
+      if (Number.isNaN(volume) || volume <= 0) {
         if (wizardVolumeInput.value) {
           wizardVolumeInput.value.focus();
           wizardVolumeInput.value.reportValidity();
@@ -8688,21 +8688,6 @@ const FertilizerApp = {
         return false;
       }
       return true;
-    }
-
-    // Scroll wizard step into view (Vue-powered replacement for getElementById scroll)
-    function scrollToWizardStep(stepId) {
-      Vue.nextTick(() => {
-        const step = document.getElementById(stepId);
-        if (step) {
-          step.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
-    }
-
-    // Check if event target is a search input (for @keydown.enter handlers)
-    function isSearchInput(event) {
-      return event?.target?.classList?.contains('wizard-fertilizer-search') || false;
     }
 
     // Handle keydown.enter for grams input step
@@ -8717,12 +8702,6 @@ const FertilizerApp = {
       if (wizardStep.value === 'fertilizer-select-step' && !isSearchInput(event)) {
         proceedFromFertilizerSelectStep();
       }
-    }
-
-    // Wrapper for global calculateFromWizardFertilizerSelect
-    async function calculateFromWizardFertilizerSelectVue() {
-      // Call the global function which handles the complex logic
-      await calculateFromWizardFertilizerSelect();
     }
 
     // Show two-tank view (Vue version)
@@ -8839,7 +8818,7 @@ const FertilizerApp = {
 
     // Open K:Ca ratio explanation modal with current ratio data
     function openKCaExplanation(kCaData) {
-      const ratio = kCaData?.ratio ? parseFloat(kCaData.ratio) : null;
+      const ratio = kCaData?.ratio ? Number.parseFloat(kCaData.ratio) : null;
       const status = kCaData?.status || (ratio ? getKCaWarningStatus(ratio) : null);
       openModal('k-ca-ratio', {
         kCaRatio: ratio,
@@ -8849,8 +8828,8 @@ const FertilizerApp = {
 
     // Open NO₃:NH₄ ratio explanation modal with current ratio data
     function openNo3Nh4Explanation(no3Nh4Data) {
-      const ratio = no3Nh4Data?.ratio !== undefined ? no3Nh4Data.ratio : null;
-      const status = no3Nh4Data?.status || (ratio !== null ? getNo3Nh4WarningStatus(ratio) : null);
+      const ratio = no3Nh4Data?.ratio === undefined ? null : no3Nh4Data.ratio;
+      const status = no3Nh4Data?.status || (ratio === null ? null : getNo3Nh4WarningStatus(ratio));
       openModal('no3-nh4-ratio', {
         no3Nh4Ratio: ratio,
         no3Nh4Status: status
@@ -8859,8 +8838,8 @@ const FertilizerApp = {
 
     // Open N:K ratio explanation modal with current ratio data
     function openNKExplanation(nkData) {
-      const ratio = nkData?.ratio !== undefined ? nkData.ratio : null;
-      const status = nkData?.status || (ratio !== null ? getNKWarningStatus(ratio) : null);
+      const ratio = nkData?.ratio === undefined ? null : nkData.ratio;
+      const status = nkData?.status || (ratio === null ? null : getNKWarningStatus(ratio));
       openModal('n-k-ratio', {
         nkRatio: ratio,
         nkStatus: status
@@ -8869,8 +8848,8 @@ const FertilizerApp = {
 
     // Open Ca:Mg ratio explanation modal with current ratio data
     function openCaMgExplanation(caMgData) {
-      const ratio = caMgData?.ratio !== undefined ? caMgData.ratio : null;
-      const status = caMgData?.status || (ratio !== null ? getCaMgWarningStatus(ratio) : null);
+      const ratio = caMgData?.ratio === undefined ? null : caMgData.ratio;
+      const status = caMgData?.status || (ratio === null ? null : getCaMgWarningStatus(ratio));
       openModal('ca-mg-ratio', {
         caMgRatio: ratio,
         caMgStatus: status
@@ -8879,8 +8858,8 @@ const FertilizerApp = {
 
     // Open Boron level explanation modal with current ppm data
     function openBoronExplanation(boronData) {
-      const ppm = boronData?.ppm !== undefined ? boronData.ppm : null;
-      const status = boronData || (ppm !== null ? getBoronWarningStatus(ppm) : null);
+      const ppm = boronData?.ppm === undefined ? null : boronData.ppm;
+      const status = boronData || (ppm === null ? null : getBoronWarningStatus(ppm));
       openModal('boron-level', {
         boronPpm: ppm,
         boronStatus: status
@@ -9005,7 +8984,7 @@ const FertilizerApp = {
         return;
       }
       const mode = currentMode.value;
-      if (MODES_WITH_CALC_MODE.includes(mode)) {
+      if (MODES_WITH_CALC_MODE.has(mode)) {
         showWizardStepVue('calc-mode-step');
       } else if (mode === 'ppm-calc') {
         showWizardStepVue('grams-input-step');
@@ -9026,7 +9005,7 @@ const FertilizerApp = {
     // Proceed from calculation mode step
     function proceedFromCalcModeStep() {
       const mode = currentMode.value;
-      if (MODES_WITH_EC.includes(mode)) {
+      if (MODES_WITH_EC.has(mode)) {
         showWizardStepVue('ec-step');
       } else if (mode === 'formula-builder') {
         showWizardStepVue('ppm-targets-step');
@@ -9044,7 +9023,7 @@ const FertilizerApp = {
     // Proceed to formula fertilizer selection step
     function proceedToFormulaFertilizerStep() {
       const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
-      const hasTarget = fields.some(field => parseFloat(wizardTargets[field]) > 0);
+      const hasTarget = fields.some(field => Number.parseFloat(wizardTargets[field]) > 0);
       if (!hasTarget) {
         alert(i18n.t('alertEnterTargetPpm'));
         return;
@@ -9055,7 +9034,7 @@ const FertilizerApp = {
     // Proceed to reverse fertilizer selection step
     function proceedToReverseFertilizerStep() {
       const fields = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
-      const hasRatio = fields.some(field => parseFloat(wizardRatios[field]) > 0);
+      const hasRatio = fields.some(field => Number.parseFloat(wizardRatios[field]) > 0);
       if (!hasRatio) {
         alert(i18n.t('alertEnterRatioValue'));
         return;
@@ -9068,7 +9047,6 @@ const FertilizerApp = {
       const wizardVolumeValue = wizardVolume.value || 10;
       const mode = currentMode.value;
       const calcMode = wizardCalcMode.value;
-      const ec = ratioTargetEC.value;
 
       // Update volume in all calculator tabs
       volume.value = wizardVolumeValue;
@@ -9076,7 +9054,7 @@ const FertilizerApp = {
       ratioVolume.value = wizardVolumeValue;
 
       // Apply calculation mode if applicable
-      if (MODES_WITH_CALC_MODE.includes(mode)) {
+      if (MODES_WITH_CALC_MODE.has(mode)) {
         if (mode === 'formula-builder') {
           formulaCalcMode.value = calcMode;
         } else if (mode === 'reverse-calc') {
@@ -9279,7 +9257,7 @@ const FertilizerApp = {
     }
 
     // Expose addDevLog globally for fertilizer-core.js to use
-    window.addDevLog = addDevLog;
+    globalThis.addDevLog = addDevLog;
 
     // =========================================================================
     // STOCK SOLUTION MAKER METHODS
@@ -9298,15 +9276,15 @@ const FertilizerApp = {
 
     // Initialize stock fertilizer selection with common fertilizers
     function initStockFertilizers() {
-      const commonIds = [
+      const commonIds = new Set([
         'calcium_nitrate_calcinit_typical',
         'potassium_nitrate_typical',
         'magnesium_sulfate_heptahydrate_common',
         'mkp_typical',
         'potassium_sulfate_common'
-      ];
+      ]);
       FERTILIZERS.forEach(fert => {
-        stockSelectedFertilizers[fert.id] = commonIds.includes(fert.id);
+        stockSelectedFertilizers[fert.id] = commonIds.has(fert.id);
       });
     }
 
@@ -9372,11 +9350,11 @@ const FertilizerApp = {
     function proceedFromStockTargets() {
       // Validate targets - check if at least one target has a non-zero nutrient value
       const hasValidTarget = (t) => {
-        const n = parseFloat(t.n) || 0;
-        const p = parseFloat(t.p) || 0;
-        const k = parseFloat(t.k) || 0;
-        const ca = parseFloat(t.ca) || 0;
-        const mg = parseFloat(t.mg) || 0;
+        const n = Number.parseFloat(t.n) || 0;
+        const p = Number.parseFloat(t.p) || 0;
+        const k = Number.parseFloat(t.k) || 0;
+        const ca = Number.parseFloat(t.ca) || 0;
+        const mg = Number.parseFloat(t.mg) || 0;
         return n > 0 || p > 0 || k > 0 || ca > 0 || mg > 0;
       };
       const validTargets = stockTargets.filter(hasValidTarget);
@@ -9410,18 +9388,18 @@ const FertilizerApp = {
         .map((t, idx) => {
           // Build ratio object from separate fields
           const ratio = {
-            N: parseFloat(t.n) || 0,
-            P: parseFloat(t.p) || 0,
-            K: parseFloat(t.k) || 0,
-            Ca: parseFloat(t.ca) || 0,
-            Mg: parseFloat(t.mg) || 0,
+            N: Number.parseFloat(t.n) || 0,
+            P: Number.parseFloat(t.p) || 0,
+            K: Number.parseFloat(t.k) || 0,
+            Ca: Number.parseFloat(t.ca) || 0,
+            Mg: Number.parseFloat(t.mg) || 0,
             S: 0
           };
           const name = t.name || ('Target ' + (idx + 1));
           return {
             id: 'target_' + idx,  // Core function expects id field
             ratio,
-            targetEC: parseFloat(t.ec) || 1.5,
+            targetEC: Number.parseFloat(t.ec) || 1.5,
             baselineEC: stockSettings.baselineEC || 0,
             name: name
           };
@@ -9568,7 +9546,7 @@ const FertilizerApp = {
         if (data.checked && data.grams > 0) {
           const fert = FERTILIZERS.find(f => f.id === fertId);
           if (fert) {
-            activeFerts.push({ ...fert, grams: parseFloat(data.grams) });
+            activeFerts.push({ ...fert, grams: Number.parseFloat(data.grams) });
           }
         }
       });
@@ -9578,7 +9556,7 @@ const FertilizerApp = {
         return;
       }
 
-      const vol = parseFloat(wizardVolume.value) || 10;
+      const vol = Number.parseFloat(wizardVolume.value) || 10;
 
       // Calculate PPM results
       const results = {};
@@ -9665,8 +9643,8 @@ const FertilizerApp = {
      * Adjusts P and K sources to compensate for PeKacid's contribution
      */
     async function calculateAcidifyMix() {
-      const vol = parseFloat(wizardVolume.value) || 10;
-      const pekacidGPerL = parseFloat(acidifyPekacidAmount.value) || 0;
+      const vol = Number.parseFloat(wizardVolume.value) || 10;
+      const pekacidGPerL = Number.parseFloat(acidifyPekacidAmount.value) || 0;
 
       if (pekacidGPerL <= 0) {
         alert(i18n.t('alertEnterPekacidAmount') || 'Please enter a PeKacid amount greater than 0.');
@@ -9676,10 +9654,10 @@ const FertilizerApp = {
       // Get active fertilizers from acidify state (excluding PeKacid)
       const originalFerts = [];
       Object.entries(acidifyGramsFertilizers).forEach(([fertId, data]) => {
-        if (data.checked && parseFloat(data.grams) > 0) {
+        if (data.checked && Number.parseFloat(data.grams) > 0) {
           const fert = FERTILIZERS.find(f => f.id === fertId);
           if (fert) {
-            originalFerts.push({ ...fert, grams: parseFloat(data.grams) });
+            originalFerts.push({ ...fert, grams: Number.parseFloat(data.grams) });
           }
         }
       });
@@ -9774,7 +9752,6 @@ const FertilizerApp = {
 
       // Calculate target PPM for MILP (baseline minus PeKacid contribution)
       // The MILP solver will find optimal amounts of other fertilizers to match these targets
-      const OXIDE_CONVERSIONS = window.FertilizerCore.OXIDE_CONVERSIONS;
       const targetPpm = {
         N_total: beforePpm.N_total || 0,
         P2O5: Math.max(0, (beforePpm.P2O5 || 0) - pekacidP2O5ppm),
@@ -9788,7 +9765,7 @@ const FertilizerApp = {
       addDevLog('Target PPM (baseline minus PeKacid): ' + JSON.stringify(targetPpm), 'info');
 
       // Prepare fertilizers for MILP (exclude PeKacid from optimization)
-      const fertsForMilp = originalFerts.map(f => FERTILIZERS.find(fert => fert.id === f.id)).filter(f => f);
+      const fertsForMilp = originalFerts.map(f => FERTILIZERS.find(fert => fert.id === f.id)).filter(Boolean);
 
       let milpSuccess = false;
       let milpFormula = {};
@@ -9796,12 +9773,12 @@ const FertilizerApp = {
 
       try {
         // Check if MILP solver is available
-        if (!window.FertilizerCore || !window.FertilizerCore.solveMilpBrowser) {
+        if (!globalThis.FertilizerCore || !globalThis.FertilizerCore.solveMilpBrowser) {
           throw new Error('MILP solver not available');
         }
 
         // Run MILP solver with adjusted targets
-        const milpResult = await window.FertilizerCore.solveMilpBrowser({
+        const milpResult = await globalThis.FertilizerCore.solveMilpBrowser({
           fertilizers: fertsForMilp,
           targets: targetPpm,
           volume: vol,
@@ -9960,12 +9937,16 @@ const FertilizerApp = {
       if (!success) {
         // Build detailed context for error message
         const contextLines = [];
-        contextLines.push('Original recipe: P₂O₅=' + (beforePpm.P2O5 || 0).toFixed(1) + ' ppm, K₂O=' + (beforePpm.K2O || 0).toFixed(1) + ' ppm');
-        contextLines.push('PeKacid (' + pekacidGPerL + ' g/L) adds: P₂O₅=' + pekacidP2O5ppm.toFixed(1) + ' ppm, K₂O=' + pekacidK2Oppm.toFixed(1) + ' ppm');
-        contextLines.push('Target for other fertilizers: P₂O₅=' + targetPpm.P2O5.toFixed(1) + ' ppm, K₂O=' + targetPpm.K2O.toFixed(1) + ' ppm');
+        contextLines.push(
+          'Original recipe: P₂O₅=' + (beforePpm.P2O5 || 0).toFixed(1) + ' ppm, K₂O=' + (beforePpm.K2O || 0).toFixed(1) + ' ppm',
+          'PeKacid (' + pekacidGPerL + ' g/L) adds: P₂O₅=' + pekacidP2O5ppm.toFixed(1) + ' ppm, K₂O=' + pekacidK2Oppm.toFixed(1) + ' ppm',
+          'Target for other fertilizers: P₂O₅=' + targetPpm.P2O5.toFixed(1) + ' ppm, K₂O=' + targetPpm.K2O.toFixed(1) + ' ppm'
+        );
         if (milpSuccess) {
-          contextLines.push('MILP achieved: P₂O₅=' + (adjustedPpm.P2O5 || 0).toFixed(1) + ' ppm, K₂O=' + (adjustedPpm.K2O || 0).toFixed(1) + ' ppm');
-          contextLines.push('Difference: P₂O₅=' + p2o5Remaining.toFixed(1) + ' ppm (tolerance: ' + p2o5Tolerance.toFixed(1) + '), K₂O=' + k2oRemaining.toFixed(1) + ' ppm (tolerance: ' + k2oTolerance.toFixed(1) + ')');
+          contextLines.push(
+            'MILP achieved: P₂O₅=' + (adjustedPpm.P2O5 || 0).toFixed(1) + ' ppm, K₂O=' + (adjustedPpm.K2O || 0).toFixed(1) + ' ppm',
+            'Difference: P₂O₅=' + p2o5Remaining.toFixed(1) + ' ppm (tolerance: ' + p2o5Tolerance.toFixed(1) + '), K₂O=' + k2oRemaining.toFixed(1) + ' ppm (tolerance: ' + k2oTolerance.toFixed(1) + ')'
+          );
         }
         const contextText = contextLines.join('\n');
 
@@ -10084,8 +10065,7 @@ const FertilizerApp = {
         alert(i18n.t('alertRunCalculationFirst'));
         return;
       }
-      const { result, targets, volume } = lastCalc;
-      const calculationMode = formulaCalcMode.value;
+      const { result, volume } = lastCalc;
       const ionBalance = calculateIonBalanceForFormula(
         Object.entries(result.formula).map(([fertId, grams]) => {
           const fert = FERTILIZERS.find(f => f.id === fertId);
@@ -10138,7 +10118,7 @@ const FertilizerApp = {
 
       // Tank recipes
       stockResultsData.tanks.forEach((tank, idx) => {
-        text += `--- ${tank.name || ('Tank ' + String.fromCharCode(65 + idx))} ---\n`;
+        text += `--- ${tank.name || ('Tank ' + String.fromCodePoint(65 + idx))} ---\n`;
         tank.fertilizers.forEach(fert => {
           const fertName = i18n.getFertilizerName(fert) || fert.name;
           text += `  ${fertName}: ${fert.gPerL.toFixed(2)} g/L (${(fert.gPerL * stockResultsData.settings?.tankVolume).toFixed(1)} g total)\n`;
@@ -10151,7 +10131,7 @@ const FertilizerApp = {
       stockResultsData.dosingTable.forEach(dosing => {
         text += `${dosing.targetName} (EC ${dosing.ec} mS/cm, ratio ${dosing.ratio}):\n`;
         dosing.doses.forEach((dose, idx) => {
-          const tankName = stockResultsData.tanks[idx]?.name || ('Tank ' + String.fromCharCode(65 + idx));
+          const tankName = stockResultsData.tanks[idx]?.name || ('Tank ' + String.fromCodePoint(65 + idx));
           text += `  ${tankName}: ${(dose || 0).toFixed(2)} mL/L\n`;
         });
         text += '\n';
@@ -10237,7 +10217,7 @@ const FertilizerApp = {
       if (mode === 'ppm-calc') {
         const parts = [];
         for (const [id, val] of Object.entries(wizardGramsFertilizers)) {
-          if (val.checked && parseFloat(val.grams) > 0) {
+          if (val.checked && Number.parseFloat(val.grams) > 0) {
             const code = fertIdToCode(id);
             if (code) parts.push(`${code}:${val.grams}`);
           }
@@ -10270,7 +10250,7 @@ const FertilizerApp = {
 
     // Called by copy buttons — always targets wizard-results so the recipient lands on results.
     function encodeWizardStateToURL() {
-      const base = window.location.href.split('?')[0];
+      const base = globalThis.location.href.split('?')[0];
       const params = buildWizardParams('wr');
       if (!params) return null;
       const full = `${base}?${params.toString()}`;
@@ -10283,7 +10263,7 @@ const FertilizerApp = {
     // Pushes the current step + state into the browser URL (no new history entry).
     let _urlUpdateTimer = null;
     function updateURL() {
-      const base = window.location.href.split('?')[0];
+      const base = globalThis.location.href.split('?')[0];
       const mode = currentMode.value;
       const step = wizardStep.value;
       if (!mode || !MODE_CODE[mode] || step === 'mode-selector' || !STEP_CODE[step]) {
@@ -10302,7 +10282,7 @@ const FertilizerApp = {
 
     // Restore state from URL on page load (handles any step, including mid-wizard).
     function restoreStateFromURL() {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(globalThis.location.search);
 
       if (params.get('fc_err') === 'overflow') {
         urlOverflowWarning.value = true;
@@ -10316,7 +10296,7 @@ const FertilizerApp = {
       const targetStep = STEP_MAP[params.get('s')] || 'wizard-results';
 
       currentMode.value = MODE_MAP[m];
-      wizardVolume.value = parseFloat(params.get('v')) || 10;
+      wizardVolume.value = Number.parseFloat(params.get('v')) || 10;
 
       // Calc mode (formula-builder & reverse-calc)
       if (params.has('c')) {
@@ -10329,7 +10309,7 @@ const FertilizerApp = {
           const colonIdx = pair.indexOf(':');
           if (colonIdx === -1) continue;
           const id = fertCodeToId(pair.slice(0, colonIdx));
-          if (id) wizardGramsFertilizers[id] = { checked: true, grams: parseFloat(pair.slice(colonIdx + 1)) };
+          if (id) wizardGramsFertilizers[id] = { checked: true, grams: Number.parseFloat(pair.slice(colonIdx + 1)) };
         }
       }
 
@@ -10342,7 +10322,7 @@ const FertilizerApp = {
       // reverse-calc: EC + ratios
       if (currentMode.value === 'reverse-calc') {
         if (params.has('ec')) {
-          const ec = EC_VALUES_URL[parseInt(params.get('ec'), 16)] || 'ec:1.2';
+          const ec = EC_VALUES_URL[Number.parseInt(params.get('ec'), 16)] || 'ec:1.2';
           wizardSelectedEC.value = ec;
           ratioTargetEC.value = ec;
         }
@@ -10355,11 +10335,11 @@ const FertilizerApp = {
       // Available fertilizers (formula-builder & reverse-calc)
       if (params.has('a')) {
         const ids = decodeFertBitmask(params.get('a'));
-        for (const id of (window.FERTILIZER_URL_ORDER || [])) wizardAvailFertilizers[id] = ids.includes(id);
+        for (const id of (globalThis.FERTILIZER_URL_ORDER || [])) wizardAvailFertilizers[id] = ids.includes(id);
       }
 
       // PeKacid limit
-      if (params.has('pk')) pekacidMaxLimit.value = parseFloat(params.get('pk')) || 0;
+      if (params.has('pk')) pekacidMaxLimit.value = Number.parseFloat(params.get('pk')) || 0;
 
       nextTick(async () => {
         if (targetStep === 'wizard-results') {
@@ -10528,8 +10508,6 @@ const FertilizerApp = {
       currentTwoTankData,
 
       // Wizard State
-      wizardStep,
-      wizardVolume,
       wizardVolumeInput,
 
       // Wizard Volume Helpers
@@ -10680,7 +10658,7 @@ const FertilizerApp = {
 function mountVueApp() {
   const app = createApp(FertilizerApp);
   app.component('ratio-card', RatioCard);
-  window.vueApp = app.mount('.calculator-container');
+  globalThis.vueApp = app.mount('.calculator-container');
 }
 
 function initializeApp() {

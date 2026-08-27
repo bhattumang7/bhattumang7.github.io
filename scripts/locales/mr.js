@@ -2,9 +2,9 @@
  * Marathi (mr) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.mr = {
+globalThis.i18nLocales.mr = {
   pageTitle: 'खत कॅल्क्युलेटर',
   whatWouldYouLikeToDo: 'तुम्हाला काय करायला आवडेल?',
   chooseModeDescription: 'तुमच्याकडे असलेल्या माहितीवर आधारित कॅल्क्युलेटर मोड निवडा.',

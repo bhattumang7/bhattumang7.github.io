@@ -2,9 +2,9 @@
  * Tamil (ta) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.ta = {
+globalThis.i18nLocales.ta = {
   // Page title
   pageTitle: 'உர கணிப்பான்',
 
@@ -151,7 +151,6 @@ window.i18nLocales.ta = {
   language: 'மொழி',
 
   // Results
-  noCalculationYet: 'இன்னும் கணக்கீடு இல்லை',
   pleaseRunCalculation: 'முடிவுகளைக் காண முதலில் கணக்கீடு செய்யவும்',
   copyResults: 'முடிவுகளை நகலெடு',
   copyResultsToClipboard: 'முடிவுகளை கிளிப்போர்டுக்கு நகலெடு',
@@ -159,7 +158,6 @@ window.i18nLocales.ta = {
   finalIonBalanceResults: 'இறுதி அயனி சமநிலை முடிவுகள்',
 
   // Warnings
-  warningsAndRecommendations: 'எச்சரிக்கைகள் மற்றும் பரிந்துரைகள்',
   warningsRecommendations: 'எச்சரிக்கைகள் & பரிந்துரைகள்',
 
   // Two tank
@@ -178,7 +176,6 @@ window.i18nLocales.ta = {
 
   // Ion balance
   ionBalance: 'அயனி சமநிலை',
-  ionBalanceExplanation: 'கரைசலில் உள்ள நேர்மின் (நேர் மின்னூட்டம்) மற்றும் எதிர்மின் (எதிர் மின்னூட்டம்) அயனிகளுக்கு இடையிலான சமநிலையை அயனி சமநிலை அளவிடுகிறது.',
   ionBalanceExplanationFull: 'ஒரு நல்ல சமநிலையான கரைசல் பொதுவாக 5% க்கும் குறைவான சமநிலையின்மையைக் கொண்டிருக்கும். அதிக சமநிலையின்மை pH ஏற்றத்தாழ்வுகள் மற்றும் ஊட்டச்சத்து கிடைக்கும் தன்மை பிரச்சனைகளுக்கு வழிவகுக்கும்.',
   phTendencyOnUptake: 'தாவர உறிஞ்சுதலில் pH போக்கு',
   phTendencyAcidic: '↓ pH அமிலமாக இழுக்கிறது',
@@ -197,7 +194,6 @@ window.i18nLocales.ta = {
   anionType: 'எதிர்மின் அயனி',
   percentOfTotalCations: 'மொத்த நேர்மின் அயனிகளின் %',
   percentOfTotalAnions: 'மொத்த எதிர்மின் அயனிகளின் %',
-  ionHeader: 'அயனி',
   typeHeader: 'வகை',
   meqLHeader: 'meq/L',
   molarMassHeader: 'மோலார் நிறை',
@@ -211,7 +207,6 @@ window.i18nLocales.ta = {
   targetEc: 'இலக்கு EC',
   targetEcDescription: 'உங்கள் கரைசலுக்கான இலக்கு மின்கடத்துத்திறனை உள்ளிடவும்',
   predictedEc: 'கணிக்கப்பட்ட EC',
-  ecPrediction: 'EC கணிப்பு',
   whatIsEc: 'EC என்றால் என்ன?',
   ecExplanationTitle: 'EC பற்றி',
   electricalConductivity25C: 'மின்கடத்துத்திறன் (25°C)',
@@ -251,12 +246,9 @@ window.i18nLocales.ta = {
   ppmModalDescription1: '<strong>PPM என்பது "பார்ட்ஸ் பெர் மில்லியன்"</strong> - சதவீதம் பயன்படுத்துவது போல மிகச் சிறிய செறிவுகளை அளவிடும் ஒரு வழி.',
   ppmModalDescription2: 'உதாரணமாக, <span class=\'highlight\'>100 PPM நைட்ரஜன்</span> என்றால் ஒவ்வொரு 10 லட்சம் கிராம் (1000 லிட்டர்) நீரில் 100 கிராம் நைட்ரஜன் உள்ளது.',
   ppmLearnMoreNote: 'PPM கணக்கீடுகள் மற்றும் ஊட்டச்சத்து செறிவுகள் பற்றி மேலும் அறிக.',
-  clickToLearnPpm: 'PPM பற்றி மேலும் அறிய கிளிக் செய்யவும்',
-  clickToLearnIonBalance: 'அயனி சமநிலை பற்றி மேலும் அறிய கிளிக் செய்யவும்',
 
   // Nutrient ratios
   nutrientRatios: 'ஊட்டச்சத்து விகிதங்கள்',
-  nutrientRatioAnalysis: 'ஊட்டச்சத்து விகித பகுப்பாய்வு',
   nutrientRatioExplanationFull: 'ஊட்டச்சத்து விகிதங்கள் உங்கள் கரைசலில் உள்ள பல்வேறு ஊட்டச்சத்துகளின் ஒப்பீட்டு அளவுகளைக் காட்டுகின்றன.',
   whatAreNutrientRatios: 'ஊட்டச்சத்து விகிதங்கள் என்றால் என்ன?',
   ratiosPreserved: 'விகிதங்கள் பாதுகாக்கப்பட்டன',
@@ -305,13 +297,10 @@ window.i18nLocales.ta = {
 
   // Phosphorus forms
   phosphorusOxide: 'பாஸ்பரஸ் (P₂O₅)',
-  phosphorusElemental: 'பாஸ்பரஸ் (P)',
   dihydrogenPhosphate: 'டைஹைட்ரஜன் பாஸ்பேட்',
   hydrogenPhosphate: 'ஹைட்ரஜன் பாஸ்பேட்',
 
   // Potassium forms
-  potassiumOxide: 'பொட்டாசியம் (K₂O)',
-  potassiumElemental: 'பொட்டாசியம் (K)',
 
   // Other elements
   calciumSimple: 'கால்சியம் (Ca)',
@@ -424,7 +413,6 @@ window.i18nLocales.ta = {
   egValue: 'எ.கா., மதிப்பு',
 
   // Notes
-  noteLabel: 'குறிப்பு:',
   noShowRegularResults: 'வழக்கமான முடிவுகளைக் காட்டாதே',
 
   // Why does this matter

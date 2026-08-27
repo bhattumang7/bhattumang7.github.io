@@ -10,7 +10,7 @@
  * - Nutrient ratio calculations
  */
 
-window.FertilizerCore = window.FertilizerCore || {};
+globalThis.FertilizerCore = globalThis.FertilizerCore || {};
 
 // =============================================================================
 // CACHED HIGHS SOLVER INSTANCE
@@ -24,7 +24,7 @@ let _highsLoadingPromise = null;
  * @param {Function} onProgress - Optional callback for progress updates: (status: string) => void
  * @returns {Promise<Object>} The HiGHS solver instance
  */
-window.FertilizerCore.getHighsInstance = async function(onProgress) {
+globalThis.FertilizerCore.getHighsInstance = async function(onProgress) {
   // Return cached instance if available
   if (_cachedHighsInstance) {
     return _cachedHighsInstance;
@@ -36,9 +36,9 @@ window.FertilizerCore.getHighsInstance = async function(onProgress) {
   }
 
   // Start loading
-  const highsFactory = window.highs || window.Module;
+  const highsFactory = globalThis.highs || globalThis.Module;
   if (typeof highsFactory !== 'function') {
-    throw new Error('HiGHS solver not available');
+    throw new TypeError('HiGHS solver not available');
   }
 
   // Notify that we're downloading the solver
@@ -51,7 +51,7 @@ window.FertilizerCore.getHighsInstance = async function(onProgress) {
     // Try to find the highs.js script and get its directory
     const scripts = document.getElementsByTagName('script');
     for (const script of scripts) {
-      if (script.src && script.src.includes('highs.js')) {
+      if (script.src?.includes('highs.js')) {
         return script.src.replace('highs.js', filename);
       }
     }
@@ -80,7 +80,7 @@ window.FertilizerCore.getHighsInstance = async function(onProgress) {
  * Check if HiGHS solver is already loaded (cached)
  * @returns {boolean}
  */
-window.FertilizerCore.isHighsLoaded = function() {
+globalThis.FertilizerCore.isHighsLoaded = function() {
   return _cachedHighsInstance !== null;
 };
 
@@ -89,12 +89,12 @@ window.FertilizerCore.isHighsLoaded = function() {
  * @param {Function} onProgress - Optional callback for progress updates
  * @returns {Promise<void>}
  */
-window.FertilizerCore.preloadHighsSolver = async function(onProgress) {
+globalThis.FertilizerCore.preloadHighsSolver = async function(onProgress) {
   if (_cachedHighsInstance || _highsLoadingPromise) {
     return; // Already loaded or loading
   }
   try {
-    await window.FertilizerCore.getHighsInstance(onProgress);
+    await globalThis.FertilizerCore.getHighsInstance(onProgress);
   } catch (e) {
     console.warn('Failed to preload HiGHS solver:', e);
   }
@@ -120,33 +120,33 @@ window.FertilizerCore.preloadHighsSolver = async function(onProgress) {
 // =============================================================================
 
 // Check if a fertilizer contains calcium
-window.FertilizerCore.hasCaContent = function(fertId) {
-  const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
-  return fert && fert.pct && fert.pct.Ca > 0;
+globalThis.FertilizerCore.hasCaContent = function(fertId) {
+  const fert = globalThis.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
+  return fert?.pct?.Ca > 0;
 };
 
 // Check if a fertilizer contains sulfate
-window.FertilizerCore.hasSulfateContent = function(fertId) {
-  const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
-  return fert && fert.pct && fert.pct.S > 0;
+globalThis.FertilizerCore.hasSulfateContent = function(fertId) {
+  const fert = globalThis.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
+  return fert?.pct?.S > 0;
 };
 
 // Check if a fertilizer contains phosphate
-window.FertilizerCore.hasPhosphateContent = function(fertId) {
-  const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
-  return fert && fert.pct && (fert.pct.P2O5 > 0 || fert.pct.P > 0);
+globalThis.FertilizerCore.hasPhosphateContent = function(fertId) {
+  const fert = globalThis.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
+  return fert?.pct && (fert.pct.P2O5 > 0 || fert.pct.P > 0);
 };
 
 // Check if a fertilizer contains silicate
-window.FertilizerCore.hasSilicateContent = function(fertId) {
-  const fert = window.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
-  return fert && fert.pct && (fert.pct.SiO2 > 0 || fert.pct.SiOH4 > 0 || fert.pct.Si > 0);
+globalThis.FertilizerCore.hasSilicateContent = function(fertId) {
+  const fert = globalThis.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
+  return fert?.pct && (fert.pct.SiO2 > 0 || fert.pct.SiOH4 > 0 || fert.pct.Si > 0);
 };
 
 // Check if a formula contains incompatible fertilizers
-window.FertilizerCore.hasIncompatibleFertilizers = function(formula) {
+globalThis.FertilizerCore.hasIncompatibleFertilizers = function(formula) {
   const activeFertIds = Object.entries(formula)
-    .filter(([id, grams]) => grams > 0)
+    .filter(([, grams]) => grams > 0)
     .map(([id]) => id);
 
   if (activeFertIds.length < 2) return false;
@@ -157,10 +157,10 @@ window.FertilizerCore.hasIncompatibleFertilizers = function(formula) {
   let hasSilicate = false;
 
   activeFertIds.forEach(fertId => {
-    if (window.FertilizerCore.hasCaContent(fertId)) hasCalcium = true;
-    if (window.FertilizerCore.hasSulfateContent(fertId)) hasSulfate = true;
-    if (window.FertilizerCore.hasPhosphateContent(fertId)) hasPhosphate = true;
-    if (window.FertilizerCore.hasSilicateContent(fertId)) hasSilicate = true;
+    if (globalThis.FertilizerCore.hasCaContent(fertId)) hasCalcium = true;
+    if (globalThis.FertilizerCore.hasSulfateContent(fertId)) hasSulfate = true;
+    if (globalThis.FertilizerCore.hasPhosphateContent(fertId)) hasPhosphate = true;
+    if (globalThis.FertilizerCore.hasSilicateContent(fertId)) hasSilicate = true;
   });
 
   return hasCalcium && (hasSulfate || hasPhosphate || hasSilicate);
@@ -176,15 +176,15 @@ window.FertilizerCore.hasIncompatibleFertilizers = function(formula) {
  * @param {Object} options - Optional settings
  * @returns {Object} EC estimation results
  */
-window.FertilizerCore.estimateEC = function(ions_mmolL, options = {}) {
+globalThis.FertilizerCore.estimateEC = function(ions_mmolL, options = {}) {
   const {
     temperatureC = 25,
     applyIonicStrengthCorrection = true,
     ionicStrengthK = 0.5
   } = options;
 
-  const IONIC_MOLAR_CONDUCTIVITY = window.FertilizerCore.IONIC_MOLAR_CONDUCTIVITY;
-  const ION_CHARGES = window.FertilizerCore.ION_CHARGES;
+  const IONIC_MOLAR_CONDUCTIVITY = globalThis.FertilizerCore.IONIC_MOLAR_CONDUCTIVITY;
+  const ION_CHARGES = globalThis.FertilizerCore.ION_CHARGES;
 
   let ec_raw = 0;
   const contributions = {};
@@ -233,7 +233,7 @@ window.FertilizerCore.estimateEC = function(ions_mmolL, options = {}) {
 /**
  * Atomic/molar masses for EC ion conversion
  */
-window.FertilizerCore.EC_ION_MOLAR_MASSES = {
+globalThis.FertilizerCore.EC_ION_MOLAR_MASSES = {
   'NO3-': 14.007,   // Based on N atomic mass
   'NH4+': 14.007,   // Based on N atomic mass
   'H2PO4-': 30.974, // Based on P atomic mass
@@ -252,7 +252,7 @@ window.FertilizerCore.EC_ION_MOLAR_MASSES = {
 /**
  * Mapping from PPM keys to ion symbols for EC calculations
  */
-window.FertilizerCore.PPM_TO_ION_MAPPINGS = [
+globalThis.FertilizerCore.PPM_TO_ION_MAPPINGS = [
   { ppmKey: 'N_NO3', ion: 'NO3-' },
   { ppmKey: 'N_NH4', ion: 'NH4+' },
   { ppmKey: 'P', ion: 'H2PO4-' },
@@ -274,10 +274,10 @@ window.FertilizerCore.PPM_TO_ION_MAPPINGS = [
  * @param {Object} ppmResults - PPM values from the calculator
  * @returns {Object} Ion concentrations in mmol/L
  */
-window.FertilizerCore.ppmToIonsForEC = function(ppmResults) {
+globalThis.FertilizerCore.ppmToIonsForEC = function(ppmResults) {
   const ions_mmolL = {};
-  const MOLAR_MASSES = window.FertilizerCore.EC_ION_MOLAR_MASSES;
-  const mappings = window.FertilizerCore.PPM_TO_ION_MAPPINGS;
+  const MOLAR_MASSES = globalThis.FertilizerCore.EC_ION_MOLAR_MASSES;
+  const mappings = globalThis.FertilizerCore.PPM_TO_ION_MAPPINGS;
 
   for (const { ppmKey, ion } of mappings) {
     const ppm = ppmResults[ppmKey] || 0;
@@ -295,10 +295,10 @@ window.FertilizerCore.ppmToIonsForEC = function(ppmResults) {
  * @param {Object} ppmResults - PPM values from the calculator
  * @returns {Object} Ion data with ppm, molarMass, and mmolL for each ion
  */
-window.FertilizerCore.ppmToIonsWithDetails = function(ppmResults) {
+globalThis.FertilizerCore.ppmToIonsWithDetails = function(ppmResults) {
   const ionsData = {};
-  const MOLAR_MASSES = window.FertilizerCore.EC_ION_MOLAR_MASSES;
-  const mappings = window.FertilizerCore.PPM_TO_ION_MAPPINGS;
+  const MOLAR_MASSES = globalThis.FertilizerCore.EC_ION_MOLAR_MASSES;
+  const mappings = globalThis.FertilizerCore.PPM_TO_ION_MAPPINGS;
 
   for (const { ppmKey, ion } of mappings) {
     const ppm = ppmResults[ppmKey] || 0;
@@ -321,10 +321,10 @@ window.FertilizerCore.ppmToIonsWithDetails = function(ppmResults) {
  * @param {Object} options - Options passed to estimateEC
  * @returns {Object} EC estimation results with detailed ion data
  */
-window.FertilizerCore.estimateECFromPPM = function(ppmResults, options = {}) {
-  const ions_mmolL = window.FertilizerCore.ppmToIonsForEC(ppmResults);
-  const ionsDetails = window.FertilizerCore.ppmToIonsWithDetails(ppmResults);
-  const result = window.FertilizerCore.estimateEC(ions_mmolL, options);
+globalThis.FertilizerCore.estimateECFromPPM = function(ppmResults, options = {}) {
+  const ions_mmolL = globalThis.FertilizerCore.ppmToIonsForEC(ppmResults);
+  const ionsDetails = globalThis.FertilizerCore.ppmToIonsWithDetails(ppmResults);
+  const result = globalThis.FertilizerCore.estimateEC(ions_mmolL, options);
 
   // Add ppm and molarMass to each contribution
   for (const ion in result.contributions) {
@@ -347,7 +347,7 @@ window.FertilizerCore.estimateECFromPPM = function(ppmResults, options = {}) {
  * @param {number} imbalance - Imbalance percentage
  * @returns {Object} {statusColor, statusLevel} - Status color and level key
  */
-window.FertilizerCore.getIonBalanceStatus = function(imbalance) {
+globalThis.FertilizerCore.getIonBalanceStatus = function(imbalance) {
   if (imbalance <= 10) {
     return { statusColor: '#28a745', statusLevel: 'balanced' };
   } else if (imbalance <= 20) {
@@ -364,10 +364,10 @@ window.FertilizerCore.getIonBalanceStatus = function(imbalance) {
  * @param {Object} options - Optional settings
  * @returns {Object} Complete ion balance data
  */
-window.FertilizerCore.calculateIonBalanceCore = function(fertilizers, volume, options = {}) {
+globalThis.FertilizerCore.calculateIonBalanceCore = function(fertilizers, volume, options = {}) {
   const { includeBreakdown = false } = options;
-  const FERTILIZERS = window.FertilizerCore.FERTILIZERS;
-  const ION_DATA = window.FertilizerCore.ION_DATA;
+  const FERTILIZERS = globalThis.FertilizerCore.FERTILIZERS;
+  const ION_DATA = globalThis.FertilizerCore.ION_DATA;
 
   let totalCations = 0;
   let totalAnions = 0;
@@ -424,7 +424,7 @@ window.FertilizerCore.calculateIonBalanceCore = function(fertilizers, volume, op
 
   const average = (totalCations + totalAnions) / 2;
   const imbalance = average > 0 ? Math.abs(totalCations - totalAnions) / average * 100 : 0;
-  const { statusColor, statusLevel } = window.FertilizerCore.getIonBalanceStatus(imbalance);
+  const { statusColor, statusLevel } = globalThis.FertilizerCore.getIonBalanceStatus(imbalance);
 
   const result = {
     totalCations,
@@ -451,23 +451,23 @@ window.FertilizerCore.calculateIonBalanceCore = function(fertilizers, volume, op
  * @param {Object} results - Nutrient concentration results
  * @returns {Array} Array of ratio objects
  */
-window.FertilizerCore.calculateNutrientRatios = function(results) {
+function getRatio(values, names, decimals = 2) {
+  const nonZeroValues = values.filter(v => v > 0);
+  if (nonZeroValues.length === 0) return null;
+
+  const minValue = Math.min(...nonZeroValues);
+  const ratioValues = values.map(v => v > 0 ? Number.parseFloat((v / minValue).toFixed(decimals)) : 0);
+
+  return {
+    name: names.join(' : '),
+    ratio: ratioValues.join(' : '),
+    values: values,
+    labels: names
+  };
+}
+
+globalThis.FertilizerCore.calculateNutrientRatios = function(results) {
   const ratios = [];
-
-  function getRatio(values, names, decimals = 2) {
-    const nonZeroValues = values.filter(v => v > 0);
-    if (nonZeroValues.length === 0) return null;
-
-    const minValue = Math.min(...nonZeroValues);
-    const ratioValues = values.map(v => v > 0 ? parseFloat((v / minValue).toFixed(decimals)) : 0);
-
-    return {
-      name: names.join(' : '),
-      ratio: ratioValues.join(' : '),
-      values: values,
-      labels: names
-    };
-  }
 
   // N:P:K (elemental)
   const npk = getRatio([results.N_total || 0, results.P || 0, results.K || 0], ['N', 'P', 'K']);
@@ -530,25 +530,25 @@ window.FertilizerCore.calculateNutrientRatios = function(results) {
  * @param {number} params.pekacidMaxLimit - Optional max limit for PeKacid in g/L (0 = no limit)
  * @returns {Object} {formula, achieved}
  */
-window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0, nh4PctTarget = null }) {
+globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0, nh4PctTarget = null }) {
   // Helper to log to both console and UI dev logs
   // Queue logs if addDevLog isn't ready yet, flush when it becomes available
   const devLog = (msg, type = 'info') => {
     const logMsg = `[MILP] ${msg}`;
     console.log(logMsg);
-    if (window.addDevLog) {
-      window.addDevLog(msg, type);
+    if (globalThis.addDevLog) {
+      globalThis.addDevLog(msg, type);
     } else {
       // Queue for later
-      window._pendingDevLogs = window._pendingDevLogs || [];
-      window._pendingDevLogs.push({ msg, type });
+      globalThis._pendingDevLogs = globalThis._pendingDevLogs || [];
+      globalThis._pendingDevLogs.push({ msg, type });
     }
   };
 
   // Flush any pending logs if addDevLog is now available
-  if (window.addDevLog && window._pendingDevLogs && window._pendingDevLogs.length > 0) {
-    window._pendingDevLogs.forEach(log => window.addDevLog(log.msg, log.type));
-    window._pendingDevLogs = [];
+  if (globalThis.addDevLog && globalThis._pendingDevLogs && globalThis._pendingDevLogs.length > 0) {
+    globalThis._pendingDevLogs.forEach(log => globalThis.addDevLog(log.msg, log.type));
+    globalThis._pendingDevLogs = [];
   }
 
   // Helper to get short fertilizer name (first part before parenthesis or dash)
@@ -571,7 +571,7 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
 
   // Log target ratios
   const targetStr = Object.entries(targets)
-    .filter(([k, v]) => v > 0)
+    .filter(([, v]) => v > 0)
     .map(([k, v]) => `${k.replace('_total', '')}:${v.toFixed(1)}`)
     .join(' ');
   devLog(`Targets: ${targetStr}`);
@@ -583,17 +583,17 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     devLog(`PeKacid cap: none`);
   }
 
-  if (!window.LPModel) {
+  if (!globalThis.LPModel) {
     throw new Error('MILP dependencies not loaded');
   }
 
-  const { Model } = window.LPModel;
-  const OXIDE_CONVERSIONS = window.FertilizerCore.OXIDE_CONVERSIONS;
+  const { Model } = globalThis.LPModel;
+  const OXIDE_CONVERSIONS = globalThis.FertilizerCore.OXIDE_CONVERSIONS;
   const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
   const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
 
   // Use cached HiGHS instance (downloads WASM only on first call)
-  const highs = await window.FertilizerCore.getHighsInstance(onProgress);
+  const highs = await globalThis.FertilizerCore.getHighsInstance(onProgress);
 
   const nutrients = ['N_total', 'P2O5', 'K2O', 'Ca', 'Mg', 'S', 'Si'];
   const tPlus = {}, tMinus = {};
@@ -613,6 +613,16 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     slackPlus[n] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `s_plus_${n}` });
     slackMinus[n] = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: `s_minus_${n}` });
   });
+  // Shared upper bound on each targeted nutrient's *relative* slack (see constraints below).
+  // Minimizing this instead of a weighted sum of the individual slacks is what actually
+  // spreads an unavoidable ratio mismatch across nutrients: a linear objective on a plain
+  // weighted sum of slacks is minimized at a vertex of the feasible region, which structurally
+  // means it concentrates all the error on as few nutrients as possible (verified directly —
+  // with 4 fertilizers unable to hit a 5-nutrient ratio exactly, a weighted-sum objective left
+  // N off by 36% while Ca/P/K/Mg matched exactly, rather than spreading a smaller error across
+  // all five). Minimizing the shared max instead pushes every targeted nutrient's error down
+  // toward the same relative bound before any single one is allowed to grow further.
+  const maxRelError = model.addVar({ lb: 0, ub: '+infinity', vtype: 'CONTINUOUS', name: 'max_rel_error' });
 
   const BIG_M = 10000;
   const PEKACID_ID = 'icl_pekacid_pk_acid';
@@ -721,10 +731,24 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
       if (c[n] !== 0) terms.push([c[n], x[f.id]]);
     });
     if (tMinus[n] > 0) {
-      model.addConstr([...terms, [-1, slackMinus[n]]], '>=', tMinus[n]);
+      // Note: +1 (not -1) so slackMinus RELAXES the floor (sum + slack >= tMinus allows
+      // sum to fall short of tMinus by up to slack, penalized in the objective below).
+      // A -1 here would make slack tighten the floor instead of relaxing it, effectively
+      // making the "tolerance" band unrelaxable on the low side while the upper bound
+      // (slackPlus below) stayed genuinely soft — letting the solver dump all
+      // infeasibility into unbounded overshoot on whichever nutrient was cheapest.
+      model.addConstr([...terms, [1, slackMinus[n]]], '>=', tMinus[n]);
     }
-    const ub = tPlus[n] > 0 ? tPlus[n] : 0;
+    const ub = Math.max(tPlus[n], 0);
     model.addConstr([...terms, [-1, slackPlus[n]]], '<=', ub);
+
+    // Tie this nutrient's relative slack to the shared maxRelError (Si excluded: it keeps its
+    // own much larger fixed penalty below rather than competing in the ratio-fairness minimax,
+    // since it's an absolute PPM target, not a ratio component).
+    if (n !== 'Si' && targets[n] > 0) {
+      model.addConstr([[1, slackPlus[n]], [-targets[n], maxRelError]], '<=', 0);
+      model.addConstr([[1, slackMinus[n]], [-targets[n], maxRelError]], '<=', 0);
+    }
   });
 
   const objective = [];
@@ -750,19 +774,50 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     objective.push([10000, pekacidSlack]);
   }
 
+  // Reference scale for the untargeted-nutrient ceiling penalty below: the largest active
+  // target ppm. Ties that penalty to the same order of magnitude as the (now per-nutrient
+  // normalized) targeted penalties, so it discourages a fertilizer's unwanted byproduct
+  // nutrients (e.g. sulfate riding along with Mg) without being so disproportionate that the
+  // solver drops a nutrient's fertilizer source entirely just to dodge it (measured directly:
+  // with a flat 50 here it did, once the targeted penalties below stopped being flat too).
+  const maxActiveTarget = Math.max(...nutrients.map(n => targets[n] || 0).filter(v => v > 0), 1);
+
   nutrients.forEach(n => {
     const isTargeted = (targets[n] || 0) > 0;
     // Si gets much higher penalty because it's an absolute PPM target (not ratio-normalized)
     // and Potassium Silicate also contributes K2O, so solver may under-use it otherwise
     // Using 10000 to strongly prioritize Si over ratio precision
-    const slackPenalty = isTargeted ? (n === 'Si' ? 10000 : 100) : 50;
-    objective.push([slackPenalty, slackPlus[n]]);
-    objective.push([slackPenalty, slackMinus[n]]);
+    //
+    // For every other targeted nutrient, the penalty coefficient is normalized by the
+    // nutrient's own target (100 / target) rather than a flat 100. A flat coefficient prices
+    // 1ppm of slack the same on every nutrient regardless of scale, so the LP's cheapest way
+    // to absorb infeasibility is to dump it all onto whichever nutrient has the largest target
+    // ppm (e.g. Ca at 600ppm) rather than spreading it proportionally. Normalizing means 1% of
+    // target costs the same objective penalty on every nutrient.
+    //
+    // For non-Si targeted nutrients this is now a small TIE-BREAKER only (1/target, two orders
+    // of magnitude below the maxRelError term below) — the maxRelError constraints above already
+    // do the real work of spreading an unavoidable mismatch evenly; this term just picks, among
+    // solutions that tie on maxRelError, the one with less total slack overall.
+    let slackPenalty;
+    if (!isTargeted) {
+      slackPenalty = 50 / maxActiveTarget;
+    } else if (n === 'Si') {
+      slackPenalty = 10000;
+    } else {
+      slackPenalty = 1 / targets[n];
+    }
+    objective.push([slackPenalty, slackPlus[n]], [slackPenalty, slackMinus[n]]);
   });
+  // Minimize the worst relative deviation any targeted nutrient has from its target. Weighted
+  // well above the per-nutrient tie-breaker and untargeted-ceiling terms above (so ratio-fairness
+  // dominates those), but below the explicit Si/PeKacid absolute-priority overrides (10000) —
+  // this preserves the pre-existing intent that filling a PeKacid limit, or hitting an absolute
+  // Si target, matters more than nutrient-ratio precision.
+  objective.push([1000, maxRelError]);
   // NH4 fraction slack penalty — higher than nutrient slack (100) but lower than PeKacid (10000)
   if (hasNH4Target && sNH4Plus && sNH4Minus) {
-    objective.push([500, sNH4Plus]);
-    objective.push([500, sNH4Minus]);
+    objective.push([500, sNH4Plus], [500, sNH4Minus]);
   }
 
   model.setObjective(objective, 'MINIMIZE');
@@ -789,52 +844,7 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
     devLog(`PeKacid used ${percentUsed}% of maximum allowed (${pekacidGrams.toFixed(3)}g / ${pekacidTargetGrams}g)`);
   }
 
-  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-  Object.entries(formula).forEach(([fid, grams]) => {
-    const fert = fertilizers.find(f => f.id === fid);
-    if (!fert) return;
-    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
-    Object.entries(fert.pct).forEach(([nutrient, pct]) => {
-      const ppm = (grams * 1000 * (pct / 100)) / volume;
-      if (nutrient === 'N_NO3') {
-        achieved.N_NO3 += ppm;
-        achieved.N_total += ppm;
-      } else if (nutrient === 'N_NH4') {
-        achieved.N_NH4 += ppm;
-        achieved.N_total += ppm;
-      } else if (nutrient === 'N_Urea') {
-        achieved.N_total += ppm;
-      } else if (nutrient === 'N_total') {
-        if (!hasNForms) achieved.N_total += ppm;
-      } else if (nutrient === 'P2O5') {
-        achieved.P2O5 += ppm;
-        achieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-      } else if (nutrient === 'P') {
-        achieved.P += ppm;
-        achieved.P2O5 += ppm * P_to_P2O5;
-      } else if (nutrient === 'K2O') {
-        achieved.K2O += ppm;
-        achieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-      } else if (nutrient === 'K') {
-        achieved.K += ppm;
-        achieved.K2O += ppm * K_to_K2O;
-      } else if (nutrient === 'CaO') {
-        achieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
-      } else if (nutrient === 'MgO') {
-        achieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
-      } else if (nutrient === 'SO3') {
-        achieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
-      } else if (nutrient === 'SiO2') {
-        achieved.Si += ppm * 0.46744;
-      } else if (nutrient === 'SiOH4') {
-        achieved.Si += ppm * 0.2922;
-      } else if (nutrient === 'Si') {
-        achieved.Si += ppm;
-      } else if (achieved[nutrient] !== undefined) {
-        achieved[nutrient] += ppm;
-      }
-    });
-  });
+  const achieved = globalThis.FertilizerCore.accumulateAchievedPPM(fertilizers, formula, volume);
 
   return { formula, achieved };
 };
@@ -842,7 +852,7 @@ window.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, 
 /**
  * Simple weighted projected gradient NNLS solver for fertilizer grams
  */
-window.FertilizerCore.solveNonNegativeLeastSquares = function(matrix, target, iterations = 1500, weights = []) {
+globalThis.FertilizerCore.solveNonNegativeLeastSquares = function(matrix, target, iterations = 1500, weights = []) {
   const rows = matrix.length;
   const cols = target.length;
 
@@ -880,7 +890,14 @@ window.FertilizerCore.solveNonNegativeLeastSquares = function(matrix, target, it
       bestX = x.slice();
     }
 
-    const lr = iter < iterations * 0.5 ? 0.0006 : iter < iterations * 0.8 ? 0.0003 : 0.00015;
+    let lr;
+    if (iter < iterations * 0.5) {
+      lr = 0.0006;
+    } else if (iter < iterations * 0.8) {
+      lr = 0.0003;
+    } else {
+      lr = 0.00015;
+    }
     const reg = 1e-4;
 
     const grad = new Array(rows).fill(0);
@@ -904,8 +921,8 @@ window.FertilizerCore.solveNonNegativeLeastSquares = function(matrix, target, it
 /**
  * Try to prune fertilizers while staying within tolerance
  */
-window.FertilizerCore.pruneSolution = function(matrix, targetVector, weights, baseSolution, fertilizers, tolerance = 0.01, iterations = 800) {
-  const solveNNLS = window.FertilizerCore.solveNonNegativeLeastSquares;
+globalThis.FertilizerCore.pruneSolution = function(matrix, targetVector, weights, baseSolution, fertilizers, tolerance = 0.01, iterations = 800) {
+  const solveNNLS = globalThis.FertilizerCore.solveNonNegativeLeastSquares;
 
   let activeIndices = baseSolution.x
     .map((grams, idx) => ({ idx, grams }))
@@ -989,26 +1006,26 @@ window.FertilizerCore.pruneSolution = function(matrix, targetVector, weights, ba
  * Optimization algorithm - finds best fertilizer combination
  * @param {Object} options.onProgress - Optional callback for progress updates (e.g., WASM download)
  */
-window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide', options = {}) {
-  const OXIDE_CONVERSIONS = window.FertilizerCore.OXIDE_CONVERSIONS;
-  const solveMilpBrowser = window.FertilizerCore.solveMilpBrowser;
+globalThis.FertilizerCore.optimizeFormula = async function(targetRatios, volume, availableFertilizers, concentration = 75, mode = 'oxide', options = {}) {
+  const OXIDE_CONVERSIONS = globalThis.FertilizerCore.OXIDE_CONVERSIONS;
+  const solveMilpBrowser = globalThis.FertilizerCore.solveMilpBrowser;
   const onProgress = options.onProgress;
 
   // Helper to log to both console and UI dev logs
   const devLog = (msg, type = 'info') => {
     const logMsg = `[OptimizeFormula] ${msg}`;
     console.log(logMsg);
-    if (window.addDevLog) {
-      window.addDevLog(msg, type);
+    if (globalThis.addDevLog) {
+      globalThis.addDevLog(msg, type);
     } else {
-      window._pendingDevLogs = window._pendingDevLogs || [];
-      window._pendingDevLogs.push({ msg, type });
+      globalThis._pendingDevLogs = globalThis._pendingDevLogs || [];
+      globalThis._pendingDevLogs.push({ msg, type });
     }
   };
 
   // MILP is required - no fallback
   if (typeof solveMilpBrowser !== 'function') {
-    throw new Error('MILP solver (solveMilpBrowser) is not available. Ensure HiGHS and lp-model are loaded.');
+    throw new TypeError('MILP solver (solveMilpBrowser) is not available. Ensure HiGHS and lp-model are loaded.');
   }
 
   const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
@@ -1063,7 +1080,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 
   // Apply EC scaling if targetEC is specified
   if (options.targetEC && options.targetEC > 0) {
-    const estimateECFromPPM = window.FertilizerCore.estimateECFromPPM;
+    const estimateECFromPPM = globalThis.FertilizerCore.estimateECFromPPM;
     if (typeof estimateECFromPPM === 'function') {
       let originalEC = estimateECFromPPM(milpResult.achieved);
       if (originalEC && originalEC.ec_mS_cm > 0) {
@@ -1287,57 +1304,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
           // Scale achieved PPM
           // We need to calculate from the scaled formula instead of scaling achieved PPM
           // because PeKacid may be fixed at cap during scaling
-          scaledAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-          availableFertilizers.forEach(fert => {
-            const grams = scaledFormula[fert.id] || 0;
-            if (grams === 0) return;
-
-            const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
-            Object.entries(fert.pct).forEach(([nutrient, pct]) => {
-              const ppm = (grams * 1000 * (pct / 100)) / volume;
-              if (nutrient === 'N_NO3') {
-                scaledAchieved.N_NO3 += ppm;
-                scaledAchieved.N_total += ppm;
-              } else if (nutrient === 'N_NH4') {
-                scaledAchieved.N_NH4 += ppm;
-                scaledAchieved.N_total += ppm;
-              } else if (nutrient === 'N_Urea') {
-                scaledAchieved.N_total += ppm;
-              } else if (nutrient === 'N_total' && !hasNForms) {
-                scaledAchieved.N_total += ppm;
-              } else if (nutrient === 'P2O5') {
-                scaledAchieved.P2O5 += ppm;
-                scaledAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-              } else if (nutrient === 'P') {
-                scaledAchieved.P += ppm;
-                scaledAchieved.P2O5 += ppm * P_to_P2O5;
-              } else if (nutrient === 'K2O') {
-                scaledAchieved.K2O += ppm;
-                scaledAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-              } else if (nutrient === 'K') {
-                scaledAchieved.K += ppm;
-                scaledAchieved.K2O += ppm * K_to_K2O;
-              } else if (nutrient === 'Ca') {
-                scaledAchieved.Ca += ppm;
-              } else if (nutrient === 'CaO') {
-                scaledAchieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
-              } else if (nutrient === 'Mg') {
-                scaledAchieved.Mg += ppm;
-              } else if (nutrient === 'MgO') {
-                scaledAchieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
-              } else if (nutrient === 'S') {
-                scaledAchieved.S += ppm;
-              } else if (nutrient === 'SO3') {
-                scaledAchieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
-              } else if (nutrient === 'SiO2') {
-                scaledAchieved.Si += ppm * 0.46744;
-              } else if (nutrient === 'SiOH4') {
-                scaledAchieved.Si += ppm * 0.2922;
-              } else if (nutrient === 'Si') {
-                scaledAchieved.Si += ppm;
-              }
-            });
-          });
+          scaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormula, volume);
 
           // Check actual EC after scaling
           const newEC = estimateECFromPPM(scaledAchieved);
@@ -1398,8 +1365,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
 
             devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
 
-            // Use the re-run result and re-apply EC scaling
-            milpResult = rerunResult;
+            // Re-apply EC scaling using the re-run result
             const newEC = estimateECFromPPM(rerunResult.achieved);
             scaleFactor = options.targetEC / newEC.ec_mS_cm;
 
@@ -1414,56 +1380,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
             });
 
             // Recalculate achieved after scaling
-            scaledAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-            availableFertilizers.forEach(fert => {
-              const grams = scaledFormula[fert.id] || 0;
-              if (grams === 0) return;
-              const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
-              Object.entries(fert.pct).forEach(([nutrient, pct]) => {
-                const ppm = (grams * 1000 * (pct / 100)) / volume;
-                if (nutrient === 'N_NO3') {
-                  scaledAchieved.N_NO3 += ppm;
-                  scaledAchieved.N_total += ppm;
-                } else if (nutrient === 'N_NH4') {
-                  scaledAchieved.N_NH4 += ppm;
-                  scaledAchieved.N_total += ppm;
-                } else if (nutrient === 'N_Urea') {
-                  scaledAchieved.N_total += ppm;
-                } else if (nutrient === 'N_total' && !hasNForms) {
-                  scaledAchieved.N_total += ppm;
-                } else if (nutrient === 'P2O5') {
-                  scaledAchieved.P2O5 += ppm;
-                  scaledAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-                } else if (nutrient === 'P') {
-                  scaledAchieved.P += ppm;
-                  scaledAchieved.P2O5 += ppm * P_to_P2O5;
-                } else if (nutrient === 'K2O') {
-                  scaledAchieved.K2O += ppm;
-                  scaledAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-                } else if (nutrient === 'K') {
-                  scaledAchieved.K += ppm;
-                  scaledAchieved.K2O += ppm * K_to_K2O;
-                } else if (nutrient === 'Ca') {
-                  scaledAchieved.Ca += ppm;
-                } else if (nutrient === 'CaO') {
-                  scaledAchieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
-                } else if (nutrient === 'Mg') {
-                  scaledAchieved.Mg += ppm;
-                } else if (nutrient === 'MgO') {
-                  scaledAchieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
-                } else if (nutrient === 'S') {
-                  scaledAchieved.S += ppm;
-                } else if (nutrient === 'SO3') {
-                  scaledAchieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
-                } else if (nutrient === 'SiO2') {
-                  scaledAchieved.Si += ppm * 0.46744;
-                } else if (nutrient === 'SiOH4') {
-                  scaledAchieved.Si += ppm * 0.2922;
-                } else if (nutrient === 'Si') {
-                  scaledAchieved.Si += ppm;
-                }
-              });
-            });
+            scaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormula, volume);
 
             const finalECAfterRerun = estimateECFromPPM(scaledAchieved);
             finalEC = finalECAfterRerun.ec_mS_cm;
@@ -1531,57 +1448,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
                 });
 
                 // Recalculate achieved PPM from the scaled formula
-                scaledAchieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
-                availableFertilizers.forEach(fert => {
-                  const grams = scaledFormula[fert.id] || 0;
-                  if (grams === 0) return;
-
-                  const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
-                  Object.entries(fert.pct).forEach(([nutrient, pct]) => {
-                    const ppm = (grams * 1000 * (pct / 100)) / volume;
-                    if (nutrient === 'N_NO3') {
-                      scaledAchieved.N_NO3 += ppm;
-                      scaledAchieved.N_total += ppm;
-                    } else if (nutrient === 'N_NH4') {
-                      scaledAchieved.N_NH4 += ppm;
-                      scaledAchieved.N_total += ppm;
-                    } else if (nutrient === 'N_Urea') {
-                      scaledAchieved.N_total += ppm;
-                    } else if (nutrient === 'N_total' && !hasNForms) {
-                      scaledAchieved.N_total += ppm;
-                    } else if (nutrient === 'P2O5') {
-                      scaledAchieved.P2O5 += ppm;
-                      scaledAchieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-                    } else if (nutrient === 'P') {
-                      scaledAchieved.P += ppm;
-                      scaledAchieved.P2O5 += ppm * P_to_P2O5;
-                    } else if (nutrient === 'K2O') {
-                      scaledAchieved.K2O += ppm;
-                      scaledAchieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-                    } else if (nutrient === 'K') {
-                      scaledAchieved.K += ppm;
-                      scaledAchieved.K2O += ppm * K_to_K2O;
-                    } else if (nutrient === 'Ca') {
-                      scaledAchieved.Ca += ppm;
-                    } else if (nutrient === 'CaO') {
-                      scaledAchieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
-                    } else if (nutrient === 'Mg') {
-                      scaledAchieved.Mg += ppm;
-                    } else if (nutrient === 'MgO') {
-                      scaledAchieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
-                    } else if (nutrient === 'S') {
-                      scaledAchieved.S += ppm;
-                    } else if (nutrient === 'SO3') {
-                      scaledAchieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
-                    } else if (nutrient === 'SiO2') {
-                      scaledAchieved.Si += ppm * 0.46744;
-                    } else if (nutrient === 'SiOH4') {
-                      scaledAchieved.Si += ppm * 0.2922;
-                    } else if (nutrient === 'Si') {
-                      scaledAchieved.Si += ppm;
-                    }
-                  });
-                });
+                scaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormula, volume);
 
                 const newEC = estimateECFromPPM(scaledAchieved);
                 finalEC = newEC.ec_mS_cm;
@@ -1626,7 +1493,7 @@ window.FertilizerCore.optimizeFormula = async function(targetRatios, volume, ava
  * @param {string} fertId - Fertilizer ID
  * @returns {number} Solubility in g/L
  */
-window.FertilizerCore.getSolubility = function(fertId) {
+globalThis.FertilizerCore.getSolubility = function(fertId) {
   const fert = this.FERTILIZERS.find(f => f.id === fertId);
   return fert?.solubility_gL ?? this.DEFAULT_SOLUBILITY_GL;
 };
@@ -1636,7 +1503,7 @@ window.FertilizerCore.getSolubility = function(fertId) {
  * @param {string} fertId - Fertilizer ID
  * @returns {string} 'calcium' | 'phosphate' | 'sulfate' | 'silicate' | 'neutral'
  */
-window.FertilizerCore.getCompatibilityTag = function(fertId) {
+globalThis.FertilizerCore.getCompatibilityTag = function(fertId) {
   const compat = this.FERTILIZER_COMPATIBILITY;
   if (compat.calcium_sources.includes(fertId)) return 'calcium';
   if (compat.phosphate_sources.includes(fertId)) return 'phosphate';
@@ -1651,12 +1518,12 @@ window.FertilizerCore.getCompatibilityTag = function(fertId) {
  * @param {string} input - Ratio string
  * @returns {Object} { ratio: {N,P,K,Ca,Mg,S}, error?: string }
  */
-window.FertilizerCore.parseRatio = function(input) {
+globalThis.FertilizerCore.parseRatio = function(input) {
   if (!input || typeof input !== 'string') {
     return { error: 'Invalid input: expected ratio string' };
   }
 
-  const cleaned = input.trim().replace(/\s+/g, '');
+  const cleaned = input.trim().replaceAll(/\s+/g, '');
   if (!cleaned) {
     return { error: 'Empty ratio string' };
   }
@@ -1671,13 +1538,13 @@ window.FertilizerCore.parseRatio = function(input) {
     // Labeled format: "N2:P1:K3:Ca0.5"
     const parts = cleaned.split(':').filter(Boolean);
     for (const part of parts) {
-      const match = part.match(/^([A-Za-z]+)([\d.]+)$/);
+      const match = /^([A-Za-z]+)([\d.]+)$/.exec(part);
       if (!match) {
         return { error: `Invalid labeled format: ${part}` };
       }
       const label = match[1].toUpperCase();
-      const value = parseFloat(match[2]);
-      if (isNaN(value)) {
+      const value = Number.parseFloat(match[2]);
+      if (Number.isNaN(value)) {
         return { error: `Invalid number: ${match[2]}` };
       }
       // Map common labels
@@ -1693,8 +1560,8 @@ window.FertilizerCore.parseRatio = function(input) {
     const parts = cleaned.split(':');
     const order = ['N', 'P', 'K', 'Ca', 'Mg', 'S'];
     for (let i = 0; i < parts.length && i < order.length; i++) {
-      const value = parseFloat(parts[i]);
-      if (isNaN(value)) {
+      const value = Number.parseFloat(parts[i]);
+      if (Number.isNaN(value)) {
         return { error: `Invalid number at position ${i + 1}: ${parts[i]}` };
       }
       ratio[order[i]] = value;
@@ -1705,11 +1572,81 @@ window.FertilizerCore.parseRatio = function(input) {
 };
 
 /**
+ * Accumulate achieved PPM (N/P/K in both elemental and oxide form, plus Ca/Mg/S/Si) from a
+ * formula (fertilizer id -> grams) applied to a given volume. Shared by solveMilpBrowser and
+ * optimizeFormula's EC-scaling/PeKacid-rerun passes, which all previously duplicated this same
+ * nutrient-classification chain inline.
+ * @param {Array} fertilizerList - Fertilizer objects (with .id and .pct)
+ * @param {Object} formula - { fertilizerId: grams }
+ * @param {number} volume - Liters
+ * @returns {Object} achieved PPM by nutrient key
+ */
+globalThis.FertilizerCore.accumulateAchievedPPM = function(fertilizerList, formula, volume) {
+  const OXIDE_CONVERSIONS = this.OXIDE_CONVERSIONS;
+  const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
+  const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
+
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+  fertilizerList.forEach(fert => {
+    const grams = formula[fert.id] || 0;
+    if (!grams) return;
+    const hasNForms = fert.pct.N_NO3 || fert.pct.N_NH4 || fert.pct.N_Urea;
+    Object.entries(fert.pct).forEach(([nutrient, pct]) => {
+      const ppm = (grams * 1000 * (pct / 100)) / volume;
+      if (nutrient === 'N_NO3') {
+        achieved.N_NO3 += ppm;
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_NH4') {
+        achieved.N_NH4 += ppm;
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_Urea') {
+        achieved.N_total += ppm;
+      } else if (nutrient === 'N_total') {
+        if (!hasNForms) achieved.N_total += ppm;
+      } else if (nutrient === 'P2O5') {
+        achieved.P2O5 += ppm;
+        achieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+      } else if (nutrient === 'P') {
+        achieved.P += ppm;
+        achieved.P2O5 += ppm * P_to_P2O5;
+      } else if (nutrient === 'K2O') {
+        achieved.K2O += ppm;
+        achieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+      } else if (nutrient === 'K') {
+        achieved.K += ppm;
+        achieved.K2O += ppm * K_to_K2O;
+      } else if (nutrient === 'Ca') {
+        achieved.Ca += ppm;
+      } else if (nutrient === 'CaO') {
+        achieved.Ca += ppm * OXIDE_CONVERSIONS.CaO_to_Ca;
+      } else if (nutrient === 'Mg') {
+        achieved.Mg += ppm;
+      } else if (nutrient === 'MgO') {
+        achieved.Mg += ppm * OXIDE_CONVERSIONS.MgO_to_Mg;
+      } else if (nutrient === 'S') {
+        achieved.S += ppm;
+      } else if (nutrient === 'SO3') {
+        achieved.S += ppm * OXIDE_CONVERSIONS.SO3_to_S;
+      } else if (nutrient === 'SiO2') {
+        achieved.Si += ppm * 0.46744;
+      } else if (nutrient === 'SiOH4') {
+        achieved.Si += ppm * 0.2922;
+      } else if (nutrient === 'Si') {
+        achieved.Si += ppm;
+      } else if (achieved[nutrient] !== undefined) {
+        achieved[nutrient] += ppm;
+      }
+    });
+  });
+  return achieved;
+};
+
+/**
  * Calculate elemental PPM contribution from 1 gram of fertilizer per liter
  * @param {Object} fert - Fertilizer object with pct
  * @returns {Object} { N, P, K, Ca, Mg, S } in ppm per gram per liter
  */
-window.FertilizerCore.getElementalContributionPerGram = function(fert) {
+globalThis.FertilizerCore.getElementalContributionPerGram = function(fert) {
   const OXIDE = this.OXIDE_CONVERSIONS;
   const contrib = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
   const pct = fert.pct || {};
@@ -1768,7 +1705,7 @@ window.FertilizerCore.getElementalContributionPerGram = function(fert) {
  * @param {boolean} options.separateMg - If true, place Mg sources in Tank D when available
  * @returns {Object} { A: {...}, B: {...}, C?: {...}, D?: {...} }
  */
-window.FertilizerCore.assignToTanks = function(formula, numTanks = 2, options = {}) {
+globalThis.FertilizerCore.assignToTanks = function(formula, numTanks = 2, options = {}) {
   const { separateMg = false } = options;
   const tanks = { A: {}, B: {} };
   if (numTanks >= 3) tanks.C = {};
@@ -1781,9 +1718,9 @@ window.FertilizerCore.assignToTanks = function(formula, numTanks = 2, options = 
     const fert = this.FERTILIZERS.find(f => f.id === fertId);
 
     // Helper: does this fertilizer have significant K content?
-    const hasSignificantK = fert && fert.pct && fert.pct.K2O > 20;
-    const hasP = fert && fert.pct && fert.pct.P2O5 > 5;
-    const hasMg = fert && fert.pct && ((fert.pct.Mg || 0) > 0 || (fert.pct.MgO || 0) > 0);
+    const hasSignificantK = fert?.pct?.K2O > 20;
+    const hasP = fert?.pct?.P2O5 > 5;
+    const hasMg = fert?.pct && ((fert.pct.Mg || 0) > 0 || (fert.pct.MgO || 0) > 0);
 
     // If P:Mg varies across targets and we have 4+ tanks, keep Mg sources separate
     if (separateMg && numTanks >= 4 && hasMg && !hasP && !hasSignificantK) {
@@ -1800,16 +1737,6 @@ window.FertilizerCore.assignToTanks = function(formula, numTanks = 2, options = 
         // Phosphate goes to Tank B
         tanks.B[fertId] = grams;
         break;
-      case 'sulfate':
-        // With 3+ tanks, separate K-heavy sulfates (like K2SO4) to Tank C
-        // This allows independent control of P:K ratios across targets
-        if (numTanks >= 3 && hasSignificantK && !hasP) {
-          // K-dominant sulfate (like K2SO4, langbeinite) goes to Tank C
-          tanks.C[fertId] = grams;
-        } else {
-          tanks.B[fertId] = grams;
-        }
-        break;
       case 'silicate':
         // Silicate goes to Tank D if 4 tanks, Tank C if 3 tanks, otherwise B
         if (numTanks >= 4) {
@@ -1820,10 +1747,11 @@ window.FertilizerCore.assignToTanks = function(formula, numTanks = 2, options = 
           tanks.B[fertId] = grams;
         }
         break;
+      case 'sulfate':
       case 'neutral':
       default:
-        // With 3+ tanks, K-containing neutrals (like KNO3) go to Tank C
-        // This allows independent control of P:K ratios across targets
+        // With 3+ tanks, K-heavy sources (like K2SO4, KNO3) go to Tank C for independent
+        // control of P:K ratios across targets; everything else goes to Tank B
         if (numTanks >= 3 && hasSignificantK && !hasP) {
           tanks.C[fertId] = grams;
         } else {
@@ -1841,7 +1769,7 @@ window.FertilizerCore.assignToTanks = function(formula, numTanks = 2, options = 
  * @param {Object} tankFormula - { fertId: g/L in stock }
  * @returns {Object} { feasible: boolean, issues: [] }
  */
-window.FertilizerCore.checkTankFeasibility = function(tankFormula) {
+globalThis.FertilizerCore.checkTankFeasibility = function(tankFormula) {
   const issues = [];
 
   for (const [fertId, gL] of Object.entries(tankFormula)) {
@@ -1881,7 +1809,7 @@ window.FertilizerCore.checkTankFeasibility = function(tankFormula) {
  * @param {Object} dosing - { A: mL/L, B: mL/L, ... }
  * @returns {Object} { N, P, K, Ca, Mg, S } in ppm
  */
-window.FertilizerCore.calculateAchievedPPM = function(tanks, dosing) {
+globalThis.FertilizerCore.calculateAchievedPPM = function(tanks, dosing) {
   const achieved = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
 
   for (const [tankId, tankFormula] of Object.entries(tanks)) {
@@ -1916,7 +1844,7 @@ window.FertilizerCore.calculateAchievedPPM = function(tanks, dosing) {
  * @param {number} tolerance - Allowed deviation (0.05 = 5%)
  * @returns {Object} { matches: boolean, errors: {} }
  */
-window.FertilizerCore.checkRatioMatch = function(achieved, targetRatio, tolerance = 0.05) {
+globalThis.FertilizerCore.checkRatioMatch = function(achieved, targetRatio, tolerance = 0.05) {
   const errors = {};
 
   // Find non-zero target nutrients
@@ -1932,7 +1860,7 @@ window.FertilizerCore.checkRatioMatch = function(achieved, targetRatio, toleranc
   if (achievedMin <= 0) {
     for (const k of targetKeys) {
       if (achieved[k] <= 0 && targetRatio[k] > 0) {
-        errors[k] = { target: targetRatio[k], achieved: 0, error: 1.0 };
+        errors[k] = { target: targetRatio[k], achieved: 0, error: 1 };
       }
     }
     return { matches: false, errors };
@@ -1963,7 +1891,7 @@ window.FertilizerCore.checkRatioMatch = function(achieved, targetRatio, toleranc
  * @param {Object} options - { maxDosing, tolerance }
  * @returns {Object} { dosing: {A, B, ...}, achieved, predictedEC, feasible, issues }
  */
-window.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
+globalThis.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
   const { maxDosing = 50, tolerance = 0.15 } = options; // Tolerance for ratio matching
   const { ratio, targetEC, baselineEC = 0 } = target;
   const estimateECFromPPM = this.estimateECFromPPM;
@@ -2028,7 +1956,7 @@ window.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
 
   // Ratio steps to try - expanded range including very extreme ratios
   // This allows spanning from almost-zero Tank A to almost-zero Tank B
-  const ratioSteps = [0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.0, 10.0, 15.0, 20.0, 50.0];
+  const ratioSteps = [0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.7, 1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20, 50];
 
   if (tankIds.length === 1) {
     // Single tank - just use 10 mL
@@ -2049,7 +1977,7 @@ window.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
     }
   } else if (tankIds.length === 3) {
     // 3 tanks: search A:B:C ratios
-    const steps3 = [0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0];
+    const steps3 = [0.1, 0.2, 0.5, 1, 2, 5, 10];
     for (const aRatio of steps3) {
       for (const bRatio of steps3) {
         const total = aRatio + bRatio + 1;
@@ -2067,7 +1995,7 @@ window.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
     }
   } else {
     // 4+ tanks: search A:B:C:D ratios
-    const steps4 = [0.2, 0.5, 1.0, 2.0, 5.0];
+    const steps4 = [0.2, 0.5, 1, 2, 5];
     for (const aRatio of steps4) {
       for (const bRatio of steps4) {
         for (const cRatio of steps4) {
@@ -2205,7 +2133,7 @@ window.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
  * @param {number} options.baselineEC - Default baseline EC
  * @returns {Promise<Object>} StockPlan
  */
-window.FertilizerCore.calculateStockSolutions = async function(options) {
+globalThis.FertilizerCore.calculateStockSolutions = async function(options) {
   const {
     targets,
     availableFertilizers,
@@ -2231,10 +2159,6 @@ window.FertilizerCore.calculateStockSolutions = async function(options) {
     return { success: false, errors: [{ level: 'error', code: 'NO_VALID_FERTILIZERS', message: 'No valid fertilizers found' }] };
   }
 
-  // Find target with highest EC (base case for stock concentration)
-  const sortedTargets = [...targets].sort((a, b) => (b.targetEC || 0) - (a.targetEC || 0));
-  const maxECTarget = sortedTargets[0];
-
   // Progressive-K algorithm: try K=2, then K=3, then K=4
   for (let numTanks = 2; numTanks <= 4; numTanks++) {
     const result = await this._tryStockSolutionWithKTanks(
@@ -2243,8 +2167,7 @@ window.FertilizerCore.calculateStockSolutions = async function(options) {
       fertObjects,
       stockConcentration,
       stockTankVolumeL,
-      defaultBaselineEC,
-      maxECTarget
+      defaultBaselineEC
     );
 
     if (result.success) {
@@ -2267,14 +2190,13 @@ window.FertilizerCore.calculateStockSolutions = async function(options) {
  * Calcium sources in Tank A, everything else distributed by type.
  * With 3+ tanks, separate K-only sources for independent P:K control.
  */
-window.FertilizerCore._tryStockSolutionWithKTanks = async function(
+globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
   numTanks,
   targets,
   fertObjects,
   stockConcentration,
   stockTankVolumeL,
-  defaultBaselineEC,
-  maxECTarget
+  defaultBaselineEC
 ) {
   const allIssues = [];
   const allErrors = [];
@@ -2410,7 +2332,7 @@ window.FertilizerCore._tryStockSolutionWithKTanks = async function(
   // Calculate maximum safe stock concentration based on solubility limits
   // For each fertilizer, max concentration = solubility / gramsPerFinalL
   let maxSafeConcentration = stockConcentration;
-  for (const [tankId, tankFormula] of Object.entries(tankAssignment)) {
+  for (const tankFormula of Object.values(tankAssignment)) {
     for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
       if (!gramsPerFinalL || gramsPerFinalL <= 0) continue;
       const solubility = this.getSolubility(fertId);
@@ -2598,7 +2520,7 @@ window.FertilizerCore._tryStockSolutionWithKTanks = async function(
  * @param {Object} options - Same as calculateStockSolutions
  * @returns {Promise<Object>} StockPlan
  */
-window.FertilizerCore.calculateStockSolutionsModeA = async function(options) {
+globalThis.FertilizerCore.calculateStockSolutionsModeA = async function(options) {
   const {
     targets,
     availableFertilizers,

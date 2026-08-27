@@ -12,8 +12,8 @@
   'use strict';
 
   // Ensure FertilizerCore namespace exists
-  if (typeof window.FertilizerCore === 'undefined') {
-    window.FertilizerCore = {};
+  if (globalThis.FertilizerCore === undefined) {
+    globalThis.FertilizerCore = {};
   }
 
   /**
@@ -25,7 +25,46 @@
    * @param {Object} fmt - Formatter with t(), formatNumber()
    * @returns {string} Formatted text for this tank
    */
-  window.FertilizerCore.buildTankCopyText = function(tank, letter, mode, fertilizers, fmt) {
+  function buildTankPpmValuesText(nutrients, pVal, kVal, pLabel, kLabel, fmt) {
+    let text = 'PPM Values:\n';
+    if (nutrients.N_total > 0.01) text += `  ${fmt.t('nitrogen').padEnd(16)} ${fmt.formatNumber(nutrients.N_total.toFixed(2))} ppm\n`;
+    if (pVal > 0.01) text += `  ${pLabel.padEnd(16)} ${fmt.formatNumber(pVal.toFixed(2))} ppm\n`;
+    if (kVal > 0.01) text += `  ${kLabel.padEnd(16)} ${fmt.formatNumber(kVal.toFixed(2))} ppm\n`;
+    if (nutrients.Ca > 0.01) text += `  ${fmt.t('calcium').padEnd(16)} ${fmt.formatNumber(nutrients.Ca.toFixed(2))} ppm\n`;
+    if (nutrients.Mg > 0.01) text += `  ${fmt.t('magnesium').padEnd(16)} ${fmt.formatNumber(nutrients.Mg.toFixed(2))} ppm\n`;
+    if (nutrients.S > 0.01) text += `  ${fmt.t('sulfur').padEnd(16)} ${fmt.formatNumber(nutrients.S.toFixed(2))} ppm\n`;
+    return text + '\n';
+  }
+
+  function buildTankNitrogenFormsText(nutrients) {
+    if (!(nutrients.N_total > 0.1)) return '';
+    const nh4Pct = (nutrients.N_NH4 / nutrients.N_total * 100) || 0;
+    const no3Pct = (nutrients.N_NO3 / nutrients.N_total * 100) || 0;
+    let text = 'Nitrogen Forms:\n';
+    text += `  NH₄-N: ${nutrients.N_NH4.toFixed(2)} ppm (${nh4Pct.toFixed(1)}%)\n`;
+    text += `  NO₃-N: ${nutrients.N_NO3.toFixed(2)} ppm (${no3Pct.toFixed(1)}%)\n\n`;
+    return text;
+  }
+
+  function buildTankRatiosText(nutrients, pVal, kVal, pLabel, kLabel) {
+    const npkValues = [nutrients.N_total, pVal, kVal].filter(v => v > 0.1);
+    if (npkValues.length === 0 && !(nutrients.Ca > 0.1 && nutrients.Mg > 0.1)) return '';
+
+    let text = 'Ratios:\n';
+    if (npkValues.length > 0) {
+      const minNPK = Math.min(...npkValues);
+      text += `  N:${pLabel}:${kLabel} = ${(nutrients.N_total/minNPK).toFixed(1)} : ${(pVal/minNPK).toFixed(1)} : ${(kVal/minNPK).toFixed(1)}\n`;
+    }
+    if (nutrients.Ca > 0.1 && nutrients.Mg > 0.1) {
+      text += `  Ca:Mg = ${(nutrients.Ca/nutrients.Mg).toFixed(2)} : 1\n`;
+    }
+    if (nutrients.N_total > 0.1 && nutrients.Ca > 0.1) {
+      text += `  N:Ca = ${(nutrients.N_total/nutrients.Ca).toFixed(2)} : 1\n`;
+    }
+    return text + '\n';
+  }
+
+  globalThis.FertilizerCore.buildTankCopyText = function(tank, letter, mode, fertilizers, fmt) {
     const pLabel = mode === 'elemental' ? 'P' : 'P₂O₅';
     const kLabel = mode === 'elemental' ? 'K' : 'K₂O';
 
@@ -55,40 +94,9 @@
     const pVal = mode === 'elemental' ? nutrients.P : nutrients.P2O5;
     const kVal = mode === 'elemental' ? nutrients.K : nutrients.K2O;
 
-    text += 'PPM Values:\n';
-    if (nutrients.N_total > 0.01) text += `  ${fmt.t('nitrogen').padEnd(16)} ${fmt.formatNumber(nutrients.N_total.toFixed(2))} ppm\n`;
-    if (pVal > 0.01) text += `  ${pLabel.padEnd(16)} ${fmt.formatNumber(pVal.toFixed(2))} ppm\n`;
-    if (kVal > 0.01) text += `  ${kLabel.padEnd(16)} ${fmt.formatNumber(kVal.toFixed(2))} ppm\n`;
-    if (nutrients.Ca > 0.01) text += `  ${fmt.t('calcium').padEnd(16)} ${fmt.formatNumber(nutrients.Ca.toFixed(2))} ppm\n`;
-    if (nutrients.Mg > 0.01) text += `  ${fmt.t('magnesium').padEnd(16)} ${fmt.formatNumber(nutrients.Mg.toFixed(2))} ppm\n`;
-    if (nutrients.S > 0.01) text += `  ${fmt.t('sulfur').padEnd(16)} ${fmt.formatNumber(nutrients.S.toFixed(2))} ppm\n`;
-    text += '\n';
-
-    // Nitrogen forms
-    if (nutrients.N_total > 0.1) {
-      const nh4Pct = (nutrients.N_NH4 / nutrients.N_total * 100) || 0;
-      const no3Pct = (nutrients.N_NO3 / nutrients.N_total * 100) || 0;
-      text += 'Nitrogen Forms:\n';
-      text += `  NH₄-N: ${nutrients.N_NH4.toFixed(2)} ppm (${nh4Pct.toFixed(1)}%)\n`;
-      text += `  NO₃-N: ${nutrients.N_NO3.toFixed(2)} ppm (${no3Pct.toFixed(1)}%)\n\n`;
-    }
-
-    // Ratios
-    const npkValues = [nutrients.N_total, pVal, kVal].filter(v => v > 0.1);
-    if (npkValues.length > 0 || (nutrients.Ca > 0.1 && nutrients.Mg > 0.1)) {
-      text += 'Ratios:\n';
-      if (npkValues.length > 0) {
-        const minNPK = Math.min(...npkValues);
-        text += `  N:${pLabel}:${kLabel} = ${(nutrients.N_total/minNPK).toFixed(1)} : ${(pVal/minNPK).toFixed(1)} : ${(kVal/minNPK).toFixed(1)}\n`;
-      }
-      if (nutrients.Ca > 0.1 && nutrients.Mg > 0.1) {
-        text += `  Ca:Mg = ${(nutrients.Ca/nutrients.Mg).toFixed(2)} : 1\n`;
-      }
-      if (nutrients.N_total > 0.1 && nutrients.Ca > 0.1) {
-        text += `  N:Ca = ${(nutrients.N_total/nutrients.Ca).toFixed(2)} : 1\n`;
-      }
-      text += '\n';
-    }
+    text += buildTankPpmValuesText(nutrients, pVal, kVal, pLabel, kLabel, fmt);
+    text += buildTankNitrogenFormsText(nutrients);
+    text += buildTankRatiosText(nutrients, pVal, kVal, pLabel, kLabel);
 
     // Ion balance
     text += 'Ion Balance:\n';
@@ -106,7 +114,7 @@
    * @param {Object} fmt - Formatter with t(), formatNumber()
    * @returns {string} Formatted text for clipboard
    */
-  window.FertilizerCore.buildTwoTankCopyText = function(data, fertilizers, fmt) {
+  globalThis.FertilizerCore.buildTwoTankCopyText = function(data, fertilizers, fmt) {
     const { tankA, tankB, volume, mode } = data;
     const pLabel = mode === 'elemental' ? 'P' : 'P₂O₅';
     const kLabel = mode === 'elemental' ? 'K' : 'K₂O';
@@ -186,7 +194,7 @@
    * @param {Object} fmt - Formatter with t(), formatNumber(), formatNutrientLabel()
    * @returns {string} Formatted text for clipboard
    */
-  window.FertilizerCore.buildGramsToPpmCopyText = function(data, fmt) {
+  globalThis.FertilizerCore.buildGramsToPpmCopyText = function(data, fmt) {
     const { activeFertilizers, volume, results, ecData, ionBalance, ratios } = data;
 
     let text = `*${fmt.t('shareTitle')}*\n`;
@@ -238,7 +246,7 @@
     }
 
     // EC Prediction
-    if (ecData && ecData.ec) {
+    if (ecData?.ec) {
       text += `*⚡ ${fmt.t('ecPrediction')}*\n`;
       text += `• ${fmt.t('ecLabel')} *${fmt.formatNumber(ecData.ec.toFixed(2))} ${fmt.t('mScmUnit')}*\n`;
       text += `\n`;
@@ -267,7 +275,7 @@
    * @param {Object} fmt - Formatter with t(), formatNumber()
    * @returns {string} Formatted text for clipboard
    */
-  window.FertilizerCore.buildFormulaCopyText = function(data, fertilizers, ionBalance, fmt) {
+  globalThis.FertilizerCore.buildFormulaCopyText = function(data, fertilizers, ionBalance, fmt) {
     const { result, targets, volume, mode } = data;
 
     let text = `*${fmt.t('shareFormulaBuilderTitle')}*\n`;
@@ -358,7 +366,7 @@
    * @param {Object} fmt - Formatter with t(), formatNumber()
    * @returns {string} Formatted text for clipboard
    */
-  window.FertilizerCore.buildReverseCopyText = function(data, fertilizers, ionBalance, fmt) {
+  globalThis.FertilizerCore.buildReverseCopyText = function(data, fertilizers, ionBalance, fmt) {
     const { result, targets, volume, calculationMode } = data;
 
     let text = `*${fmt.t('shareNpkRatioTitle')}*\n`;

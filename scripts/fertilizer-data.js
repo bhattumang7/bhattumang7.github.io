@@ -11,8 +11,8 @@
   'use strict';
 
   // Initialize FertilizerCore namespace
-  if (typeof window.FertilizerCore === 'undefined') {
-    window.FertilizerCore = {};
+  if (globalThis.FertilizerCore === undefined) {
+    globalThis.FertilizerCore = {};
   }
 
   // ======================================================================
@@ -20,21 +20,21 @@
   // ======================================================================
 
   // Default solubility for fertilizers without explicit data (conservative, g/L at 20°C)
-  window.FertilizerCore.DEFAULT_SOLUBILITY_GL = 200;
+  globalThis.FertilizerCore.DEFAULT_SOLUBILITY_GL = 200;
 
-  window.FertilizerCore.FERTILIZERS = [
+  globalThis.FertilizerCore.FERTILIZERS = [
     {
       id: "calcium_nitrate_calcinit_typical",
       name: "Calcium Nitrate - Calcinit type (15.5% N, 19% Ca)",
       aliases: ["YaraLiva Calcinit", "Calcium nitrate 15.5-0-0 + Ca", "Calcinit"],
-      pct: { N_total: 15.5, N_NO3: 14.4, N_NH4: 1.1, Ca: 19.0 },
+      pct: { N_total: 15.5, N_NO3: 14.4, N_NH4: 1.1, Ca: 19 },
       solubility_gL: 1290
     },
     {
       id: "hydrospeed_cab_max",
       name: "HydroSpeed CaB Max (15% N, 19.3% Ca, 0.2% B)",
       aliases: ["HydroSpeed CaB Max", "15-0-0 + 19.3Ca + 0.2B"],
-      pct: { N_total: 15.0, N_NO3: 14.3, N_NH4: 0.7, Ca: 19.3, B: 0.2 },
+      pct: { N_total: 15, N_NO3: 14.3, N_NH4: 0.7, Ca: 19.3, B: 0.2 },
       solubility_gL: 1290
     },
     {
@@ -48,77 +48,77 @@
       id: "map_typical",
       name: "Mono Ammonium Phosphate (MAP)",
       aliases: ["NH4H2PO4", "12-61-0", "12 61", "12:61" ],
-      pct: { N_total: 12.0, N_NH4: 12.0, P2O5: 61.0 },
+      pct: { N_total: 12, N_NH4: 12, P2O5: 61 },
       solubility_gL: 370
     },
     {
       id: "mkp_typical",
       name: "Mono Potassium Phosphate (MKP)",
       aliases: ["KH2PO4", "0-52-34", "0:52:34", "52 34"],
-      pct: { P2O5: 52.0, K2O: 34.0 },
+      pct: { P2O5: 52, K2O: 34 },
       solubility_gL: 230
     },
     {
       id: "dap_common",
       name: "Di Ammonium Phosphate (DAP)",
       aliases: ["(NH4)2HPO4", "18-46-0"],
-      pct: { N_total: 18.0, N_NH4: 18.0, P2O5: 46.0 },
+      pct: { N_total: 18, N_NH4: 18, P2O5: 46 },
       solubility_gL: 580
     },
     {
       id: "ssp_common",
       name: "Single Super Phosphate (SSP)",
       aliases: ["SSP", "Superphosphate", "0-16-0", "Ca(H2PO4)2"],
-      pct: { P2O5: 16.0, Ca: 20.0, S: 12.0 },
+      pct: { P2O5: 16, Ca: 20, S: 12 },
       solubility_gL: 20  // Very low - calcium phosphate
     },
     {
       id: "urea_common",
       name: "Urea",
       aliases: ["CO(NH2)2", "46-0-0"],
-      pct: { N_total: 46.0, N_Urea: 46.0 },
+      pct: { N_total: 46, N_Urea: 46 },
       solubility_gL: 1080
     },
     {
       id: "ammonium_sulfate_common",
       name: "Ammonium Sulfate",
       aliases: ["(NH4)2SO4", "21-0-0 + 24S"],
-      pct: { N_total: 21.0, N_NH4: 21.0, S: 24.0 },
+      pct: { N_total: 21, N_NH4: 21, S: 24 },
       solubility_gL: 750
     },
     {
       id: "calcium_ammonium_nitrate_26",
       name: "Calcium Ammonium Nitrate - CAN 26% (26% N, 9% Ca)",
       aliases: ["CAN 26", "CAN-26", "Calcium Ammonium Nitrate 26", "26% CAN", "CAN 26N"],
-      pct: { N_total: 26.0, N_NO3: 13.0, N_NH4: 13.0, Ca: 9.0 },
+      pct: { N_total: 26, N_NO3: 13, N_NH4: 13, Ca: 9 },
       solubility_gL: 1000
     },
     {
       id: "calcium_ammonium_nitrate_27",
       name: "Calcium Ammonium Nitrate - CAN 27% (27% N, 8% Ca)",
       aliases: ["CAN 27", "CAN-27", "Calcium Ammonium Nitrate 27", "27% CAN", "CAN 27N"],
-      pct: { N_total: 27.0, N_NO3: 13.5, N_NH4: 13.5, Ca: 8.0 },
+      pct: { N_total: 27, N_NO3: 13.5, N_NH4: 13.5, Ca: 8 },
       solubility_gL: 1000
     },
     {
       id: "ammonium_nitrate_common",
       name: "Ammonium Nitrate - Solid (34% N)",
       aliases: ["NH4NO3", "34-0-0 (typical)", "Ammonium Nitrate solid"],
-      pct: { N_total: 34.0, N_NO3: 17.0, N_NH4: 17.0 },
+      pct: { N_total: 34, N_NO3: 17, N_NH4: 17 },
       solubility_gL: 1900
     },
     {
       id: "magnesium_sulfate_heptahydrate_common",
       name: "Magnesium Sulfate - Heptahydrate / Epsom Salt (9.86% Mg)",
       aliases: ["MgSO4·7H2O", "Epsom Salt", "Magnesium Sulfate 7H2O"],
-      pct: { Mg: 9.86, S: 13.0 },
+      pct: { Mg: 9.86, S: 13 },
       solubility_gL: 710
     },
     {
       id: "magnesium_sulfate_16mgo",
       name: "Magnesium Sulfate (16% MgO) (~9.6% Mg, ~13% S)",
       aliases: ["MgSO4", "Magnesium Sulphate", "Epsom Salt", "MgSO4·7H2O (if heptahydrate)"],
-      pct: { MgO: 16.0, S: 13.0 },
+      pct: { MgO: 16, S: 13 },
       solubility_gL: 710
     },
     {
@@ -132,14 +132,14 @@
       id: "potassium_sulfate_common",
       name: "Potassium Sulfate (SOP)",
       aliases: ["K2SO4", "0-0-50 + ~17S"],
-      pct: { K2O: 50.0, S: 17.0 },
+      pct: { K2O: 50, S: 17 },
       solubility_gL: 120  // Low - often limiting factor
     },
     {
       id: "potassium_chloride_common",
       name: "Potassium Chloride (MOP)",
       aliases: ["KCl", "0-0-60"],
-      pct: { K2O: 60.0, Cl: 47.6 },
+      pct: { K2O: 60, Cl: 47.6 },
       solubility_gL: 340
     },
     {
@@ -153,42 +153,42 @@
       id: "langbeinite_common",
       name: "Langbeinite / Sul-Po-Mag",
       aliases: ["K2SO4·2MgSO4", "0-0-22 + 11Mg + 22S"],
-      pct: { K2O: 22.0, Mg: 11.0, S: 22.0 },
+      pct: { K2O: 22, Mg: 11, S: 22 },
       solubility_gL: 240
     },
     {
       id: "potassium_schoenite",
       name: "Potassium Schoenite / SOPM (23% K2O, 11% MgO)",
       aliases: ["Schoenite", "Potassium Magnesium Sulfate", "SOPM", "K2SO4·MgSO4·6H2O"],
-      pct: { K2O: 23.0, MgO: 11.0, S: 15.9 },
+      pct: { K2O: 23, MgO: 11, S: 15.9 },
       solubility_gL: 220
     },
     {
       id: "uan32_solution_typical",
       name: "UAN Solution (example: 32-0-0)",
       aliases: ["UAN-32"],
-      pct: { N_total: 32.0, N_Urea: 16.0, N_NO3: 8.0, N_NH4: 8.0 },
+      pct: { N_total: 32, N_Urea: 16, N_NO3: 8, N_NH4: 8 },
       solubility_gL: 1000  // Already liquid
     },
     {
       id: "ammonium_thiosulfate_common",
       name: "Ammonium Thiosulfate (ATS)",
       aliases: ["12-0-0-26S (common liquid)"],
-      pct: { N_total: 12.0, N_NH4: 12.0, S: 26.0 },
+      pct: { N_total: 12, N_NH4: 12, S: 26 },
       solubility_gL: 1000  // Typically liquid
     },
     {
       id: "potassium_thiosulfate_common",
       name: "Potassium Thiosulfate (KTS)",
       aliases: ["0-0-25-17S (common liquid)"],
-      pct: { K2O: 25.0, S: 17.0 },
+      pct: { K2O: 25, S: 17 },
       solubility_gL: 1000  // Typically liquid
     },
     {
       id: "fe_edta_13",
       name: "Iron Chelate - EDTA (13% Fe)",
       aliases: ["Fe-EDTA 13", "Fe-EDTA 13%"],
-      pct: { Fe: 13.0 },
+      pct: { Fe: 13 },
       solubility_gL: 100
     },
     {
@@ -230,14 +230,14 @@
       id: "potassium_bicarbonate",
       name: "Potassium Bicarbonate",
       aliases: ["KHCO3"],
-      pct: { K: 39.0 },
+      pct: { K: 39 },
       solubility_gL: 330
     },
     {
       id: "ammonium_nitrate_liquid",
       name: "Ammonium Nitrate - Liquid (18% N)",
       aliases: ["NH4NO3 liquid", "Ammonium Nitrate liquid"],
-      pct: { N_total: 18.0, N_NO3: 9.0, N_NH4: 9.0 },
+      pct: { N_total: 18, N_NO3: 9, N_NH4: 9 },
       solubility_gL: 1000  // Liquid
     },
     {
@@ -272,7 +272,7 @@
       id: "calcium_chloride_solid",
       name: "Calcium Chloride - Solid (36% Ca)",
       aliases: ["CaCl2 solid", "Calcium Chloride solid"],
-      pct: { Ca: 36.0, Cl: 63.9 },
+      pct: { Ca: 36, Cl: 63.9 },
       solubility_gL: 745
     },
     {
@@ -293,63 +293,63 @@
       id: "magnesium_nitrate_liquid",
       name: "Magnesium Nitrate - Liquid (7% N, 6.1% Mg)",
       aliases: ["Mg(NO3)2 liquid", "Magnesium Nitrate liquid"],
-      pct: { N_total: 7.0, N_NO3: 7.0, Mg: 6.1 },
+      pct: { N_total: 7, N_NO3: 7, Mg: 6.1 },
       solubility_gL: 1000  // Liquid
     },
     {
       id: "fe_dtpa_12",
       name: "Iron Chelate - DTPA solid (12% Fe)",
       aliases: ["Fe-DTPA 12%", "Fe-DTPA 12"],
-      pct: { Fe: 12.0 },
+      pct: { Fe: 12 },
       solubility_gL: 80
     },
     {
       id: "fe_dtpa_liquid_3",
       name: "Iron Chelate - DTPA liquid (3% Fe)",
       aliases: ["Fe-DTPA 3%", "Fe-DTPA 3"],
-      pct: { Fe: 3.0 },
+      pct: { Fe: 3 },
       solubility_gL: 1000  // Liquid
     },
     {
       id: "fe_dtpa_liquid_6",
       name: "Iron Chelate - DTPA liquid (6% Fe)",
       aliases: ["Fe-DTPA 6%", "Fe-DTPA 6"],
-      pct: { Fe: 6.0 },
+      pct: { Fe: 6 },
       solubility_gL: 1000  // Liquid
     },
     {
       id: "fe_eddha_6",
       name: "Iron Chelate - EDDHA (6% Fe)",
       aliases: ["Fe-EDDHA 6%", "Fe-EDDHA 6"],
-      pct: { Fe: 6.0 },
+      pct: { Fe: 6 },
       solubility_gL: 60
     },
     {
       id: "fe_hbed_6",
       name: "Iron Chelate - HBED (6% Fe)",
       aliases: ["Fe-HBED 6%", "Fe-HBED 6"],
-      pct: { Fe: 6.0 },
+      pct: { Fe: 6 },
       solubility_gL: 60
     },
     {
       id: "mn_edta_13",
       name: "Manganese Chelate - EDTA (13% Mn)",
       aliases: ["Mn-EDTA 13%", "Mn-EDTA 13"],
-      pct: { Mn: 13.0 },
+      pct: { Mn: 13 },
       solubility_gL: 100
     },
     {
       id: "zn_edta_15",
       name: "Zinc Chelate - EDTA (15% Zn)",
       aliases: ["Zn-EDTA 15%", "Zn-EDTA 15"],
-      pct: { Zn: 15.0 },
+      pct: { Zn: 15 },
       solubility_gL: 100
     },
     {
       id: "cu_edta_15",
       name: "Copper Chelate - EDTA (15% Cu)",
       aliases: ["Cu-EDTA 15%", "Cu-EDTA 15"],
-      pct: { Cu: 15.0 },
+      pct: { Cu: 15 },
       solubility_gL: 100
     },
     {
@@ -363,7 +363,7 @@
       id: "zinc_sulfate_mono",
       name: "Zinc Sulfate - Monohydrate (36% Zn)",
       aliases: ["ZnSO4·H2O", "Zinc Sulfate H2O"],
-      pct: { Zn: 36.0 },
+      pct: { Zn: 36 },
       solubility_gL: 580
     },
     {
@@ -391,7 +391,7 @@
       id: "ammonium_molybdate",
       name: "Ammonium Molybdate",
       aliases: ["(NH4)6Mo7O24·4H2O"],
-      pct: { Mo: 52.0, N_total: 8.0, N_NH4: 8.0 },
+      pct: { Mo: 52, N_total: 8, N_NH4: 8 },
       solubility_gL: 400
     },
     {
@@ -412,7 +412,7 @@
       id: "utkarsh_double_combi",
       name: "Utkarsh Double Combi (Micronutrient Mix)",
       aliases: ["Utkarsh Double Combi", "Double Combi"],
-      pct: { Ca: 1.0, Mg: 2.5, Zn: 2.0, Fe: 2.0, Mn: 1.0, B: 1.0, Cu: 0.5, Mo: 0.05, Co: 0.005 },
+      pct: { Ca: 1, Mg: 2.5, Zn: 2, Fe: 2, Mn: 1, B: 1, Cu: 0.5, Mo: 0.05, Co: 0.005 },
       solubility_gL: 80
     },
     {
@@ -426,7 +426,7 @@
       id: "wsf_13_40_13",
       name: "WSF 13:40:13 (13% N, 40% P₂O₅, 13% K₂O)",
       aliases: ["WSF 13:40:13", "13:40:13", "13-40-13", "WSF 13-40-13"],
-      pct: { N_total: 13.0, N_NO3: 4.4, N_NH4: 8.6, P2O5: 40.0, K2O: 13.0 },
+      pct: { N_total: 13, N_NO3: 4.4, N_NH4: 8.6, P2O5: 40, K2O: 13 },
       solubility_gL: 300
     },
     {
@@ -442,12 +442,12 @@
         "12-6-22+12CaO"
       ],
       pct: {
-        N_total: 12.0,
-        N_NO3: 12.0,
-        N_NH4: 0.0,
-        P2O5: 6.0,
-        K2O: 22.0,
-        CaO: 12.0
+        N_total: 12,
+        N_NO3: 12,
+        N_NH4: 0,
+        P2O5: 6,
+        K2O: 22,
+        CaO: 12
       },
       solubility_gL: 180
     },
@@ -461,14 +461,14 @@
         "Sodium octaborate tetrahydrate",
         "Na2B8O13·4H2O"
       ],
-      pct: { B: 20.0 },
+      pct: { B: 20 },
       solubility_gL: 100
     },
     {
       id: "icl_pekacid_pk_acid",
       name: "ICL PeKacid (0-60-20) - Acidifying PK Fertilizer",
       aliases: ["PeKacid", "Peakacid", "ICL PeKacid", "PeaK PeKacid", "0-60-20"],
-      pct: { P2O5: 60.0, K2O: 20.0 },
+      pct: { P2O5: 60, K2O: 20 },
 
 
 
@@ -479,7 +479,7 @@
       id: "npk_19_19_19",
       name: "NPK 19:19:19 (100% Water Soluble, Foliar Grade)",
       aliases: ["NPK 19:19:19", "19:19:19", "19-19-19", "WSF 19:19:19", "WSF 19-19-19"],
-      pct: { N_total: 19.0, N_NO3: 4.0, N_NH4: 4.5, N_Urea: 10.5, P2O5: 19.0, K2O: 19.0 },
+      pct: { N_total: 19, N_NO3: 4, N_NH4: 4.5, N_Urea: 10.5, P2O5: 19, K2O: 19 },
       solubility_gL: 350
     },
     {
@@ -492,7 +492,7 @@
         "12:5:27+8CaO",
         "12-5-27+8CaO"
       ],
-      pct: { N_total: 12.0, N_NO3: 12.0, P2O5: 5.0, K2O: 27.0, CaO: 8.0, Fe: 0.1, Mn: 0.1, B: 0.1, Zn: 0.1 },
+      pct: { N_total: 12, N_NO3: 12, P2O5: 5, K2O: 27, CaO: 8, Fe: 0.1, Mn: 0.1, B: 0.1, Zn: 0.1 },
       solubility_gL: 200
     }
   ];
@@ -502,7 +502,7 @@
   // ======================================================================
 
   // Conversion factors for oxides to elements
-  window.FertilizerCore.OXIDE_CONVERSIONS = {
+  globalThis.FertilizerCore.OXIDE_CONVERSIONS = {
     P2O5_to_P: 0.43646,
     K2O_to_K: 0.83013,
     CaO_to_Ca: 0.71469,
@@ -513,7 +513,7 @@
   };
 
   // Molar masses for nutrients (g/mol) - for EC calculation
-  window.FertilizerCore.MOLAR_MASSES = {
+  globalThis.FertilizerCore.MOLAR_MASSES = {
     'N_NO3': 14.007,
     'N_NH4': 14.007,
     'P': 30.974,
@@ -532,7 +532,7 @@
   };
 
   // Ionic charges (absolute values) - legacy, for backward compatibility
-  window.FertilizerCore.IONIC_CHARGES = {
+  globalThis.FertilizerCore.IONIC_CHARGES = {
     'N_NO3': 1,
     'N_NH4': 1,
     'P': 1,      // H2PO4- form
@@ -552,7 +552,7 @@
 
   // EC contribution factors - LEGACY, kept for backward compatibility
   // Units: S·cm²/mol (molar conductivity)
-  window.FertilizerCore.EC_CONTRIBUTIONS = {
+  globalThis.FertilizerCore.EC_CONTRIBUTIONS = {
     'N_NO3': 71.46,
     'N_NH4': 73.5,
     'P': 57,         // H2PO4-
@@ -560,7 +560,7 @@
     'Mg': 106,
     'Ca': 119,
     'S': 160,        // SO4 2-
-    'Fe': 108.0,
+    'Fe': 108,
     'Mn': 0,         // negligible
     'Zn': 0,         // negligible
     'B': 0,          // negligible
@@ -573,31 +573,31 @@
   // Ionic Molar Conductivity at Infinite Dilution (25°C)
   // λ (lambda) values in S·cm²/mol at 25°C
   // Formula: EC (mS/cm) = 0.001 × Σ(λᵢ × cᵢ) where cᵢ is in mmol/L
-  window.FertilizerCore.IONIC_MOLAR_CONDUCTIVITY = {
+  globalThis.FertilizerCore.IONIC_MOLAR_CONDUCTIVITY = {
     // CATIONS
     'K+': 73.5,
     'Na+': 50.1,
     'NH4+': 73.5,
-    'Ca2+': 119.0,
-    'Mg2+': 106.0,
-    'Fe2+': 108.0,
-    'Fe3+': 204.0,
-    'Mn2+': 107.0,
+    'Ca2+': 119,
+    'Mg2+': 106,
+    'Fe2+': 108,
+    'Fe3+': 204,
+    'Mn2+': 107,
     'Zn2+': 105.6,
     'Cu2+': 107.2,
     // ANIONS
     'NO3-': 71.5,
     'Cl-': 76.3,
-    'SO4^2-': 160.0,
+    'SO4^2-': 160,
     'H2PO4-': 33.5,
-    'HPO4^2-': 114.0,
+    'HPO4^2-': 114,
     'HCO3-': 44.5,
-    'OH-': 198.0,
+    'OH-': 198,
     'H+': 349.8
   };
 
   // Ionic charges for EC calculation
-  window.FertilizerCore.ION_CHARGES = {
+  globalThis.FertilizerCore.ION_CHARGES = {
     'K+': 1,
     'Na+': 1,
     'NH4+': 1,
@@ -623,7 +623,7 @@
   // ======================================================================
   // Molar mass and ions for each fertilizer
 
-  window.FertilizerCore.ION_DATA = {
+  globalThis.FertilizerCore.ION_DATA = {
     potassium_nitrate_typical: {
       formula: 'KNO₃',
       molarMass: 101.1,
@@ -975,7 +975,7 @@
   // ======================================================================
 
   // Common fertilizers (most frequently used)
-  window.FertilizerCore.COMMON_FERTILIZERS = [
+  globalThis.FertilizerCore.COMMON_FERTILIZERS = [
     'calcium_nitrate_calcinit_typical',
     'potassium_nitrate_typical',
     'map_typical',
@@ -984,7 +984,7 @@
   ];
 
   // Fertilizer compatibility groups for two-tank system
-  window.FertilizerCore.FERTILIZER_COMPATIBILITY = {
+  globalThis.FertilizerCore.FERTILIZER_COMPATIBILITY = {
     calcium_sources: [
       'calcium_nitrate_calcinit_typical',
       'hydrospeed_cab_max',
@@ -1045,7 +1045,7 @@
   };
 
   // Ordered array for URL encoding — do NOT reorder or insert (only append)
-  window.FERTILIZER_URL_ORDER = [
+  globalThis.FERTILIZER_URL_ORDER = [
     'calcium_nitrate_calcinit_typical', 'hydrospeed_cab_max', 'potassium_nitrate_typical',
     'map_typical', 'mkp_typical', 'dap_common', 'ssp_common', 'urea_common',
     'ammonium_sulfate_common', 'calcium_ammonium_nitrate_26', 'calcium_ammonium_nitrate_27',

@@ -2,9 +2,9 @@
  * Telugu (te) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.te = {
+globalThis.i18nLocales.te = {
   pageTitle: 'ఎరువులు కాలిక్యులేటర్',
   whatWouldYouLikeToDo: 'మీరు ఏమి చేయాలనుకుంటున్నారు?',
   chooseModeDescription: 'మీ వద్ద ఉన్న సమాచారం ఆధారంగా కాలిక్యులేటర్ మోడ్‌ను ఎంచుకోండి.',

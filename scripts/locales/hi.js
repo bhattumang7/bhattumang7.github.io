@@ -2,9 +2,9 @@
  * Hindi (hi) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.hi = {
+globalThis.i18nLocales.hi = {
   pageTitle: 'उर्वरक कैलकुलेटर',
   whatWouldYouLikeToDo: 'आप क्या करना चाहेंगे?',
   chooseModeDescription: 'आपके पास जो जानकारी है उसके आधार पर एक कैलकुलेटर मोड चुनें।',
@@ -75,7 +75,6 @@ window.i18nLocales.hi = {
   twoTankSeparationNote: 'कैल्शियम सल्फेट अवक्षेपण को रोकने के लिए उर्वरकों को अलग किया गया। प्रत्येक टैंक को अलग-अलग पानी के साथ मिलाएं, फिर अंतिम घोल में मिलाएं।',
   fertilizersToAddPer: 'जोड़ने के लिए उर्वरक (प्रति {volume}{unit})',
   gramsShort: 'जी',
-  gramsPerLiter: 'जी/एल',
   totalConcentration: 'कुल एकाग्रता',
   totalFertilizers: 'कुल ({count} उर्वरक)',
   targetVsAchieved: 'लक्ष्य बनाम हासिल',

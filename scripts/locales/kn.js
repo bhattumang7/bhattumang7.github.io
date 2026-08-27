@@ -2,9 +2,9 @@
  * Kannada (kn) translations for Fertilizer Calculator
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.kn = {
+globalThis.i18nLocales.kn = {
   pageTitle: 'ರಸಗೊಬ್ಬರ ಕ್ಯಾಲ್ಕುಲೇಟರ್',
   whatWouldYouLikeToDo: 'ನೀವು ಏನು ಮಾಡಲು ಬಯಸುತ್ತೀರಿ?',
   chooseModeDescription: 'ನೀವು ಹೊಂದಿರುವ ಮಾಹಿತಿಯನ್ನು ಆಧರಿಸಿ ಕ್ಯಾಲ್ಕುಲೇಟರ್ ಮೋಡ್ ಅನ್ನು ಆಯ್ಕೆ ಮಾಡಿ.',

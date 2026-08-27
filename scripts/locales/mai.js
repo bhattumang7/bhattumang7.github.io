@@ -3,9 +3,9 @@
  * मैथिली भाषा मे खाद कैलकुलेटर के अनुवाद
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.mai = {
+globalThis.i18nLocales.mai = {
   pageTitle: 'खाद कैलकुलेटर',
   whatWouldYouLikeToDo: 'अहाँ की करए चाहैत छी?',
   chooseModeDescription: 'अहाँ लग जे जानकारी अछि ओकरा हिसाब सँ एकटा कैलकुलेटर मोड चुनू।',

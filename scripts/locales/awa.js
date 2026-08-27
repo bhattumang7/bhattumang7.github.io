@@ -3,9 +3,9 @@
  * अवधी भाषा में खाद कैलकुलेटर का अनुवाद
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.awa = {
+globalThis.i18nLocales.awa = {
   pageTitle: 'खाद कैलकुलेटर',
   whatWouldYouLikeToDo: 'तू का करै चाहत हौ?',
   chooseModeDescription: 'तोहरे लगे जवन जानकारी बा ओहके हिसाब से एक कैलकुलेटर मोड चुनौ।',

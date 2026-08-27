@@ -3,9 +3,9 @@
  * भोजपुरी भाषा में खाद कैलकुलेटर के अनुवाद
  */
 
-window.i18nLocales = window.i18nLocales || {};
+globalThis.i18nLocales = globalThis.i18nLocales || {};
 
-window.i18nLocales.bho = {
+globalThis.i18nLocales.bho = {
   pageTitle: 'खाद कैलकुलेटर',
   whatWouldYouLikeToDo: 'तूँ का करे के चाहत बाड़ऽ?',
   chooseModeDescription: 'तोहरा लगे जवन जानकारी बा ओकरा हिसाब से एगो कैलकुलेटर मोड चुनऽ।',
