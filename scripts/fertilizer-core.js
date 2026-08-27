@@ -1002,6 +1002,542 @@ globalThis.FertilizerCore.pruneSolution = function(matrix, targetVector, weights
   return best;
 };
 
+function _buildPpmTargetsFromAbsoluteTargets(targetRatios, mode, P_to_P2O5, K_to_K2O) {
+  return {
+    N_total: targetRatios.N || 0,
+    P2O5: mode === 'elemental' ? (targetRatios.P || 0) * P_to_P2O5 : (targetRatios.P || 0),
+    K2O: mode === 'elemental' ? (targetRatios.K || 0) * K_to_K2O : (targetRatios.K || 0),
+    Ca: targetRatios.Ca || 0,
+    Mg: targetRatios.Mg || 0,
+    S: targetRatios.S || 0,
+    Si: targetRatios.Si || 0
+  };
+}
+
+function _buildPpmTargetsFromNormalizedRatio(targetRatios, mode, concentration, P_to_P2O5, K_to_K2O) {
+  const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
+  const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
+  const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
+  const normalizedRatios = {
+    N: targetRatios.N / minRatio,
+    P: targetRatios.P / minRatio,
+    K: targetRatios.K / minRatio,
+    Ca: targetRatios.Ca / minRatio,
+    Mg: targetRatios.Mg / minRatio,
+    S: targetRatios.S / minRatio
+  };
+  const basePPMForMinRatio = concentration;
+
+  return {
+    N_total: normalizedRatios.N * basePPMForMinRatio,
+    P2O5: mode === 'elemental'
+      ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
+      : normalizedRatios.P * basePPMForMinRatio,
+    K2O: mode === 'elemental'
+      ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
+      : normalizedRatios.K * basePPMForMinRatio,
+    Ca: normalizedRatios.Ca * basePPMForMinRatio,
+    Mg: normalizedRatios.Mg * basePPMForMinRatio,
+    S: normalizedRatios.S * basePPMForMinRatio,
+    Si: targetRatios.Si || 0
+  };
+}
+
+// Scale `formula` proportionally (up to 5 iterations) until its achieved EC is within 1% of
+// ctx.targetEC, starting from startScaleFactor.
+function _rescaleFormulaToTargetEC(ctx, formula, startScaleFactor) {
+  const { availableFertilizers, volume, estimateECFromPPM, targetEC } = ctx;
+  let scale = startScaleFactor;
+  let scaledFormulaOut = {};
+  let scaledAchievedOut = {};
+  let ec = 0;
+  for (let i = 0; i < 5; i++) {
+    scaledFormulaOut = {};
+    Object.entries(formula).forEach(([fertId, grams]) => {
+      scaledFormulaOut[fertId] = grams * scale;
+    });
+    scaledAchievedOut = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormulaOut, volume);
+    ec = estimateECFromPPM(scaledAchievedOut).ec_mS_cm;
+    const error = Math.abs(ec - targetEC) / targetEC;
+    if (error < 0.01) break;
+    scale = scale * (targetEC / ec);
+  }
+  return { formula: scaledFormulaOut, achieved: scaledAchievedOut, ec, scaleFactor: scale };
+}
+
+// Special handling: when PeKacid is fixed at cap, solve ratios for other fertilizers at the
+// target EC so total ratios stay aligned (PeKacid adds P/K but no N/Ca/Mg). Returns the final
+// result object if this path applies, or null to fall through to the general EC-scaling
+// approach (mirrors the original "if (pekacidFert)" guard: every branch that finds a PeKacid
+// fertilizer always returned something).
+async function _trySolveWithFixedPekacidRatios(ctx) {
+  const {
+    availableFertilizers, PEKACID_ID, fixedPekacidGrams, volume, targetRatios, milpResult,
+    ppmTargets, concentration, solveMilpBrowser, onProgress, estimateECFromPPM, targetEC,
+    mode, P_to_P2O5, K_to_K2O, originalEC, OXIDE_CONVERSIONS
+  } = ctx;
+
+  const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
+  if (!pekacidFert) return null;
+
+  const pekacidP2O5_ppm = (fixedPekacidGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
+  const pekacidK2O_ppm = (fixedPekacidGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
+  const pekacidP_ppm = pekacidP2O5_ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+  const pekacidK_ppm = pekacidK2O_ppm * OXIDE_CONVERSIONS.K2O_to_K;
+
+  const ratioValues = [
+    targetRatios.N,
+    targetRatios.P,
+    targetRatios.K,
+    targetRatios.Ca,
+    targetRatios.Mg,
+    targetRatios.S
+  ].filter(v => v > 0);
+  if (ratioValues.length === 0) {
+    return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
+  }
+  const minRatio = Math.min(...ratioValues);
+  const normalizedRatios = {
+    N: targetRatios.N / minRatio,
+    P: targetRatios.P / minRatio,
+    K: targetRatios.K / minRatio,
+    Ca: targetRatios.Ca / minRatio,
+    Mg: targetRatios.Mg / minRatio,
+    S: targetRatios.S / minRatio
+  };
+
+  const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
+  const targetSi = targetRatios.Si || 0;
+
+  const solveForScale = async (scale) => {
+    const targets = {
+      N_total: normalizedRatios.N * scale,
+      P2O5: mode === 'elemental' ? normalizedRatios.P * scale * P_to_P2O5 : normalizedRatios.P * scale,
+      K2O: mode === 'elemental' ? normalizedRatios.K * scale * K_to_K2O : normalizedRatios.K * scale,
+      Ca: normalizedRatios.Ca * scale,
+      Mg: normalizedRatios.Mg * scale,
+      S: normalizedRatios.S * scale,
+      Si: targetSi
+    };
+
+    targets.P2O5 = Math.max(0, (targets.P2O5 || 0) - pekacidP2O5_ppm);
+    targets.K2O = Math.max(0, (targets.K2O || 0) - pekacidK2O_ppm);
+
+    const result = await solveMilpBrowser({
+      fertilizers: fertilizersWithoutPekacid,
+      targets,
+      volume,
+      tolerance: 0.01,
+      onProgress,
+      pekacidMaxLimit: 0
+    });
+
+    result.formula[PEKACID_ID] = fixedPekacidGrams;
+    result.achieved.P2O5 += pekacidP2O5_ppm;
+    result.achieved.P += pekacidP_ppm;
+    result.achieved.K2O += pekacidK2O_ppm;
+    result.achieved.K += pekacidK_ppm;
+
+    const ecData = estimateECFromPPM(result.achieved);
+    return { result, ec: ecData.ec_mS_cm };
+  };
+
+  let lowScale = 1;
+  let highScale = Math.max(concentration, 10);
+  let lowData = await solveForScale(lowScale);
+  let highData = await solveForScale(highScale);
+
+  for (let i = 0; i < 6 && highData.ec < targetEC; i++) {
+    lowScale = highScale;
+    lowData = highData;
+    highScale *= 2;
+    highData = await solveForScale(highScale);
+  }
+
+  let best = lowData;
+  if (Math.abs(highData.ec - targetEC) < Math.abs(best.ec - targetEC)) {
+    best = highData;
+  }
+
+  for (let i = 0; i < 8 && lowData.ec < targetEC && highData.ec > targetEC; i++) {
+    const midScale = (lowScale + highScale) / 2;
+    const midData = await solveForScale(midScale);
+    if (Math.abs(midData.ec - targetEC) < Math.abs(best.ec - targetEC)) {
+      best = midData;
+    }
+    if (midData.ec >= targetEC) {
+      highScale = midScale;
+      highData = midData;
+    } else {
+      lowScale = midScale;
+      lowData = midData;
+    }
+  }
+
+  return {
+    formula: best.result.formula,
+    achieved: best.result.achieved,
+    targetRatios,
+    targetPPM: ppmTargets,
+    ecScaling: { scaleFactor: 1, originalEC: originalEC.ec_mS_cm, targetEC, achievedEC: best.ec },
+    pekacidFixed: true
+  };
+}
+
+// If EC scaling would reduce PeKacid below its cap, fix it at cap and re-run the MILP for the
+// other fertilizers so acidification stays maximized. Returns updated
+// { milpResult, originalEC, scaleFactor, fixedPekacidGrams }, or null if it doesn't apply.
+async function _rerunKeepingPekacidAtCapIfScalingWouldDropIt(ctx) {
+  const {
+    pekacidMaxLimit, pekacidFromMilp, scaleFactor, pekacidMaxGrams, availableFertilizers,
+    PEKACID_ID, OXIDE_CONVERSIONS, volume, estimateECFromPPM, targetEC, ppmTargets,
+    solveMilpBrowser, onProgress, devLog
+  } = ctx;
+
+  const enablePekacidRerun = true;
+  if (!(enablePekacidRerun && pekacidMaxLimit > 0 && pekacidFromMilp > 0 && scaleFactor < 0.99)) return null;
+
+  const scaledPekacid = pekacidFromMilp * scaleFactor;
+  if (scaledPekacid >= pekacidMaxGrams * 0.95) return null;
+
+  devLog(`EC scaling would reduce PeKacid from ${pekacidFromMilp.toFixed(3)}g to ${scaledPekacid.toFixed(3)}g (cap is ${pekacidMaxGrams.toFixed(3)}g)`);
+  devLog(`Re-running MILP with PeKacid fixed at cap (${pekacidMaxGrams.toFixed(3)}g) to maintain acidification`);
+
+  const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
+  if (!pekacidFert) return null;
+
+  // Calculate PeKacid's contribution to nutrients
+  const pekacidP2O5_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
+  const pekacidK2O_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
+  const pekacidP_ppm = pekacidP2O5_ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+  const pekacidK_ppm = pekacidK2O_ppm * OXIDE_CONVERSIONS.K2O_to_K;
+
+  // Calculate PeKacid's EC contribution
+  const pekacidNutrients = { N_total: 0, P: pekacidP_ppm, K: pekacidK_ppm, Ca: 0, Mg: 0, S: 0 };
+  const pekacidEC = estimateECFromPPM(pekacidNutrients);
+  const pekacidECContrib = pekacidEC ? pekacidEC.ec_mS_cm : 0;
+
+  // Remaining EC budget for other fertilizers
+  const remainingEC = targetEC - pekacidECContrib;
+  devLog(`PeKacid EC contribution: ${pekacidECContrib.toFixed(2)} mS/cm, remaining EC budget: ${remainingEC.toFixed(2)} mS/cm`);
+
+  // Subtract PeKacid's P and K contributions from targets
+  // Keep N, Ca, Mg, S at original levels (PeKacid doesn't provide these)
+  // This maintains the correct N:Ca:Mg ratios while accounting for PeKacid's P and K
+  const adjustedTargets = { ...ppmTargets };
+  adjustedTargets.P2O5 = Math.max(0, (ppmTargets.P2O5 || 0) - pekacidP2O5_ppm);
+  adjustedTargets.K2O = Math.max(0, (ppmTargets.K2O || 0) - pekacidK2O_ppm);
+
+  devLog(`Adjusted targets for other fertilizers (PeKacid P/K subtracted): N:${(adjustedTargets.N_total || 0).toFixed(1)} P2O5:${adjustedTargets.P2O5.toFixed(1)} K2O:${adjustedTargets.K2O.toFixed(1)}`);
+
+  // Re-run MILP without PeKacid, using adjusted targets
+  const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
+  const rerunResult = await solveMilpBrowser({
+    fertilizers: fertilizersWithoutPekacid,
+    targets: adjustedTargets,
+    volume,
+    tolerance: 0.01,
+    onProgress,
+    pekacidMaxLimit: 0
+  });
+
+  devLog(`Re-run MILP complete. Keeping ratios intact (not scaling for EC).`);
+
+  // Now add PeKacid back at cap
+  rerunResult.formula[PEKACID_ID] = pekacidMaxGrams;
+
+  // Add PeKacid's contribution to achieved
+  rerunResult.achieved.P2O5 += pekacidP2O5_ppm;
+  rerunResult.achieved.P += pekacidP_ppm;
+  rerunResult.achieved.K2O += pekacidK2O_ppm;
+  rerunResult.achieved.K += pekacidK_ppm;
+
+  devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
+
+  // Calculate final EC
+  const rerunEC = estimateECFromPPM(rerunResult.achieved);
+  devLog(`Final EC with PeKacid at cap (maintaining ratios): ${rerunEC.ec_mS_cm.toFixed(2)} mS/cm (target was: ${targetEC.toFixed(2)})`);
+
+  // Continue scaling with PeKacid fixed at cap to match target EC as closely as possible.
+  return {
+    milpResult: rerunResult,
+    originalEC: rerunEC,
+    scaleFactor: targetEC / rerunEC.ec_mS_cm,
+    fixedPekacidGrams: pekacidMaxGrams
+  };
+}
+
+// Iterate up to 5 times to converge on target EC. Returns { scaledFormula, scaledAchieved, finalEC, scaleFactor }.
+function _convergeEcScaling(ctx) {
+  const {
+    milpResult, shouldFixPekacid, PEKACID_ID, fixedPekacidGrams, availableFertilizers, volume,
+    estimateECFromPPM, targetEC
+  } = ctx;
+  let scaleFactor = ctx.scaleFactor;
+  let scaledFormula = {};
+  let scaledAchieved = {};
+  let finalEC = 0;
+
+  for (let i = 0; i < 5; i++) {
+    // Scale fertilizers proportionally, keeping PeKacid fixed at cap when applicable
+    scaledFormula = {};
+    Object.entries(milpResult.formula).forEach(([fertId, grams]) => {
+      if (fertId === PEKACID_ID && shouldFixPekacid) {
+        scaledFormula[fertId] = fixedPekacidGrams;
+      } else {
+        scaledFormula[fertId] = grams * scaleFactor;
+      }
+    });
+
+    // Scale achieved PPM
+    // We need to calculate from the scaled formula instead of scaling achieved PPM
+    // because PeKacid may be fixed at cap during scaling
+    scaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormula, volume);
+
+    // Check actual EC after scaling
+    const newEC = estimateECFromPPM(scaledAchieved);
+    finalEC = newEC.ec_mS_cm;
+
+    // If within 1% of target, we're done
+    const error = Math.abs(finalEC - targetEC) / targetEC;
+    if (error < 0.01) break;
+
+    // Adjust scale factor to converge to target EC
+    scaleFactor = scaleFactor * (targetEC / finalEC);
+  }
+
+  return { scaledFormula, scaledAchieved, finalEC, scaleFactor };
+}
+
+// If PeKacid exceeds cap after EC scaling, cap it and re-run MILP with PeKacid fixed at the cap.
+// Returns updated { scaledFormula, scaledAchieved, finalEC, scaleFactor }, or null if it doesn't apply.
+async function _rerunIfPekacidExceedsCapAfterScaling(ctx) {
+  const {
+    scaledFormula, PEKACID_ID, pekacidMaxLimit, pekacidMaxGrams, availableFertilizers,
+    OXIDE_CONVERSIONS, volume, ppmTargets, solveMilpBrowser, onProgress, devLog,
+    estimateECFromPPM, targetEC
+  } = ctx;
+
+  const scaledPekacid = scaledFormula[PEKACID_ID] || 0;
+  if (!(pekacidMaxLimit > 0 && scaledPekacid > pekacidMaxGrams * 1.001)) return null;
+
+  devLog(`PeKacid after EC scaling (${scaledPekacid.toFixed(3)}g) exceeds cap (${pekacidMaxGrams.toFixed(3)}g) - re-running MILP with PeKacid fixed at cap`);
+
+  // Re-run MILP with PeKacid fixed at the cap amount
+  // Calculate new targets: reduce P and K targets by what PeKacid provides
+  const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
+  if (!pekacidFert) return null;
+
+  const pekacidP2O5_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
+  const pekacidK2O_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
+
+  const adjustedTargets = { ...ppmTargets };
+  adjustedTargets.P2O5 = Math.max(0, (ppmTargets.P2O5 || 0) - pekacidP2O5_ppm);
+  adjustedTargets.K2O = Math.max(0, (ppmTargets.K2O || 0) - pekacidK2O_ppm);
+
+  devLog(`Adjusted targets after fixing PeKacid: P2O5:${adjustedTargets.P2O5.toFixed(1)} K2O:${adjustedTargets.K2O.toFixed(1)}`);
+
+  // Re-run MILP without PeKacid in the fertilizer list
+  const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
+  const rerunResult = await solveMilpBrowser({
+    fertilizers: fertilizersWithoutPekacid,
+    targets: adjustedTargets,
+    volume,
+    tolerance: 0.01,
+    onProgress,
+    pekacidMaxLimit: 0  // No PeKacid limit since we're excluding it
+  });
+
+  // Add PeKacid back to the formula at the capped amount
+  rerunResult.formula[PEKACID_ID] = pekacidMaxGrams;
+
+  // Recalculate achieved with PeKacid included
+  Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
+    const ppm = (pekacidMaxGrams * 1000 * (pct / 100)) / volume;
+    if (nutrient === 'P2O5') {
+      rerunResult.achieved.P2O5 += ppm;
+      rerunResult.achieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
+    } else if (nutrient === 'K2O') {
+      rerunResult.achieved.K2O += ppm;
+      rerunResult.achieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
+    }
+  });
+
+  devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
+
+  // Re-apply EC scaling using the re-run result
+  const newEC = estimateECFromPPM(rerunResult.achieved);
+  const scaleFactor = targetEC / newEC.ec_mS_cm;
+
+  // Re-scale with PeKacid fixed at cap
+  let newScaledFormula = {};
+  Object.entries(rerunResult.formula).forEach(([fertId, grams]) => {
+    if (fertId === PEKACID_ID) {
+      newScaledFormula[fertId] = pekacidMaxGrams;  // Keep PeKacid at cap
+    } else {
+      newScaledFormula[fertId] = grams * scaleFactor;
+    }
+  });
+
+  // Recalculate achieved after scaling
+  const newScaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, newScaledFormula, volume);
+
+  const finalECAfterRerun = estimateECFromPPM(newScaledAchieved);
+  const finalEC = finalECAfterRerun.ec_mS_cm;
+  devLog(`Final EC after re-run and scaling: ${finalEC.toFixed(2)} mS/cm (target: ${targetEC.toFixed(2)})`);
+
+  return { scaledFormula: newScaledFormula, scaledAchieved: newScaledAchieved, finalEC, scaleFactor };
+}
+
+// For Si: if user specified an absolute Si target, iteratively adjust the Si target so that
+// after EC scaling it reaches the desired value (Si is an absolute PPM target, not ratio-based).
+// Returns updated { scaledFormula, scaledAchieved, scaleFactor }.
+async function _convergeSiTarget(ctx) {
+  const {
+    targetSi, availableFertilizers, volume, ppmTargets, solveMilpBrowser, onProgress,
+    pekacidMaxLimit, estimateECFromPPM, targetEC
+  } = ctx;
+  let { scaledFormula, scaledAchieved, scaleFactor } = ctx;
+
+  let currentSiTarget = targetSi;
+  let bestSiError = Math.abs((scaledAchieved.Si || 0) - targetSi);
+  let bestFormula = { ...scaledFormula };
+  let bestAchieved = { ...scaledAchieved };
+  let bestScaleFactor = scaleFactor;
+
+  // Iterate up to 5 times to converge Si to target
+  for (let siIter = 0; siIter < 5; siIter++) {
+    const achievedSi = scaledAchieved.Si || 0;
+    const siError = Math.abs(achievedSi - targetSi);
+
+    // Track best result
+    if (siError < bestSiError) {
+      bestSiError = siError;
+      bestFormula = { ...scaledFormula };
+      bestAchieved = { ...scaledAchieved };
+      bestScaleFactor = scaleFactor;
+    }
+
+    // If Si is within 10% of target, good enough
+    if (siError / targetSi < 0.1) break;
+
+    // Adjust Si target based on how much we're missing
+    // If achieved 14 but want 25, ratio is 25/14 = 1.79, so multiply current target by that
+    const siAdjustmentRatio = achievedSi > 0 ? targetSi / achievedSi : 2;
+    currentSiTarget = currentSiTarget * siAdjustmentRatio;
+
+    // Cap the adjustment to avoid runaway values
+    currentSiTarget = Math.min(currentSiTarget, targetSi * 5);
+
+    const adjustedPpmTargets = { ...ppmTargets, Si: currentSiTarget };
+
+    // Re-run solver with adjusted Si target
+    const adjustedResult = await solveMilpBrowser({
+      fertilizers: availableFertilizers,
+      targets: adjustedPpmTargets,
+      volume,
+      tolerance: 0.01,
+      onProgress,
+      pekacidMaxLimit
+    });
+
+    // Re-apply EC scaling to the adjusted result (scale ALL fertilizers proportionally
+    // to maintain ratios)
+    const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
+    if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
+      const rescaled = _rescaleFormulaToTargetEC(ctx, adjustedResult.formula, targetEC / adjustedOriginalEC.ec_mS_cm);
+      scaledFormula = rescaled.formula;
+      scaledAchieved = rescaled.achieved;
+      scaleFactor = rescaled.scaleFactor;
+    }
+  }
+
+  // Use the best result found
+  return { scaledFormula: bestFormula, scaledAchieved: bestAchieved, scaleFactor: bestScaleFactor };
+}
+
+// Once a MILP solution is found, scale it to hit the requested target EC (keeping PeKacid at
+// its cap when applicable, re-running the MILP when scaling would push PeKacid off its cap in
+// either direction, and iteratively converging an absolute Si target). Returns the final result.
+async function _applyTargetEcScaling(ctx) {
+  const { milpResult, targetRatios, ppmTargets, targetEC, devLog } = ctx;
+  const estimateECFromPPM = ctx.estimateECFromPPM;
+
+  let originalEC = estimateECFromPPM(milpResult.achieved);
+  if (!(originalEC && originalEC.ec_mS_cm > 0)) {
+    return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
+  }
+
+  const PEKACID_ID = 'icl_pekacid_pk_acid';
+  // Strategy: Keep PeKacid at cap whenever possible to maximize acidification
+  // If EC scaling would reduce PeKacid below cap, re-run MILP with PeKacid fixed at cap
+  let scaleFactor = targetEC / originalEC.ec_mS_cm;
+  const pekacidMaxGrams = ctx.pekacidMaxLimit * ctx.volume;
+  const pekacidFromMilp = milpResult.formula[PEKACID_ID] || 0;
+  const shouldFixPekacid = ctx.pekacidMaxLimit > 0 && pekacidFromMilp > 0;
+  let fixedPekacidGrams = shouldFixPekacid ? Math.min(pekacidFromMilp, pekacidMaxGrams) : 0;
+  let currentMilpResult = milpResult;
+
+  // Special handling: when PeKacid is fixed at cap, solve ratios for other fertilizers at the
+  // target EC so total ratios stay aligned (PeKacid adds P/K but no N/Ca/Mg).
+  if (shouldFixPekacid && !ctx.useAbsoluteTargets) {
+    const fixedRatioResult = await _trySolveWithFixedPekacidRatios({
+      ...ctx, PEKACID_ID, fixedPekacidGrams, milpResult: currentMilpResult, originalEC
+    });
+    if (fixedRatioResult) return fixedRatioResult;
+  }
+
+  // If EC scaling would reduce PeKacid below its cap, fix it at cap and re-run the MILP for the
+  // other fertilizers so acidification stays maximized.
+  const rerunState = await _rerunKeepingPekacidAtCapIfScalingWouldDropIt({
+    ...ctx, PEKACID_ID, pekacidFromMilp, scaleFactor, pekacidMaxGrams, devLog
+  });
+  if (rerunState) {
+    currentMilpResult = rerunState.milpResult;
+    originalEC = rerunState.originalEC;
+    scaleFactor = rerunState.scaleFactor;
+    fixedPekacidGrams = rerunState.fixedPekacidGrams;
+  }
+
+  const targetSi = targetRatios.Si || 0;
+
+  const ecScalingResult = _convergeEcScaling({
+    ...ctx, milpResult: currentMilpResult, shouldFixPekacid, PEKACID_ID, fixedPekacidGrams, scaleFactor
+  });
+  let scaledFormula = ecScalingResult.scaledFormula;
+  let scaledAchieved = ecScalingResult.scaledAchieved;
+  let finalEC = ecScalingResult.finalEC;
+  scaleFactor = ecScalingResult.scaleFactor;
+
+  // If PeKacid exceeds cap after EC scaling, cap it and re-run MILP with PeKacid fixed at the cap.
+  const capExceededState = await _rerunIfPekacidExceedsCapAfterScaling({
+    ...ctx, scaledFormula, PEKACID_ID, pekacidMaxGrams, devLog
+  });
+  if (capExceededState) {
+    scaledFormula = capExceededState.scaledFormula;
+    scaledAchieved = capExceededState.scaledAchieved;
+    finalEC = capExceededState.finalEC;
+    scaleFactor = capExceededState.scaleFactor;
+  }
+
+  if (targetSi > 0) {
+    const siState = await _convergeSiTarget({
+      ...ctx, targetSi, scaledFormula, scaledAchieved, scaleFactor
+    });
+    scaledFormula = siState.scaledFormula;
+    scaledAchieved = siState.scaledAchieved;
+    scaleFactor = siState.scaleFactor;
+  }
+
+  return {
+    formula: scaledFormula,
+    achieved: scaledAchieved,
+    targetRatios,
+    targetPPM: ppmTargets,
+    ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC, achievedEC: finalEC }
+  };
+}
+
 /**
  * Optimization algorithm - finds best fertilizer combination
  * @param {Object} options.onProgress - Optional callback for progress updates (e.g., WASM download)
@@ -1031,452 +1567,24 @@ globalThis.FertilizerCore.optimizeFormula = async function(targetRatios, volume,
   const P_to_P2O5 = 1 / OXIDE_CONVERSIONS.P2O5_to_P;
   const K_to_K2O = 1 / OXIDE_CONVERSIONS.K2O_to_K;
 
-  let ppmTargets;
-
-  if (options.useAbsoluteTargets) {
-    ppmTargets = {
-      N_total: targetRatios.N || 0,
-      P2O5: mode === 'elemental' ? (targetRatios.P || 0) * P_to_P2O5 : (targetRatios.P || 0),
-      K2O: mode === 'elemental' ? (targetRatios.K || 0) * K_to_K2O : (targetRatios.K || 0),
-      Ca: targetRatios.Ca || 0,
-      Mg: targetRatios.Mg || 0,
-      S: targetRatios.S || 0,
-      Si: targetRatios.Si || 0
-    };
-  } else {
-    const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
-    const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
-    const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
-    const normalizedRatios = {
-      N: targetRatios.N / minRatio,
-      P: targetRatios.P / minRatio,
-      K: targetRatios.K / minRatio,
-      Ca: targetRatios.Ca / minRatio,
-      Mg: targetRatios.Mg / minRatio,
-      S: targetRatios.S / minRatio
-    };
-    const basePPMForMinRatio = concentration;
-
-    ppmTargets = {
-      N_total: normalizedRatios.N * basePPMForMinRatio,
-      P2O5: mode === 'elemental'
-        ? normalizedRatios.P * basePPMForMinRatio * P_to_P2O5
-        : normalizedRatios.P * basePPMForMinRatio,
-      K2O: mode === 'elemental'
-        ? normalizedRatios.K * basePPMForMinRatio * K_to_K2O
-        : normalizedRatios.K * basePPMForMinRatio,
-      Ca: normalizedRatios.Ca * basePPMForMinRatio,
-      Mg: normalizedRatios.Mg * basePPMForMinRatio,
-      S: normalizedRatios.S * basePPMForMinRatio,
-      Si: targetRatios.Si || 0
-    };
-  }
+  const ppmTargets = options.useAbsoluteTargets
+    ? _buildPpmTargetsFromAbsoluteTargets(targetRatios, mode, P_to_P2O5, K_to_K2O)
+    : _buildPpmTargetsFromNormalizedRatio(targetRatios, mode, concentration, P_to_P2O5, K_to_K2O);
 
   // Pass pekacidMaxLimit and nh4PctTarget to the MILP solver if specified
   const pekacidMaxLimit = options.pekacidMaxLimit || 0;
   const nh4PctTarget = (typeof options.nh4PctTarget === 'number' && options.nh4PctTarget >= 0 && options.nh4PctTarget <= 100)
     ? options.nh4PctTarget : null;
-  let milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit, nh4PctTarget });
-
-  // Apply EC scaling if targetEC is specified
-  if (options.targetEC && options.targetEC > 0) {
-    const estimateECFromPPM = globalThis.FertilizerCore.estimateECFromPPM;
-    if (typeof estimateECFromPPM === 'function') {
-      let originalEC = estimateECFromPPM(milpResult.achieved);
-      if (originalEC && originalEC.ec_mS_cm > 0) {
-        const PEKACID_ID = 'icl_pekacid_pk_acid';
-        // Strategy: Keep PeKacid at cap whenever possible to maximize acidification
-        // If EC scaling would reduce PeKacid below cap, re-run MILP with PeKacid fixed at cap
-
-        // Calculate initial scale factor - scale all fertilizers proportionally
-        let scaleFactor = options.targetEC / originalEC.ec_mS_cm;
-        const pekacidMaxGrams = pekacidMaxLimit * volume;
-        const pekacidFromMilp = milpResult.formula[PEKACID_ID] || 0;
-        const shouldFixPekacid = pekacidMaxLimit > 0 && pekacidFromMilp > 0;
-        let fixedPekacidGrams = shouldFixPekacid ? Math.min(pekacidFromMilp, pekacidMaxGrams) : 0;
-
-        // Special handling: when PeKacid is fixed at cap, solve ratios for other fertilizers
-        // at the target EC so total ratios stay aligned (PeKacid adds P/K but no N/Ca/Mg).
-        if (shouldFixPekacid && !options.useAbsoluteTargets) {
-          const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
-          if (pekacidFert) {
-            const pekacidP2O5_ppm = (fixedPekacidGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
-            const pekacidK2O_ppm = (fixedPekacidGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
-            const pekacidP_ppm = pekacidP2O5_ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-            const pekacidK_ppm = pekacidK2O_ppm * OXIDE_CONVERSIONS.K2O_to_K;
-
-            const ratioValues = [
-              targetRatios.N,
-              targetRatios.P,
-              targetRatios.K,
-              targetRatios.Ca,
-              targetRatios.Mg,
-              targetRatios.S
-            ].filter(v => v > 0);
-            if (ratioValues.length === 0) {
-              return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
-            }
-            const minRatio = Math.min(...ratioValues);
-            const normalizedRatios = {
-              N: targetRatios.N / minRatio,
-              P: targetRatios.P / minRatio,
-              K: targetRatios.K / minRatio,
-              Ca: targetRatios.Ca / minRatio,
-              Mg: targetRatios.Mg / minRatio,
-              S: targetRatios.S / minRatio
-            };
-
-            const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
-            const targetSi = targetRatios.Si || 0;
-
-            const solveForScale = async (scale) => {
-              const targets = {
-                N_total: normalizedRatios.N * scale,
-                P2O5: mode === 'elemental' ? normalizedRatios.P * scale * P_to_P2O5 : normalizedRatios.P * scale,
-                K2O: mode === 'elemental' ? normalizedRatios.K * scale * K_to_K2O : normalizedRatios.K * scale,
-                Ca: normalizedRatios.Ca * scale,
-                Mg: normalizedRatios.Mg * scale,
-                S: normalizedRatios.S * scale,
-                Si: targetSi
-              };
-
-              targets.P2O5 = Math.max(0, (targets.P2O5 || 0) - pekacidP2O5_ppm);
-              targets.K2O = Math.max(0, (targets.K2O || 0) - pekacidK2O_ppm);
-
-              const result = await solveMilpBrowser({
-                fertilizers: fertilizersWithoutPekacid,
-                targets,
-                volume,
-                tolerance: 0.01,
-                onProgress,
-                pekacidMaxLimit: 0
-              });
-
-              result.formula[PEKACID_ID] = fixedPekacidGrams;
-              result.achieved.P2O5 += pekacidP2O5_ppm;
-              result.achieved.P += pekacidP_ppm;
-              result.achieved.K2O += pekacidK2O_ppm;
-              result.achieved.K += pekacidK_ppm;
-
-              const ecData = estimateECFromPPM(result.achieved);
-              return { result, ec: ecData.ec_mS_cm };
-            };
-
-            let lowScale = 1;
-            let highScale = Math.max(concentration, 10);
-            let lowData = await solveForScale(lowScale);
-            let highData = await solveForScale(highScale);
-
-            for (let i = 0; i < 6 && highData.ec < options.targetEC; i++) {
-              lowScale = highScale;
-              lowData = highData;
-              highScale *= 2;
-              highData = await solveForScale(highScale);
-            }
-
-            let best = lowData;
-            if (Math.abs(highData.ec - options.targetEC) < Math.abs(best.ec - options.targetEC)) {
-              best = highData;
-            }
-
-            for (let i = 0; i < 8 && lowData.ec < options.targetEC && highData.ec > options.targetEC; i++) {
-              const midScale = (lowScale + highScale) / 2;
-              const midData = await solveForScale(midScale);
-              if (Math.abs(midData.ec - options.targetEC) < Math.abs(best.ec - options.targetEC)) {
-                best = midData;
-              }
-              if (midData.ec >= options.targetEC) {
-                highScale = midScale;
-                highData = midData;
-              } else {
-                lowScale = midScale;
-                lowData = midData;
-              }
-            }
-
-            return {
-              formula: best.result.formula,
-              achieved: best.result.achieved,
-              targetRatios,
-              targetPPM: ppmTargets,
-              ecScaling: { scaleFactor: 1, originalEC: originalEC.ec_mS_cm, targetEC: options.targetEC, achievedEC: best.ec },
-              pekacidFixed: true
-            };
-          }
-        }
-
-        // Enable PeKacid re-run logic to keep PeKacid at cap during EC scaling
-        // PeKacid takes priority for acidification - keep it at cap and adjust other P/K sources
-        const enablePekacidRerun = true;
-
-        // Check if EC scaling would reduce PeKacid below its cap
-        // If so, fix PeKacid at cap and re-calculate other fertilizers at the target EC
-        if (enablePekacidRerun && pekacidMaxLimit > 0 && pekacidFromMilp > 0 && scaleFactor < 0.99) {
-          const scaledPekacid = pekacidFromMilp * scaleFactor;
-
-          // If scaling would reduce PeKacid below 95% of cap, fix it at cap and re-run
-          if (scaledPekacid < pekacidMaxGrams * 0.95) {
-            devLog(`EC scaling would reduce PeKacid from ${pekacidFromMilp.toFixed(3)}g to ${scaledPekacid.toFixed(3)}g (cap is ${pekacidMaxGrams.toFixed(3)}g)`);
-            devLog(`Re-running MILP with PeKacid fixed at cap (${pekacidMaxGrams.toFixed(3)}g) to maintain acidification`);
-
-            const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
-            if (pekacidFert) {
-              // Calculate PeKacid's contribution to nutrients
-              const pekacidP2O5_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
-              const pekacidK2O_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
-              const pekacidP_ppm = pekacidP2O5_ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-              const pekacidK_ppm = pekacidK2O_ppm * OXIDE_CONVERSIONS.K2O_to_K;
-
-              // Calculate PeKacid's EC contribution
-              const pekacidNutrients = { N_total: 0, P: pekacidP_ppm, K: pekacidK_ppm, Ca: 0, Mg: 0, S: 0 };
-              const pekacidEC = estimateECFromPPM(pekacidNutrients);
-              const pekacidECContrib = pekacidEC ? pekacidEC.ec_mS_cm : 0;
-
-              // Remaining EC budget for other fertilizers
-              const remainingEC = options.targetEC - pekacidECContrib;
-              devLog(`PeKacid EC contribution: ${pekacidECContrib.toFixed(2)} mS/cm, remaining EC budget: ${remainingEC.toFixed(2)} mS/cm`);
-
-              // Subtract PeKacid's P and K contributions from targets
-              // Keep N, Ca, Mg, S at original levels (PeKacid doesn't provide these)
-              // This maintains the correct N:Ca:Mg ratios while accounting for PeKacid's P and K
-              const adjustedTargets = { ...ppmTargets };
-              adjustedTargets.P2O5 = Math.max(0, (ppmTargets.P2O5 || 0) - pekacidP2O5_ppm);
-              adjustedTargets.K2O = Math.max(0, (ppmTargets.K2O || 0) - pekacidK2O_ppm);
-
-              devLog(`Adjusted targets for other fertilizers (PeKacid P/K subtracted): N:${(adjustedTargets.N_total || 0).toFixed(1)} P2O5:${adjustedTargets.P2O5.toFixed(1)} K2O:${adjustedTargets.K2O.toFixed(1)}`);
-
-              // Re-run MILP without PeKacid, using adjusted targets
-              const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
-              const rerunResult = await solveMilpBrowser({
-                fertilizers: fertilizersWithoutPekacid,
-                targets: adjustedTargets,
-                volume,
-                tolerance: 0.01,
-                onProgress,
-                pekacidMaxLimit: 0
-              });
-
-              devLog(`Re-run MILP complete. Keeping ratios intact (not scaling for EC).`);
-
-              // Now add PeKacid back at cap
-              rerunResult.formula[PEKACID_ID] = pekacidMaxGrams;
-
-              // Add PeKacid's contribution to achieved
-              rerunResult.achieved.P2O5 += pekacidP2O5_ppm;
-              rerunResult.achieved.P += pekacidP_ppm;
-              rerunResult.achieved.K2O += pekacidK2O_ppm;
-              rerunResult.achieved.K += pekacidK_ppm;
-
-              devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
-
-              // Calculate final EC
-              const rerunEC = estimateECFromPPM(rerunResult.achieved);
-              devLog(`Final EC with PeKacid at cap (maintaining ratios): ${rerunEC.ec_mS_cm.toFixed(2)} mS/cm (target was: ${options.targetEC.toFixed(2)})`);
-
-              // Continue scaling with PeKacid fixed at cap to match target EC as closely as possible.
-              milpResult = rerunResult;
-              originalEC = rerunEC;
-              scaleFactor = options.targetEC / originalEC.ec_mS_cm;
-              fixedPekacidGrams = pekacidMaxGrams;
-            }
-          }
-        }
-
-        let scaledFormula = {};
-        let scaledAchieved = {};
-        let finalEC = originalEC.ec_mS_cm;
-
-        // Si is an absolute PPM target (not ratio-based), so we need to handle it specially
-        const targetSi = targetRatios.Si || 0;
-
-        // Iterate up to 5 times to converge on target EC
-        for (let i = 0; i < 5; i++) {
-          // Scale fertilizers proportionally, keeping PeKacid fixed at cap when applicable
-          scaledFormula = {};
-          Object.entries(milpResult.formula).forEach(([fertId, grams]) => {
-            if (fertId === PEKACID_ID && shouldFixPekacid) {
-              scaledFormula[fertId] = fixedPekacidGrams;
-            } else {
-              scaledFormula[fertId] = grams * scaleFactor;
-            }
-          });
-
-          // Scale achieved PPM
-          // We need to calculate from the scaled formula instead of scaling achieved PPM
-          // because PeKacid may be fixed at cap during scaling
-          scaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormula, volume);
-
-          // Check actual EC after scaling
-          const newEC = estimateECFromPPM(scaledAchieved);
-          finalEC = newEC.ec_mS_cm;
-
-          // If within 1% of target, we're done
-          const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
-          if (error < 0.01) break;
-
-          // Adjust scale factor to converge to target EC
-          scaleFactor = scaleFactor * (options.targetEC / finalEC);
-        }
-
-        // Check if PeKacid exceeds cap after EC scaling
-        // If it does, cap it and re-run MILP with PeKacid fixed at the cap
-        const scaledPekacid = scaledFormula[PEKACID_ID] || 0;
-        if (pekacidMaxLimit > 0 && scaledPekacid > pekacidMaxGrams * 1.001) {
-          devLog(`PeKacid after EC scaling (${scaledPekacid.toFixed(3)}g) exceeds cap (${pekacidMaxGrams.toFixed(3)}g) - re-running MILP with PeKacid fixed at cap`);
-
-          // Re-run MILP with PeKacid fixed at the cap amount
-          // Calculate new targets: reduce P and K targets by what PeKacid provides
-          const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
-          if (pekacidFert) {
-            const pekacidP2O5_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.P2O5 || 0) / 100) / volume;
-            const pekacidK2O_ppm = (pekacidMaxGrams * 1000 * (pekacidFert.pct.K2O || 0) / 100) / volume;
-
-            const adjustedTargets = { ...ppmTargets };
-            adjustedTargets.P2O5 = Math.max(0, (ppmTargets.P2O5 || 0) - pekacidP2O5_ppm);
-            adjustedTargets.K2O = Math.max(0, (ppmTargets.K2O || 0) - pekacidK2O_ppm);
-
-            devLog(`Adjusted targets after fixing PeKacid: P2O5:${adjustedTargets.P2O5.toFixed(1)} K2O:${adjustedTargets.K2O.toFixed(1)}`);
-
-            // Re-run MILP without PeKacid in the fertilizer list
-            const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
-            const rerunResult = await solveMilpBrowser({
-              fertilizers: fertilizersWithoutPekacid,
-              targets: adjustedTargets,
-              volume,
-              tolerance: 0.01,
-              onProgress,
-              pekacidMaxLimit: 0  // No PeKacid limit since we're excluding it
-            });
-
-            // Add PeKacid back to the formula at the capped amount
-            rerunResult.formula[PEKACID_ID] = pekacidMaxGrams;
-
-            // Recalculate achieved with PeKacid included
-            Object.entries(pekacidFert.pct).forEach(([nutrient, pct]) => {
-              const ppm = (pekacidMaxGrams * 1000 * (pct / 100)) / volume;
-              if (nutrient === 'P2O5') {
-                rerunResult.achieved.P2O5 += ppm;
-                rerunResult.achieved.P += ppm * OXIDE_CONVERSIONS.P2O5_to_P;
-              } else if (nutrient === 'K2O') {
-                rerunResult.achieved.K2O += ppm;
-                rerunResult.achieved.K += ppm * OXIDE_CONVERSIONS.K2O_to_K;
-              }
-            });
-
-            devLog(`Re-run complete with PeKacid fixed at ${pekacidMaxGrams.toFixed(3)}g`);
-
-            // Re-apply EC scaling using the re-run result
-            const newEC = estimateECFromPPM(rerunResult.achieved);
-            scaleFactor = options.targetEC / newEC.ec_mS_cm;
-
-            // Re-scale with PeKacid fixed at cap
-            scaledFormula = {};
-            Object.entries(rerunResult.formula).forEach(([fertId, grams]) => {
-              if (fertId === PEKACID_ID) {
-                scaledFormula[fertId] = pekacidMaxGrams;  // Keep PeKacid at cap
-              } else {
-                scaledFormula[fertId] = grams * scaleFactor;
-              }
-            });
-
-            // Recalculate achieved after scaling
-            scaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormula, volume);
-
-            const finalECAfterRerun = estimateECFromPPM(scaledAchieved);
-            finalEC = finalECAfterRerun.ec_mS_cm;
-            devLog(`Final EC after re-run and scaling: ${finalEC.toFixed(2)} mS/cm (target: ${options.targetEC.toFixed(2)})`);
-          }
-        }
-
-        // For Si: if user specified an absolute Si target, we need to iteratively adjust
-        // the Si target so that after EC scaling it reaches the desired value.
-        // Always adjust Si after EC scaling (scale up or down) because Si is an absolute PPM target
-        if (targetSi > 0) {
-          let currentSiTarget = targetSi;
-          let bestSiError = Math.abs((scaledAchieved.Si || 0) - targetSi);
-          let bestFormula = { ...scaledFormula };
-          let bestAchieved = { ...scaledAchieved };
-          let bestScaleFactor = scaleFactor;
-
-          // Iterate up to 5 times to converge Si to target
-          for (let siIter = 0; siIter < 5; siIter++) {
-            const achievedSi = scaledAchieved.Si || 0;
-            const siError = Math.abs(achievedSi - targetSi);
-
-            // Track best result
-            if (siError < bestSiError) {
-              bestSiError = siError;
-              bestFormula = { ...scaledFormula };
-              bestAchieved = { ...scaledAchieved };
-              bestScaleFactor = scaleFactor;
-            }
-
-            // If Si is within 10% of target, good enough
-            if (siError / targetSi < 0.1) break;
-
-            // Adjust Si target based on how much we're missing
-            // If achieved 14 but want 25, ratio is 25/14 = 1.79, so multiply current target by that
-            const siAdjustmentRatio = achievedSi > 0 ? targetSi / achievedSi : 2;
-            currentSiTarget = currentSiTarget * siAdjustmentRatio;
-
-            // Cap the adjustment to avoid runaway values
-            currentSiTarget = Math.min(currentSiTarget, targetSi * 5);
-
-            const adjustedPpmTargets = { ...ppmTargets, Si: currentSiTarget };
-
-            // Re-run solver with adjusted Si target
-            const adjustedResult = await solveMilpBrowser({
-              fertilizers: availableFertilizers,
-              targets: adjustedPpmTargets,
-              volume,
-              tolerance: 0.01,
-              onProgress,
-              pekacidMaxLimit
-            });
-
-            // Re-apply EC scaling to the adjusted result
-            const adjustedOriginalEC = estimateECFromPPM(adjustedResult.achieved);
-            if (adjustedOriginalEC && adjustedOriginalEC.ec_mS_cm > 0) {
-              // Calculate scale factor - scale all fertilizers proportionally
-              scaleFactor = options.targetEC / adjustedOriginalEC.ec_mS_cm;
-
-              for (let i = 0; i < 5; i++) {
-                // Scale ALL fertilizers proportionally to maintain ratios
-                scaledFormula = {};
-                Object.entries(adjustedResult.formula).forEach(([fertId, grams]) => {
-                  scaledFormula[fertId] = grams * scaleFactor;
-                });
-
-                // Recalculate achieved PPM from the scaled formula
-                scaledAchieved = globalThis.FertilizerCore.accumulateAchievedPPM(availableFertilizers, scaledFormula, volume);
-
-                const newEC = estimateECFromPPM(scaledAchieved);
-                finalEC = newEC.ec_mS_cm;
-
-                const error = Math.abs(finalEC - options.targetEC) / options.targetEC;
-                if (error < 0.01) break;
-
-                // Adjust scale factor to converge to target EC
-                scaleFactor = scaleFactor * (options.targetEC / finalEC);
-              }
-            }
-          }
-
-          // Use the best result found
-          scaledFormula = bestFormula;
-          scaledAchieved = bestAchieved;
-          scaleFactor = bestScaleFactor;
-        }
-
-        return {
-          formula: scaledFormula,
-          achieved: scaledAchieved,
-          targetRatios,
-          targetPPM: ppmTargets,
-          ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC: options.targetEC, achievedEC: finalEC }
-        };
-      }
-    }
+  const milpResult = await solveMilpBrowser({ fertilizers: availableFertilizers, targets: ppmTargets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit, nh4PctTarget });
+
+  // Apply EC scaling if specified; otherwise return the raw MILP result as-is.
+  if (options.targetEC && options.targetEC > 0 && typeof globalThis.FertilizerCore.estimateECFromPPM === 'function') {
+    return _applyTargetEcScaling({
+      milpResult, targetRatios, ppmTargets, volume, mode, concentration, options,
+      availableFertilizers, solveMilpBrowser, onProgress, devLog, OXIDE_CONVERSIONS,
+      P_to_P2O5, K_to_K2O, pekacidMaxLimit, useAbsoluteTargets: options.useAbsoluteTargets,
+      targetEC: options.targetEC, estimateECFromPPM: globalThis.FertilizerCore.estimateECFromPPM
+    });
   }
 
   return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
@@ -1886,57 +1994,12 @@ globalThis.FertilizerCore.checkRatioMatch = function(achieved, targetRatio, tole
  * Two-phase approach:
  *   Phase 1: Find tank dosing RATIOS that match the target nutrient ratio (ignoring EC)
  *   Phase 2: Scale all dosing uniformly to hit target EC
- * @param {Object} tanks - { A: {fertId: g/L}, B: {...} }
- * @param {Object} target - { ratio: {...}, targetEC, baselineEC }
- * @param {Object} options - { maxDosing, tolerance }
- * @returns {Object} { dosing: {A, B, ...}, achieved, predictedEC, feasible, issues }
  */
-globalThis.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
-  const { maxDosing = 50, tolerance = 0.15 } = options; // Tolerance for ratio matching
-  const { ratio, targetEC, baselineEC = 0 } = target;
-  const estimateECFromPPM = this.estimateECFromPPM;
-
-  // Calculate nutrient contribution per mL of each tank
-  const tankContribPerML = {};
-  for (const [tankId, tankFormula] of Object.entries(tanks)) {
-    tankContribPerML[tankId] = { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 };
-    for (const [fertId, stock_gL] of Object.entries(tankFormula)) {
-      if (!stock_gL) continue;
-      const fert = this.FERTILIZERS.find(f => f.id === fertId);
-      if (!fert) continue;
-      const contribPerGram = this.getElementalContributionPerGram(fert);
-      for (const n of Object.keys(tankContribPerML[tankId])) {
-        tankContribPerML[tankId][n] += contribPerGram[n] * stock_gL / 1000;
-      }
-    }
-  }
-
-  const tankIds = Object.keys(tanks).filter(t => Object.keys(tanks[t]).length > 0);
-  if (tankIds.length === 0) {
-    return { dosing: {}, achieved: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }, predictedEC: baselineEC, feasible: false, issues: [{ level: 'error', code: 'NO_FERTILIZERS', message: 'No fertilizers in tanks' }] };
-  }
-
-  const effectiveTargetEC = targetEC - baselineEC;
-  if (effectiveTargetEC <= 0) {
-    return { dosing: {}, achieved: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }, predictedEC: baselineEC, feasible: false, issues: [{ level: 'error', code: 'EC_UNACHIEVABLE', message: `Target EC ${targetEC} is below baseline ${baselineEC}` }] };
-  }
-
-  // Get nutrients specified in target ratio
-  const targetNutrients = ['N', 'P', 'K', 'Ca', 'Mg', 'S'].filter(n => ratio[n] > 0);
-  const targetMin = Math.min(...targetNutrients.map(n => ratio[n]).filter(v => v > 0)) || 1;
-
-  // ========================================================================
-  // PHASE 1: Find dosing RATIOS that match the target nutrient ratio
-  // We optimize the A:B (or A:B:C, A:B:C:D) ratios to match nutrient ratios
-  // EC doesn't matter yet - we'll scale for EC in Phase 2
-  // ========================================================================
-
-  let bestDosing = {};
-  let bestRatioError = Infinity;
-
-  // Helper to calculate ratio error for a given dosing
-  const calcRatioError = (dosing) => {
-    const achieved = this.calculateAchievedPPM(tanks, dosing);
+// PHASE 1: Find dosing RATIOS (mL per tank, arbitrary overall scale) that match the target
+// nutrient ratio as closely as possible. EC doesn't matter yet - Phase 2 scales for EC.
+function _makeRatioErrorFn(tanks, ratio, targetNutrients, targetMin) {
+  return (dosing) => {
+    const achieved = globalThis.FertilizerCore.calculateAchievedPPM(tanks, dosing);
     const achievedNonZero = targetNutrients.filter(n => achieved[n] > 0);
     if (achievedNonZero.length === 0) return Infinity;
 
@@ -1953,125 +2016,139 @@ globalThis.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
     }
     return ratioError;
   };
+}
 
-  // Ratio steps to try - expanded range including very extreme ratios
-  // This allows spanning from almost-zero Tank A to almost-zero Tank B
+// Try a candidate dosing, keeping it (and its error) if it beats the current best.
+function _tryDosingCandidate(dosing, calcRatioError, best) {
+  const err = calcRatioError(dosing);
+  if (err < best.error) {
+    return { dosing: { ...dosing }, error: err };
+  }
+  return best;
+}
+
+function _searchTwoTankRatios(tankIds, calcRatioError, best) {
   const ratioSteps = [0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.7, 1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20, 50];
+  for (const abRatio of ratioSteps) {
+    const total = abRatio + 1;
+    const dosing = {
+      [tankIds[0]]: 10 * abRatio / total,
+      [tankIds[1]]: 10 / total
+    };
+    best = _tryDosingCandidate(dosing, calcRatioError, best);
+  }
+  return best;
+}
 
-  if (tankIds.length === 1) {
-    // Single tank - just use 10 mL
-    bestDosing[tankIds[0]] = 10;
-  } else if (tankIds.length === 2) {
-    // 2 tanks: search A:B ratios
-    for (const abRatio of ratioSteps) {
-      const total = abRatio + 1;
+function _searchThreeTankRatios(tankIds, calcRatioError, best) {
+  const steps3 = [0.1, 0.2, 0.5, 1, 2, 5, 10];
+  for (const aRatio of steps3) {
+    for (const bRatio of steps3) {
+      const total = aRatio + bRatio + 1;
       const dosing = {
-        [tankIds[0]]: 10 * abRatio / total,
-        [tankIds[1]]: 10 / total
+        [tankIds[0]]: 10 * aRatio / total,
+        [tankIds[1]]: 10 * bRatio / total,
+        [tankIds[2]]: 10 / total
       };
-      const err = calcRatioError(dosing);
-      if (err < bestRatioError) {
-        bestRatioError = err;
-        bestDosing = { ...dosing };
-      }
+      best = _tryDosingCandidate(dosing, calcRatioError, best);
     }
-  } else if (tankIds.length === 3) {
-    // 3 tanks: search A:B:C ratios
-    const steps3 = [0.1, 0.2, 0.5, 1, 2, 5, 10];
-    for (const aRatio of steps3) {
-      for (const bRatio of steps3) {
-        const total = aRatio + bRatio + 1;
+  }
+  return best;
+}
+
+function _searchFourPlusTankRatios(tankIds, calcRatioError, best) {
+  const steps4 = [0.2, 0.5, 1, 2, 5];
+  for (const aRatio of steps4) {
+    for (const bRatio of steps4) {
+      for (const cRatio of steps4) {
+        const total = aRatio + bRatio + cRatio + 1;
         const dosing = {
           [tankIds[0]]: 10 * aRatio / total,
           [tankIds[1]]: 10 * bRatio / total,
-          [tankIds[2]]: 10 / total
+          [tankIds[2]]: 10 * cRatio / total,
+          [tankIds[3]]: 10 / total
         };
-        const err = calcRatioError(dosing);
-        if (err < bestRatioError) {
-          bestRatioError = err;
-          bestDosing = { ...dosing };
+        // Handle 5+ tanks if ever needed
+        for (let i = 4; i < tankIds.length; i++) {
+          dosing[tankIds[i]] = 1;
+        }
+        best = _tryDosingCandidate(dosing, calcRatioError, best);
+      }
+    }
+  }
+  return best;
+}
+
+// Local refinement: try small adjustments around the best solution found so far.
+function _refineDosingRatios(tankIds, calcRatioError, best) {
+  const refinementSteps = [-0.3, -0.1, 0.1, 0.3];
+  let improved = true;
+  let iterations = 0;
+  while (improved && iterations < 10) {
+    improved = false;
+    iterations++;
+    for (const tankId of tankIds) {
+      const baseDose = best.dosing[tankId] || 0;
+      for (const delta of refinementSteps) {
+        const testDosing = { ...best.dosing };
+        testDosing[tankId] = Math.max(0.01, baseDose * (1 + delta));
+        const candidate = _tryDosingCandidate(testDosing, calcRatioError, best);
+        if (candidate !== best) {
+          best = candidate;
+          improved = true;
         }
       }
     }
+  }
+  return best;
+}
+
+function _searchBestDosingRatios(tanks, tankIds, ratio, targetNutrients, targetMin) {
+  const calcRatioError = _makeRatioErrorFn(tanks, ratio, targetNutrients, targetMin);
+  let best = { dosing: {}, error: Infinity };
+
+  if (tankIds.length === 1) {
+    // Single tank - just use 10 mL
+    best = { dosing: { [tankIds[0]]: 10 }, error: Infinity };
+  } else if (tankIds.length === 2) {
+    best = _searchTwoTankRatios(tankIds, calcRatioError, best);
+  } else if (tankIds.length === 3) {
+    best = _searchThreeTankRatios(tankIds, calcRatioError, best);
   } else {
-    // 4+ tanks: search A:B:C:D ratios
-    const steps4 = [0.2, 0.5, 1, 2, 5];
-    for (const aRatio of steps4) {
-      for (const bRatio of steps4) {
-        for (const cRatio of steps4) {
-          const total = aRatio + bRatio + cRatio + 1;
-          const dosing = {
-            [tankIds[0]]: 10 * aRatio / total,
-            [tankIds[1]]: 10 * bRatio / total,
-            [tankIds[2]]: 10 * cRatio / total,
-            [tankIds[3]]: 10 / total
-          };
-          // Handle 5+ tanks if ever needed
-          for (let i = 4; i < tankIds.length; i++) {
-            dosing[tankIds[i]] = 1;
-          }
-          const err = calcRatioError(dosing);
-          if (err < bestRatioError) {
-            bestRatioError = err;
-            bestDosing = { ...dosing };
-          }
-        }
-      }
-    }
+    best = _searchFourPlusTankRatios(tankIds, calcRatioError, best);
   }
 
-  // Local refinement: try small adjustments around the best solution
-  if (tankIds.length >= 2 && bestRatioError > 0.01) {
-    const refinementSteps = [-0.3, -0.1, 0.1, 0.3];
-    let improved = true;
-    let iterations = 0;
-    while (improved && iterations < 10) {
-      improved = false;
-      iterations++;
-      for (const tankId of tankIds) {
-        const baseDose = bestDosing[tankId] || 0;
-        for (const delta of refinementSteps) {
-          const testDosing = { ...bestDosing };
-          testDosing[tankId] = Math.max(0.01, baseDose * (1 + delta));
-          const err = calcRatioError(testDosing);
-          if (err < bestRatioError) {
-            bestRatioError = err;
-            bestDosing = { ...testDosing };
-            improved = true;
-          }
-        }
-      }
-    }
+  if (tankIds.length >= 2 && best.error > 0.01) {
+    best = _refineDosingRatios(tankIds, calcRatioError, best);
   }
 
-  // ========================================================================
-  // PHASE 2: Scale all dosing uniformly to hit target EC
-  // The ratio between tanks stays the same, we just scale everything
-  // ========================================================================
+  return best.dosing;
+}
 
-  let dosing = { ...bestDosing };
+// PHASE 2: Scale all dosing uniformly to hit target EC (the ratio between tanks stays the same).
+// Returns { dosing, achieved, predictedEC }.
+function _scaleDosingToTargetEC(tanks, bestDosing, tankIds, effectiveTargetEC, baselineEC) {
+  const estimateECFromPPM = globalThis.FertilizerCore.estimateECFromPPM;
+  const dosing = { ...bestDosing };
 
-  // Calculate current EC
-  let achieved = this.calculateAchievedPPM(tanks, dosing);
-  let ecResult = estimateECFromPPM.call(this, achieved);
-  let currentEC = ecResult.ec_mS_cm;
+  let achieved = globalThis.FertilizerCore.calculateAchievedPPM(tanks, dosing);
+  let ecResult = estimateECFromPPM(achieved);
+  const currentEC = ecResult.ec_mS_cm;
 
-  // Scale to hit target EC
   if (currentEC > 0) {
     const ecScale = effectiveTargetEC / currentEC;
     for (const t of tankIds) {
       dosing[t] *= ecScale;
     }
-    achieved = this.calculateAchievedPPM(tanks, dosing);
-    ecResult = estimateECFromPPM.call(this, achieved);
+    achieved = globalThis.FertilizerCore.calculateAchievedPPM(tanks, dosing);
+    ecResult = estimateECFromPPM(achieved);
   }
 
-  const predictedEC = ecResult.ec_mS_cm + baselineEC;
+  return { dosing, achieved, predictedEC: ecResult.ec_mS_cm + baselineEC };
+}
 
-  // ========================================================================
-  // Check constraints and build issues
-  // ========================================================================
-
+// Check dosing-volume and ratio/EC-match constraints, building the issues list.
+function _buildDosingIssues(dosing, achieved, predictedEC, ratio, targetEC, maxDosing, tolerance) {
   const issues = [];
   const totalDosing = Object.values(dosing).reduce((a, b) => a + b, 0);
 
@@ -2092,7 +2169,7 @@ globalThis.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
   }
 
   // Check ratio match - this is an error that triggers escalation to more tanks
-  const ratioCheck = this.checkRatioMatch(achieved, ratio, tolerance);
+  const ratioCheck = globalThis.FertilizerCore.checkRatioMatch(achieved, ratio, tolerance);
   if (!ratioCheck.matches) {
     issues.push({
       level: 'error',
@@ -2112,6 +2189,36 @@ globalThis.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
       details: { predicted: predictedEC, target: targetEC, error: ecErrorFinal }
     });
   }
+
+  return issues;
+}
+
+/**
+ * @param {Object} target - { ratio: {...}, targetEC, baselineEC }
+ * @param {Object} options - { maxDosing, tolerance }
+ * @returns {Object} { dosing: {A, B, ...}, achieved, predictedEC, feasible, issues }
+ */
+globalThis.FertilizerCore.solveDosing = function(tanks, target, options = {}) {
+  const { maxDosing = 50, tolerance = 0.15 } = options; // Tolerance for ratio matching
+  const { ratio, targetEC, baselineEC = 0 } = target;
+
+  const tankIds = Object.keys(tanks).filter(t => Object.keys(tanks[t]).length > 0);
+  if (tankIds.length === 0) {
+    return { dosing: {}, achieved: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }, predictedEC: baselineEC, feasible: false, issues: [{ level: 'error', code: 'NO_FERTILIZERS', message: 'No fertilizers in tanks' }] };
+  }
+
+  const effectiveTargetEC = targetEC - baselineEC;
+  if (effectiveTargetEC <= 0) {
+    return { dosing: {}, achieved: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }, predictedEC: baselineEC, feasible: false, issues: [{ level: 'error', code: 'EC_UNACHIEVABLE', message: `Target EC ${targetEC} is below baseline ${baselineEC}` }] };
+  }
+
+  // Get nutrients specified in target ratio
+  const targetNutrients = ['N', 'P', 'K', 'Ca', 'Mg', 'S'].filter(n => ratio[n] > 0);
+  const targetMin = Math.min(...targetNutrients.map(n => ratio[n]).filter(v => v > 0)) || 1;
+
+  const bestDosing = _searchBestDosingRatios(tanks, tankIds, ratio, targetNutrients, targetMin);
+  const { dosing, achieved, predictedEC } = _scaleDosingToTargetEC(tanks, bestDosing, tankIds, effectiveTargetEC, baselineEC);
+  const issues = _buildDosingIssues(dosing, achieved, predictedEC, ratio, targetEC, maxDosing, tolerance);
 
   return {
     dosing,
@@ -2183,6 +2290,266 @@ globalThis.FertilizerCore.calculateStockSolutions = async function(options) {
   return { success: false, errors: [{ level: 'error', code: 'INFEASIBLE', message: 'Could not find feasible stock solution with up to 4 tanks' }] };
 };
 
+// Pick the target whose N:P ratio is closest to the median across all targets (not the lowest),
+// so the base MILP formula can span both high-N and high-P targets.
+function _selectBaseTargetAndLowestNP(targets) {
+  const targetsWithNP = targets.map(t => ({
+    target: t,
+    npRatio: (t.ratio.N || 0) / (t.ratio.P || 0.001)
+  }));
+  targetsWithNP.sort((a, b) => a.npRatio - b.npRatio);
+  const medianIndex = Math.floor(targetsWithNP.length / 2);
+  return { baseTarget: targetsWithNP[medianIndex].target, lowestNP: targetsWithNP[0].npRatio };
+}
+
+// Detect whether the target ratios vary widely enough (across multiple simultaneous targets)
+// that certain nutrients need independently-controllable fertilizer sources.
+function _detectVaryingRatios(targets) {
+  if (targets.length <= 1) {
+    return { hasVaryingPK: false, hasVaryingNP: false, hasVaryingPMg: false };
+  }
+
+  const spread = (values) => Math.max(...values) / Math.min(...values);
+
+  // If P:K varies by more than 50%, we need separate P and K sources
+  const hasVaryingPK = spread(targets.map(t => (t.ratio.K || 0.001) / (t.ratio.P || 0.001))) > 1.5;
+  // If N:P varies by more than 2x, we need to decouple N from P sources
+  const hasVaryingNP = spread(targets.map(t => (t.ratio.N || 0.001) / (t.ratio.P || 0.001))) > 2;
+  // If P:Mg varies by more than 50%, we need separate Mg control
+  const hasVaryingPMg = spread(targets.map(t => (t.ratio.P || 0.001) / (t.ratio.Mg || 0.001))) > 1.5;
+
+  return { hasVaryingPK, hasVaryingNP, hasVaryingPMg };
+}
+
+// For 3+ tanks, prefer fertilizers that let varying nutrients be controlled independently
+// (e.g. MKP over MAP when N:P varies, so N can be varied via Tank A/C without dragging P along).
+// Falls back to the original, unfiltered list if filtering would remove a needed nutrient
+// entirely or leave fewer than 3 fertilizers.
+function _filterFertilizersForKTanks(fertObjects, numTanks, hasVaryingNP, hasVaryingPK) {
+  if (numTanks < 3) return fertObjects;
+
+  const hasSignificant = (fert, keys) => {
+    const pct = fert.pct || {};
+    return keys.some(key => (pct[key] || 0) > 5);
+  };
+  const hasAny = (fert, keys) => {
+    const pct = fert.pct || {};
+    return keys.some(key => (pct[key] || 0) > 0);
+  };
+  const hasSignificantN = fert => hasSignificant(fert, ['N_total', 'N_NO3', 'N_NH4', 'N_Urea']);
+  const hasSignificantP = fert => hasSignificant(fert, ['P2O5', 'P']);
+  const hasSignificantK = fert => hasSignificant(fert, ['K2O', 'K']);
+
+  let filteredFertObjects = fertObjects;
+
+  if (hasVaryingNP) {
+    // When N:P varies widely, prefer P sources WITHOUT N (like MKP over MAP)
+    // This allows N to be varied independently via Tank A (Ca-N) and Tank C (K-N)
+    filteredFertObjects = filteredFertObjects.filter(f => !(hasSignificantN(f) && hasSignificantP(f)));
+  }
+
+  if (hasVaryingPK) {
+    // When P:K varies, prefer P sources WITHOUT K for independent control
+    filteredFertObjects = filteredFertObjects.filter(f => !(hasSignificantP(f) && hasSignificantK(f)));
+  }
+
+  const filteredHasN = filteredFertObjects.some(f => hasAny(f, ['N_total', 'N_NO3', 'N_NH4', 'N_Urea']));
+  const filteredHasP = filteredFertObjects.some(f => hasAny(f, ['P2O5', 'P']));
+  const filteredHasK = filteredFertObjects.some(f => hasAny(f, ['K2O', 'K']));
+  const missingN = hasVaryingNP && !filteredHasN;
+  const missingP = (hasVaryingNP || hasVaryingPK) && !filteredHasP;
+  const missingK = hasVaryingPK && !filteredHasK;
+
+  if (filteredFertObjects.length >= 3 && !missingN && !missingP && !missingK) {
+    return filteredFertObjects;
+  }
+  // Fallback: if filtering removes too many fertilizers or key nutrients, use original list
+  return fertObjects;
+}
+
+// De-prioritize N sources that would go to Tank B (i.e. not calcium-bearing) so Tank A's
+// calcium nitrate is preferred for supplying N when the lowest target N:P ratio is small.
+function _deprioritizeNWithoutCa(fertObjects, lowestNP) {
+  return fertObjects.map(f => {
+    const pct = f.pct || {};
+    const hasN = pct.N_total > 0 || pct.N_NO3 > 0 || pct.N_NH4 > 0 || pct.N_Urea > 0;
+    const hasCa = pct.Ca > 0 || pct.CaO > 0;
+    if (hasN && !hasCa && lowestNP < 1.5) {
+      return { ...f, priority: Math.max(f.priority || 10, 50) };
+    }
+    return f;
+  });
+}
+
+// Cap the requested stock concentration so no fertilizer in any tank exceeds 80% of its
+// solubility limit.
+function _calculateEffectiveConcentration(tankAssignment, stockConcentration) {
+  let maxSafeConcentration = stockConcentration;
+  for (const tankFormula of Object.values(tankAssignment)) {
+    for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
+      if (!gramsPerFinalL || gramsPerFinalL <= 0) continue;
+      const solubility = globalThis.FertilizerCore.getSolubility(fertId);
+      // Use 80% of solubility as safe limit
+      const maxConc = (solubility * 0.8) / gramsPerFinalL;
+      if (maxConc < maxSafeConcentration) {
+        maxSafeConcentration = maxConc;
+      }
+    }
+  }
+  return Math.min(stockConcentration, Math.floor(maxSafeConcentration));
+}
+
+// Build the { tanks } structure (fertilizer amounts, solubility %, nutrients per mL) at the
+// given concentration, and check each tank's feasibility. Returns { tanks, issues, errors }.
+function _tankNamesAndDescriptions(numTanks, hasVaryingPMg) {
+  const separateMg = hasVaryingPMg && numTanks >= 4;
+  return {
+    names: {
+      A: 'Calcium Tank',
+      B: separateMg ? 'Phosphate Tank' : 'Phosphate + Mg',
+      C: 'Potassium',
+      D: separateMg ? 'Magnesium Tank' : 'Silicate/Specialty'
+    },
+    descriptions: {
+      A: 'Calcium-bearing fertilizers (isolated from phosphate/sulfate)',
+      B: separateMg ? 'Phosphate sources (separated for P:Mg control)' : 'Phosphate sources and magnesium sulfate',
+      C: 'Potassium sulfate and K-dominant fertilizers (allows independent P:K control)',
+      D: separateMg ? 'Magnesium sources (separated for P:Mg control)' : 'Silicate and specialty fertilizers'
+    }
+  };
+}
+
+// Build one tank's { fertilizers, totalSolids_gL, nutrientsPerML } at the given concentration.
+function _buildOneTank(tankId, tankFormula, tankMeta, effectiveConcentration, stockTankVolumeL) {
+  const tank = {
+    id: tankId,
+    name: tankMeta.names[tankId] || `Tank ${tankId}`,
+    description: tankMeta.descriptions[tankId] || '',
+    fertilizers: {},
+    totalSolids_gL: 0,
+    nutrientsPerML: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }
+  };
+
+  for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
+    const stock_gL = gramsPerFinalL * effectiveConcentration;
+    const solubility = globalThis.FertilizerCore.getSolubility(fertId);
+    const solubility_pct = (stock_gL / solubility) * 100;
+
+    tank.fertilizers[fertId] = {
+      grams_per_L: stock_gL,
+      grams_total: stock_gL * stockTankVolumeL,
+      solubility_pct
+    };
+    tank.totalSolids_gL += stock_gL;
+
+    // Calculate nutrients per mL
+    const fert = globalThis.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
+    if (fert) {
+      const contribPerGram = globalThis.FertilizerCore.getElementalContributionPerGram(fert);
+      for (const n of Object.keys(tank.nutrientsPerML)) {
+        tank.nutrientsPerML[n] += contribPerGram[n] * stock_gL / 1000;
+      }
+    }
+  }
+
+  return tank;
+}
+
+function _buildTanksFromAssignment(tankAssignment, effectiveConcentration, stockTankVolumeL, numTanks, hasVaryingPMg) {
+  const tanks = {};
+  const issues = [];
+  const errors = [];
+  const tankMeta = _tankNamesAndDescriptions(numTanks, hasVaryingPMg);
+
+  for (const [tankId, tankFormula] of Object.entries(tankAssignment)) {
+    if (!tankFormula || Object.keys(tankFormula).length === 0) continue;
+
+    tanks[tankId] = _buildOneTank(tankId, tankFormula, tankMeta, effectiveConcentration, stockTankVolumeL);
+
+    // Check tank feasibility (should pass now with safe concentration)
+    const tankFormulaGL = {};
+    for (const [fertId, data] of Object.entries(tanks[tankId].fertilizers)) {
+      tankFormulaGL[fertId] = data.grams_per_L;
+    }
+    const feasibility = globalThis.FertilizerCore.checkTankFeasibility(tankFormulaGL);
+    issues.push(...feasibility.issues);
+    if (!feasibility.feasible) {
+      errors.push(...feasibility.issues.filter(i => i.level === 'error'));
+    }
+  }
+
+  return { tanks, issues, errors };
+}
+
+// Solve dosing for every target against the built tanks. Returns
+// { dosingInstructions, issues, errors }.
+function _calculateDosingForTargets(targets, tanks, optimResult, defaultBaselineEC) {
+  const dosingInstructions = [];
+  const issues = [];
+  const errors = [];
+
+  const tanksForDosing = {};
+  for (const [tankId, tankData] of Object.entries(tanks)) {
+    tanksForDosing[tankId] = {};
+    for (const [fertId, fertData] of Object.entries(tankData.fertilizers)) {
+      tanksForDosing[tankId][fertId] = fertData.grams_per_L;
+    }
+  }
+
+  for (const target of targets) {
+    const targetBaselineEC = target.baselineEC ?? defaultBaselineEC;
+    const maxDosing = target.maxDosingML ?? 50;
+    const finalLiters = target.finalLiters ?? 1000;
+
+    const dosingResult = globalThis.FertilizerCore.solveDosing(tanksForDosing, {
+      ratio: target.ratio,
+      targetEC: target.targetEC,
+      baselineEC: targetBaselineEC
+    }, { maxDosing, tolerance: 0.15 });
+
+    const tankDosing = {};
+    for (const [tankId, mL_per_L] of Object.entries(dosingResult.dosing)) {
+      tankDosing[tankId] = {
+        mL_per_L,
+        mL_total: mL_per_L * finalLiters
+      };
+    }
+
+    const totalDosing_mL_per_L = Object.values(dosingResult.dosing).reduce((a, b) => a + b, 0);
+
+    // Calculate ion balance for achieved PPM
+    const ionBalance = globalThis.FertilizerCore.calculateIonBalanceCore
+      ? globalThis.FertilizerCore.calculateIonBalanceCore(optimResult.formula, 1)
+      : { totalCations: 0, totalAnions: 0, imbalance: 0 };
+
+    dosingInstructions.push({
+      targetId: target.id,
+      targetEC: target.targetEC,
+      tanks: tankDosing,
+      totalDosing_mL_per_L,
+      predicted: {
+        nutrients: dosingResult.achieved,
+        ratio: target.ratio,
+        EC: dosingResult.predictedEC,
+        ionBalance: {
+          cations: ionBalance.totalCations,
+          anions: ionBalance.totalAnions,
+          imbalance: ionBalance.imbalance
+        }
+      },
+      warnings: dosingResult.issues
+    });
+
+    issues.push(...dosingResult.issues);
+    if (!dosingResult.feasible) {
+      // This target is infeasible with current K
+      errors.push(...dosingResult.issues.filter(i => i.level === 'error'));
+    }
+  }
+
+  return { dosingInstructions, issues, errors };
+}
+
 /**
  * Internal: Try to build stock solution with K tanks
  *
@@ -2198,116 +2565,13 @@ globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
   stockTankVolumeL,
   defaultBaselineEC
 ) {
-  const allIssues = [];
-  const allErrors = [];
   const optimizeFormula = this.optimizeFormula;
 
-  // Find target with median N:P ratio for base optimization
-  // Using median (not lowest) allows the stock to span both high-N and high-P targets
-  const targetsWithNP = targets.map(t => ({
-    target: t,
-    npRatio: (t.ratio.N || 0) / (t.ratio.P || 0.001)
-  }));
-  targetsWithNP.sort((a, b) => a.npRatio - b.npRatio);
-  const medianIndex = Math.floor(targetsWithNP.length / 2);
-  const baseTarget = targetsWithNP[medianIndex].target;
-  const lowestNP = targetsWithNP[0].npRatio;
+  const { baseTarget, lowestNP } = _selectBaseTargetAndLowestNP(targets);
+  const { hasVaryingPK, hasVaryingNP, hasVaryingPMg } = _detectVaryingRatios(targets);
 
-  // Check if targets have varying P:K ratios (requires separate P and K sources)
-  let hasVaryingPK = false;
-  if (targets.length > 1) {
-    const pkRatios = targets.map(t => {
-      const p = t.ratio.P || 0.001;
-      const k = t.ratio.K || 0.001;
-      return k / p;
-    });
-    const minPK = Math.min(...pkRatios);
-    const maxPK = Math.max(...pkRatios);
-    // If P:K varies by more than 50%, we need separate tanks
-    hasVaryingPK = maxPK / minPK > 1.5;
-  }
-
-  // Check if targets have varying N:P ratios (requires N to be decoupled from P)
-  let hasVaryingNP = false;
-  if (targets.length > 1) {
-    const npRatios = targets.map(t => {
-      const n = t.ratio.N || 0.001;
-      const p = t.ratio.P || 0.001;
-      return n / p;
-    });
-    const minNP = Math.min(...npRatios);
-    const maxNP = Math.max(...npRatios);
-    // If N:P varies by more than 2x, we need to decouple N from P sources
-    hasVaryingNP = maxNP / minNP > 2;
-  }
-
-  // Check if targets have varying P:Mg ratios (requires Mg to be decoupled from P)
-  let hasVaryingPMg = false;
-  if (targets.length > 1) {
-    const pmgRatios = targets.map(t => {
-      const p = t.ratio.P || 0.001;
-      const mg = t.ratio.Mg || 0.001;
-      return p / mg;
-    });
-    const minPMg = Math.min(...pmgRatios);
-    const maxPMg = Math.max(...pmgRatios);
-    // If P:Mg varies by more than 50%, we need separate Mg control
-    hasVaryingPMg = maxPMg / minPMg > 1.5;
-  }
-
-  // For 3+ tanks, apply intelligent fertilizer filtering
-  let adjustedFertObjects = fertObjects;
-  if (numTanks >= 3) {
-    const hasSignificant = (fert, keys) => {
-      const pct = fert.pct || {};
-      return keys.some(key => (pct[key] || 0) > 5);
-    };
-    const hasAny = (fert, keys) => {
-      const pct = fert.pct || {};
-      return keys.some(key => (pct[key] || 0) > 0);
-    };
-    const hasSignificantN = fert => hasSignificant(fert, ['N_total', 'N_NO3', 'N_NH4', 'N_Urea']);
-    const hasSignificantP = fert => hasSignificant(fert, ['P2O5', 'P']);
-    const hasSignificantK = fert => hasSignificant(fert, ['K2O', 'K']);
-
-    let filteredFertObjects = fertObjects;
-
-    if (hasVaryingNP) {
-      // When N:P varies widely, prefer P sources WITHOUT N (like MKP over MAP)
-      // This allows N to be varied independently via Tank A (Ca-N) and Tank C (K-N)
-      filteredFertObjects = filteredFertObjects.filter(f => !(hasSignificantN(f) && hasSignificantP(f)));
-    }
-
-    if (hasVaryingPK) {
-      // When P:K varies, prefer P sources WITHOUT K for independent control
-      filteredFertObjects = filteredFertObjects.filter(f => !(hasSignificantP(f) && hasSignificantK(f)));
-    }
-
-    const filteredHasN = filteredFertObjects.some(f => hasAny(f, ['N_total', 'N_NO3', 'N_NH4', 'N_Urea']));
-    const filteredHasP = filteredFertObjects.some(f => hasAny(f, ['P2O5', 'P']));
-    const filteredHasK = filteredFertObjects.some(f => hasAny(f, ['K2O', 'K']));
-    const missingN = hasVaryingNP && !filteredHasN;
-    const missingP = (hasVaryingNP || hasVaryingPK) && !filteredHasP;
-    const missingK = hasVaryingPK && !filteredHasK;
-
-    if (filteredFertObjects.length >= 3 && !missingN && !missingP && !missingK) {
-      adjustedFertObjects = filteredFertObjects;
-    } else {
-      // Fallback: if filtering removes too many fertilizers or key nutrients, use original list
-      adjustedFertObjects = fertObjects;
-    }
-  }
-
-  // De-prioritize N sources that would go to Tank B (not calcium)
-  adjustedFertObjects = adjustedFertObjects.map(f => {
-    const pct = f.pct || {};
-    const hasN = pct.N_total > 0 || pct.N_NO3 > 0 || pct.N_NH4 > 0 || pct.N_Urea > 0;
-    const hasCa = pct.Ca > 0 || pct.CaO > 0;
-    if (hasN && !hasCa && lowestNP < 1.5) {
-      return { ...f, priority: Math.max(f.priority || 10, 50) };
-    }
-    return f;
-  });
+  const filteredFertObjects = _filterFertilizersForKTanks(fertObjects, numTanks, hasVaryingNP, hasVaryingPK);
+  const adjustedFertObjects = _deprioritizeNWithoutCa(filteredFertObjects, lowestNP);
 
   // Run MILP optimization
   const optimResult = await optimizeFormula.call(
@@ -2329,92 +2593,17 @@ globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
     separateMg: hasVaryingPMg
   });
 
-  // Calculate maximum safe stock concentration based on solubility limits
-  // For each fertilizer, max concentration = solubility / gramsPerFinalL
-  let maxSafeConcentration = stockConcentration;
-  for (const tankFormula of Object.values(tankAssignment)) {
-    for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
-      if (!gramsPerFinalL || gramsPerFinalL <= 0) continue;
-      const solubility = this.getSolubility(fertId);
-      // Use 80% of solubility as safe limit
-      const maxConc = (solubility * 0.8) / gramsPerFinalL;
-      if (maxConc < maxSafeConcentration) {
-        maxSafeConcentration = maxConc;
-      }
-    }
-  }
-
-  // Use the lower of requested and safe concentration
-  const effectiveConcentration = Math.min(stockConcentration, Math.floor(maxSafeConcentration));
+  const effectiveConcentration = _calculateEffectiveConcentration(tankAssignment, stockConcentration);
   if (effectiveConcentration < 10) {
     // Concentration too low to be practical
     return { success: false, errors: [{ level: 'error', code: 'CONCENTRATION_TOO_LOW', message: `Required stock concentration (${effectiveConcentration}x) is too low due to solubility limits` }] };
   }
 
-  // Scale up to stock concentration
-  const tanks = {};
-  const tankNames = {
-    A: 'Calcium Tank',
-    B: hasVaryingPMg && numTanks >= 4 ? 'Phosphate Tank' : 'Phosphate + Mg',
-    C: 'Potassium',
-    D: hasVaryingPMg && numTanks >= 4 ? 'Magnesium Tank' : 'Silicate/Specialty'
-  };
-  const tankDescriptions = {
-    A: 'Calcium-bearing fertilizers (isolated from phosphate/sulfate)',
-    B: hasVaryingPMg && numTanks >= 4
-      ? 'Phosphate sources (separated for P:Mg control)'
-      : 'Phosphate sources and magnesium sulfate',
-    C: 'Potassium sulfate and K-dominant fertilizers (allows independent P:K control)',
-    D: hasVaryingPMg && numTanks >= 4
-      ? 'Magnesium sources (separated for P:Mg control)'
-      : 'Silicate and specialty fertilizers'
-  };
-
-  for (const [tankId, tankFormula] of Object.entries(tankAssignment)) {
-    if (!tankFormula || Object.keys(tankFormula).length === 0) continue;
-
-    tanks[tankId] = {
-      id: tankId,
-      name: tankNames[tankId] || `Tank ${tankId}`,
-      description: tankDescriptions[tankId] || '',
-      fertilizers: {},
-      totalSolids_gL: 0,
-      nutrientsPerML: { N: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0 }
-    };
-
-    for (const [fertId, gramsPerFinalL] of Object.entries(tankFormula)) {
-      const stock_gL = gramsPerFinalL * effectiveConcentration;
-      const solubility = this.getSolubility(fertId);
-      const solubility_pct = (stock_gL / solubility) * 100;
-
-      tanks[tankId].fertilizers[fertId] = {
-        grams_per_L: stock_gL,
-        grams_total: stock_gL * stockTankVolumeL,
-        solubility_pct
-      };
-      tanks[tankId].totalSolids_gL += stock_gL;
-
-      // Calculate nutrients per mL
-      const fert = this.FERTILIZERS.find(f => f.id === fertId);
-      if (fert) {
-        const contribPerGram = this.getElementalContributionPerGram(fert);
-        for (const n of Object.keys(tanks[tankId].nutrientsPerML)) {
-          tanks[tankId].nutrientsPerML[n] += contribPerGram[n] * stock_gL / 1000;
-        }
-      }
-    }
-
-    // Check tank feasibility (should pass now with safe concentration)
-    const tankFormulaGL = {};
-    for (const [fertId, data] of Object.entries(tanks[tankId].fertilizers)) {
-      tankFormulaGL[fertId] = data.grams_per_L;
-    }
-    const feasibility = this.checkTankFeasibility(tankFormulaGL);
-    allIssues.push(...feasibility.issues);
-    if (!feasibility.feasible) {
-      allErrors.push(...feasibility.issues.filter(i => i.level === 'error'));
-    }
-  }
+  const { tanks, issues: tankIssues, errors: tankErrors } = _buildTanksFromAssignment(
+    tankAssignment, effectiveConcentration, stockTankVolumeL, numTanks, hasVaryingPMg
+  );
+  const allIssues = [...tankIssues];
+  const allErrors = [...tankErrors];
 
   // Add warning if concentration was reduced
   if (effectiveConcentration < stockConcentration) {
@@ -2431,68 +2620,10 @@ globalThis.FertilizerCore._tryStockSolutionWithKTanks = async function(
     return { success: false, tanks, errors: allErrors, warnings: allIssues.filter(i => i.level !== 'error') };
   }
 
-  // Step 4: Calculate dosing for each target
-  const dosingInstructions = [];
-
-  // Build tank structure for dosing calculation
-  const tanksForDosing = {};
-  for (const [tankId, tankData] of Object.entries(tanks)) {
-    tanksForDosing[tankId] = {};
-    for (const [fertId, fertData] of Object.entries(tankData.fertilizers)) {
-      tanksForDosing[tankId][fertId] = fertData.grams_per_L;
-    }
-  }
-
-  for (const target of targets) {
-    const targetBaselineEC = target.baselineEC ?? defaultBaselineEC;
-    const maxDosing = target.maxDosingML ?? 50;
-    const finalLiters = target.finalLiters ?? 1000;
-
-    const dosingResult = this.solveDosing(tanksForDosing, {
-      ratio: target.ratio,
-      targetEC: target.targetEC,
-      baselineEC: targetBaselineEC
-    }, { maxDosing, tolerance: 0.15 });
-
-    const tankDosing = {};
-    for (const [tankId, mL_per_L] of Object.entries(dosingResult.dosing)) {
-      tankDosing[tankId] = {
-        mL_per_L,
-        mL_total: mL_per_L * finalLiters
-      };
-    }
-
-    const totalDosing_mL_per_L = Object.values(dosingResult.dosing).reduce((a, b) => a + b, 0);
-
-    // Calculate ion balance for achieved PPM
-    const ionBalance = this.calculateIonBalanceCore
-      ? this.calculateIonBalanceCore(optimResult.formula, 1)
-      : { totalCations: 0, totalAnions: 0, imbalance: 0 };
-
-    dosingInstructions.push({
-      targetId: target.id,
-      targetEC: target.targetEC,
-      tanks: tankDosing,
-      totalDosing_mL_per_L,
-      predicted: {
-        nutrients: dosingResult.achieved,
-        ratio: target.ratio,
-        EC: dosingResult.predictedEC,
-        ionBalance: {
-          cations: ionBalance.totalCations,
-          anions: ionBalance.totalAnions,
-          imbalance: ionBalance.imbalance
-        }
-      },
-      warnings: dosingResult.issues
-    });
-
-    allIssues.push(...dosingResult.issues);
-    if (!dosingResult.feasible) {
-      // This target is infeasible with current K
-      allErrors.push(...dosingResult.issues.filter(i => i.level === 'error'));
-    }
-  }
+  const { dosingInstructions, issues: dosingIssues, errors: dosingErrors } =
+    _calculateDosingForTargets(targets, tanks, optimResult, defaultBaselineEC);
+  allIssues.push(...dosingIssues);
+  allErrors.push(...dosingErrors);
 
   // If any target is infeasible, this K is infeasible
   if (allErrors.length > 0) {

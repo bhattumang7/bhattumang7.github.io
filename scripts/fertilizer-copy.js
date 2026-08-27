@@ -37,7 +37,7 @@
   }
 
   function buildTankNitrogenFormsText(nutrients) {
-    if (!(nutrients.N_total > 0.1)) return '';
+    if (nutrients.N_total <= 0.1) return '';
     const nh4Pct = (nutrients.N_NH4 / nutrients.N_total * 100) || 0;
     const no3Pct = (nutrients.N_NO3 / nutrients.N_total * 100) || 0;
     let text = 'Nitrogen Forms:\n';
