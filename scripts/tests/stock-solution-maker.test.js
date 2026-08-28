@@ -152,13 +152,21 @@
   test('preloadHighsSolver: swallows a failure to load the solver instead of throwing', async () => {
     if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
     if (window.FertilizerCore.isHighsLoaded()) { console.log('  (skipped - HiGHS already cached by an earlier test)'); return; }
+    // getHighsInstance resolves the factory as `globalThis.highs || globalThis.Module` - the
+    // real highs.js build only ever sets globalThis.Module (globalThis.highs is never actually
+    // assigned anywhere), so clearing just `highs` still leaves the real Module fallback in
+    // place and this test's failure never happens. Both must be cleared to simulate "solver
+    // unavailable".
     const originalHighs = globalThis.highs;
+    const originalModule = globalThis.Module;
     globalThis.highs = undefined;
+    globalThis.Module = undefined;
     try {
       await window.FertilizerCore.preloadHighsSolver();
       assert(!window.FertilizerCore.isHighsLoaded(), 'Should not have cached a solver instance');
     } finally {
       globalThis.highs = originalHighs;
+      globalThis.Module = originalModule;
     }
   });
 
@@ -1286,6 +1294,47 @@
     assertApprox(result.ecScaling.achievedEC, 2.2, 0.1, 'Achieved EC should be close to target');
     assertApprox(result.achieved.P2O5, 794.4, 15, 'Achieved P2O5 ppm');
     assertApprox(result.achieved.K2O, 810.0, 15, 'Achieved K2O ppm');
+  });
+
+  test('optimizeFormula: a generous PeKacid cap is not forced to the max when PeKacid is the sole P source', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // Real bug report: a grower's selected fertilizers (Calcium Nitrate, Potassium Nitrate,
+    // Ammonium Nitrate, Magnesium Sulfate, Potassium Sulfate, ICL PeKacid) have no P source
+    // other than PeKacid. They set a generous 1.14 g/L "max PeKacid" cap (left over from
+    // elsewhere in the wizard) while solving an N:P:K:Ca:Mg = 4.11:1:4.52:3.6:1 ratio at a
+    // 2.0 mS/cm target EC - a ratio that only actually needs ~0.15 g/L of PeKacid.
+    // Before the fix, the MILP's fill-to-cap incentive (weighted above ratio precision)
+    // forced PeKacid all the way to 1.14 g/L regardless, flooding the mix with P and K and
+    // leaving the achieved ratio wildly off (P ~760% off target, K ~21% off) with no other
+    // fertilizer able to absorb the excess. This test exercises both the MILP objective
+    // weighting (_pekacidIsSoleSource) and the EC-scaling path
+    // (_applyTargetEcScaling/_rerunKeepingPekacidAtCapIfScalingWouldDropIt) that must also
+    // avoid holding PeKacid fixed in this case.
+    const ids = [
+      'calcium_nitrate_calcinit_typical', 'potassium_nitrate_typical', 'ammonium_nitrate_common',
+      'magnesium_sulfate_heptahydrate_common', 'potassium_sulfate_common', 'icl_pekacid_pk_acid'
+    ];
+    const fertObjects = ids.map(id => window.FertilizerCore.FERTILIZERS.find(f => f.id === id)).filter(Boolean);
+    assertEqual(fertObjects.length, 6, 'All 6 fertilizers should be found');
+
+    const targets = { N: 4.11, P: 1, K: 4.52, Ca: 3.6, Mg: 1 };
+    const result = await window.FertilizerCore.optimizeFormula(
+      targets, 10, fertObjects, 100, 'elemental', { targetEC: 2.0, pekacidMaxLimit: 1.14, useMilp: true }
+    );
+
+    assert(!result.pekacidFixed, 'Should NOT take the fixed-PeKacid-at-cap path - no other fertilizer supplies P');
+    const pekacidGPerL = (result.formula.icl_pekacid_pk_acid || 0) / 10;
+    assert(pekacidGPerL < 0.5, `PeKacid dose should stay far below its 1.14 g/L cap, got ${pekacidGPerL.toFixed(3)} g/L`);
+    assertApprox(result.ecScaling.achievedEC, 2.0, 0.1, 'Achieved EC should be close to target');
+
+    // Verify the achieved ratio actually matches the target ratio (elemental P/K), not just
+    // that the solver ran without error.
+    const achieved = result.achieved;
+    const ratioOf = (key) => achieved[key] / achieved.P;
+    assertApprox(ratioOf('N_total'), targets.N, targets.N * 0.1, 'N:P ratio should match target within 10%');
+    assertApprox(ratioOf('K'), targets.K, targets.K * 0.1, 'K:P ratio should match target within 10%');
+    assertApprox(ratioOf('Ca'), targets.Ca, targets.Ca * 0.1, 'Ca:P ratio should match target within 10%');
+    assertApprox(ratioOf('Mg'), targets.Mg, targets.Mg * 0.1, 'Mg:P ratio should match target within 10%');
   });
 
   test('optimizeFormula: PeKacid capped with absolute targets stays at cap when EC scaling would drop it', async () => {

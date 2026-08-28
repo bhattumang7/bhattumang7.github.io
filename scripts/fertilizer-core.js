@@ -579,6 +579,21 @@ function _milpPerGramContrib(fert, volume, OXIDE_CONVERSIONS, P_to_P2O5, K_to_K2
   return c;
 }
 
+// Whether PeKacid is the *sole* source, among the selected fertilizers, of a nutrient that's
+// actually targeted (P2O5 and/or K2O). When true, forcing PeKacid up to a max-quantity cap has
+// no other fertilizer to absorb the resulting excess P/K against - it makes that nutrient's ratio
+// unachievable rather than just trading off ratio precision for acidification dose. Shared by
+// solveMilpBrowser (the fill-to-cap objective weight) and _applyTargetEcScaling (whether to hold
+// PeKacid fixed while scaling everything else to a target EC).
+function _pekacidIsSoleSource(fertilizers, targets) {
+  const PEKACID_ID = 'icl_pekacid_pk_acid';
+  const hasAlternateSource = (nutrientKey, targetPpm) => {
+    if (!(targetPpm > 0)) return true; // nutrient isn't targeted, so there's nothing to protect
+    return fertilizers.some(f => f.id !== PEKACID_ID && (f.pct[nutrientKey] || 0) > 0);
+  };
+  return !hasAlternateSource('P2O5', targets.P2O5) || !hasAlternateSource('K2O', targets.K2O);
+}
+
 /**
  * MILP solver helper using highs.js + lp-model
  * @param {Object} params - {fertilizers, targets, volume, tolerance, onProgress, pekacidMaxLimit}
@@ -673,6 +688,8 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
   fertilizers.forEach(f => {
     model.addConstr([[1, x[f.id]], [-BIG_M, y[f.id]]], '<=', 0);
   });
+
+  const pekacidIsSoleSource = _pekacidIsSoleSource(fertilizers, targets);
 
   // Add PeKacid limit constraint if specified (and > 0): a max constraint AND a minimum
   // incentive via slack variable. Returns { pekacidSlack, pekacidTargetGrams }.
@@ -776,13 +793,18 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
     objective.push([priorityCoeff, y[f.id]]);
   });
 
-  // Add very strong penalty for NOT using the full PeKacid limit
-  // The pekacidSlack variable represents how much below the target we are
-  // A very high penalty forces the solver to minimize this slack (i.e., use more PeKacid)
+  // Add a penalty for NOT using the full PeKacid limit. The pekacidSlack variable represents
+  // how much below the cap we are; minimizing it nudges the solver to prefer PeKacid over other
+  // P/K sources. Normally weighted very high (10000, above ratio-precision's maxRelError at
+  // 1000) since filling a deliberate acidification dose is meant to matter more than ratio
+  // precision - other fertilizers can absorb PeKacid's excess P/K while the rest of the ratio is
+  // solved around it (see _trySolveWithFixedPekacidRatios / _rerunKeepingPekacidAtCapIfScalingWouldDropIt).
+  // But when PeKacid is the *sole* source of a targeted nutrient, there is no other fertilizer to
+  // absorb that excess, so forcing it to the cap doesn't trade off ratio precision - it makes the
+  // ratio unachievable. In that case the weight drops below maxRelError so it's only a
+  // tie-breaker among otherwise-equally-good ratio matches, not an override.
   if (pekacidSlack) {
-    // Penalty of 10000 makes filling PeKacid to limit more important than exact nutrient ratios
-    // (nutrient slack penalties are only 100)
-    objective.push([10000, pekacidSlack]);
+    objective.push([pekacidIsSoleSource ? 50 : 10000, pekacidSlack]);
   }
 
   // Reference scale for the untargeted-nutrient ceiling penalty below: the largest active
@@ -1046,6 +1068,9 @@ async function _rerunKeepingPekacidAtCapIfScalingWouldDropIt(ctx) {
 
   const enablePekacidRerun = true;
   if (!(enablePekacidRerun && pekacidMaxLimit > 0 && pekacidFromMilp > 0 && scaleFactor < 0.99)) return null;
+  // See _pekacidIsSoleSource: forcing PeKacid back to cap here has no other fertilizer to
+  // absorb the excess P/K against when it's the sole source of a targeted nutrient.
+  if (_pekacidIsSoleSource(availableFertilizers, ppmTargets)) return null;
 
   const scaledPekacid = pekacidFromMilp * scaleFactor;
   if (scaledPekacid >= pekacidMaxGrams * 0.95) return null;
@@ -1244,7 +1269,12 @@ async function _applyTargetEcScaling(ctx) {
   let scaleFactor = targetEC / originalEC.ec_mS_cm;
   const pekacidMaxGrams = ctx.pekacidMaxLimit * ctx.volume;
   const pekacidFromMilp = milpResult.formula[PEKACID_ID] || 0;
-  const shouldFixPekacid = ctx.pekacidMaxLimit > 0 && pekacidFromMilp > 0;
+  // When PeKacid is the sole source of a targeted nutrient, holding it fixed while scaling
+  // every other fertilizer to the target EC would just reintroduce the same ratio mismatch
+  // (in the opposite direction) that the MILP objective already avoids creating - so let it
+  // scale proportionally with everything else instead, like any other fertilizer.
+  const shouldFixPekacid = ctx.pekacidMaxLimit > 0 && pekacidFromMilp > 0
+    && !_pekacidIsSoleSource(ctx.availableFertilizers, ctx.ppmTargets);
   let fixedPekacidGrams = shouldFixPekacid ? Math.min(pekacidFromMilp, pekacidMaxGrams) : 0;
   let currentMilpResult = milpResult;
 
