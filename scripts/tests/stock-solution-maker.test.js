@@ -540,15 +540,15 @@
 
     // Key Ratios
     const ratios = window.FertilizerCore.calculateNutrientRatios(achieved);
-    const npk = ratios.find(r => r.name === 'N : P : K');
-    const npkOxide = ratios.find(r => r.name === 'N : P₂O₅ : K₂O');
+    const npk = ratios.find(r => r.name === 'N : P : K : Ca : Mg');
+    const npkOxide = ratios.find(r => r.name === 'N : P₂O₅ : K₂O : CaO : MgO');
     const nk = ratios.find(r => r.name === 'N : K');
     const no3nh4 = ratios.find(r => r.name === 'NO₃ : NH₄');
 
-    assert(npk, 'Should have N:P:K ratio');
-    assertEqual(npk.ratio, '4.11 : 1 : 4.52', 'N:P:K ratio string');
-    assert(npkOxide, 'Should have N:P2O5:K2O ratio');
-    assertEqual(npkOxide.ratio, '1.79 : 1 : 2.38', 'N:P2O5:K2O ratio string');
+    assert(npk, 'Should have N:P:K:Ca:Mg ratio');
+    assertEqual(npk.ratio, '4.11 : 1 : 4.52 : 3.6 : 1', 'N:P:K:Ca:Mg ratio string');
+    assert(npkOxide, 'Should have N:P2O5:K2O:CaO:MgO ratio');
+    assertEqual(npkOxide.ratio, '2.47 : 1.38 : 3.28 : 3.03 : 1', 'N:P2O5:K2O:CaO:MgO ratio string');
     assert(nk, 'Should have N:K ratio');
     assertEqual(nk.ratio, '1 : 1.1', 'N:K ratio string');
     assert(no3nh4, 'Should have NO3:NH4 ratio');
@@ -2058,8 +2058,8 @@
     // Exercises getRatio's per-value ternary alternate (v > 0 ? ... : 0) - P is present in the
     // results but explicitly 0, unlike the other two which are positive.
     const ratios = window.FertilizerCore.calculateNutrientRatios({ N_total: 100, P: 0, K: 50 });
-    const npk = ratios.find(r => r.name === 'N : P : K');
-    assertEqual(npk.ratio, '2 : 0 : 1', 'zero-valued nutrient renders as 0 in the ratio string');
+    const npk = ratios.find(r => r.name === 'N : P : K : Ca : Mg');
+    assertEqual(npk.ratio, '2 : 0 : 1 : 0 : 0', 'zero-valued nutrient renders as 0 in the ratio string');
   });
 
   test('calculateNutrientRatios: K:Ca:Mg meq/L ratio appears only when all three are present', () => {

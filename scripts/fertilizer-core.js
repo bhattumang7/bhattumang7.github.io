@@ -511,12 +511,18 @@ function _pushKCaMgMeqRatio(ratios, results) {
 globalThis.FertilizerCore.calculateNutrientRatios = function(results) {
   const ratios = [];
 
-  // N:P:K (elemental)
-  const npk = getRatio([results.N_total || 0, results.P || 0, results.K || 0], ['N', 'P', 'K']);
+  // N:P:K:Ca:Mg (elemental)
+  const npk = getRatio(
+    [results.N_total || 0, results.P || 0, results.K || 0, results.Ca || 0, results.Mg || 0],
+    ['N', 'P', 'K', 'Ca', 'Mg']
+  );
   if (npk) ratios.push(npk);
 
-  // N:P2O5:K2O (oxide form)
-  const npkOxide = getRatio([results.N_total || 0, results.P2O5 || 0, results.K2O || 0], ['N', 'P₂O₅', 'K₂O']);
+  // N:P2O5:K2O:CaO:MgO (oxide form)
+  const npkOxide = getRatio(
+    [results.N_total || 0, results.P2O5 || 0, results.K2O || 0, results.CaO || 0, results.MgO || 0],
+    ['N', 'P₂O₅', 'K₂O', 'CaO', 'MgO']
+  );
   if (npkOxide) ratios.push(npkOxide);
 
   _pushRatioIfApplicable(ratios, (results.N_total || 0) > 0 && (results.K || 0) > 0,
