@@ -588,7 +588,7 @@ function _milpPerGramContrib(fert, volume, OXIDE_CONVERSIONS, P_to_P2O5, K_to_K2
 function _pekacidIsSoleSource(fertilizers, targets) {
   const PEKACID_ID = 'icl_pekacid_pk_acid';
   const hasAlternateSource = (nutrientKey, targetPpm) => {
-    if (!(targetPpm > 0)) return true; // nutrient isn't targeted, so there's nothing to protect
+    if (targetPpm <= 0) return true; // nutrient isn't targeted, so there's nothing to protect
     return fertilizers.some(f => f.id !== PEKACID_ID && (f.pct[nutrientKey] || 0) > 0);
   };
   return !hasAlternateSource('P2O5', targets.P2O5) || !hasAlternateSource('K2O', targets.K2O);
