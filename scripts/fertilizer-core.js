@@ -752,12 +752,18 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
 
   const perGramContrib = (fert) => _milpPerGramContrib(fert, volume, OXIDE_CONVERSIONS, P_to_P2O5, K_to_K2O);
 
+  // Whether any selected fertilizer can contribute anything at all to a given nutrient -
+  // used below to keep an unachievable target (no fertilizer supplies it) from poisoning the
+  // shared maxRelError bound for every other, actually-achievable nutrient (see below).
+  const nutrientHasSource = {};
+
   nutrients.forEach(n => {
     const terms = [];
     fertilizers.forEach(f => {
       const c = perGramContrib(f);
       if (c[n] !== 0) terms.push([c[n], x[f.id]]);
     });
+    nutrientHasSource[n] = terms.length > 0;
     if (tMinus[n] > 0) {
       // Note: +1 (not -1) so slackMinus RELAXES the floor (sum + slack >= tMinus allows
       // sum to fall short of tMinus by up to slack, penalized in the objective below).
@@ -772,8 +778,13 @@ globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targe
 
     // Tie this nutrient's relative slack to the shared maxRelError (Si excluded: it keeps its
     // own much larger fixed penalty below rather than competing in the ratio-fairness minimax,
-    // since it's an absolute PPM target, not a ratio component).
-    if (n !== 'Si' && targets[n] > 0) {
+    // since it's an absolute PPM target, not a ratio component). A targeted nutrient with no
+    // fertilizer source at all is also excluded: its slack is then forced to 100% regardless
+    // of anything else (no decision variable can change it), and tying it to maxRelError would
+    // force maxRelError itself to 100% - which would then let every OTHER, actually-achievable
+    // nutrient drift just as far off target for free, since their slack only needs to stay
+    // within that now-huge shared bound to avoid any objective penalty.
+    if (n !== 'Si' && targets[n] > 0 && nutrientHasSource[n]) {
       model.addConstr([[1, slackPlus[n]], [-targets[n], maxRelError]], '<=', 0);
       model.addConstr([[1, slackMinus[n]], [-targets[n], maxRelError]], '<=', 0);
     }

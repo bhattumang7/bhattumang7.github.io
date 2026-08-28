@@ -1337,6 +1337,39 @@
     assertApprox(ratioOf('Mg'), targets.Mg, targets.Mg * 0.1, 'Mg:P ratio should match target within 10%');
   });
 
+  test('optimizeFormula: an unachievable nutrient (no fertilizer source at all) does not drag down every other nutrient\'s ratio precision', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // Real bug report: same N:P:K:Ca:Mg = 4.11:1:4.52:3.6:1 ratio as above, but with only
+    // Calcium Nitrate, Potassium Nitrate, and PeKacid selected - no Mg source at all. Mg is
+    // necessarily 100% off target (nothing can supply it), which is expected and fine. The bug
+    // was that N/K/Ca - all perfectly achievable - ALSO ended up wildly off (36.5%/28.4%/28.2%
+    // in the report) instead of matching closely.
+    // Root cause: every targeted nutrient's slack was tied to one shared `maxRelError` upper
+    // bound (see the ratio-fairness constraint in solveMilpBrowser). Since Mg's slack is stuck
+    // at 100% of its target no matter what the solver does, that forced maxRelError itself up
+    // to 1.0 - which then let N/K/Ca drift anywhere within that same now-huge bound for free,
+    // since nothing in the objective rewarded tightening them further. Exercises the
+    // `nutrientHasSource` exclusion that keeps a sourceless nutrient's forced 100% miss from
+    // being coupled into maxRelError at all.
+    const ids = ['calcium_nitrate_calcinit_typical', 'potassium_nitrate_typical', 'icl_pekacid_pk_acid'];
+    const fertObjects = ids.map(id => window.FertilizerCore.FERTILIZERS.find(f => f.id === id)).filter(Boolean);
+    assertEqual(fertObjects.length, 3, 'All 3 fertilizers should be found');
+
+    const targets = { N: 4.11, P: 1, K: 4.52, Ca: 3.6, Mg: 1 };
+    const result = await window.FertilizerCore.optimizeFormula(
+      targets, 10, fertObjects, 100, 'elemental', { targetEC: 2.0, pekacidMaxLimit: 1.14, useMilp: true }
+    );
+
+    const achieved = result.achieved;
+    assertEqual(achieved.Mg, 0, 'Mg should be unachieved - no selected fertilizer supplies it');
+
+    // The genuinely achievable nutrients should still land close to the target ratio.
+    const ratioOf = (key) => achieved[key] / achieved.P;
+    assertApprox(ratioOf('N_total'), targets.N, targets.N * 0.15, 'N:P ratio should match target within 15% despite Mg being unachievable');
+    assertApprox(ratioOf('K'), targets.K, targets.K * 0.15, 'K:P ratio should match target within 15% despite Mg being unachievable');
+    assertApprox(ratioOf('Ca'), targets.Ca, targets.Ca * 0.15, 'Ca:P ratio should match target within 15% despite Mg being unachievable');
+  });
+
   test('optimizeFormula: PeKacid capped with absolute targets stays at cap when EC scaling would drop it', async () => {
     // Real scenario: a grower dials in an absolute-PPM recipe (N:150 P2O5:250 K2O:250 Ca:150)
     // with a generous PeKacid cap for acidification, then also requests a lower target EC for
