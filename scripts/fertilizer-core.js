@@ -121,6 +121,22 @@ globalThis.FertilizerCore.preloadHighsSolver = async function(onProgress) {
 // HELPER FUNCTIONS
 // =============================================================================
 
+// Build a logger that writes to both console and the UI dev log panel, prefixing every message
+// with `[${label}]`. Queues messages if addDevLog isn't ready yet, flushing them the next time
+// any logger built by this function runs after addDevLog becomes available. Shared by
+// solveMilpBrowser and optimizeFormula, which previously each defined their own copy inline.
+globalThis.FertilizerCore._makeDevLogger = function(label) {
+  return (msg, type = 'info') => {
+    console.log(`[${label}] ${msg}`);
+    if (globalThis.addDevLog) {
+      globalThis.addDevLog(msg, type);
+    } else {
+      globalThis._pendingDevLogs = globalThis._pendingDevLogs || [];
+      globalThis._pendingDevLogs.push({ msg, type });
+    }
+  };
+};
+
 // Check if a fertilizer contains calcium
 globalThis.FertilizerCore.hasCaContent = function(fertId) {
   const fert = globalThis.FertilizerCore.FERTILIZERS.find(f => f.id === fertId);
@@ -565,19 +581,7 @@ function _milpPerGramContrib(fert, volume, OXIDE_CONVERSIONS, P_to_P2O5, K_to_K2
  * @returns {Object} {formula, achieved}
  */
 globalThis.FertilizerCore.solveMilpBrowser = async function({ fertilizers, targets, volume, tolerance = 0.01, onProgress, pekacidMaxLimit = 0, nh4PctTarget = null }) {
-  // Helper to log to both console and UI dev logs
-  // Queue logs if addDevLog isn't ready yet, flush when it becomes available
-  const devLog = (msg, type = 'info') => {
-    const logMsg = `[MILP] ${msg}`;
-    console.log(logMsg);
-    if (globalThis.addDevLog) {
-      globalThis.addDevLog(msg, type);
-    } else {
-      // Queue for later
-      globalThis._pendingDevLogs = globalThis._pendingDevLogs || [];
-      globalThis._pendingDevLogs.push({ msg, type });
-    }
-  };
+  const devLog = globalThis.FertilizerCore._makeDevLogger('MILP');
 
   // Flush any pending logs if addDevLog is now available
   if (globalThis.addDevLog && globalThis._pendingDevLogs && globalThis._pendingDevLogs.length > 0) {
@@ -862,11 +866,14 @@ function _buildPpmTargetsFromAbsoluteTargets(targetRatios, mode, P_to_P2O5, K_to
   };
 }
 
-function _buildPpmTargetsFromNormalizedRatio(targetRatios, mode, concentration, P_to_P2O5, K_to_K2O) {
-  const ratioNutrients = { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
-  const ratioValues = Object.values(ratioNutrients).filter(v => v > 0);
-  const minRatio = ratioValues.length > 0 ? Math.min(...ratioValues) : 1;
-  const normalizedRatios = {
+// Normalize N/P/K/Ca/Mg/S ratios so the smallest non-zero component equals 1. Returns null if
+// none of the ratio components is positive. Shared by _buildPpmTargetsFromNormalizedRatio and
+// _trySolveWithFixedPekacidRatios, which previously duplicated this normalization inline.
+function _normalizeRatiosToMin(targetRatios) {
+  const ratioValues = ['N', 'P', 'K', 'Ca', 'Mg', 'S'].map(k => targetRatios[k]).filter(v => v > 0);
+  if (ratioValues.length === 0) return null;
+  const minRatio = Math.min(...ratioValues);
+  return {
     N: targetRatios.N / minRatio,
     P: targetRatios.P / minRatio,
     K: targetRatios.K / minRatio,
@@ -874,6 +881,11 @@ function _buildPpmTargetsFromNormalizedRatio(targetRatios, mode, concentration, 
     Mg: targetRatios.Mg / minRatio,
     S: targetRatios.S / minRatio
   };
+}
+
+function _buildPpmTargetsFromNormalizedRatio(targetRatios, mode, concentration, P_to_P2O5, K_to_K2O) {
+  const normalizedRatios = _normalizeRatiosToMin(targetRatios)
+    || { N: targetRatios.N, P: targetRatios.P, K: targetRatios.K, Ca: targetRatios.Ca, Mg: targetRatios.Mg, S: targetRatios.S };
   const basePPMForMinRatio = concentration;
 
   return {
@@ -933,26 +945,10 @@ async function _trySolveWithFixedPekacidRatios(ctx) {
   const pekacidP_ppm = pekacidP2O5_ppm * OXIDE_CONVERSIONS.P2O5_to_P;
   const pekacidK_ppm = pekacidK2O_ppm * OXIDE_CONVERSIONS.K2O_to_K;
 
-  const ratioValues = [
-    targetRatios.N,
-    targetRatios.P,
-    targetRatios.K,
-    targetRatios.Ca,
-    targetRatios.Mg,
-    targetRatios.S
-  ].filter(v => v > 0);
-  if (ratioValues.length === 0) {
+  const normalizedRatios = _normalizeRatiosToMin(targetRatios);
+  if (!normalizedRatios) {
     return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
   }
-  const minRatio = Math.min(...ratioValues);
-  const normalizedRatios = {
-    N: targetRatios.N / minRatio,
-    P: targetRatios.P / minRatio,
-    K: targetRatios.K / minRatio,
-    Ca: targetRatios.Ca / minRatio,
-    Mg: targetRatios.Mg / minRatio,
-    S: targetRatios.S / minRatio
-  };
 
   const fertilizersWithoutPekacid = availableFertilizers.filter(f => f.id !== PEKACID_ID);
   const targetSi = targetRatios.Si || 0;
@@ -1304,17 +1300,7 @@ globalThis.FertilizerCore.optimizeFormula = async function(targetRatios, volume,
   const solveMilpBrowser = globalThis.FertilizerCore.solveMilpBrowser;
   const onProgress = options.onProgress;
 
-  // Helper to log to both console and UI dev logs
-  const devLog = (msg, type = 'info') => {
-    const logMsg = `[OptimizeFormula] ${msg}`;
-    console.log(logMsg);
-    if (globalThis.addDevLog) {
-      globalThis.addDevLog(msg, type);
-    } else {
-      globalThis._pendingDevLogs = globalThis._pendingDevLogs || [];
-      globalThis._pendingDevLogs.push({ msg, type });
-    }
-  };
+  const devLog = globalThis.FertilizerCore._makeDevLogger('OptimizeFormula');
 
   // MILP is required - no fallback
   if (typeof solveMilpBrowser !== 'function') {
@@ -1464,14 +1450,34 @@ const ACHIEVED_PPM_HANDLERS = {
   K2O: (achieved, ppm, ctx) => { achieved.K2O += ppm; achieved.K += ppm * ctx.OXIDE_CONVERSIONS.K2O_to_K; },
   K: (achieved, ppm, ctx) => { achieved.K += ppm; achieved.K2O += ppm * ctx.K_to_K2O; },
   Ca: (achieved, ppm) => { achieved.Ca += ppm; },
-  CaO: (achieved, ppm, ctx) => { achieved.Ca += ppm * ctx.OXIDE_CONVERSIONS.CaO_to_Ca; },
+  CaO: (achieved, ppm) => { achieved.CaO += ppm; },
   Mg: (achieved, ppm) => { achieved.Mg += ppm; },
-  MgO: (achieved, ppm, ctx) => { achieved.Mg += ppm * ctx.OXIDE_CONVERSIONS.MgO_to_Mg; },
+  MgO: (achieved, ppm) => { achieved.MgO += ppm; },
   S: (achieved, ppm) => { achieved.S += ppm; },
   SO3: (achieved, ppm, ctx) => { achieved.S += ppm * ctx.OXIDE_CONVERSIONS.SO3_to_S; },
   SiO2: (achieved, ppm) => { achieved.Si += ppm * 0.46744; },
   SiOH4: (achieved, ppm) => { achieved.Si += ppm * 0.2922; },
   Si: (achieved, ppm) => { achieved.Si += ppm; }
+};
+
+/**
+ * Cross-populates Ca/CaO and Mg/MgO on a nutrient-ppm object so both the elemental and oxide
+ * forms are always available, regardless of which form the source fertilizers declared -
+ * mirroring how P/P2O5 and K/K2O are already kept in sync. Mutates and returns `nutrients`.
+ */
+globalThis.FertilizerCore.syncCalciumMagnesiumOxideForms = function(nutrients) {
+  const OXIDE_CONVERSIONS = this.OXIDE_CONVERSIONS;
+  const rawCa = nutrients.Ca || 0;
+  const rawCaO = nutrients.CaO || 0;
+  const rawMg = nutrients.Mg || 0;
+  const rawMgO = nutrients.MgO || 0;
+
+  nutrients.Ca = rawCa + rawCaO * OXIDE_CONVERSIONS.CaO_to_Ca;
+  nutrients.CaO = rawCaO + rawCa / OXIDE_CONVERSIONS.CaO_to_Ca;
+  nutrients.Mg = rawMg + rawMgO * OXIDE_CONVERSIONS.MgO_to_Mg;
+  nutrients.MgO = rawMgO + rawMg / OXIDE_CONVERSIONS.MgO_to_Mg;
+
+  return nutrients;
 };
 
 globalThis.FertilizerCore.accumulateAchievedPPM = function(fertilizerList, formula, volume) {
@@ -1483,7 +1489,7 @@ globalThis.FertilizerCore.accumulateAchievedPPM = function(fertilizerList, formu
     hasNForms: false
   };
 
-  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, Mg: 0, S: 0, Si: 0 };
+  const achieved = { N_total: 0, N_NO3: 0, N_NH4: 0, P2O5: 0, K2O: 0, P: 0, K: 0, Ca: 0, CaO: 0, Mg: 0, MgO: 0, S: 0, Si: 0 };
   fertilizerList.forEach(fert => {
     const grams = formula[fert.id] || 0;
     if (!grams) return;
@@ -1496,7 +1502,7 @@ globalThis.FertilizerCore.accumulateAchievedPPM = function(fertilizerList, formu
       }
     });
   });
-  return achieved;
+  return this.syncCalciumMagnesiumOxideForms(achieved);
 };
 
 /**

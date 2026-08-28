@@ -568,6 +568,89 @@
   });
 
   // ==========================================================================
+  // Ca/CaO and Mg/MgO cross-conversion Tests (syncCalciumMagnesiumOxideForms,
+  // and its use inside accumulateAchievedPPM)
+  // ==========================================================================
+
+  test('syncCalciumMagnesiumOxideForms: derives CaO/MgO from elemental-only input', () => {
+    const OX = window.FertilizerCore.OXIDE_CONVERSIONS;
+    const result = window.FertilizerCore.syncCalciumMagnesiumOxideForms({ Ca: 100, Mg: 50 });
+    assertEqual(result.Ca, 100, 'Ca unchanged when no CaO present');
+    assertEqual(result.Mg, 50, 'Mg unchanged when no MgO present');
+    assertApprox(result.CaO, 100 / OX.CaO_to_Ca, 0.01, 'CaO derived from elemental Ca');
+    assertApprox(result.MgO, 50 / OX.MgO_to_Mg, 0.01, 'MgO derived from elemental Mg');
+  });
+
+  test('syncCalciumMagnesiumOxideForms: derives elemental Ca/Mg from oxide-only input', () => {
+    const OX = window.FertilizerCore.OXIDE_CONVERSIONS;
+    const result = window.FertilizerCore.syncCalciumMagnesiumOxideForms({ CaO: 80, MgO: 110 });
+    assertEqual(result.CaO, 80, 'CaO unchanged when no elemental Ca present');
+    assertEqual(result.MgO, 110, 'MgO unchanged when no elemental Mg present');
+    assertApprox(result.Ca, 80 * OX.CaO_to_Ca, 0.01, 'Ca derived from CaO');
+    assertApprox(result.Mg, 110 * OX.MgO_to_Mg, 0.01, 'Mg derived from MgO');
+  });
+
+  test('syncCalciumMagnesiumOxideForms: sums both directions when elemental and oxide are both already present', () => {
+    const OX = window.FertilizerCore.OXIDE_CONVERSIONS;
+    const result = window.FertilizerCore.syncCalciumMagnesiumOxideForms({ Ca: 100, CaO: 80, Mg: 50, MgO: 110 });
+    assertApprox(result.Ca, 100 + 80 * OX.CaO_to_Ca, 0.01, 'Ca = direct Ca + CaO-derived Ca');
+    assertApprox(result.CaO, 80 + 100 / OX.CaO_to_Ca, 0.01, 'CaO = direct CaO + Ca-derived CaO');
+    assertApprox(result.Mg, 50 + 110 * OX.MgO_to_Mg, 0.01, 'Mg = direct Mg + MgO-derived Mg');
+    assertApprox(result.MgO, 110 + 50 / OX.MgO_to_Mg, 0.01, 'MgO = direct MgO + Mg-derived MgO');
+  });
+
+  test('syncCalciumMagnesiumOxideForms: leaves an all-zero/empty object at zero', () => {
+    const result = window.FertilizerCore.syncCalciumMagnesiumOxideForms({});
+    assertEqual(result.Ca, 0, 'Ca defaults to 0');
+    assertEqual(result.CaO, 0, 'CaO defaults to 0');
+    assertEqual(result.Mg, 0, 'Mg defaults to 0');
+    assertEqual(result.MgO, 0, 'MgO defaults to 0');
+  });
+
+  test('accumulateAchievedPPM: populates CaO/MgO for a fertilizer that only declares elemental Ca/Mg', () => {
+    // Mirrors how P/P2O5 and K/K2O are already kept in sync, so oxide-mode displays
+    // (Results grid, formula-builder/reverse comparisons, two-tank badges) always have a
+    // CaO/MgO value even when every selected fertilizer declares only elemental Ca/Mg.
+    const OX = window.FertilizerCore.OXIDE_CONVERSIONS;
+    const achieved = window.FertilizerCore.accumulateAchievedPPM(
+      [{ id: 'custom_ca_mg_elemental', pct: { Ca: 10, Mg: 5 } }],
+      { custom_ca_mg_elemental: 10 },
+      1
+    );
+    assertApprox(achieved.Ca, 1000, 0.01, 'Ca ppm (direct)');
+    assertApprox(achieved.Mg, 500, 0.01, 'Mg ppm (direct)');
+    assertApprox(achieved.CaO, 1000 / OX.CaO_to_Ca, 0.1, 'CaO derived from elemental Ca');
+    assertApprox(achieved.MgO, 500 / OX.MgO_to_Mg, 0.1, 'MgO derived from elemental Mg');
+  });
+
+  test('accumulateAchievedPPM: populates Ca/Mg for a fertilizer that only declares oxide CaO/MgO', () => {
+    const OX = window.FertilizerCore.OXIDE_CONVERSIONS;
+    const achieved = window.FertilizerCore.accumulateAchievedPPM(
+      [{ id: 'custom_ca_mg_oxide', pct: { CaO: 8, MgO: 11 } }],
+      { custom_ca_mg_oxide: 10 },
+      1
+    );
+    assertApprox(achieved.CaO, 800, 0.01, 'CaO ppm (direct)');
+    assertApprox(achieved.MgO, 1100, 0.01, 'MgO ppm (direct)');
+    assertApprox(achieved.Ca, 800 * OX.CaO_to_Ca, 0.1, 'Ca derived from CaO');
+    assertApprox(achieved.Mg, 1100 * OX.MgO_to_Mg, 0.1, 'Mg derived from MgO');
+  });
+
+  test('accumulateAchievedPPM: sums Ca/CaO contributions across fertilizers declaring different forms', () => {
+    const OX = window.FertilizerCore.OXIDE_CONVERSIONS;
+    const achieved = window.FertilizerCore.accumulateAchievedPPM(
+      [
+        { id: 'custom_ca_elemental', pct: { Ca: 10 } },
+        { id: 'custom_ca_oxide', pct: { CaO: 8 } }
+      ],
+      { custom_ca_elemental: 10, custom_ca_oxide: 10 },
+      1
+    );
+    assertApprox(achieved.Ca, 1000 + 800 * OX.CaO_to_Ca, 0.1, 'Ca = direct Ca + CaO-derived Ca');
+    assertApprox(achieved.CaO, 800 + 1000 / OX.CaO_to_Ca, 0.1, 'CaO = direct CaO + Ca-derived CaO');
+  });
+
+  // ==========================================================================
   // solveDosing Tests
   // ==========================================================================
 

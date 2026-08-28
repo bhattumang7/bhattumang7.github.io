@@ -4694,7 +4694,7 @@ function calculateTankNutrients(fertilizers, volume) {
   const nutrients = {
     N_total: 0, N_NO3: 0, N_NH4: 0, N_Urea: 0,
     P2O5: 0, P: 0, K2O: 0, K: 0,
-    Ca: 0, Mg: 0, S: 0
+    Ca: 0, CaO: 0, Mg: 0, MgO: 0, S: 0
   };
 
   Object.entries(fertilizers).forEach(([fertId, grams]) => {
@@ -4718,6 +4718,8 @@ function calculateTankNutrients(fertilizers, volume) {
   if (nutrients.K2O > 0 && nutrients.K === 0) {
     nutrients.K = nutrients.K2O * OXIDE_CONVERSIONS.K2O_to_K;
   }
+
+  globalThis.FertilizerCore.syncCalciumMagnesiumOxideForms(nutrients);
 
   return nutrients;
 }
@@ -5334,8 +5336,8 @@ const TankPanel = {
         <span v-if="tank.nutrients && tank.nutrients.N_total > 0.1" class="tank-nutrient-badge"><strong>N:</strong> {{ i18n.formatNumber(tank.nutrients.N_total.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
         <span v-if="tank.nutrients && (mode === 'elemental' ? tank.nutrients.P : tank.nutrients.P2O5) > 0.1" class="tank-nutrient-badge"><strong>{{ nutrientLabels.P }}:</strong> {{ i18n.formatNumber((mode === 'elemental' ? tank.nutrients.P : tank.nutrients.P2O5).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
         <span v-if="tank.nutrients && (mode === 'elemental' ? tank.nutrients.K : tank.nutrients.K2O) > 0.1" class="tank-nutrient-badge"><strong>{{ nutrientLabels.K }}:</strong> {{ i18n.formatNumber((mode === 'elemental' ? tank.nutrients.K : tank.nutrients.K2O).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
-        <span v-if="tank.nutrients && tank.nutrients.Ca > 0.1" class="tank-nutrient-badge"><strong>Ca:</strong> {{ i18n.formatNumber(tank.nutrients.Ca.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
-        <span v-if="tank.nutrients && tank.nutrients.Mg > 0.1" class="tank-nutrient-badge"><strong>Mg:</strong> {{ i18n.formatNumber(tank.nutrients.Mg.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+        <span v-if="tank.nutrients && (mode === 'elemental' ? tank.nutrients.Ca : tank.nutrients.CaO) > 0.1" class="tank-nutrient-badge"><strong>{{ nutrientLabels.Ca }}:</strong> {{ i18n.formatNumber((mode === 'elemental' ? tank.nutrients.Ca : tank.nutrients.CaO).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+        <span v-if="tank.nutrients && (mode === 'elemental' ? tank.nutrients.Mg : tank.nutrients.MgO) > 0.1" class="tank-nutrient-badge"><strong>{{ nutrientLabels.Mg }}:</strong> {{ i18n.formatNumber((mode === 'elemental' ? tank.nutrients.Mg : tank.nutrients.MgO).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
         <span v-if="tank.nutrients && tank.nutrients.S > 0.1" class="tank-nutrient-badge"><strong>S:</strong> {{ i18n.formatNumber(tank.nutrients.S.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
         <span v-if="tank.ionBalance" class="tank-status-badge" :style="{ background: tank.ionBalance.statusColor + '20', border: '1px solid ' + tank.ionBalance.statusColor }">
           <strong :style="{ color: tank.ionBalance.statusColor }">{{ i18n.t('ionLabel') }} {{ i18n.formatNumber(tank.ionBalance.imbalance.toFixed(1)) }}% {{ tank.ionBalance.statusText }}</strong>
@@ -5444,8 +5446,8 @@ const CombinedSolutionNote = {
         <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.N }}:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.N_total.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
         <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.P }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.combinedNutrients.P : twoTankDisplayData.combinedNutrients.P2O5).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
         <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.K }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.combinedNutrients.K : twoTankDisplayData.combinedNutrients.K2O).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
-        <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Ca:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.Ca.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
-        <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>Mg:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.Mg.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+        <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.Ca }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.combinedNutrients.Ca : twoTankDisplayData.combinedNutrients.CaO).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
+        <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>{{ twoTankDisplayData.nutrientLabels.Mg }}:</strong> {{ i18n.formatNumber((twoTankDisplayData.mode === 'elemental' ? twoTankDisplayData.combinedNutrients.Mg : twoTankDisplayData.combinedNutrients.MgO).toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
         <span style="padding: 5px 10px; background: #fff; border-radius: 4px;"><strong>S:</strong> {{ i18n.formatNumber(twoTankDisplayData.combinedNutrients.S.toFixed(1)) }} {{ i18n.t('ppmUnit') }}</span>
       </div>
 
@@ -6457,15 +6459,8 @@ const FertilizerApp = {
           finalResults.K = (finalResults.K || 0) + (ppmResults.K2O * OXIDE_CONVERSIONS.K2O_to_K);
         }
 
-        // Ca from CaO
-        if (ppmResults.CaO) {
-          finalResults.Ca = (finalResults.Ca || 0) + (ppmResults.CaO * OXIDE_CONVERSIONS.CaO_to_Ca);
-        }
-
-        // Mg from MgO
-        if (ppmResults.MgO) {
-          finalResults.Mg = (finalResults.Mg || 0) + (ppmResults.MgO * OXIDE_CONVERSIONS.MgO_to_Mg);
-        }
+        // Keep Ca/CaO and Mg/MgO in sync so both forms are always available, mirroring P/P2O5 and K/K2O
+        globalThis.FertilizerCore.syncCalciumMagnesiumOxideForms(finalResults);
 
         if (progressBar.isCancelled()) return;
 
@@ -6932,8 +6927,8 @@ const FertilizerApp = {
             { key: 'N', label: i18n.t('nitrogen'), ratioKey: 'N', ppmKey: 'N_total', targetKey: 'N' },
             { key: 'P2O5', label: i18n.t('phosphorusOxide'), ratioKey: 'P2O5', ppmKey: 'P2O5', targetKey: 'P' },
             { key: 'K2O', label: i18n.t('potassiumOxide'), ratioKey: 'K2O', ppmKey: 'K2O', targetKey: 'K' },
-            { key: 'Ca', label: i18n.t('calcium'), ratioKey: 'Ca', ppmKey: 'Ca', targetKey: 'Ca' },
-            { key: 'Mg', label: i18n.t('magnesium'), ratioKey: 'Mg', ppmKey: 'Mg', targetKey: 'Mg' },
+            { key: 'CaO', label: i18n.t('calciumOxide'), ratioKey: 'Ca', ppmKey: 'CaO', targetKey: 'Ca' },
+            { key: 'MgO', label: i18n.t('magnesiumOxide'), ratioKey: 'Mg', ppmKey: 'MgO', targetKey: 'Mg' },
             { key: 'S', label: i18n.t('sulfur'), ratioKey: 'S', ppmKey: 'S', targetKey: 'S' },
             { key: 'Si', label: i18n.t('silicon'), isPPM: true }
           ];
@@ -7126,8 +7121,8 @@ const FertilizerApp = {
             { key: 'N_total', label: i18n.t('nitrogen'), targetKey: 'N' },
             { key: 'P2O5', label: i18n.t('phosphorusOxide'), targetKey: 'P' },
             { key: 'K2O', label: i18n.t('potassiumOxide'), targetKey: 'K' },
-            { key: 'Ca', label: i18n.t('calcium'), targetKey: 'Ca' },
-            { key: 'Mg', label: i18n.t('magnesium'), targetKey: 'Mg' },
+            { key: 'CaO', label: i18n.t('calciumOxide'), targetKey: 'Ca' },
+            { key: 'MgO', label: i18n.t('magnesiumOxide'), targetKey: 'Mg' },
             { key: 'S', label: i18n.t('sulfur'), targetKey: 'S' },
             { key: 'Si', label: i18n.t('silicon'), targetKey: 'Si' }
           ];
@@ -7269,8 +7264,10 @@ const FertilizerApp = {
         { key: 'P2O5', label: i18n.t('phosphorusOxide') },
         { key: 'K', label: i18n.t('potassiumElemental') },
         { key: 'K2O', label: i18n.t('potassiumOxide') },
-        { key: 'Ca', label: i18n.t('calcium') },
-        { key: 'Mg', label: i18n.t('magnesium') },
+        { key: 'Ca', label: i18n.t('calciumElemental') },
+        { key: 'CaO', label: i18n.t('calciumOxide') },
+        { key: 'Mg', label: i18n.t('magnesiumElemental') },
+        { key: 'MgO', label: i18n.t('magnesiumOxide') },
         { key: 'S', label: i18n.t('sulfur') },
         { key: 'Fe', label: 'Iron (Fe)' },
         { key: 'B', label: 'Boron (B)' },
@@ -7349,7 +7346,9 @@ const FertilizerApp = {
         K2O: tankA.nutrients.K2O + tankB.nutrients.K2O,
         K: tankA.nutrients.K + tankB.nutrients.K,
         Ca: tankA.nutrients.Ca + tankB.nutrients.Ca,
+        CaO: tankA.nutrients.CaO + tankB.nutrients.CaO,
         Mg: tankA.nutrients.Mg + tankB.nutrients.Mg,
+        MgO: tankA.nutrients.MgO + tankB.nutrients.MgO,
         S: tankA.nutrients.S + tankB.nutrients.S,
         N_NH4: tankA.nutrients.N_NH4 + tankB.nutrients.N_NH4,
         N_NO3: tankA.nutrients.N_NO3 + tankB.nutrients.N_NO3
@@ -7365,7 +7364,7 @@ const FertilizerApp = {
       // Set nutrient labels based on mode
       twoTankDisplayData.nutrientLabels = mode === 'elemental'
         ? { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S' }
-        : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'Ca', Mg: 'Mg', S: 'S' };
+        : { N: 'N', P: 'P₂O₅', K: 'K₂O', Ca: 'CaO', Mg: 'MgO', S: 'S' };
 
       // Process tank data
       processTankData(twoTankDisplayData.tankA, tankA, volume, mode, targets, combinedNutrients, 'A');
@@ -7513,16 +7512,20 @@ const FertilizerApp = {
       const nutrients = sourceTank.nutrients;
       const pVal = mode === 'elemental' ? nutrients.P : nutrients.P2O5;
       const kVal = mode === 'elemental' ? nutrients.K : nutrients.K2O;
+      const caVal = mode === 'elemental' ? nutrients.Ca : nutrients.CaO;
+      const mgVal = mode === 'elemental' ? nutrients.Mg : nutrients.MgO;
       const pLabel = mode === 'elemental' ? i18n.t('phosphorusElemental') : i18n.t('phosphorusOxide');
       const kLabel = mode === 'elemental' ? i18n.t('potassiumElemental') : i18n.t('potassiumOxide');
+      const caLabel = mode === 'elemental' ? i18n.t('calciumElemental') : i18n.t('calciumOxide');
+      const mgLabel = mode === 'elemental' ? i18n.t('magnesiumElemental') : i18n.t('magnesiumOxide');
 
       // Build PPM data for table
       displayTank.ppmData = [
         { label: i18n.t('nitrogen'), value: nutrients.N_total },
         { label: pLabel, value: pVal },
         { label: kLabel, value: kVal },
-        { label: i18n.t('calcium'), value: nutrients.Ca },
-        { label: i18n.t('magnesium'), value: nutrients.Mg },
+        { label: caLabel, value: caVal },
+        { label: mgLabel, value: mgVal },
         { label: i18n.t('sulfur'), value: nutrients.S }
       ].filter(item => item.value > 0.01);
 
@@ -8642,12 +8645,7 @@ const FertilizerApp = {
       if (results.K2O) {
         results.K = (results.K || 0) + (results.K2O * OXIDE_CONVERSIONS.K2O_to_K);
       }
-      if (results.CaO) {
-        results.Ca = (results.Ca || 0) + (results.CaO * OXIDE_CONVERSIONS.CaO_to_Ca);
-      }
-      if (results.MgO) {
-        results.Mg = (results.Mg || 0) + (results.MgO * OXIDE_CONVERSIONS.MgO_to_Mg);
-      }
+      globalThis.FertilizerCore.syncCalciumMagnesiumOxideForms(results);
 
       return results;
     }
