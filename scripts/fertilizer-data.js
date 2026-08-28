@@ -494,6 +494,19 @@
       ],
       pct: { N_total: 12, N_NO3: 12, P2O5: 5, K2O: 27, CaO: 8, Fe: 0.1, Mn: 0.1, B: 0.1, Zn: 0.1 },
       solubility_gL: 200
+    },
+    {
+      id: "yaramila_complex_12_11_18",
+      name: "YaraMila Complex 12-11-18 (+2.65 MgO, +19.9 SO3, +Zn, +B)",
+      aliases: [
+        "YaraMila Complex",
+        "Yara Mila Complex",
+        "YaraMila 12-11-18",
+        "12-11-18+2.65MgO+19.9SO3",
+        "12:11:18"
+      ],
+      pct: { N_total: 12, N_NO3: 5, N_NH4: 7, P2O5: 11, K2O: 18, Mg: 1.6, S: 7.97, Zn: 0.02, B: 0.015 },
+      solubility_gL: 200  // Granular compound NPK, soil/blended application - not a fully water-soluble grade
     }
   ];
 
@@ -1062,7 +1075,7 @@
     'zinc_sulfate_mono', 'borax', 'copper_sulfate', 'sodium_molybdate', 'ammonium_molybdate',
     'potassium_silicate_liquid_typical', 'rexolin_cxk', 'utkarsh_double_combi', 'haifa_17_10_27',
     'wsf_13_40_13', 'wsf_12_6_22_12cao', 'disodium_octaborate_tetrahydrate_20b',
-    'icl_pekacid_pk_acid', 'npk_19_19_19', 'nutrivant_fruit_12_5_27'
+    'icl_pekacid_pk_acid', 'npk_19_19_19', 'nutrivant_fruit_12_5_27', 'yaramila_complex_12_11_18'
   ];
 
 })();
