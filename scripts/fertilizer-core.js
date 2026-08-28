@@ -1067,6 +1067,101 @@ async function _trySolveWithFixedPekacidRatios(ctx) {
   };
 }
 
+// When PeKacid is the *sole* source of a targeted nutrient, _trySolveWithFixedPekacidRatios'
+// approach (pin PeKacid's grams from the baseline solve, subtract its contribution, solve the
+// remainder without it) doesn't apply - there's no "remainder" fertilizer to solve for that
+// nutrient. But the naive fallback (solve once at an arbitrary baseline concentration, then
+// uniformly rescale everything to the target EC) has its own bug here: the baseline solve's ppm
+// targets are NOT the real final targets - they're built from an arbitrary internal
+// "concentration=100" reference that only matches the final target EC by coincidence - yet the
+// PeKacid cap is enforced as an absolute gram ceiling (pekacidMaxLimit * volume) at THAT
+// mismatched baseline scale. When the baseline overshoots the real target EC (a common case),
+// the cap ends up far more restrictive at the baseline's inflated scale than it actually is at
+// the real final concentration, forcing a badly-off ratio in the baseline solve that then just
+// carries through the (ratio-preserving) uniform rescale unchanged.
+//
+// Fix: solve directly in real, target-EC-equivalent absolute ppm at every step, the same way
+// _trySolveWithFixedPekacidRatios does - but include PeKacid as a normal, capped decision
+// variable in each solve (instead of pinning its grams and excluding it) so the solver picks
+// however much of it the ratio actually needs, up to the cap, at a scale that's actually
+// comparable to that cap.
+async function _trySolveWithScaledPekacidCap(ctx) {
+  const {
+    availableFertilizers, PEKACID_ID, volume, targetRatios, milpResult, ppmTargets, concentration,
+    solveMilpBrowser, onProgress, estimateECFromPPM, targetEC, mode, P_to_P2O5, K_to_K2O,
+    originalEC, pekacidMaxLimit
+  } = ctx;
+
+  const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
+  if (!pekacidFert) return null;
+
+  const normalizedRatios = _normalizeRatiosToMin(targetRatios);
+  if (!normalizedRatios) {
+    return { formula: milpResult.formula, achieved: milpResult.achieved, targetRatios, targetPPM: ppmTargets };
+  }
+
+  const targetSi = targetRatios.Si || 0;
+
+  const solveForScale = async (scale) => {
+    const targets = {
+      N_total: normalizedRatios.N * scale,
+      P2O5: mode === 'elemental' ? normalizedRatios.P * scale * P_to_P2O5 : normalizedRatios.P * scale,
+      K2O: mode === 'elemental' ? normalizedRatios.K * scale * K_to_K2O : normalizedRatios.K * scale,
+      Ca: normalizedRatios.Ca * scale,
+      Mg: normalizedRatios.Mg * scale,
+      S: normalizedRatios.S * scale,
+      Si: targetSi
+    };
+
+    const result = await solveMilpBrowser({
+      fertilizers: availableFertilizers, targets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit
+    });
+
+    const ecData = estimateECFromPPM(result.achieved);
+    return { result, ec: ecData.ec_mS_cm };
+  };
+
+  let lowScale = 1;
+  let highScale = Math.max(concentration, 10);
+  let lowData = await solveForScale(lowScale);
+  let highData = await solveForScale(highScale);
+
+  for (let i = 0; i < 6 && highData.ec < targetEC; i++) {
+    lowScale = highScale;
+    lowData = highData;
+    highScale *= 2;
+    highData = await solveForScale(highScale);
+  }
+
+  let best = lowData;
+  if (Math.abs(highData.ec - targetEC) < Math.abs(best.ec - targetEC)) {
+    best = highData;
+  }
+
+  for (let i = 0; i < 8 && lowData.ec < targetEC && highData.ec > targetEC; i++) {
+    const midScale = (lowScale + highScale) / 2;
+    const midData = await solveForScale(midScale);
+    if (Math.abs(midData.ec - targetEC) < Math.abs(best.ec - targetEC)) {
+      best = midData;
+    }
+    if (midData.ec >= targetEC) {
+      highScale = midScale;
+      highData = midData;
+    } else {
+      lowScale = midScale;
+      lowData = midData;
+    }
+  }
+
+  return {
+    formula: best.result.formula,
+    achieved: best.result.achieved,
+    targetRatios,
+    targetPPM: ppmTargets,
+    ecScaling: { scaleFactor: 1, originalEC: originalEC.ec_mS_cm, targetEC, achievedEC: best.ec }
+  };
+}
+
 // If EC scaling would reduce PeKacid below its cap, fix it at cap and re-run the MILP for the
 // other fertilizers so acidification stays maximized. Returns updated
 // { milpResult, originalEC, scaleFactor, fixedPekacidGrams }, or null if it doesn't apply.
@@ -1275,6 +1370,17 @@ async function _applyTargetEcScaling(ctx) {
   }
 
   const PEKACID_ID = 'icl_pekacid_pk_acid';
+  const pekacidIsSoleSource = _pekacidIsSoleSource(ctx.availableFertilizers, ctx.ppmTargets);
+
+  // When PeKacid is the sole source of a targeted nutrient, solve for it directly at the real
+  // target-EC scale (see _trySolveWithScaledPekacidCap) instead of the baseline-then-uniform-
+  // rescale approach below, which compares the cap against an internal baseline concentration
+  // that generally doesn't match the real final scale.
+  if (ctx.pekacidMaxLimit > 0 && pekacidIsSoleSource && !ctx.useAbsoluteTargets) {
+    const scaledCapResult = await _trySolveWithScaledPekacidCap({ ...ctx, PEKACID_ID, milpResult, originalEC });
+    if (scaledCapResult) return scaledCapResult;
+  }
+
   // Strategy: Keep PeKacid at cap whenever possible to maximize acidification
   // If EC scaling would reduce PeKacid below cap, re-run MILP with PeKacid fixed at cap
   let scaleFactor = targetEC / originalEC.ec_mS_cm;
@@ -1283,9 +1389,9 @@ async function _applyTargetEcScaling(ctx) {
   // When PeKacid is the sole source of a targeted nutrient, holding it fixed while scaling
   // every other fertilizer to the target EC would just reintroduce the same ratio mismatch
   // (in the opposite direction) that the MILP objective already avoids creating - so let it
-  // scale proportionally with everything else instead, like any other fertilizer.
-  const shouldFixPekacid = ctx.pekacidMaxLimit > 0 && pekacidFromMilp > 0
-    && !_pekacidIsSoleSource(ctx.availableFertilizers, ctx.ppmTargets);
+  // scale proportionally with everything else instead, like any other fertilizer. (In practice
+  // the branch above already handles this case and returns before reaching here.)
+  const shouldFixPekacid = ctx.pekacidMaxLimit > 0 && pekacidFromMilp > 0 && !pekacidIsSoleSource;
   let fixedPekacidGrams = shouldFixPekacid ? Math.min(pekacidFromMilp, pekacidMaxGrams) : 0;
   let currentMilpResult = milpResult;
 

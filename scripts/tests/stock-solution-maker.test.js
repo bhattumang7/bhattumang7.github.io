@@ -1370,6 +1370,50 @@
     assertApprox(ratioOf('Ca'), targets.Ca, targets.Ca * 0.15, 'Ca:P ratio should match target within 15% despite Mg being unachievable');
   });
 
+  test('optimizeFormula: a PeKacid cap genuinely below the sole-source need is a small deviation, not a wild one', async () => {
+    if (!milpAvailable()) { console.log('  (skipped - MILP not available in Node)'); return; }
+    // Second real bug report on the same scenario as the two tests above (same 6 fertilizers,
+    // same N:P:K:Ca:Mg = 4.11:1:4.52:3.6:1 ratio, same 2.0 mS/cm target EC), but with a tighter
+    // PeKacid cap of 0.15 g/L - just under the ~0.157 g/L the ratio actually needs, so the cap
+    // is now genuinely (if only slightly) binding.
+    // Root cause: the baseline MILP solve (that the EC-scaling step then uniformly rescales)
+    // targets an arbitrary internal "concentration=100" reference, not the real final ppm scale
+    // - but the PeKacid cap is an absolute gram ceiling that only makes sense evaluated at the
+    // real final scale. When the baseline concentration happens to overshoot the target EC (as
+    // here: solving at that baseline reference alone implies ~4.18 mS/cm before scaling down to
+    // the 2.0 target), the cap bites far harder at the baseline's inflated scale than it
+    // actually would at the real final scale, so the baseline solve comes out badly distorted
+    // and that distortion survives the (ratio-preserving) uniform rescale afterward - reported
+    // as N/K/Ca off by 150-175%, for a cap only ~5% short of what's needed.
+    // Exercises _trySolveWithScaledPekacidCap, which solves directly at real target-EC-scale
+    // ppm on every iteration so the cap is always compared against the real need.
+    const ids = [
+      'calcium_nitrate_calcinit_typical', 'potassium_nitrate_typical', 'ammonium_nitrate_common',
+      'magnesium_sulfate_heptahydrate_common', 'potassium_sulfate_common', 'icl_pekacid_pk_acid'
+    ];
+    const fertObjects = ids.map(id => window.FertilizerCore.FERTILIZERS.find(f => f.id === id)).filter(Boolean);
+    assertEqual(fertObjects.length, 6, 'All 6 fertilizers should be found');
+
+    const targets = { N: 4.11, P: 1, K: 4.52, Ca: 3.6, Mg: 1 };
+    const result = await window.FertilizerCore.optimizeFormula(
+      targets, 10, fertObjects, 100, 'elemental', { targetEC: 2.0, pekacidMaxLimit: 0.15, useMilp: true }
+    );
+
+    const pekacidGPerL = (result.formula.icl_pekacid_pk_acid || 0) / 10;
+    assert(pekacidGPerL <= 0.15 + 1e-6, `PeKacid dose should respect its 0.15 g/L cap, got ${pekacidGPerL.toFixed(4)} g/L`);
+    assert(pekacidGPerL > 0.1, `PeKacid dose should be using close to its full cap since it's genuinely needed, got ${pekacidGPerL.toFixed(4)} g/L`);
+    assertApprox(result.ecScaling.achievedEC, 2.0, 0.1, 'Achieved EC should be close to target');
+
+    // The cap is only slightly short of what's needed, so the resulting ratio deviation should
+    // be correspondingly small - not the wild 150%+ deviation the bug produced.
+    const achieved = result.achieved;
+    const ratioOf = (key) => achieved[key] / achieved.P;
+    assertApprox(ratioOf('N_total'), targets.N, targets.N * 0.15, 'N:P ratio should be within 15% of target, not wildly off');
+    assertApprox(ratioOf('K'), targets.K, targets.K * 0.15, 'K:P ratio should be within 15% of target, not wildly off');
+    assertApprox(ratioOf('Ca'), targets.Ca, targets.Ca * 0.15, 'Ca:P ratio should be within 15% of target, not wildly off');
+    assertApprox(ratioOf('Mg'), targets.Mg, targets.Mg * 0.15, 'Mg:P ratio should be within 15% of target, not wildly off');
+  });
+
   test('optimizeFormula: PeKacid capped with absolute targets stays at cap when EC scaling would drop it', async () => {
     // Real scenario: a grower dials in an absolute-PPM recipe (N:150 P2O5:250 K2O:250 Ca:150)
     // with a generous PeKacid cap for acidification, then also requests a lower target EC for
