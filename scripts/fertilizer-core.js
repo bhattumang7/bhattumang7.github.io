@@ -973,7 +973,7 @@ async function _trySolveWithFixedPekacidRatios(ctx) {
   const {
     availableFertilizers, PEKACID_ID, fixedPekacidGrams, volume, targetRatios, milpResult,
     ppmTargets, concentration, solveMilpBrowser, onProgress, estimateECFromPPM, targetEC,
-    mode, P_to_P2O5, K_to_K2O, originalEC, OXIDE_CONVERSIONS
+    mode, P_to_P2O5, K_to_K2O, originalEC, OXIDE_CONVERSIONS, nh4PctTarget
   } = ctx;
 
   const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
@@ -1012,7 +1012,8 @@ async function _trySolveWithFixedPekacidRatios(ctx) {
       volume,
       tolerance: 0.01,
       onProgress,
-      pekacidMaxLimit: 0
+      pekacidMaxLimit: 0,
+      nh4PctTarget
     });
 
     result.formula[PEKACID_ID] = fixedPekacidGrams;
@@ -1089,7 +1090,7 @@ async function _trySolveWithScaledPekacidCap(ctx) {
   const {
     availableFertilizers, PEKACID_ID, volume, targetRatios, milpResult, ppmTargets, concentration,
     solveMilpBrowser, onProgress, estimateECFromPPM, targetEC, mode, P_to_P2O5, K_to_K2O,
-    originalEC, pekacidMaxLimit
+    originalEC, pekacidMaxLimit, nh4PctTarget
   } = ctx;
 
   const pekacidFert = availableFertilizers.find(f => f.id === PEKACID_ID);
@@ -1114,7 +1115,7 @@ async function _trySolveWithScaledPekacidCap(ctx) {
     };
 
     const result = await solveMilpBrowser({
-      fertilizers: availableFertilizers, targets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit
+      fertilizers: availableFertilizers, targets, volume, tolerance: 0.01, onProgress, pekacidMaxLimit, nh4PctTarget
     });
 
     const ecData = estimateECFromPPM(result.achieved);
@@ -1169,7 +1170,7 @@ async function _rerunKeepingPekacidAtCapIfScalingWouldDropIt(ctx) {
   const {
     pekacidMaxLimit, pekacidFromMilp, scaleFactor, pekacidMaxGrams, availableFertilizers,
     PEKACID_ID, OXIDE_CONVERSIONS, volume, estimateECFromPPM, targetEC, ppmTargets,
-    solveMilpBrowser, onProgress, devLog
+    solveMilpBrowser, onProgress, devLog, nh4PctTarget
   } = ctx;
 
   const enablePekacidRerun = true;
@@ -1219,7 +1220,8 @@ async function _rerunKeepingPekacidAtCapIfScalingWouldDropIt(ctx) {
     volume,
     tolerance: 0.01,
     onProgress,
-    pekacidMaxLimit: 0
+    pekacidMaxLimit: 0,
+    nh4PctTarget
   });
 
   devLog(`Re-run MILP complete. Keeping ratios intact (not scaling for EC).`);
@@ -1296,7 +1298,7 @@ function _convergeEcScaling(ctx) {
 async function _convergeSiTarget(ctx) {
   const {
     targetSi, availableFertilizers, volume, ppmTargets, solveMilpBrowser, onProgress,
-    pekacidMaxLimit, estimateECFromPPM, targetEC
+    pekacidMaxLimit, estimateECFromPPM, targetEC, nh4PctTarget
   } = ctx;
   let { scaledFormula, scaledAchieved, scaleFactor } = ctx;
 
@@ -1337,7 +1339,8 @@ async function _convergeSiTarget(ctx) {
       volume,
       tolerance: 0.01,
       onProgress,
-      pekacidMaxLimit
+      pekacidMaxLimit,
+      nh4PctTarget
     });
 
     // Re-apply EC scaling to the adjusted result (scale ALL fertilizers proportionally
@@ -1490,7 +1493,7 @@ globalThis.FertilizerCore.optimizeFormula = async function(targetRatios, volume,
     return _applyTargetEcScaling({
       milpResult, targetRatios, ppmTargets, volume, mode, concentration, options,
       availableFertilizers, solveMilpBrowser, onProgress, devLog, OXIDE_CONVERSIONS,
-      P_to_P2O5, K_to_K2O, pekacidMaxLimit, useAbsoluteTargets: options.useAbsoluteTargets,
+      P_to_P2O5, K_to_K2O, pekacidMaxLimit, nh4PctTarget, useAbsoluteTargets: options.useAbsoluteTargets,
       targetEC: options.targetEC, estimateECFromPPM: globalThis.FertilizerCore.estimateECFromPPM
     });
   }
