@@ -1303,7 +1303,6 @@ async function _convergeSiTarget(ctx) {
   let currentSiTarget = targetSi;
   let bestSiError = Math.abs((scaledAchieved.Si || 0) - targetSi);
   let bestFormula = { ...scaledFormula };
-  let bestAchieved = { ...scaledAchieved };
   let bestScaleFactor = scaleFactor;
 
   // Iterate up to 5 times to converge Si to target
@@ -1315,7 +1314,6 @@ async function _convergeSiTarget(ctx) {
     if (siError < bestSiError) {
       bestSiError = siError;
       bestFormula = { ...scaledFormula };
-      bestAchieved = { ...scaledAchieved };
       bestScaleFactor = scaleFactor;
     }
 
@@ -1353,8 +1351,17 @@ async function _convergeSiTarget(ctx) {
     }
   }
 
-  // Use the best result found
-  return { scaledFormula: bestFormula, scaledAchieved: bestAchieved, scaleFactor: bestScaleFactor };
+  // Use the best result found — but each Si re-solve above is a fresh MILP run that
+  // isn't guaranteed to preserve the target EC as tightly as the pre-Si solution did
+  // (it only optimizes for Si fit), so pull the chosen composition's EC back to target
+  // one more time before returning. This is a pure proportional rescale, so it keeps
+  // the fertilizer ratios (and therefore the Si fit) unchanged.
+  const finalRescale = _rescaleFormulaToTargetEC(ctx, bestFormula, 1);
+  return {
+    scaledFormula: finalRescale.formula,
+    scaledAchieved: finalRescale.achieved,
+    scaleFactor: bestScaleFactor * finalRescale.scaleFactor
+  };
 }
 
 // Once a MILP solution is found, scale it to hit the requested target EC (keeping PeKacid at
@@ -1423,7 +1430,6 @@ async function _applyTargetEcScaling(ctx) {
   });
   let scaledFormula = ecScalingResult.scaledFormula;
   let scaledAchieved = ecScalingResult.scaledAchieved;
-  const finalEC = ecScalingResult.finalEC;
   scaleFactor = ecScalingResult.scaleFactor;
 
   if (targetSi > 0) {
@@ -1435,12 +1441,18 @@ async function _applyTargetEcScaling(ctx) {
     scaleFactor = siState.scaleFactor;
   }
 
+  // Recompute from the FINAL formula rather than reusing ecScalingResult.finalEC, which
+  // reflects the pre-Si solution and goes stale once the Si convergence step above swaps
+  // in a different (re-solved) formula — otherwise the reported "achieved EC" can disagree
+  // with the EC actually implied by the returned `achieved` ppm.
+  const achievedEC = estimateECFromPPM(scaledAchieved).ec_mS_cm;
+
   return {
     formula: scaledFormula,
     achieved: scaledAchieved,
     targetRatios,
     targetPPM: ppmTargets,
-    ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC, achievedEC: finalEC }
+    ecScaling: { scaleFactor, originalEC: originalEC.ec_mS_cm, targetEC, achievedEC }
   };
 }
 
