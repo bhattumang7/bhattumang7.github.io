@@ -9257,6 +9257,7 @@ const FertilizerApp = {
       params.set('ec', ecIdx >= 0 ? ecIdx.toString(16) : '5');
       const r = wizardRatios;
       params.set('t', `${r.N},${r.P},${r.K},${r.Ca},${r.Mg},${r.S},${r.Si ?? 0}`);
+      if (wizardNH4Pct.value !== null && wizardNH4Pct.value !== '') params.set('nh4', wizardNH4Pct.value);
       addWizardAvailFertilizerParam(params);
     }
 
@@ -9342,6 +9343,7 @@ const FertilizerApp = {
         const [N,P,K,Ca,Mg,S,Si] = params.get('t').split(',');
         Object.assign(wizardRatios, { N: N||'', P: P||'', K: K||'', Ca: Ca||'', Mg: Mg||'', S: S||'', Si: Si||'0' });
       }
+      if (params.has('nh4')) wizardNH4Pct.value = params.get('nh4');
     }
 
     // Available fertilizers (formula-builder & reverse-calc)
